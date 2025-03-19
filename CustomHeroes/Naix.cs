@@ -87,9 +87,9 @@ namespace WarcraftPlugin.Classes
                     var directionVec = new Vector();
                     NativeAPI.AngleVectors(directionAngle.Handle, directionVec.Handle, nint.Zero, nint.Zero);
 
-                    if (directionVec.Z < 0.500)
+                    if (directionVec.Z < 0.500f)
                     {
-                        directionVec.Z = 0.500;
+                        directionVec.Z = 0.500f;
                     }
 
                     directionVec *= 500; // Adjust force if needed
