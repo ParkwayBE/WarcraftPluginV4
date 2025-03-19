@@ -13,7 +13,7 @@ using CounterStrikeSharp.API.Modules.Entities.Constants;
 
 namespace WarcraftPlugin.Classes
 {
-    
+
     internal class Naix : WarcraftClass
     {
         public override string DisplayName => "Naix";
@@ -38,7 +38,6 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerJump>(PlayerJump);
             HookAbility(3, Ultimate);
-            Console.WriteLine("[DEBUG] Hooked EventPlayerDeath to PlayerKill.");
         }
 
 
@@ -58,14 +57,14 @@ namespace WarcraftPlugin.Classes
             }
 
 
-            // ✅ Ensure previous effect is removed before adding a new one
+            // Ensuring previous effect is removed before adding a new one
             if (activeEffects.TryGetValue(Player, out var existingEffect))
             {
                 existingEffect.Destroy();
                 activeEffects.Remove(Player);
             }
 
-            // ✅ Apply Smoke Supply Effect and track it
+            // Apply Smoke Supply Effect and track it
             var effect = new SmokeSupplyEffect(Player);
             activeEffects[Player] = effect;
             effect.Start();
@@ -82,29 +81,62 @@ namespace WarcraftPlugin.Classes
                 }
 
                 Console.WriteLine($"[DEBUG] {Player.PlayerName} jumped! Applying longjump effect...");
-
-                // ✅ Delay the velocity application slightly to prevent engine override
                 WarcraftPlugin.Instance.AddTimer(0.05f, () =>
                 {
                     var directionAngle = Player.PlayerPawn.Value.EyeAngles;
                     var directionVec = new Vector();
                     NativeAPI.AngleVectors(directionAngle.Handle, directionVec.Handle, nint.Zero, nint.Zero);
 
-                    if (directionVec.Z < 0.475)
+                    if (directionVec.Z < 0.500)
                     {
-                        directionVec.Z = 0.475f;
+                        directionVec.Z = 0.500;
                     }
 
                     directionVec *= 500; // Adjust force if needed
-
-                    // ✅ Apply velocity axis-by-axis like Rapscallion
                     Player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
                     Player.PlayerPawn.Value.AbsVelocity.Y = directionVec.Y;
                     Player.PlayerPawn.Value.AbsVelocity.Z = directionVec.Z;
 
                     Console.WriteLine($"[INFO] Applied longjump force after delay: X:{directionVec.X}, Y:{directionVec.Y}, Z:{directionVec.Z}");
                 });
+                WarcraftPlugin.Instance.AddTimer(0.05f, () =>
+                {
+                    Console.WriteLine("[INFO] Applying reduced gravity after delay.");
+                    new SetGravityEffect(Player, 0.7f, 3f).Start();
+                });
             }
+        }
+
+        internal class SetGravityEffect(CCSPlayerController owner, float gravity, float duration)
+    : WarcraftEffect(owner, duration)
+        {
+            private readonly float _gravity = gravity;
+
+            public override void OnStart()
+            {
+                if (Owner?.PlayerPawn?.Value == null)
+                {
+                    Console.WriteLine("ERROR: Owner or PlayerPawn is NULL in SetGravityEffect!");
+                    return;
+                }
+
+                Console.WriteLine($"[INFO] {Owner.PlayerName} gravity set to {_gravity}.");
+                Owner.PlayerPawn.Value.GravityScale = _gravity;
+            }
+
+            public override void OnFinish()
+            {
+                if (Owner?.PlayerPawn?.Value == null)
+                {
+                    Console.WriteLine("ERROR: Owner or PlayerPawn is NULL in SetGravityEffect OnFinish!");
+                    return;
+                }
+
+                Console.WriteLine($"[INFO] {Owner.PlayerName} gravity restored to normal.");
+                Owner.PlayerPawn.Value.GravityScale = 1.0f; // Reset to default gravity
+            }
+
+            public override void OnTick() { /* Not needed */ }
         }
 
 
