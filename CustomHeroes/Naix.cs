@@ -21,6 +21,7 @@ namespace WarcraftPlugin.Classes
         private const uint IN_DUCK = 1 << 2; // Defines the crouch input
         private readonly Dictionary<CCSPlayerController, SmokeSupplyEffect> activeEffects = new();
         private readonly int _MovementSpeedMult = 10;
+        private Dictionary<ulong, Vector> lastSmokePositions = new();
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -106,6 +107,25 @@ namespace WarcraftPlugin.Classes
                 });
             }
         }
+
+        
+
+        private void OnSmokeDetonate(EventSmokegrenadeDetonate @event)
+        {
+            if (@event.Userid == null || !@event.Userid.IsValid)
+            {
+                Console.WriteLine("[ERROR] SmokeDetonate event triggered, but Userid is NULL or invalid!");
+                return;
+            }
+
+            var player = @event.Userid;
+
+            // Store the last smoke grenade location for this player
+            lastSmokePositions[player.SteamID] = @event.Position;
+
+            Console.WriteLine($"[DEBUG] Stored smoke location for {player.PlayerName}: {@event.Position}");
+        }
+
 
         internal class SetGravityEffect(CCSPlayerController owner, float gravity, float duration)
     : WarcraftEffect(owner, duration)
@@ -248,11 +268,6 @@ namespace WarcraftPlugin.Classes
             effect.GiveSmokeIfNeeded();
         }
 
-        private void Ultimate()
-        {
-            Console.WriteLine("[INFO] Ultimate ability activated!");
-        }
-
         internal class SmokeSupplyEffect(CCSPlayerController owner) : WarcraftEffect(owner)
         {
             private int smokesGiven = 0;
@@ -337,6 +352,49 @@ namespace WarcraftPlugin.Classes
 
             // ✅ Required by WarcraftEffect (empty implementation)
             public override void OnTick() { }
+
+        }
+
+        private void Ultimate()
+        {
+            Console.WriteLine("[INFO] Naix used Detonate!");
+
+            if (WarcraftPlayer.GetAbilityLevel(3) < 1 || !IsAbilityReady(3))
+            {
+                Console.WriteLine("[INFO] Ultimate cannot be used (ability level too low or on cooldown).");
+                return;
+            }
+
+            if (!lastSmokePositions.TryGetValue(Player.SteamID, out var smokePosition))
+            {
+                Console.WriteLine("[ERROR] No recorded smoke grenade location for this player! Aborting.");
+                return;
+            }
+
+            Console.WriteLine($"[INFO] Spawning HE grenade at {smokePosition} for {Player.PlayerName}");
+
+            // Spawn an HE grenade at the stored smoke position
+            var heGrenade = Utilities.CreateEntityByName("hegrenade_projectile");
+            if (heGrenade == null)
+            {
+                Console.WriteLine("[ERROR] Failed to create HE grenade entity!");
+                return;
+            }
+
+            heGrenade.Teleport(smokePosition, null, null);
+            heGrenade.Spawn();
+
+            Console.WriteLine("[INFO] HE grenade spawned! Detonating immediately...");
+
+            // Make the grenade explode instantly
+            WarcraftPlugin.Instance.AddTimer(0.1f, () =>
+            {
+                heGrenade.TakeDamage(9999, Player, Player);
+                Console.WriteLine("[INFO] HE grenade exploded at smoke position!");
+            });
+
+            //  Start Cooldown
+            StartCooldown(3);
         }
     }
 }
