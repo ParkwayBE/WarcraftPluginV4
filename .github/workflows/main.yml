@@ -1,0 +1,49 @@
+name: Build and Test C# Warcraft project2
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - 'CustomHeroes/**'
+  pull_request:
+    branches:
+      - master
+    paths-ignore:
+      - 'CustomHeroes/**'
+
+jobs:
+  build:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.x.x'
+
+    - name: Publish build artifacts
+      run: dotnet publish WarcraftPlugin.csproj --configuration Release --output ./publish
+    
+    - name: moving files to sftp
+      uses: pressidium/lftp-mirror-action@v1
+      with:
+        host: a7668d183af52f09.daemon.panel.gg
+        port: 2022
+        user: ben.steam@hotmail.com.61e6a5d9
+        pass: Yoloswag116  # The password for SSH authentication
+        localDir: "./publish/"  # Local path to the files you want to deploy
+        remoteDir: "/game/csgo/addons/counterstrikesharp/plugins/WarcraftPlugin"  # Remote path to the target directory
+
+    - name: moving classes to right place
+      uses: pressidium/lftp-mirror-action@v1
+      with:
+        host: a7668d183af52f09.daemon.panel.gg
+        port: 2022
+        user: ben.steam@hotmail.com.61e6a5d9
+        pass: Yoloswag116  # The password for SSH authentication
+        localDir: "./CustomHeroes/"
+        remoteDir: "/game/csgo/addons/counterstrikesharp/plugins/WarcraftPlugin/CustomHeroes"
