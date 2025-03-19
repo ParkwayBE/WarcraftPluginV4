@@ -40,7 +40,7 @@ namespace WarcraftPlugin.Classes
         public override void Register()
         {
 
-            HookEvent<EventWeaponFire>(PlayerShoot);
+            HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookAbility(3, Ultimate);
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
