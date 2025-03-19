@@ -57,5 +57,6 @@
 	<Import Project=".\PostBuild.targets" Condition="Exists('.\PostBuild.targets')" />
   <ItemGroup>
     <Compile Remove="CustomHeroes\**" />
+    <Content Include="CustomHeroes\**" />
   </ItemGroup>
 </Project>
