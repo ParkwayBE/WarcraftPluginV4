@@ -77,23 +77,37 @@ namespace WarcraftPlugin.Classes
             {
                 if (Player == null || Player.PlayerPawn?.Value == null)
                 {
-                    Console.WriteLine("ERROR: Player or PlayerPawn is NULL in ApplyDashForce!");
+                    Console.WriteLine("ERROR: Player or PlayerPawn is NULL in PlayerJump!");
                     return;
                 }
 
-                var directionAngle = Player.PlayerPawn.Value.EyeAngles; // getting the diretion for the longjump
-                var directionVec = new Vector();
-                NativeAPI.AngleVectors(directionAngle.Handle, directionVec.Handle, nint.Zero, nint.Zero);
-                if (directionVec.Z < 0.175)
+                Console.WriteLine($"[DEBUG] {Player.PlayerName} jumped! Applying longjump effect...");
+
+                // ✅ Delay the velocity application slightly to prevent engine override
+                WarcraftPlugin.Instance.AddTimer(0.05f, () =>
                 {
-                    directionVec.Z = 0.175f;
-                }
-                directionVec *= 400; // The force for the Dash, adjust if the dash is too powerfull/weak
-                Player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
-                Player.PlayerPawn.Value.AbsVelocity.Y = directionVec.Y;
-                Player.PlayerPawn.Value.AbsVelocity.Z = directionVec.Z;
+                    var directionAngle = Player.PlayerPawn.Value.EyeAngles;
+                    var directionVec = new Vector();
+                    NativeAPI.AngleVectors(directionAngle.Handle, directionVec.Handle, nint.Zero, nint.Zero);
+
+                    if (directionVec.Z < 0.175)
+                    {
+                        directionVec.Z = 0.175f;
+                    }
+
+                    directionVec *= 400; // Adjust force if needed
+
+                    // ✅ Apply velocity axis-by-axis like Rapscallion
+                    Player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
+                    Player.PlayerPawn.Value.AbsVelocity.Y = directionVec.Y;
+                    Player.PlayerPawn.Value.AbsVelocity.Z = directionVec.Z;
+
+                    Console.WriteLine($"[INFO] Applied longjump force after delay: X:{directionVec.X}, Y:{directionVec.Y}, Z:{directionVec.Z}");
+                });
             }
         }
+
+
 
         private void PlayerKill(EventPlayerHurtOther @event)
         {
