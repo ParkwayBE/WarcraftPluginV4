@@ -90,12 +90,12 @@ namespace WarcraftPlugin.Classes
                     var directionVec = new Vector();
                     NativeAPI.AngleVectors(directionAngle.Handle, directionVec.Handle, nint.Zero, nint.Zero);
 
-                    if (directionVec.Z < 0.375)
+                    if (directionVec.Z < 0.475)
                     {
-                        directionVec.Z = 0.375f;
+                        directionVec.Z = 0.475f;
                     }
 
-                    directionVec *= 600; // Adjust force if needed
+                    directionVec *= 500; // Adjust force if needed
 
                     // ✅ Apply velocity axis-by-axis like Rapscallion
                     Player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
