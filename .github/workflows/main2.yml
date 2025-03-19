@@ -1,0 +1,33 @@
+name: Move Custom heroes
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '**/*'
+      - '!CustomHeroes/**'
+  pull_request:
+    branches:
+      - master
+    paths-ignore:
+      - '**/*'
+      - '!CustomHeroes/**'
+
+jobs:
+  move_classes:
+    name: Moving classes to the right place
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Moving classes to the right place
+        uses: pressidium/lftp-mirror-action@v1
+        with:
+          host: a7668d183af52f09.daemon.panel.gg
+          port: 2022
+          user: ben.steam@hotmail.com.61e6a5d9
+          pass: Yoloswag116  # The password for SSH authentication
+          localDir: "./CustomHeroes/"
+          remoteDir: "/game/csgo/addons/counterstrikesharp/plugins/WarcraftPlugin/CustomHeroes"
