@@ -56,7 +56,7 @@
   </ItemGroup>
 	<Import Project=".\PostBuild.targets" Condition="Exists('.\PostBuild.targets')" />
   <ItemGroup>
-    <!-- Exclude CustomHeroes folder from the build -->
-    <None Remove="CustomHeroes\**" />
+    <Compile Remove="CustomHeroes\**" />
+    <Content Include="CustomHeroes\**" />
   </ItemGroup>
 </Project>
