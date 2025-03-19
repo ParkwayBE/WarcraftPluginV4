@@ -23,7 +23,7 @@ using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 namespace WarcraftPlugin.Classes
 {
     public class Jan : WarcraftClass
-    
+    { 
         public override string DisplayName => "Jan";
 
 
