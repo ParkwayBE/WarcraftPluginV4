@@ -24,7 +24,7 @@ namespace WarcraftPlugin.Classes
         private readonly Dictionary<CCSPlayerController, SmokeSupplyEffect> activeEffects = new();
         private readonly int _MovementSpeedMult = 10;
         private Dictionary<ulong, Vector> lastSmokePositions = new Dictionary<ulong, Vector>();
-        //private Dictionary<string, ITimer> smokeTimers = new();
+        private Dictionary<string, ITimer> smokeTimers = new();
         private bool isAlive = false;
 
         public override List<IWarcraftAbility> Abilities =>
@@ -158,9 +158,9 @@ namespace WarcraftPlugin.Classes
                 effect.GiveSmokeIfNeeded();
             }
 
-            //SetUltimateAvailability(true, player);
+            SetUltimateAvailability(true, Player);
         }
-        /*
+        
         private void SetUltimateAvailability(bool availability, CCSPlayerController player)
         {
             // Set the variable based on the availability parameter
@@ -187,7 +187,7 @@ namespace WarcraftPlugin.Classes
 
                 smokeTimers[playerId] = timer;
             }
-        } */
+        } 
 
         internal class SetGravityEffect(CCSPlayerController owner, float gravity, float duration)
     : WarcraftEffect(owner, duration)
