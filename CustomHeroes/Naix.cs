@@ -16,7 +16,7 @@ namespace WarcraftPlugin.Classes
     internal class Naix : WarcraftClass
     {
         public override string DisplayName => "Naix";
-        public override Color DefaultColor => Color.GreenYellow;
+        public override Color DefaultColor => Color.AntiqueWhite;
         private const uint IN_DUCK = 1 << 2; // Defines the crouch input
         private readonly Dictionary<CCSPlayerController, SmokeSupplyEffect> activeEffects = new();
         private readonly int _MovementSpeedMult = 10;
@@ -275,6 +275,16 @@ namespace WarcraftPlugin.Classes
             {
                 Console.WriteLine("[ERROR] No active weapon found, could not refill ammo!");
             }
+            killer.PlayerPawn.Value.SetColor(Color.Red);
+
+            // Set a timer to reset the color after 2 seconds
+            WarcraftPlugin.Instance.AddTimer(2.0f, () =>
+            {
+                if (killer.PlayerPawn?.Value != null && killer.PlayerPawn.Value.IsValid)
+                {
+                    killer.PlayerPawn.Value.SetColor(Color.AntiqueWhite);
+                }
+            });
 
             Console.WriteLine($"[SUCCESS] {killer.PlayerName} successfully used Consume on {victim.PlayerName}!");
         }
