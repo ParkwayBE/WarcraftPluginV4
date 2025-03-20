@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.Helpers;
@@ -119,23 +120,17 @@ namespace WarcraftPlugin.Classes
             }
 
             var player = @event.Userid;
-
-            // ✅ Extract smoke grenade entity and get its position
-            var smokeEntity = @event.SmokeGrenade;
-            if (smokeEntity == null)
+            if (player == null || player.PlayerPawn?.Value == null)
             {
-                Console.WriteLine("[ERROR] Could not find smoke grenade entity! Aborting.");
+                Console.WriteLine("[ERROR] Player is NULL in SmokeDetonate! Aborting.");
                 return;
             }
 
-            var smokePosition = smokeEntity.AbsOrigin; // ✅ Get smoke grenade's position
+            // ✅ Store the last smoke grenade position for this player
+            lastSmokePositions[player.SteamID] = player.PlayerPawn.Value.AbsOrigin.Clone();
 
-            // ✅ Store the last smoke grenade location for this player
-            lastSmokePositions[player.SteamID] = smokePosition;
-
-            Console.WriteLine($"[DEBUG] Stored smoke location for {player.PlayerName}: {smokePosition}");
+            Console.WriteLine($"[DEBUG] Stored smoke location for {player.PlayerName}: {lastSmokePositions[player.SteamID]}");
         }
-
 
 
         internal class SetGravityEffect(CCSPlayerController owner, float gravity, float duration)
@@ -368,42 +363,36 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            Console.WriteLine("[INFO] Naix used Detonate!");
-
             if (WarcraftPlayer.GetAbilityLevel(3) < 1 || !IsAbilityReady(3))
             {
                 Console.WriteLine("[INFO] Ultimate cannot be used (ability level too low or on cooldown).");
                 return;
             }
 
-            if (!lastSmokePositions.TryGetValue(Player.SteamID, out var smokePosition))
+            if (!canUseUltimate)
             {
-                Console.WriteLine("[ERROR] No recorded smoke grenade location for this player! Aborting.");
+                Console.WriteLine("[INFO] Ultimate is on cooldown!");
                 return;
             }
 
-            Console.WriteLine($"[INFO] Spawning HE grenade at {smokePosition} for {Player.PlayerName}");
+            if (!lastSmokePositions.TryGetValue(Player.SteamID, out var lastSmokePosition))
+            {
+                Console.WriteLine("[ERROR] No stored smoke grenade position for this player! Aborting ultimate.");
+                return;
+            }
 
-            // ✅ Adjust position like in Necromancer's PoisonCloudEffect
-            var grenadePosition = smokePosition.With(z: smokePosition.Z + 5f); // Slightly raised above ground
+            Console.WriteLine($"[INFO] Spawning HE grenade at last smoke position: {lastSmokePosition}");
+
+            // ✅ Adjust grenade position slightly above ground
+            var grenadePosition = lastSmokePosition.With(z: lastSmokePosition.Z + 5f);
 
             // ✅ Manually create HE grenade entity
-            var heGrenade = Utilities.FindAllEntitiesByDesignerName<CSmokeGrenadeProjectile>("hegrenade_projectile")
-                .Where(x => x.Thrower.Index == Player.PlayerPawn.Index)
-                .OrderByDescending(x => x.CreateTime)
-                .FirstOrDefault();
+            var heGrenade = CounterStrikeSharp.API.Modules.Utils.Utilities.CreateEntityByName<CSmokeGrenadeProjectile>("hegrenade_projectile");
 
             if (heGrenade == null)
             {
-                Console.WriteLine("[ERROR] No valid HE grenade entity found! Trying to spawn manually...");
-
-                // ✅ Fallback: Manually spawn HE grenade
-                heGrenade = Utilities.CreateEntityByName("hegrenade_projectile");
-                if (heGrenade == null)
-                {
-                    Console.WriteLine("[ERROR] Failed to create HE grenade entity!");
-                    return;
-                }
+                Console.WriteLine("[ERROR] Failed to create HE grenade entity!");
+                return;
             }
 
             // ✅ Set grenade position & ownership
@@ -419,12 +408,10 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("[INFO] HE grenade exploded at smoke position!");
             });
 
-            // ✅ Start Cooldown
+            // ✅ Start Ultimate Cooldown
+            canUseUltimate = false;
             StartCooldown(3);
         }
-
-
-
 
     }
 }
