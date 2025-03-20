@@ -369,6 +369,7 @@ namespace WarcraftPlugin.Classes
         private void Ultimate()
         {
             Console.WriteLine("[INFO] Naix used Detonate!");
+            Console.WriteLine("[INFO] Detonate testing!");
 
             if (WarcraftPlayer.GetAbilityLevel(3) < 1 || !IsAbilityReady(3))
             {
