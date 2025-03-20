@@ -278,7 +278,7 @@ namespace WarcraftPlugin.Classes
             killer.PlayerPawn.Value.SetColor(Color.Red);
 
             // EFFECT CODE
-            string redCircleParticle = "particles/explosions_fx/explosion_c4_ground_residual_ash.vpcf";
+            string redCircleParticle = "particles/inferno_fx/molotov_fire01_cheap.vpcf";
             float particleDuration = 2.0f;
             var particle = Warcraft.SpawnParticle(killer.PlayerPawn.Value.AbsOrigin, redCircleParticle, particleDuration);
 
