@@ -22,6 +22,7 @@ namespace WarcraftPlugin.Classes
         private const uint IN_DUCK = 1 << 2; // Defines the crouch input
         private readonly Dictionary<CCSPlayerController, SmokeSupplyEffect> activeEffects = new();
         private readonly int _MovementSpeedMult = 10;
+        private bool isAlive = false;
         private Dictionary<ulong, Vector> lastSmokePositions = new Dictionary<ulong, Vector>();
 
         public override List<IWarcraftAbility> Abilities =>
@@ -39,6 +40,7 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerHurtOther>(PlayerKill);
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerJump>(PlayerJump);
+            HookEvent<EventPlayerDeath>(PlayerDeath);
             HookAbility(3, Ultimate);
         }
 
@@ -66,6 +68,7 @@ namespace WarcraftPlugin.Classes
                 activeEffects.Remove(Player);
             }
 
+            isAlive = true;
             // Apply Smoke Supply Effect and track it
             var effect = new SmokeSupplyEffect(Player);
             activeEffects[Player] = effect;
@@ -369,8 +372,21 @@ namespace WarcraftPlugin.Classes
 
         private bool canUseUltimate = true; // ✅ Add this at the class level
 
+        private void PlayerDeath(EventPlayerDeath @event)
+        {
+            Console.WriteLine("[INFO] PlayerDeath triggered! Setting isAlive = false.");
+            isAlive = false;
+        }
+
+
         private void Ultimate()
         {
+            if (!isAlive)
+            {
+                Console.WriteLine("[ERROR] Ultimate cannot be used while dead! Aborting.");
+                return;
+            }
+
             if (WarcraftPlayer.GetAbilityLevel(3) < 1 || !IsAbilityReady(3))
             {
                 Console.WriteLine("[INFO] Ultimate cannot be used (ability level too low or on cooldown).");
@@ -382,40 +398,34 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("[INFO] Ultimate is on cooldown!");
                 return;
             }
+
             if (!lastSmokePositions.TryGetValue(Player.SteamID, out Vector lastSmokePosition))
             {
                 Console.WriteLine("[ERROR] No stored smoke grenade position for this player! Aborting ultimate.");
                 return;
             }
 
-            if (Player == null || !Player.IsAlive())
-            {
-                Console.WriteLine("[ERROR] Ultimate cannot be used while dead! Aborting.");
-                return;
-            }
-
             Console.WriteLine($"[INFO] Spawning explosion at last smoke position: {lastSmokePosition}");
 
-            // ✅ Adjust explosion position slightly above ground
             var explosionPosition = lastSmokePosition.With(z: lastSmokePosition.Z + 10f);
 
-            // ✅ Use predefined SpawnExplosion function
             Warcraft.SpawnExplosion(
                 pos: explosionPosition,
-                damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f), // ✅ Damage scales with ability level
+                damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f),
                 radius: 250f,
                 attacker: Player,
                 killFeedIcon: KillFeedIcon.prop_exploding_barrel
             );
 
-
             Console.WriteLine($"[INFO] Explosion triggered at {explosionPosition} with {50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f)} damage!");
 
             // ✅ Start Ultimate Cooldown
             canUseUltimate = false;
-            WarcraftPlugin.Instance.AddTimer(6.0f, () => canUseUltimate = true); // Reset after 6 seconds
+            WarcraftPlugin.Instance.AddTimer(6.0f, () => canUseUltimate = true);
             StartCooldown(3);
         }
+
+
 
     }
 }
