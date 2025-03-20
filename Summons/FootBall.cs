@@ -18,9 +18,9 @@ namespace WarcraftPlugin.Summons
         private CDynamicProp _ballProp;
         private CCSPlayerController _owner;
 
-        internal Vector Position { get; set; } = new(70, -70, 90);
+        public Vector Position { get; set; } = new(70, -70, 90);
 
-        internal FootBall(CCSPlayerController owner, Vector position)
+        public FootBall(CCSPlayerController owner, Vector position)
         {
             _owner = owner;
             Position = position;
