@@ -60,8 +60,8 @@ namespace WarcraftPlugin.Summons
             var distance = 60;
             var height = 10;
             posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
+            _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
             _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-            //_ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
             _ballProp.SetParent(_ball);
             
         }
