@@ -20,6 +20,7 @@ using System.Reflection;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using WarcraftPlugin.Core;
 using WarcraftPlugin.Summons;
+using static g3.RoundRectGenerator;
 
 
 namespace WarcraftPlugin.Classes
@@ -32,7 +33,7 @@ namespace WarcraftPlugin.Classes
         public override Color DefaultColor => Color.CadetBlue;
 
         List<FootBall> footBalls = new List<FootBall>();
-
+        int footballsRemaining = 0;
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -50,20 +51,24 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            footBalls.Add(new FootBall(Player, Player.PlayerPawn.Value.AbsOrigin));
-            footBalls.Add(new FootBall(Player, Player.PlayerPawn.Value.AbsOrigin));
-            footBalls.Add(new FootBall(Player, Player.PlayerPawn.Value.AbsOrigin));
+            footballsRemaining = 3;
             //WarcraftPlugin.Instance.AddTimer(0.2f, () => {Player.PlayLocalSound("sounds/ambient/misc/techno_overpass.vsnd"); });
             Player.PrintToChat("you have 3 footballs");
         }
 
         private void Ultimate()
         {
-            if (footBalls.Count > 0)
+            if (footballsRemaining > 0)
             {
-                Player.PrintToChat("Lukaku has used a ball!");
-                footBalls[0].Activate();
-                footBalls.RemoveAt(footBalls.Count - 1);
+                footballsRemaining--;
+                FootballSystem fbs = new FootballSystem(Player, 0.3f, footBalls);
+                fbs.FinishOnDestroy = true;
+                fbs.Start();
+                WarcraftPlugin.Instance.AddTimer(20f, () =>
+                {
+                    fbs.Destroy();
+                });
+                Player.PrintToChat("end ult");
             }
 
 
@@ -75,9 +80,42 @@ namespace WarcraftPlugin.Classes
             // _plugin.AdminPanel.OpenAdminPanel(Player);
 
         }
+        /*
+        private void FootballUse()
+        {
+            int maxSeconds = 5;
+            DateTime startTime = DateTime.Now;
+            footBalls.Add(new FootBall(Player, Player.PlayerPawn.Value.AbsOrigin));
+            footBalls[0].Activate();
+            Player.PrintToChat("You have used a ball");
+            
 
+            while ((DateTime.Now - startTime).TotalSeconds < maxSeconds)
+            {
+                footBalls[0].UpdateLocation(Player.PlayerPawn.Value.AbsOrigin);
+            }
+        }
+        */
+        internal class FootballSystem(CCSPlayerController owner, float onTickInterval, List<FootBall> footBalls) : WarcraftEffect(owner, onTickInterval: onTickInterval)
+        {
+            public override void OnStart()
+            {
+                owner.PrintToChat("football sytsem start");
+                footBalls.Add(new FootBall(owner, owner.PlayerPawn.Value.AbsOrigin));
+                footBalls[0].Activate();
+                owner.PrintToChat("You have used a ball");
+            }
+            public override void OnTick()
+            {
+                owner.PrintToChat("tick");
+                footBalls[0].UpdateLocation(owner.PlayerPawn.Value.AbsOrigin);
+         
+            }
+            public override void OnFinish() { }
+        }
 
     }
+
 }
 
 
