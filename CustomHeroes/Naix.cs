@@ -388,6 +388,12 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
+            if (Player == null || !Player.IsAlive())
+            {
+                Console.WriteLine("[ERROR] Ultimate cannot be used while dead! Aborting.");
+                return;
+            }
+
             Console.WriteLine($"[INFO] Spawning explosion at last smoke position: {lastSmokePosition}");
 
             // ✅ Adjust explosion position slightly above ground
