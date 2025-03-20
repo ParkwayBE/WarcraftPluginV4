@@ -383,39 +383,27 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
-            Console.WriteLine($"[INFO] Spawning HE grenade at last smoke position: {lastSmokePosition}");
+            Console.WriteLine($"[INFO] Spawning explosion at last smoke position: {lastSmokePosition}");
 
-            // ✅ Adjust grenade position slightly above ground
-            var grenadePosition = lastSmokePosition.With(z: lastSmokePosition.Z + 5f);
+            // ✅ Adjust explosion position slightly above ground
+            var explosionPosition = lastSmokePosition.With(z: lastSmokePosition.Z + 10f);
 
-            // ✅ Create HE grenade entity properly
-            var heGrenade = CounterStrikeSharp.API.Modules.Utils.Utilities.CreateEntityByName<CBaseGrenade>("hegrenade");
+            // ✅ Use predefined SpawnExplosion function
+            SpawnExplosion(
+                pos: explosionPosition,
+                damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f), // ✅ Damage scales with ability level
+                radius: 250f,
+                attacker: Player,
+                killFeedIcon: KillFeedIcon.prop_exploding_barrel
+            );
 
-            if (heGrenade == null)
-            {
-                Console.WriteLine("[ERROR] Failed to create HE grenade entity!");
-                return;
-            }
-
-            // ✅ Set grenade position & ownership
-            heGrenade.Teleport(grenadePosition, Player.PlayerPawn.Value.AbsRotation, Vector.Zero);
-            heGrenade.SetOwner(Player);
-
-            Console.WriteLine($"[INFO] HE grenade spawned at {grenadePosition}. Detonating immediately...");
-
-            // ✅ Trigger instant explosion properly
-            WarcraftPlugin.Instance.AddTimer(0.05f, () =>
-            {
-                heGrenade.Detonate(); // ✅ Use the correct function to trigger an explosion
-                Console.WriteLine("[INFO] HE grenade exploded at smoke position!");
-            });
+            Console.WriteLine($"[INFO] Explosion triggered at {explosionPosition} with {50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f)} damage!");
 
             // ✅ Start Ultimate Cooldown
             canUseUltimate = false;
             WarcraftPlugin.Instance.AddTimer(6.0f, () => canUseUltimate = true); // Reset after 6 seconds
             StartCooldown(3);
         }
-
 
     }
 }
