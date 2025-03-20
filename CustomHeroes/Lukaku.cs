@@ -79,7 +79,7 @@ namespace WarcraftPlugin.Classes
                 
                 fbs.Destroy();
                 footBalls[0].StayPut(Player);
-
+                footBalls.RemoveAt(footBalls.Count - 1);
                 footballIsSpawned = false;
                 StartCooldown(3);
             }
