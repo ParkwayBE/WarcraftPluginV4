@@ -139,26 +139,21 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
-            // Log all potential position values
-            Console.WriteLine($"[DEBUG] SmokeDetonate Position - X: {detonate.X}, Y: {detonate.Y}, Z: {detonate.Z}");
+            // ✅ Ensure we get a valid coordinate set
+            Console.WriteLine($"[DEBUG] SmokeDetonate Coordinates - X: {detonate.X}, Y: {detonate.Y}, Z: {detonate.Z}");
 
-            // Ensure we have a valid position
-            Vector smokePosition = new Vector(detonate.X, detonate.Y, detonate.Z);
-            if (smokePosition == null)
-            {
-                Console.WriteLine("[ERROR] Failed to retrieve smoke grenade position!");
-                return;
-            }
+            // ✅ Store the last smoke grenade position in a dictionary
+            lastSmokePositions[player.SteamID] = new Vector(detonate.X, detonate.Y, detonate.Z);
 
-            // ✅ Store the last smoke grenade position
-            lastSmokePositions[player.SteamID] = smokePosition;
-            Console.WriteLine($"[DEBUG] Stored smoke position for {player.PlayerName}: {smokePosition}");
-
-            if (!activeEffects.TryGetValue(player, out var effect)) return;
+            Console.WriteLine($"[INFO] Stored smoke position for {player.PlayerName}: {lastSmokePositions[player.SteamID]}");
 
             // ✅ Grant another smoke if below ability cap
-            effect.GiveSmokeIfNeeded();
+            if (activeEffects.TryGetValue(player, out var effect))
+            {
+                effect.GiveSmokeIfNeeded();
+            }
         }
+
 
         internal class SetGravityEffect(CCSPlayerController owner, float gravity, float duration)
     : WarcraftEffect(owner, duration)
@@ -393,6 +388,7 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("[INFO] Ultimate is on cooldown!");
                 return;
             }
+
             if (!lastSmokePositions.TryGetValue(Player.SteamID, out Vector lastSmokePosition))
             {
                 Console.WriteLine("[ERROR] No stored smoke grenade position for this player! Aborting ultimate.");
@@ -404,6 +400,13 @@ namespace WarcraftPlugin.Classes
             // ✅ Adjust explosion position slightly above ground
             var explosionPosition = lastSmokePosition.With(z: lastSmokePosition.Z + 10f);
 
+            // ✅ Ensure we have a valid position
+            if (explosionPosition == null)
+            {
+                Console.WriteLine("[ERROR] Explosion position is NULL! Aborting.");
+                return;
+            }
+
             // ✅ Use predefined SpawnExplosion function
             Warcraft.SpawnExplosion(
                 pos: explosionPosition,
@@ -413,7 +416,6 @@ namespace WarcraftPlugin.Classes
                 killFeedIcon: KillFeedIcon.prop_exploding_barrel
             );
 
-
             Console.WriteLine($"[INFO] Explosion triggered at {explosionPosition} with {50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f)} damage!");
 
             // ✅ Start Ultimate Cooldown
@@ -421,6 +423,7 @@ namespace WarcraftPlugin.Classes
             WarcraftPlugin.Instance.AddTimer(6.0f, () => canUseUltimate = true); // Reset after 6 seconds
             StartCooldown(3);
         }
+
 
     }
 }
