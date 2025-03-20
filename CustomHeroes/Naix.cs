@@ -59,7 +59,8 @@ namespace WarcraftPlugin.Classes
             {
                 var pawn = Player.PlayerPawn.Value;
                 pawn.VelocityModifier = 1 + 0.5f * WarcraftPlayer.GetAbilityLevel(2);
-                
+                Console.WriteLine($"[DEBUG] Current movement speed modifier: {Player.PlayerPawn.Value.VelocityModifier}");
+
             }
 
 
