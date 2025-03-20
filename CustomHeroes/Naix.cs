@@ -369,7 +369,6 @@ namespace WarcraftPlugin.Classes
         private void Ultimate()
         {
             Console.WriteLine("[INFO] Naix used Detonate!");
-            Console.WriteLine("[INFO] Detonate testing!");
 
             if (WarcraftPlayer.GetAbilityLevel(3) < 1 || !IsAbilityReady(3))
             {
@@ -388,30 +387,42 @@ namespace WarcraftPlugin.Classes
             // ✅ Adjust position like in Necromancer's PoisonCloudEffect
             var grenadePosition = smokePosition.With(z: smokePosition.Z + 5f); // Slightly raised above ground
 
-            // ✅ Spawn HE grenade using proper instant detonation setup
-            var heGrenade = Warcraft.SpawnGrenade("hegrenade_projectile", grenadePosition, Player.PlayerPawn.Value);
+            // ✅ Manually create HE grenade entity
+            var heGrenade = Utilities.FindAllEntitiesByDesignerName<CSmokeGrenadeProjectile>("hegrenade_projectile")
+                .Where(x => x.Thrower.Index == Player.PlayerPawn.Index)
+                .OrderByDescending(x => x.CreateTime)
+                .FirstOrDefault();
 
             if (heGrenade == null)
             {
-                Console.WriteLine("[ERROR] Failed to create HE grenade entity!");
-                return;
+                Console.WriteLine("[ERROR] No valid HE grenade entity found! Trying to spawn manually...");
+
+                // ✅ Fallback: Manually spawn HE grenade
+                heGrenade = Utilities.CreateEntityByName("hegrenade_projectile");
+                if (heGrenade == null)
+                {
+                    Console.WriteLine("[ERROR] Failed to create HE grenade entity!");
+                    return;
+                }
             }
 
-            heGrenade.SpawnTime = 0; // ✅ Ensure instant activation
-            heGrenade.Teleport(velocity: Vector.Zero); // ✅ Prevent unwanted movement
+            // ✅ Set grenade position & ownership
+            heGrenade.Teleport(grenadePosition, Player.PlayerPawn.Value.AbsRotation, Vector.Zero);
+            heGrenade.SetOwner(Player);
 
-            Console.WriteLine("[INFO] HE grenade spawned at {grenadePosition}. Detonating immediately...");
+            Console.WriteLine($"[INFO] HE grenade spawned at {grenadePosition}. Detonating immediately...");
 
             // ✅ Trigger instant explosion
             WarcraftPlugin.Instance.AddTimer(0.05f, () =>
             {
-                heGrenade.TakeDamage(9999, Player, Player);
+                heGrenade.TakeDamage(9999, Player, Player); // ✅ Force explosion
                 Console.WriteLine("[INFO] HE grenade exploded at smoke position!");
             });
 
             // ✅ Start Cooldown
             StartCooldown(3);
         }
+
 
 
 
