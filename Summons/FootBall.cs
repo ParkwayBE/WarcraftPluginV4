@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Entities;
 using WarcraftPlugin.Helpers;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
@@ -46,10 +47,11 @@ namespace WarcraftPlugin.Summons
         }
         public void UpdateLocation(Vector position)
         {
-            posInfrontOfPlayer = _owner.CalculatePositionInFront(position);
-            changedLocation = new Vector(posInfrontOfPlayer.X, posInfrontOfPlayer.Y, posInfrontOfPlayer.Z += 50f);
+            var distance = 60;
+            var height = 60;
+            posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
             _ball.Teleport(changedLocation, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-
+           
         }
     }
 
