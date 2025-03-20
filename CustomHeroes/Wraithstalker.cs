@@ -68,7 +68,7 @@ namespace WarcraftPlugin.Classes
                 return;
             }
             Console.WriteLine("[DEBUG] Successfully created relay and glow models.");
-
+            CDynamicProp Glow = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic")!;
             // Set up the relay model
             relayModel.SetModel(modelName);
             relayModel.Spawnflags = 256U;
@@ -80,13 +80,7 @@ namespace WarcraftPlugin.Classes
             glowModel.Spawnflags = 256U;
             glowModel.Glow.GlowColorOverride = color;
             glowModel.Glow.GlowRange = 5000;
-
-            // Log all potential GlowType values (example of iteration, adjust as needed)
-            for (int i = 0; i <= 10; i++) // Adjust range to cover all GlowType values you think might exist
-            {
-                glowModel.Glow.GlowType = i;
-                Console.WriteLine($"[DEBUG] Testing GlowType: {i}");
-            }
+            glowModel.Glow.GlowTeam = -1;
 
             glowModel.Glow.GlowType = 3; // Use the intended GlowType here
             Console.WriteLine($"[DEBUG] Final GlowType set: {glowModel.Glow.GlowType}");
@@ -95,14 +89,11 @@ namespace WarcraftPlugin.Classes
             // Spawn the entities
             relayModel.DispatchSpawn();
             glowModel.DispatchSpawn();
-            Console.WriteLine("[DEBUG] Models spawned.");
 
             // Attach the models
             relayModel.AcceptInput("FollowEntity", pawn, relayModel, "!activator");
             glowModel.AcceptInput("FollowEntity", relayModel, glowModel, "!activator");
-            Console.WriteLine("[DEBUG] Models attached.");
 
-            // Set a timer to clean up the glow effect
             if (duration > 0)
             {
                 WarcraftPlugin.Instance.AddTimer(duration, () =>
