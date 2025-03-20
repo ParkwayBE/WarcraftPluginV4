@@ -124,6 +124,7 @@ namespace WarcraftPlugin.Classes
                 // ✅ Store the last smoke grenade's position
                 lastSmokePositions[Player.SteamID] = new Vector(detonate.X, detonate.Y, detonate.Z);
 
+
                 Console.WriteLine($"[DEBUG] Stored smoke location for {Player.PlayerName}: {lastSmokePositions[Player.SteamID]}");
             }
         }
@@ -386,7 +387,7 @@ namespace WarcraftPlugin.Classes
             var explosionPosition = lastSmokePosition.With(z: lastSmokePosition.Z + 10f);
 
             // ✅ Use predefined SpawnExplosion function
-            Warcraft.SpawnExplosion(
+            WarcraftPlugin.Instance.SpawnExplosion(
                 pos: explosionPosition,
                 damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f), // ✅ Damage scales with ability level
                 radius: 250f,
