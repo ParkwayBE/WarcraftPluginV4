@@ -280,8 +280,8 @@ namespace WarcraftPlugin.Classes
 
             // EFFECT CODE
             float offset = 70.0f; // Adjust the offset as needed
-            float particleDuration = 12.0f;
-            float particleDuration2 = 4.0f;
+            float particleDuration = 120.0f;
+            float particleDuration2 = 40.0f;
             string redCircleParticle = "particles/weapons/cs_weapon_fx/weapon_sensorgren_detonate.vpcf";
             string redCircleParticle2 = "particles/inferno_fx/explosion_incend_air_core.vpcf";
 
