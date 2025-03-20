@@ -66,8 +66,8 @@ namespace WarcraftPlugin.Classes
                 footBalls.RemoveAt(footBalls.Count - 1);
             }
 
-            
 
+            StartCooldown(3);
         }
 
         private void PlayerShoot(EventWeaponFire @event)
