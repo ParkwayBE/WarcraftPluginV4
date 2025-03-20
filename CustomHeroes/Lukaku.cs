@@ -58,9 +58,13 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            Console.WriteLine("Lukaku used ultimate!");
-            footBalls[0].Activate();
-            footBalls.RemoveAt(footBalls.Count - 1);
+            if (footBalls.Count > 0)
+            {
+                Console.WriteLine("Lukaku used ultimate!");
+                footBalls[0].Activate();
+                footBalls.RemoveAt(footBalls.Count - 1);
+            }
+
             
 
         }
