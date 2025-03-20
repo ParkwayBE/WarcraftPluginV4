@@ -111,7 +111,7 @@ namespace WarcraftPlugin.Classes
             // Offset the position in the direction we're looking
             var offsetVector = new Vector();
             NativeAPI.AngleVectors(lookDirection.Handle, offsetVector.Handle, nint.Zero, nint.Zero);
-            offsetVector *= 300.0f; // Move 300 units forward in the look direction
+            offsetVector *= 200.0f; // Move 200 units forward in the look direction
             var targetPosition = playerPosition + offsetVector;
 
             // Iterate through all players and find those within the radius
@@ -125,16 +125,17 @@ namespace WarcraftPlugin.Classes
                 var otherPlayerPosition = otherPlayer.PlayerPawn.Value.AbsOrigin;
                 var distanceVector = targetPosition - otherPlayerPosition;
                 var distanceSquared = distanceVector.X * distanceVector.X + distanceVector.Y * distanceVector.Y + distanceVector.Z * distanceVector.Z;
-                string PlayerNameString = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+
                 // Compare squared distance to squared radius for performance
                 if (distanceSquared <= radius * radius)
                 {
                     // If within radius, print the player's name
-                    var playerName = PlayerNameString ?? "Unknown";
+                    var playerName = otherPlayer.GetRealPlayerName(); // Use the extension method
                     Console.WriteLine($"Player found: {playerName}");
                 }
             }
         }
+
 
         private void Ultimate()
         {
