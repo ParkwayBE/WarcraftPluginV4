@@ -23,13 +23,14 @@ using WarcraftPlugin.Summons;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 
 namespace WarcraftPlugin.Classes
 {
     public static class PlayerExtensions
     {
-        public static string GetRealPlayerName(this CCSPlayerController player)
+        public static string GetNearbyPlayersName(this CCSPlayerController player)
         {
             if (player == null || !player.IsValid) return string.Empty;
             var playerNameClean = Regex.Replace(player.PlayerName, @"\d+\s\[.*\]\s", "");
@@ -113,8 +114,10 @@ namespace WarcraftPlugin.Classes
             }
         }
 
+        bool playerFound = false;
         private void FindAndLogNearbyPlayers(float radius)
         {
+            bool playerFound = false;
             var playerPosition = Player.PlayerPawn.Value.AbsOrigin;
             var players = Utilities.GetPlayers();
 
@@ -126,23 +129,32 @@ namespace WarcraftPlugin.Classes
                 var otherPlayerPosition = otherPlayer.PlayerPawn.Value.AbsOrigin;
                 var distanceVector = playerPosition - otherPlayerPosition;
                 var distanceSquared = distanceVector.X * distanceVector.X + distanceVector.Y * distanceVector.Y + distanceVector.Z * distanceVector.Z;
-
-                if (distanceSquared <= radius * radius)
+                float doubleRadius = 2 * radius;
+                if (distanceSquared <= doubleRadius * doubleRadius)
                 {
-                    Console.WriteLine($"Player found: {otherPlayer.GetRealPlayerName()}");
+                    Console.WriteLine($"Player found: {otherPlayer.GetNearbyPlayersName()}");
+                    playerFound = true;
+                    // Trigger the glow effect (if needed)
+                    var duration = 7.0f;
+                    var tickRate = 0.02f;
+                    new GlowEffect(otherPlayer, Color.Red, duration, tickRate).Start();
+                    otherPlayer.PrintToChat("You have been MARKED");
                 }
+            }
+
+            if (!playerFound)
+            {
+                Console.WriteLine("No players found in the specified radius.");
             }
         }
 
 
-        
+
+
 
         private void Ultimate()
         {
-            // Trigger the glow effect (if needed)
-            var duration = 7.0f;
-            var tickRate = 0.02f;
-            /* new GlowEffect(Player, Color.Red, duration, tickRate).Start(); // UNCOMMENT THIS LINE TO ENABLE GLOW EFFECT AGAIN */
+           
 
             // Find and log nearby players
             FindAndLogNearbyPlayers(500f);
