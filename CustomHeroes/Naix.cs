@@ -116,8 +116,9 @@ namespace WarcraftPlugin.Classes
 
         private void OnSmokeDetonate(EventSmokegrenadeDetonate detonate)
         {
-            Console.WriteLine("[DEBUG] OnSmokeDetonate triggered!");
+            Console.WriteLine("[DEBUG] OnSmokeDetonate event was triggered!");
 
+            // ✅ Ensure the event contains a valid player
             if (detonate.Userid == null || !detonate.Userid.IsValid)
             {
                 Console.WriteLine("[ERROR] SmokeDetonate event triggered, but Userid is NULL or invalid!");
@@ -125,32 +126,31 @@ namespace WarcraftPlugin.Classes
             }
 
             var player = detonate.Userid;
-            if (player == null || player.PlayerPawn?.Value == null)
-            {
-                Console.WriteLine("[ERROR] Player is NULL in SmokeDetonate! Aborting.");
-                return;
-            }
+            Console.WriteLine($"[DEBUG] SmokeDetonate assigned player: {player.PlayerName}");
 
-            // Log all potential position values
+            // ✅ Ensure the event contains a valid position
+            Vector smokePosition = new Vector(detonate.X, detonate.Y, detonate.Z);
             Console.WriteLine($"[DEBUG] SmokeDetonate Position - X: {detonate.X}, Y: {detonate.Y}, Z: {detonate.Z}");
 
-            // Ensure we have a valid position
-            Vector smokePosition = new Vector(detonate.X, detonate.Y, detonate.Z);
-            if (smokePosition == null)
+            if (smokePosition.X == 0 && smokePosition.Y == 0 && smokePosition.Z == 0)
             {
-                Console.WriteLine("[ERROR] Failed to retrieve smoke grenade position!");
+                Console.WriteLine("[ERROR] Invalid smoke position received! Aborting.");
                 return;
             }
 
-            // ✅ Store the last smoke grenade position
-            lastSmokePositions[player.SteamID] = smokePosition;
-            Console.WriteLine($"[DEBUG] Stored smoke position for {player.PlayerName}: {smokePosition}");
-
-            if (!activeEffects.TryGetValue(Player, out var effect)) return;
-
-            // ✅ Grant another smoke if below ability cap
-            effect.GiveSmokeIfNeeded();
+            // ✅ Store the last smoke position per player
+            if (!lastSmokePositions.ContainsKey(player.SteamID))
+            {
+                lastSmokePositions.Add(player.SteamID, smokePosition);
+                Console.WriteLine($"[INFO] Stored FIRST smoke position for {player.PlayerName}: {smokePosition}");
+            }
+            else
+            {
+                lastSmokePositions[player.SteamID] = smokePosition;
+                Console.WriteLine($"[INFO] Updated LAST smoke position for {player.PlayerName}: {smokePosition}");
+            }
         }
+
 
         internal class SetGravityEffect(CCSPlayerController owner, float gravity, float duration)
     : WarcraftEffect(owner, duration)
