@@ -389,13 +389,14 @@ namespace WarcraftPlugin.Classes
             var explosionPosition = lastSmokePosition.With(z: lastSmokePosition.Z + 10f);
 
             // ✅ Use predefined SpawnExplosion function
-            SpawnExplosion(
+            Warcraft.SpawnExplosion(
                 pos: explosionPosition,
                 damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f), // ✅ Damage scales with ability level
                 radius: 250f,
                 attacker: Player,
                 killFeedIcon: KillFeedIcon.prop_exploding_barrel
             );
+
 
             Console.WriteLine($"[INFO] Explosion triggered at {explosionPosition} with {50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f)} damage!");
 
