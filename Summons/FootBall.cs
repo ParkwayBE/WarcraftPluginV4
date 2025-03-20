@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities;
 using WarcraftPlugin.Helpers;
+using static g3.RoundRectGenerator;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace WarcraftPlugin.Summons
@@ -52,7 +53,16 @@ namespace WarcraftPlugin.Summons
             owner.PrintToChat($"Updating Ball Position: {posInfrontOfPlayer}");
             _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
 
-           
+        }
+        public void StayPut(CCSPlayerController owner)
+        {
+            var distance = 60;
+            var height = 10;
+            _ball.DispatchSpawn();
+            posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
+            _ball.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            _ballProp.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            _ballProp.SetParent(_ball);
         }
     }
 

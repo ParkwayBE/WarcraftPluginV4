@@ -35,6 +35,8 @@ namespace WarcraftPlugin.Classes
 
         List<FootBall> footBalls = new List<FootBall>();
         int footballsRemaining = 0;
+        FootballSystem fbs;
+        bool footballIsSpawned = true;
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -59,21 +61,27 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            if (footballsRemaining > 0)
+            if (!footballIsSpawned)
             {
-                footballsRemaining--;
-                FootballSystem fbs = new FootballSystem(Player, 0.3f, footBalls);
-                fbs.FinishOnDestroy = true;
-                fbs.Start();
-                WarcraftPlugin.Instance.AddTimer(5f, () =>
+                if (footballsRemaining > 0)
                 {
-                    fbs.Destroy();
-                });
-                Player.PrintToChat("end ult");
+                    footballsRemaining--;
+                    fbs = new FootballSystem(Player, 0.01f, footBalls);
+                    fbs.FinishOnDestroy = true;
+                    fbs.Start();
+                    footballIsSpawned = true;
+
+                }
+
+            }
+            else
+            {
+                
+                fbs.Destroy();
+                footBalls[0].StayPut(Player);
+
             }
 
-
-            StartCooldown(3);
         }
 
         private void PlayerShoot(EventWeaponFire @event)
@@ -110,7 +118,6 @@ namespace WarcraftPlugin.Classes
             {
                 owner.PrintToChat("tick");
                 footBalls[0].UpdateLocation(Owner);
-         
             }
             public override void OnFinish() { }
         }
