@@ -55,7 +55,7 @@
     </None>
   </ItemGroup>
 <ItemGroup>
-  <Compile Include="MyCustomMap.cs" Condition="'$(Configuration)' == 'Debug'" />
+  <Compile Include="CustomHeroes\**" Condition="'$(Configuration)' == 'Debug'" />
 </ItemGroup>
 
 </Project>
