@@ -23,6 +23,7 @@ using WarcraftPlugin.Summons;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 
 namespace WarcraftPlugin.Classes
@@ -113,6 +114,7 @@ namespace WarcraftPlugin.Classes
             }
         }
 
+        bool playerFound = false;
         private void FindAndLogNearbyPlayers(float radius)
         {
             var playerPosition = Player.PlayerPawn.Value.AbsOrigin;
@@ -130,8 +132,15 @@ namespace WarcraftPlugin.Classes
                 if (distanceSquared <= radius * radius)
                 {
                     Console.WriteLine($"Player found: {otherPlayer.GetRealPlayerName()}");
+                    playerFound = true;
                 }
             }
+
+            if (!playerFound)
+            {
+                Console.WriteLine("No players found in the specified radius.");
+            }
+
         }
 
 
