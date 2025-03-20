@@ -20,6 +20,7 @@ using System.Reflection;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using WarcraftPlugin.Core;
 using WarcraftPlugin.Summons;
+using static g3.RoundRectGenerator;
 
 
 namespace WarcraftPlugin.Classes
@@ -67,6 +68,7 @@ namespace WarcraftPlugin.Classes
                 {
                     fbs.Destroy();
                 });
+                Player.PrintToChat("end ult");
             }
 
 
@@ -98,12 +100,14 @@ namespace WarcraftPlugin.Classes
         {
             public override void OnStart()
             {
+                owner.PrintToChat("football sytsem start");
                 footBalls.Add(new FootBall(owner, owner.PlayerPawn.Value.AbsOrigin));
                 footBalls[0].Activate();
                 owner.PrintToChat("You have used a ball");
             }
             public override void OnTick()
             {
+                owner.PrintToChat("tick");
                 footBalls[0].UpdateLocation(owner.PlayerPawn.Value.AbsOrigin);
          
             }
