@@ -113,21 +113,30 @@ namespace WarcraftPlugin.Classes
 
         private void OnSmokeDetonate(EventSmokegrenadeDetonate detonate)
         {
-            if (WarcraftPlayer.GetAbilityLevel(3) > 0) // ✅ Check if the ultimate ability is unlocked
+            Console.WriteLine("[DEBUG] OnSmokeDetonate triggered!");
+
+            if (detonate.Userid == null || !detonate.Userid.IsValid)
             {
-                if (Player == null || Player.PlayerPawn?.Value == null)
-                {
-                    Console.WriteLine("[ERROR] Player is NULL in SmokeDetonate! Aborting.");
-                    return;
-                }
-
-                // ✅ Store the last smoke grenade's position
-                lastSmokePositions[Player.SteamID] = new Vector(detonate.X, detonate.Y, detonate.Z);
-
-
-                Console.WriteLine($"[DEBUG] Stored smoke location for {Player.PlayerName}: {lastSmokePositions[Player.SteamID]}");
+                Console.WriteLine("[ERROR] SmokeDetonate event triggered, but Userid is NULL or invalid!");
+                return;
             }
+
+            var player = detonate.Userid;
+            if (player == null || player.PlayerPawn?.Value == null)
+            {
+                Console.WriteLine("[ERROR] Player is NULL in SmokeDetonate! Aborting.");
+                return;
+            }
+
+            // ✅ Retrieve smoke grenade position from event data
+            Vector smokePosition = new Vector(detonate.X, detonate.Y, detonate.Z);
+
+            // ✅ Store the last smoke grenade position
+            lastSmokePositions[player.SteamID] = smokePosition;
+
+            Console.WriteLine($"[DEBUG] Stored smoke position for {player.PlayerName}: {smokePosition}");
         }
+
 
 
 
@@ -374,8 +383,7 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("[INFO] Ultimate is on cooldown!");
                 return;
             }
-
-            if (!lastSmokePositions.TryGetValue(Player.SteamID, out var lastSmokePosition))
+            if (!lastSmokePositions.TryGetValue(Player.SteamID, out Vector lastSmokePosition))
             {
                 Console.WriteLine("[ERROR] No stored smoke grenade position for this player! Aborting ultimate.");
                 return;
@@ -386,8 +394,20 @@ namespace WarcraftPlugin.Classes
             // ✅ Adjust explosion position slightly above ground
             var explosionPosition = lastSmokePosition.With(z: lastSmokePosition.Z + 10f);
 
+            // ✅ Call SpawnExplosion with corrected position
+            Warcraft.SpawnExplosion(
+                pos: explosionPosition,
+                damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f),
+                radius: 250f,
+                attacker: Player,
+                killFeedIcon: KillFeedIcon.prop_exploding_barrel
+            );
+
+            // ✅ Adjust explosion position slightly above ground
+            var explosionPosition = lastSmokePosition.With(z: lastSmokePosition.Z + 10f);
+
             // ✅ Use predefined SpawnExplosion function
-            WarcraftPlugin.Instance.SpawnExplosion(
+            Warcraft.SpawnExplosion(
                 pos: explosionPosition,
                 damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f), // ✅ Damage scales with ability level
                 radius: 250f,
