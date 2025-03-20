@@ -64,7 +64,7 @@ namespace WarcraftPlugin.Classes
                 FootballSystem fbs = new FootballSystem(Player, 0.3f, footBalls);
                 fbs.FinishOnDestroy = true;
                 fbs.Start();
-                WarcraftPlugin.Instance.AddTimer(20f, () =>
+                WarcraftPlugin.Instance.AddTimer(5f, () =>
                 {
                     fbs.Destroy();
                 });
