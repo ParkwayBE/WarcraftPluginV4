@@ -80,6 +80,8 @@ namespace WarcraftPlugin.Classes
                 fbs.Destroy();
                 footBalls[0].StayPut(Player);
 
+                footballIsSpawned = false;
+                StartCooldown(3);
             }
 
         }
