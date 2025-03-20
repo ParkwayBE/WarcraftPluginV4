@@ -20,6 +20,7 @@ using System.Reflection;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using WarcraftPlugin.Core;
 using WarcraftPlugin.Summons;
+using CounterStrikeSharp.API.Modules.Commands.Targeting;
 
 
 namespace WarcraftPlugin.Classes
@@ -50,60 +51,25 @@ namespace WarcraftPlugin.Classes
             
         }
 
-        public void StartGlow(CCSPlayerController player, Color color, int duration)
+        public static void SetGlowOnEntity(CBaseEntity? entity, Color GlowColor)
         {
-            var pawn = player.PlayerPawn.Value;
-
-            // Retrieve the player's current model name
-            var modelName = pawn.CBodyComponent.SceneNode.GetSkeletonInstance().ModelState.ModelName;
-            Console.WriteLine($"[DEBUG] Model name retrieved: {modelName}");
-
-            // Create relay and glow model entities
-            var relayModel = Utilities.CreateEntityByName<CBaseModelEntity>("prop_dynamic");
-            var glowModel = Utilities.CreateEntityByName<CBaseModelEntity>("prop_dynamic");
-
-            if (relayModel == null || glowModel == null)
-            {
-                Console.WriteLine("[DEBUG] Failed to create relay or glow model.");
+            if (entity == null || !entity.IsValid)
                 return;
-            }
-            Console.WriteLine("[DEBUG] Successfully created relay and glow models.");
+
             CDynamicProp Glow = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic")!;
-            // Set up the relay model
-            relayModel.SetModel(modelName);
-            relayModel.Spawnflags = 256U;
-            relayModel.RenderMode = RenderMode_t.kRenderNone;
-            Console.WriteLine("[DEBUG] Relay model properties set.");
+            Glow.Spawnflags = 256;
+            Glow.Render = Color.Transparent;
+            Glow.CBodyComponent!.SceneNode!.Owner!.Entity!.Flags = (uint)(Glow.CBodyComponent!.SceneNode!.Owner!.Entity!.Flags & ~(1 << 2));
+            Glow.SetModel(entity.CBodyComponent!.SceneNode!.GetSkeletonInstance().ModelState.ModelName);
+            Glow.DispatchSpawn();
+            Glow.Glow.GlowColorOverride = GlowColor;
+            Glow.Glow.GlowRange = 5000;
+            Glow.Glow.GlowRangeMin = 0;
+            Glow.Glow.GlowTeam = -1; // -1 = Both, 2 = T, 3 = CT
+            Glow.Glow.GlowType = 3;
 
-            // Set up the glow model
-            glowModel.SetModel(modelName);
-            glowModel.Spawnflags = 256U;
-            glowModel.Glow.GlowColorOverride = color;
-            glowModel.Glow.GlowRange = 5000;
-            glowModel.Glow.GlowTeam = -1;
-
-            glowModel.Glow.GlowType = 3; // Use the intended GlowType here
-            Console.WriteLine($"[DEBUG] Final GlowType set: {glowModel.Glow.GlowType}");
-            glowModel.RenderMode = RenderMode_t.kRenderGlow;
-
-            // Spawn the entities
-            relayModel.DispatchSpawn();
-            glowModel.DispatchSpawn();
-
-            // Attach the models
-            relayModel.AcceptInput("FollowEntity", pawn, relayModel, "!activator");
-            glowModel.AcceptInput("FollowEntity", relayModel, glowModel, "!activator");
-
-            if (duration > 0)
-            {
-                WarcraftPlugin.Instance.AddTimer(duration, () =>
-                {
-                    // Remove the glow and relay models after the duration
-                    Console.WriteLine("[DEBUG] Cleaning up models.");
-                    glowModel?.RemoveIfValid();
-                    relayModel?.RemoveIfValid();
-                });
-            }
+            Glow.Teleport(entity.AbsOrigin, entity.AbsRotation, entity.AbsVelocity);
+            Glow.AcceptInput("SetParent", entity, Glow, "!activator");
         }
 
 
@@ -111,8 +77,8 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-           StartGlow(Player, Color.Blue, 5);
-           StartCooldown(3);
+            SetGlowOnEntity(Player.PlayerPawn.Value, Color.Red);
+            StartCooldown(3);
         }
 
         private void PlayerShoot(EventWeaponFire @event)
