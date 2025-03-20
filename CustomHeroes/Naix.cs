@@ -361,6 +361,8 @@ namespace WarcraftPlugin.Classes
 
         }
 
+        private bool canUseUltimate = true; // ✅ Add this at the class level
+
         private void Ultimate()
         {
             if (WarcraftPlayer.GetAbilityLevel(3) < 1 || !IsAbilityReady(3))
@@ -386,8 +388,8 @@ namespace WarcraftPlugin.Classes
             // ✅ Adjust grenade position slightly above ground
             var grenadePosition = lastSmokePosition.With(z: lastSmokePosition.Z + 5f);
 
-            // ✅ Manually create HE grenade entity
-            var heGrenade = CounterStrikeSharp.API.Modules.Utils.Utilities.CreateEntityByName<CSmokeGrenadeProjectile>("hegrenade_projectile");
+            // ✅ Create HE grenade entity properly
+            var heGrenade = CounterStrikeSharp.API.Modules.Utils.Utilities.CreateEntityByName<CBaseGrenade>("hegrenade");
 
             if (heGrenade == null)
             {
@@ -401,17 +403,19 @@ namespace WarcraftPlugin.Classes
 
             Console.WriteLine($"[INFO] HE grenade spawned at {grenadePosition}. Detonating immediately...");
 
-            // ✅ Trigger instant explosion
+            // ✅ Trigger instant explosion properly
             WarcraftPlugin.Instance.AddTimer(0.05f, () =>
             {
-                heGrenade.TakeDamage(9999, Player, Player); // ✅ Force explosion
+                heGrenade.Detonate(); // ✅ Use the correct function to trigger an explosion
                 Console.WriteLine("[INFO] HE grenade exploded at smoke position!");
             });
 
             // ✅ Start Ultimate Cooldown
             canUseUltimate = false;
+            WarcraftPlugin.Instance.AddTimer(6.0f, () => canUseUltimate = true); // Reset after 6 seconds
             StartCooldown(3);
         }
+
 
     }
 }
