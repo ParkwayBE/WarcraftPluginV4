@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WarcraftPlugin.Helpers;
 using static g3.RoundRectGenerator;
+using static g3.SetGroupBehavior;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace WarcraftPlugin.Summons
@@ -30,15 +31,17 @@ namespace WarcraftPlugin.Summons
         public void Activate()
         {
             Deactivate();
-            //_ball = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
-            //_ball.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
+            _ball = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
+            _ball.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
+            _ball.DispatchSpawn();
 
             _ballProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
             _ballProp.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
             _ballProp.DispatchSpawn();
 
-           // _ballProp.SetParent(_ball, new Vector(0, 0, 0));
-            _ballProp.Teleport(_owner.CalculatePositionInFront(Position), _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            _ballProp.SetParent(_ball, new Vector(0, 0, 0));
+            _ballProp.CBodyComponent.SceneNode.GetSkeletonInstance().Scale = 1;
+            _ball.Teleport(_owner.CalculatePositionInFront(Position), _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
 
         }
         private void Deactivate()
