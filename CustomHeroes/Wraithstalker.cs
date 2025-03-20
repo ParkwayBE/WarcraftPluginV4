@@ -129,11 +129,15 @@ namespace WarcraftPlugin.Classes
                 var otherPlayerPosition = otherPlayer.PlayerPawn.Value.AbsOrigin;
                 var distanceVector = playerPosition - otherPlayerPosition;
                 var distanceSquared = distanceVector.X * distanceVector.X + distanceVector.Y * distanceVector.Y + distanceVector.Z * distanceVector.Z;
-
-                if (distanceSquared <= radius * radius)
+                float doubleRadius = 2 * radius;
+                if (distanceSquared <= doubleRadius * doubleRadius)
                 {
                     Console.WriteLine($"Player found: {otherPlayer.GetRealPlayerName()}");
                     playerFound = true;
+                    // Trigger the glow effect (if needed)
+                    var duration = 7.0f;
+                    var tickRate = 0.02f;
+                    new GlowEffect(otherPlayer, Color.Red, duration, tickRate).Start();
                 }
             }
 
@@ -149,10 +153,7 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            // Trigger the glow effect (if needed)
-            var duration = 7.0f;
-            var tickRate = 0.02f;
-            /* new GlowEffect(Player, Color.Red, duration, tickRate).Start(); // UNCOMMENT THIS LINE TO ENABLE GLOW EFFECT AGAIN */
+           
 
             // Find and log nearby players
             FindAndLogNearbyPlayers(500f);
