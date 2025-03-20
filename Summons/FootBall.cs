@@ -62,7 +62,7 @@ namespace WarcraftPlugin.Summons
             posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
             _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
             //_ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-            _ballProp.SetParent(_ball);
+           // _ballProp.SetParent(_ball);
             
         }
     }
