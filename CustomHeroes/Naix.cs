@@ -80,6 +80,7 @@ namespace WarcraftPlugin.Classes
         {
             Console.WriteLine("Player died, preventing ultimate usage.");
             isAlive = false;
+            canUseUltimate = false;
 
         }
 
