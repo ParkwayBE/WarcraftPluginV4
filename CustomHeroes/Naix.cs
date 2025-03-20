@@ -282,7 +282,7 @@ namespace WarcraftPlugin.Classes
             float offset = 30.0f; // Adjust the offset as needed
             float particleDuration = 3.0f;
             string redCircleParticle = "particles/weapons/cs_weapon_fx/weapon_sensorgren_detonate.vpcf";
-            string redCircleParticle2 = "particles/inferno_fx/explosion_incend_air.vpcf";
+            string redCircleParticle2 = "particles/inferno_fx/explosion_incend_air_core.vpcf";
 
             var basePosition = killer.PlayerPawn.Value.AbsOrigin.Clone();
             basePosition.Z += 50; // Raise all particles above the ground
