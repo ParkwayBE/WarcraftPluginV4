@@ -62,7 +62,6 @@ namespace WarcraftPlugin.Classes
                     {
                         var pawn = Player.PlayerPawn.Value;
                         pawn.VelocityModifier = 1 + 0.12f * WarcraftPlayer.GetAbilityLevel(2);
-                        Console.WriteLine($"[DEBUG] Current movement speed modifier after delay: {pawn.VelocityModifier}");
                     }
                 });
 
@@ -108,12 +107,12 @@ namespace WarcraftPlugin.Classes
                     var directionVec = new Vector();
                     NativeAPI.AngleVectors(directionAngle.Handle, directionVec.Handle, nint.Zero, nint.Zero);
 
-                    if (directionVec.Z < 0.500f)
+                    if (directionVec.Z < 0.475f)
                     {
-                        directionVec.Z = 0.500f;
+                        directionVec.Z = 0.475f;
                     }
 
-                    directionVec *= 500; // Adjust force if needed
+                    directionVec *= 575; // Adjust force if needed
                     Player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
                     Player.PlayerPawn.Value.AbsVelocity.Y = directionVec.Y;
                     Player.PlayerPawn.Value.AbsVelocity.Z = directionVec.Z;
@@ -121,7 +120,7 @@ namespace WarcraftPlugin.Classes
                 WarcraftPlugin.Instance.AddTimer(0.05f, () =>
                 {
                     Console.WriteLine("[INFO] Applying reduced gravity after delay.");
-                    new SetGravityEffect(Player, 0.7f, 3f).Start();
+                    new SetGravityEffect(Player, 0.5f, 3f).Start();
                 });
             }
         }
