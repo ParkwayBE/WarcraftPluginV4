@@ -32,7 +32,7 @@ namespace WarcraftPlugin.Classes
         public override Color DefaultColor => Color.CadetBlue;
 
         List<FootBall> footBalls = new List<FootBall>();
-
+        int footballsRemaining = 0;
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -50,20 +50,17 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            footBalls.Add(new FootBall(Player, Player.PlayerPawn.Value.AbsOrigin));
-            footBalls.Add(new FootBall(Player, Player.PlayerPawn.Value.AbsOrigin));
-            footBalls.Add(new FootBall(Player, Player.PlayerPawn.Value.AbsOrigin));
+            footballsRemaining = 3;
             //WarcraftPlugin.Instance.AddTimer(0.2f, () => {Player.PlayLocalSound("sounds/ambient/misc/techno_overpass.vsnd"); });
             Player.PrintToChat("you have 3 footballs");
         }
 
         private void Ultimate()
         {
-            if (footBalls.Count > 0)
+            if (footballsRemaining > 0)
             {
-                Player.PrintToChat("Lukaku has used a ball!");
-                footBalls[0].Activate();
-                footBalls.RemoveAt(footBalls.Count - 1);
+                footballsRemaining--;
+                FootballUse();
             }
 
 
@@ -75,8 +72,20 @@ namespace WarcraftPlugin.Classes
             // _plugin.AdminPanel.OpenAdminPanel(Player);
 
         }
+        private void FootballUse()
+        {
+            int maxSeconds = 5;
+            DateTime startTime = DateTime.Now;
+            footBalls.Add(new FootBall(Player, Player.PlayerPawn.Value.AbsOrigin));
+            footBalls[0].Activate();
+            Player.PrintToChat("You have used a ball");
+            
 
-
+            while ((DateTime.Now - startTime).TotalSeconds < maxSeconds)
+            {
+                footBalls[0].UpdateLocation(Player.PlayerPawn.Value.AbsOrigin);
+            }
+        }
     }
 }
 
