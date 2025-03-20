@@ -31,6 +31,7 @@ namespace WarcraftPlugin.Classes
 
         private readonly WarcraftPlugin _plugin;
         public override Color DefaultColor => Color.CadetBlue;
+        private bool canUseUltimate = true;
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -73,14 +74,34 @@ namespace WarcraftPlugin.Classes
             Glow.AcceptInput("SetParent", entity, Glow, "!activator");
         }
 
-
-
-
         private void Ultimate()
         {
-            SetGlowOnEntity(Player.PlayerPawn.Value, Color.Red);
+            int repetitions = 14;
+            float interval = 0.5f; // seconds
+            if (WarcraftPlayer.GetAbilityLevel(3) < 1 || !IsAbilityReady(3))
+            {
+                Console.WriteLine("[INFO] Ultimate cannot be used (ability level too low or on cooldown).");
+                return;
+            }
+            if (!canUseUltimate)
+            {
+                Console.WriteLine("[INFO] Ultimate is on cooldown!");
+                return;
+            }
+
+            for (int i = 0; i < repetitions; i++)
+            {
+                // Schedule the function to run at i * interval seconds
+                float delay = i * interval;
+                WarcraftPlugin.Instance.AddTimer(delay, () =>
+                {
+                    SetGlowOnEntity(Player.PlayerPawn.Value, Color.Red);
+                });
+            }
+
             StartCooldown(3);
         }
+
 
         private void PlayerShoot(EventWeaponFire @event)
         {
