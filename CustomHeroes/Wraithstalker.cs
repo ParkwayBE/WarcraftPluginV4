@@ -125,6 +125,8 @@ namespace WarcraftPlugin.Classes
             {
                 if (!otherPlayer.IsAlive() || otherPlayer.UserId == Player.UserId)
                     continue;
+                if (otherPlayer.Team != Player.Team)
+                    continue;
 
                 var otherPlayerPosition = otherPlayer.PlayerPawn.Value.AbsOrigin;
                 var distanceVector = playerPosition - otherPlayerPosition;
