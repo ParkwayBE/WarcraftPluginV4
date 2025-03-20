@@ -54,44 +54,32 @@ namespace WarcraftPlugin.Classes
         {
             var pawn = player.PlayerPawn.Value;
 
-            // Retrieve the player's current model name
-            var modelName = pawn.CBodyComponent.SceneNode.GetSkeletonInstance().ModelState.ModelName;
+            // Create a new prop_dynamic entity for the glow
+            var glowProp = Utilities.CreateEntityByName<CBaseModelEntity>("prop_dynamic");
+            if (glowProp == null) return;
 
-            // Create relay and glow model entities
-            var relayModel = Utilities.CreateEntityByName<CBaseModelEntity>("prop_dynamic");
-            var glowModel = Utilities.CreateEntityByName<CBaseModelEntity>("prop_dynamic");
+            // Assign a model and configure it
+            glowProp.SetModel("characters\\models\\tm_leet\\tm_leet_variantb.vmdl");  // Example model path
+            glowProp.Spawnflags = 256U;
+            glowProp.RenderMode = RenderMode_t.kRenderGlow;
+            glowProp.Glow.GlowColorOverride = color;
+            glowProp.Glow.GlowRangeMin = 3;
+            glowProp.Glow.GlowRange = 8000;
+            glowProp.Glow.GlowType = 3;
 
-            if (relayModel == null || glowModel == null) return;
+            // Attach the prop to the player
+            glowProp.Teleport(pawn.AbsOrigin, pawn.AbsRotation, new Vector(0, 0, 0));
+            glowProp.AcceptInput("FollowEntity", caller: glowProp, activator: pawn, value: "!activator");
 
-            // Set up the relay model
-            relayModel.SetModel(modelName);
-            relayModel.Spawnflags = 256U;
-            relayModel.RenderMode = RenderMode_t.kRenderNone;
+            // Spawn the prop
+            glowProp.DispatchSpawn();
 
-            // Set up the glow model
-            glowModel.SetModel(modelName);
-            glowModel.Spawnflags = 256U;
-            glowModel.Glow.GlowColorOverride = color;
-            glowModel.Glow.GlowRange = 8000;
-            glowModel.Glow.GlowType = 1;
-            glowModel.RenderMode = RenderMode_t.kRenderGlow;
-
-            // Spawn the entities
-            relayModel.DispatchSpawn();
-            glowModel.DispatchSpawn();
-
-            // Attach the models
-            relayModel.AcceptInput("FollowEntity", pawn, relayModel, "!activator");
-            glowModel.AcceptInput("FollowEntity", relayModel, glowModel, "!activator");
-
-            // Set a timer to clean up the glow effect
+            // Set a timer to remove the glow prop after the specified duration
             if (duration > 0)
             {
                 WarcraftPlugin.Instance.AddTimer(duration, () =>
                 {
-                    // Remove the glow and relay models after the duration
-                    glowModel?.RemoveIfValid();
-                    relayModel?.RemoveIfValid();
+                    glowProp?.Remove();
                 });
             }
         }
