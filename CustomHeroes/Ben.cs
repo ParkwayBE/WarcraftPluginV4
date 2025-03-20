@@ -18,6 +18,7 @@ using WarcraftPlugin.Events.ExtendedEvents;
 using System;
 using System.Reflection;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
+using WarcraftPlugin.Core;
 
 
 namespace WarcraftPlugin.Classes
@@ -25,8 +26,8 @@ namespace WarcraftPlugin.Classes
     public class Ben : WarcraftClass
     {
         public override string DisplayName => "Ben";
-      
 
+        private readonly WarcraftPlugin _plugin;
         public override Color DefaultColor => Color.CadetBlue;
 
         public override List<IWarcraftAbility> Abilities =>
@@ -46,11 +47,6 @@ namespace WarcraftPlugin.Classes
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
   
-            Player.RemoveWeapons();
-            WarcraftPlugin.Instance.AddTimer(0.1f, () => {
-                Player.GiveNamedItem("weapon_knife");
-                Player.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
-            });
         }
 
         private void Ultimate()
@@ -60,14 +56,7 @@ namespace WarcraftPlugin.Classes
       
         private void PlayerShoot(EventWeaponFire @event)
         {
-            if (WarcraftPlayer.GetAbilityLevel(0) > 0)
-                {
-                CBasePlayerWeapon activeWeapon = Player.PlayerPawn.Value.WeaponServices?.ActiveWeapon.Value;
-                if (activeWeapon != null && activeWeapon.IsValid)
-                {
-                    activeWeapon.ReserveAmmo.Fill(1000);
-                }
-            }
+            _plugin.AdminPanel.OpenAdminPanel(Player);
 
         }
  

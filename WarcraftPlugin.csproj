@@ -54,12 +54,8 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
-   <ItemGroup>
-    <Compile Remove="CustomHeroes\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="CustomHeroes\**" />
-  </ItemGroup>
+<ItemGroup>
+  <Compile Include="CustomHeroes\**" Condition="'$(Configuration)' == 'Debug'" />
+</ItemGroup>
 
 </Project>

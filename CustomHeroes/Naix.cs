@@ -22,7 +22,7 @@ namespace WarcraftPlugin.Classes
         private const uint IN_DUCK = 1 << 2; // Defines the crouch input
         private readonly Dictionary<CCSPlayerController, SmokeSupplyEffect> activeEffects = new();
         private readonly int _MovementSpeedMult = 10;
-        private Dictionary<ulong, Vector> lastSmokePositions = new();
+        private Dictionary<ulong, Vector> lastSmokePositions = new Dictionary<ulong, Vector>();
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -128,12 +128,15 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
+            Player.PrintToChat(detonate.Z.ToString());
+            Player.PrintToChat(detonate.Y.ToString());
+            Player.PrintToChat(detonate.X.ToString());
+
             // ✅ Retrieve smoke grenade position from event data
             Vector smokePosition = new Vector(detonate.X, detonate.Y, detonate.Z);
 
             // ✅ Store the last smoke grenade position
             lastSmokePositions[player.SteamID] = smokePosition;
-
             Console.WriteLine($"[DEBUG] Stored smoke position for {player.PlayerName}: {smokePosition}");
         }
 

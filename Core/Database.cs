@@ -26,6 +26,7 @@ namespace WarcraftPlugin.Core
 	                `steamid` UNSIGNED BIG INT NOT NULL,
 	                `currentRace` VARCHAR(32) NOT NULL,
                   `name` VARCHAR(64),
+                  `role` TINYINT NULL DEFAULT 0,
 	                PRIMARY KEY (`steamid`));");
 
             _connection.Execute(@"
@@ -42,6 +43,36 @@ namespace WarcraftPlugin.Core
                   PRIMARY KEY (`steamid`, `racename`));
                 ");
         }
+        internal int ChangePlayerRole(CCSPlayerController player, int role)
+        {
+            var dbPlayer = _connection.QueryFirstOrDefault<DatabasePlayer>(@"
+                SELECT * FROM `players` WHERE `steamid` = @steamid",
+                    new { steamid = player.SteamID });
+
+            if (dbPlayer == null)
+                return 9009;
+
+            _connection.Execute(@"
+                UPDATE `players` SET `role` = @role WHERE `steamid` = @steamid",
+                    new { steamid = player.SteamID, role });
+
+            return 1;
+        }
+        internal int GetPlayerRoleExtra(CCSPlayerControllerExtra player)
+        {
+            var dbPlayer = _connection.QueryFirstOrDefault<DatabasePlayer>(@"
+                SELECT * FROM `players` WHERE `steamid` = @steamid",
+                    new { steamid = player.SteamID });
+            return dbPlayer.Role;
+        }
+        internal int GetPlayerRole(CCSPlayerController player)
+        {
+            var dbPlayer = _connection.QueryFirstOrDefault<DatabasePlayer>(@"
+                SELECT * FROM `players` WHERE `steamid` = @steamid",
+                    new { steamid = player.SteamID });
+            return dbPlayer.Role;
+        }
+
 
         internal bool PlayerExistsInDatabase(ulong steamid)
         {
@@ -188,6 +219,7 @@ namespace WarcraftPlugin.Core
         internal ulong SteamId { get; set; }
         internal string CurrentRace { get; set; }
         internal string Name { get; set; }
+        internal int Role { get; set; }
     }
 
     internal class ClassInformation
