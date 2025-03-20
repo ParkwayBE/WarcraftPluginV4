@@ -38,7 +38,6 @@ namespace WarcraftPlugin.Classes
 
         public override void Register()
         {
-            Console.WriteLine("[INFO] Registering Naix hooks...");
             HookEvent<EventSmokegrenadeDetonate>(SmokegrenadeDetonate);
             HookEvent<EventPlayerHurtOther>(PlayerKill);
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
@@ -56,11 +55,11 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
-            Console.WriteLine("[INFO] Naix has spawned!");
-
             if (WarcraftPlayer.GetAbilityLevel(2) > 0)
             {
-                Player.PlayerPawn.Value.VelocityModifier += WarcraftPlayer.GetAbilityLevel(2) * _MovementSpeedMult;
+                float additionalSpeed = WarcraftPlayer.GetAbilityLevel(2) * _MovementSpeedMult;
+                Player.PlayerPawn.Value.VelocityModifier += additionalSpeed;
+                Console.WriteLine("Adding speed to player.");
             }
 
 
@@ -97,7 +96,6 @@ namespace WarcraftPlugin.Classes
                     return;
                 }
 
-                Console.WriteLine($"[DEBUG] {Player.PlayerName} jumped! Applying longjump effect...");
                 WarcraftPlugin.Instance.AddTimer(0.05f, () =>
                 {
                     var directionAngle = Player.PlayerPawn.Value.EyeAngles;
@@ -113,8 +111,6 @@ namespace WarcraftPlugin.Classes
                     Player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
                     Player.PlayerPawn.Value.AbsVelocity.Y = directionVec.Y;
                     Player.PlayerPawn.Value.AbsVelocity.Z = directionVec.Z;
-
-                    Console.WriteLine($"[INFO] Applied longjump force after delay: X:{directionVec.X}, Y:{directionVec.Y}, Z:{directionVec.Z}");
                 });
                 WarcraftPlugin.Instance.AddTimer(0.05f, () =>
                 {
@@ -123,8 +119,6 @@ namespace WarcraftPlugin.Classes
                 });
             }
         }
-
-
 
         private void SmokegrenadeDetonate(EventSmokegrenadeDetonate detonate)
         {
@@ -143,9 +137,7 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
-            Console.WriteLine($"[DEBUG] SmokeDetonate Coordinates - X: {detonate.X}, Y: {detonate.Y}, Z: {detonate.Z}");
             lastSmokePositions[player.SteamID] = new Vector(detonate.X, detonate.Y, detonate.Z);
-            Console.WriteLine($"[INFO] Stored smoke position for {player.PlayerName}: {lastSmokePositions[player.SteamID]}");
 
             if (activeEffects.TryGetValue(player, out var effect))
             {
@@ -167,12 +159,10 @@ namespace WarcraftPlugin.Classes
 
             if (availability)
             {
-                Console.WriteLine("[INFO] Starting a new 20-second timer for ultimate availability.");
                 canUseUltimate = true;
 
                 var timer = WarcraftPlugin.Instance.AddTimer(20f, () =>
                 {
-                    Console.WriteLine("[INFO] 20 seconds elapsed. Setting canUseUltimate to false.");
                     canUseUltimate = false;
                     smokeTimers.Remove(player);
                 });
@@ -181,7 +171,6 @@ namespace WarcraftPlugin.Classes
             }
             else
             {
-                Console.WriteLine("[INFO] Setting canUseUltimate to false.");
                 canUseUltimate = false;
             }
         }
@@ -199,8 +188,6 @@ namespace WarcraftPlugin.Classes
                     Console.WriteLine("ERROR: Owner or PlayerPawn is NULL in SetGravityEffect!");
                     return;
                 }
-
-                Console.WriteLine($"[INFO] {Owner.PlayerName} gravity set to {_gravity}.");
                 Owner.PlayerPawn.Value.GravityScale = _gravity;
             }
 
@@ -211,8 +198,6 @@ namespace WarcraftPlugin.Classes
                     Console.WriteLine("ERROR: Owner or PlayerPawn is NULL in SetGravityEffect OnFinish!");
                     return;
                 }
-
-                Console.WriteLine($"[INFO] {Owner.PlayerName} gravity restored to normal.");
                 Owner.PlayerPawn.Value.GravityScale = 1.0f; // Reset to default gravity
             }
 
@@ -223,12 +208,8 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerKill(EventPlayerHurtOther @event)
         {
-            Console.WriteLine("[DEBUG] PlayerHurtOther event triggered! Checking for lethal hit...");
-
             var killer = @event.Attacker;
             var victim = @event.Userid;
-
-            Console.WriteLine($"[DEBUG] Attacker: {killer?.PlayerName ?? "NULL"}, Victim: {victim?.PlayerName ?? "NULL"}");
 
             if (killer == null || victim == null)
             {
@@ -244,22 +225,14 @@ namespace WarcraftPlugin.Classes
 
             if (victim.PlayerPawn?.Value?.Health > 0)
             {
-                Console.WriteLine($"[INFO] {victim.PlayerName} is still alive ({victim.PlayerPawn.Value.Health} HP). Consume aborted.");
                 return;
             }
-
-            Console.WriteLine("[INFO] PlayerHurtOther detected a fatal hit, treating as PlayerKill.");
-
-            Console.WriteLine($"[DEBUG] {killer.PlayerName} killed {victim.PlayerName}. Checking conditions...");
-
             // Check if the player is crouching
             var movementServices = killer.PlayerPawn.Value.MovementServices;
             if ((movementServices.Buttons.ButtonStates[0] & IN_DUCK) == 0)
             {
-                Console.WriteLine($"[INFO] {killer.PlayerName} is NOT crouching. Consume aborted.");
                 return;
             }
-            Console.WriteLine($"[DEBUG] {killer.PlayerName} is crouching. Consume activated!");
 
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
             if (abilityLevel < 1)
@@ -349,8 +322,6 @@ namespace WarcraftPlugin.Classes
 
             public void GiveSmokeIfNeeded()
             {
-                Console.WriteLine($"[DEBUG] Checking if {Owner.PlayerName} needs a smoke.");
-
                 if (smokesGiven >= maxSmokes)
                 {
                     Console.WriteLine($"[INFO] {Owner.PlayerName} has already received the max number of smokes ({maxSmokes}).");
@@ -365,7 +336,7 @@ namespace WarcraftPlugin.Classes
 
             public override void OnFinish()
             {
-                Console.WriteLine($"[INFO] Smoke Supply Effect Finished for {Owner.PlayerName}");
+                Console.WriteLine($"[INFO] No more free smokes for {Owner.PlayerName} this round.");
             }
 
             private void RemoveGrenades(string grenadeName)
@@ -405,8 +376,6 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("[ERROR] No stored smoke grenade position for this player! Aborting ultimate.");
                 return;
             }
-
-            Console.WriteLine($"[INFO] Spawning explosion at last smoke position: {lastSmokePosition}");
 
             var explosionPosition = lastSmokePosition.With(z: lastSmokePosition.Z + 10f);
 
