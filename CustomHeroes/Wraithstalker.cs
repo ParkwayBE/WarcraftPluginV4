@@ -72,8 +72,8 @@ namespace WarcraftPlugin.Classes
             glowModel.SetModel(modelName);
             glowModel.Spawnflags = 256U;
             glowModel.Glow.GlowColorOverride = color;
-            glowModel.Glow.GlowRange = 5000;
-            glowModel.Glow.GlowType = 3;
+            glowModel.Glow.GlowRange = 8000;
+            glowModel.Glow.GlowType = 2;
             glowModel.RenderMode = RenderMode_t.kRenderGlow;
 
             // Spawn the entities
