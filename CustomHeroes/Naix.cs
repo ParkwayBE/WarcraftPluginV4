@@ -322,8 +322,9 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("[ERROR] No active weapon found, could not refill ammo!");
             }
             killer.PlayerPawn.Value.SetColor(Color.Red);
+            SpawnParticles();
 
-            
+
             WarcraftPlugin.Instance.AddTimer(3.0f, () =>
             {
                 if (killer.PlayerPawn?.Value != null && killer.PlayerPawn.Value.IsValid)
