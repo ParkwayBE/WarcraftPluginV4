@@ -34,7 +34,7 @@ namespace WarcraftPlugin.Summons
             _ballProp.DispatchSpawn();
 
             //_ballProp.SetParent(_ball, new Vector(0, 0, 0));
-            _ballProp.CBodyComponent.SceneNode.GetSkeletonInstance().Scale = 1;
+            _ballProp.CBodyComponent.SceneNode.GetSkeletonInstance().Scale = 0.8f;
             var distance = 60;
             var height = 10;
             posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
