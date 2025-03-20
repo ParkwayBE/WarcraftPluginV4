@@ -22,8 +22,8 @@ namespace WarcraftPlugin.Classes
         private const uint IN_DUCK = 1 << 2; // Defines the crouch input
         private readonly Dictionary<CCSPlayerController, SmokeSupplyEffect> activeEffects = new();
         private readonly int _MovementSpeedMult = 10;
-        private bool isAlive = false;
         private Dictionary<ulong, Vector> lastSmokePositions = new Dictionary<ulong, Vector>();
+        private bool isAlive = false;
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -68,11 +68,19 @@ namespace WarcraftPlugin.Classes
                 activeEffects.Remove(Player);
             }
 
-            isAlive = true;
             // Apply Smoke Supply Effect and track it
             var effect = new SmokeSupplyEffect(Player);
             activeEffects[Player] = effect;
             effect.Start();
+
+            isAlive = true;
+        }
+
+        private void PlayerDeath(EventPlayerDeath @event)
+        {
+            Console.WriteLine("Player died, preventing ultimate usage.");
+            isAlive = false;
+
         }
 
         private void PlayerJump(EventPlayerJump @event)
@@ -116,9 +124,8 @@ namespace WarcraftPlugin.Classes
 
         private void OnSmokeDetonate(EventSmokegrenadeDetonate detonate)
         {
-            Console.WriteLine("[DEBUG] OnSmokeDetonate event was triggered!");
+            Console.WriteLine("[DEBUG] OnSmokeDetonate triggered!");
 
-            // ✅ Ensure the event contains a valid player
             if (detonate.Userid == null || !detonate.Userid.IsValid)
             {
                 Console.WriteLine("[ERROR] SmokeDetonate event triggered, but Userid is NULL or invalid!");
@@ -126,31 +133,32 @@ namespace WarcraftPlugin.Classes
             }
 
             var player = detonate.Userid;
-            Console.WriteLine($"[DEBUG] SmokeDetonate assigned player: {player.PlayerName}");
-
-            // ✅ Ensure the event contains a valid position
-            Vector smokePosition = new Vector(detonate.X, detonate.Y, detonate.Z);
-            Console.WriteLine($"[DEBUG] SmokeDetonate Position - X: {detonate.X}, Y: {detonate.Y}, Z: {detonate.Z}");
-
-            if (smokePosition.X == 0 && smokePosition.Y == 0 && smokePosition.Z == 0)
+            if (player == null || player.PlayerPawn?.Value == null)
             {
-                Console.WriteLine("[ERROR] Invalid smoke position received! Aborting.");
+                Console.WriteLine("[ERROR] Player is NULL in SmokeDetonate! Aborting.");
                 return;
             }
 
-            // ✅ Store the last smoke position per player
-            if (!lastSmokePositions.ContainsKey(player.SteamID))
-            {
-                lastSmokePositions.Add(player.SteamID, smokePosition);
-                Console.WriteLine($"[INFO] Stored FIRST smoke position for {player.PlayerName}: {smokePosition}");
-            }
-            else
-            {
-                lastSmokePositions[player.SteamID] = smokePosition;
-                Console.WriteLine($"[INFO] Updated LAST smoke position for {player.PlayerName}: {smokePosition}");
-            }
-        }
+            // Log all potential position values
+            Console.WriteLine($"[DEBUG] SmokeDetonate Position - X: {detonate.X}, Y: {detonate.Y}, Z: {detonate.Z}");
 
+            // Ensure we have a valid position
+            Vector smokePosition = new Vector(detonate.X, detonate.Y, detonate.Z);
+            if (smokePosition == null)
+            {
+                Console.WriteLine("[ERROR] Failed to retrieve smoke grenade position!");
+                return;
+            }
+
+            // ✅ Store the last smoke grenade position
+            lastSmokePositions[player.SteamID] = smokePosition;
+            Console.WriteLine($"[DEBUG] Stored smoke position for {player.PlayerName}: {smokePosition}");
+
+            if (!activeEffects.TryGetValue(player, out var effect)) return;
+
+            // ✅ Grant another smoke if below ability cap
+            effect.GiveSmokeIfNeeded();
+        }
 
         internal class SetGravityEffect(CCSPlayerController owner, float gravity, float duration)
     : WarcraftEffect(owner, duration)
@@ -372,21 +380,8 @@ namespace WarcraftPlugin.Classes
 
         private bool canUseUltimate = true; // ✅ Add this at the class level
 
-        private void PlayerDeath(EventPlayerDeath @event)
-        {
-            Console.WriteLine("[INFO] PlayerDeath triggered! Setting isAlive = false.");
-            isAlive = false;
-        }
-
-
         private void Ultimate()
         {
-            if (!isAlive)
-            {
-                Console.WriteLine("[ERROR] Ultimate cannot be used while dead! Aborting.");
-                return;
-            }
-
             if (WarcraftPlayer.GetAbilityLevel(3) < 1 || !IsAbilityReady(3))
             {
                 Console.WriteLine("[INFO] Ultimate cannot be used (ability level too low or on cooldown).");
@@ -398,7 +393,6 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("[INFO] Ultimate is on cooldown!");
                 return;
             }
-
             if (!lastSmokePositions.TryGetValue(Player.SteamID, out Vector lastSmokePosition))
             {
                 Console.WriteLine("[ERROR] No stored smoke grenade position for this player! Aborting ultimate.");
@@ -407,25 +401,26 @@ namespace WarcraftPlugin.Classes
 
             Console.WriteLine($"[INFO] Spawning explosion at last smoke position: {lastSmokePosition}");
 
+            // ✅ Adjust explosion position slightly above ground
             var explosionPosition = lastSmokePosition.With(z: lastSmokePosition.Z + 10f);
 
+            // ✅ Use predefined SpawnExplosion function
             Warcraft.SpawnExplosion(
                 pos: explosionPosition,
-                damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f),
+                damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f), // ✅ Damage scales with ability level
                 radius: 250f,
                 attacker: Player,
                 killFeedIcon: KillFeedIcon.prop_exploding_barrel
             );
 
+
             Console.WriteLine($"[INFO] Explosion triggered at {explosionPosition} with {50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f)} damage!");
 
             // ✅ Start Ultimate Cooldown
             canUseUltimate = false;
-            WarcraftPlugin.Instance.AddTimer(6.0f, () => canUseUltimate = true);
+            WarcraftPlugin.Instance.AddTimer(6.0f, () => canUseUltimate = true); // Reset after 6 seconds
             StartCooldown(3);
         }
-
-
 
     }
 }
