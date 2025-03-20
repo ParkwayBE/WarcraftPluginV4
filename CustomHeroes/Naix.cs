@@ -26,6 +26,7 @@ namespace WarcraftPlugin.Classes
         private Dictionary<ulong, Vector> lastSmokePositions = new Dictionary<ulong, Vector>();
         private Dictionary<CCSPlayerController, CounterStrikeSharp.API.Modules.Timers.Timer> smokeTimers = new();
         private bool isAlive = false;
+        private bool canUseUltimate = true;
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -142,32 +143,21 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
-            // ✅ Ensure we get a valid coordinate set
             Console.WriteLine($"[DEBUG] SmokeDetonate Coordinates - X: {detonate.X}, Y: {detonate.Y}, Z: {detonate.Z}");
-
-            // ✅ Store the last smoke grenade position in a dictionary
             lastSmokePositions[player.SteamID] = new Vector(detonate.X, detonate.Y, detonate.Z);
-
             Console.WriteLine($"[INFO] Stored smoke position for {player.PlayerName}: {lastSmokePositions[player.SteamID]}");
 
-            // ✅ Grant another smoke if below ability cap
             if (activeEffects.TryGetValue(player, out var effect))
             {
                 effect.GiveSmokeIfNeeded();
             }
-
-            // ✅ Set ultimate availability with the 20-second window
             SetUltimateAvailability(true, player);
         }
 
         private void SetUltimateAvailability(bool availability, CCSPlayerController player)
         {
             var playerId = player.SteamID;
-
-            // ✅ Log the initial state
-            Console.WriteLine($"[INFO] SetUltimateAvailability called: {availability} for {player.PlayerName}");
-
-            // ✅ Cancel any existing timer for this player
+            // Cancel any existing timer for this player
             if (smokeTimers.TryGetValue(player, out var existingTimer))
             {
                 Console.WriteLine("[INFO] Cancelling existing timer.");
@@ -175,7 +165,6 @@ namespace WarcraftPlugin.Classes
                 smokeTimers.Remove(player);
             }
 
-            // ✅ If setting availability to true, start a new timer
             if (availability)
             {
                 Console.WriteLine("[INFO] Starting a new 20-second timer for ultimate availability.");
@@ -185,8 +174,6 @@ namespace WarcraftPlugin.Classes
                 {
                     Console.WriteLine("[INFO] 20 seconds elapsed. Setting canUseUltimate to false.");
                     canUseUltimate = false;
-
-                    // Remove the timer reference after it finishes
                     smokeTimers.Remove(player);
                 });
 
@@ -194,7 +181,6 @@ namespace WarcraftPlugin.Classes
             }
             else
             {
-                // ✅ If setting to false, simply ensure `canUseUltimate` is off
                 Console.WriteLine("[INFO] Setting canUseUltimate to false.");
                 canUseUltimate = false;
             }
@@ -230,7 +216,7 @@ namespace WarcraftPlugin.Classes
                 Owner.PlayerPawn.Value.GravityScale = 1.0f; // Reset to default gravity
             }
 
-            public override void OnTick() { /* Not needed */ }
+            public override void OnTick() { /* */ }
         }
 
 
@@ -250,14 +236,12 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
-            // ✅ Ensure that Naix (YOU) is the attacker
             if (killer != Player)
             {
                 Console.WriteLine($"[INFO] {killer.PlayerName} is not Naix. Ignoring kill event.");
                 return;
             }
 
-            // ✅ Ensure that the victim is actually dead
             if (victim.PlayerPawn?.Value?.Health > 0)
             {
                 Console.WriteLine($"[INFO] {victim.PlayerName} is still alive ({victim.PlayerPawn.Value.Health} HP). Consume aborted.");
@@ -268,7 +252,7 @@ namespace WarcraftPlugin.Classes
 
             Console.WriteLine($"[DEBUG] {killer.PlayerName} killed {victim.PlayerName}. Checking conditions...");
 
-            // ✅ Check if the player is crouching using `IN_DUCK`
+            // Check if the player is crouching
             var movementServices = killer.PlayerPawn.Value.MovementServices;
             if ((movementServices.Buttons.ButtonStates[0] & IN_DUCK) == 0)
             {
@@ -277,7 +261,6 @@ namespace WarcraftPlugin.Classes
             }
             Console.WriteLine($"[DEBUG] {killer.PlayerName} is crouching. Consume activated!");
 
-            // ✅ Ensure Naix has the ability
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
             if (abilityLevel < 1)
             {
@@ -285,27 +268,17 @@ namespace WarcraftPlugin.Classes
                 return;
             }
             Console.WriteLine($"[DEBUG] {killer.PlayerName} has Consume at Level {abilityLevel}.");
-
-            // ✅ Debug Logs for Health Before Applying
             Console.WriteLine($"[DEBUG] Current Health: {killer.Health}");
             Console.WriteLine($"[DEBUG] Heal Amount: {abilityLevel} * 7 = {abilityLevel * 7}");
 
-            // ✅ Get current HP
             int currentHealth = killer.PlayerPawn.Value.Health;
 
-            // ✅ Calculate new HP
             int healAmount = abilityLevel * 7;
             int newHealth = currentHealth + healAmount;
-
-            // ✅ Apply the health increase
             killer.SetHp(newHealth);
 
-            Console.WriteLine($"[INFO] {killer.PlayerName} healed for {healAmount} HP (new total: {newHealth}).");
+            Player.PrintToCenter($"[INFO] {killer.PlayerName} healed for {healAmount} HP (new total: {newHealth}).");
 
-
-
-
-            // ✅ Teleport Naix to victim's last position
             if (victim.PlayerPawn?.Value != null)
             {
                 Vector victimPos = victim.PlayerPawn.Value.AbsOrigin;
@@ -317,7 +290,6 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine($"[ERROR] Could not retrieve victim's position for teleport!");
             }
 
-            // ✅ Refill Ammo Properly
             var activeWeapon = killer.PlayerPawn.Value.WeaponServices.ActiveWeapon.Value;
             if (activeWeapon != null)
             {
@@ -348,7 +320,6 @@ namespace WarcraftPlugin.Classes
                     return;
                 }
 
-                // ✅ Retrieve WarcraftPlayer correctly
                 WarcraftPlayer = Owner.GetWarcraftPlayer();
                 if (WarcraftPlayer == null)
                 {
@@ -367,17 +338,15 @@ namespace WarcraftPlugin.Classes
 
                 Console.WriteLine($"[INFO] Smoke Supply Effect Activated - Ability Level: {maxSmokes}");
 
-                // ✅ Remove existing smokes to prevent unintended stacking
+                // Remove existing smokes to prevent unintended stacking
                 RemoveGrenades("weapon_smokegrenade");
 
-                // ✅ Start with 1 smoke
+                //Start with 1 smoke
                 Console.WriteLine("[INFO] Granting initial smoke grenade.");
                 Owner.GiveNamedItem("weapon_smokegrenade");
-                smokesGiven = 1; // Track that we have given 1 smoke
+                smokesGiven = 1; 
             }
 
-
-            // ✅ Called by `Naix` when a smoke detonates
             public void GiveSmokeIfNeeded()
             {
                 Console.WriteLine($"[DEBUG] Checking if {Owner.PlayerName} needs a smoke.");
@@ -399,7 +368,6 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine($"[INFO] Smoke Supply Effect Finished for {Owner.PlayerName}");
             }
 
-            // ✅ Helper function to remove old smokes
             private void RemoveGrenades(string grenadeName)
             {
                 var grenades = Owner.PlayerPawn.Value.WeaponServices.MyWeapons;
@@ -414,12 +382,9 @@ namespace WarcraftPlugin.Classes
                 }
             }
 
-            // ✅ Required by WarcraftEffect (empty implementation)
             public override void OnTick() { }
 
         }
-
-        private bool canUseUltimate = true; // ✅ Add this at the class level
 
         private void Ultimate()
         {
@@ -443,31 +408,27 @@ namespace WarcraftPlugin.Classes
 
             Console.WriteLine($"[INFO] Spawning explosion at last smoke position: {lastSmokePosition}");
 
-            // ✅ Adjust explosion position slightly above ground
             var explosionPosition = lastSmokePosition.With(z: lastSmokePosition.Z + 10f);
 
-            // ✅ Ensure we have a valid position
             if (explosionPosition == null)
             {
                 Console.WriteLine("[ERROR] Explosion position is NULL! Aborting.");
                 return;
             }
 
-            // ✅ Use predefined SpawnExplosion function
             Warcraft.SpawnExplosion(
                 pos: explosionPosition,
-                damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f), // ✅ Damage scales with ability level
-                radius: 250f,
+                damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f), 
+                radius: 350f, // Tweak for explosion radius
                 attacker: Player,
                 killFeedIcon: KillFeedIcon.prop_exploding_barrel
             );
 
             Console.WriteLine($"[INFO] Explosion triggered at {explosionPosition} with {50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f)} damage!");
 
-            // ✅ Start Ultimate Cooldown
             canUseUltimate = false;
             WarcraftPlugin.Instance.AddTimer(6.0f, () => canUseUltimate = true); // Reset after 6 seconds
-            StartCooldown(3);
+            StartCooldown(6);
         }
 
 
