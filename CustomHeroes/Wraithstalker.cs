@@ -126,7 +126,7 @@ namespace WarcraftPlugin.Classes
                 if (!otherPlayer.IsAlive() || otherPlayer.UserId == Player.UserId)
                     continue;
                 Console.WriteLine($"Checking player {otherPlayer.PlayerName} with team {otherPlayer.Team}");
-                if (otherPlayer.Team != Player.Team)
+                if (otherPlayer.Team == Player.Team)
                     continue;
 
                 var otherPlayerPosition = otherPlayer.PlayerPawn.Value.AbsOrigin;
