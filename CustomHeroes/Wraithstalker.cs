@@ -20,6 +20,7 @@ using System.Reflection;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using WarcraftPlugin.Core;
 using WarcraftPlugin.Summons;
+using CounterStrikeSharp.API.Modules.Commands.Targeting;
 
 
 namespace WarcraftPlugin.Classes
@@ -30,6 +31,7 @@ namespace WarcraftPlugin.Classes
 
         private readonly WarcraftPlugin _plugin;
         public override Color DefaultColor => Color.CadetBlue;
+        private bool canUseUltimate = true;
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -50,79 +52,56 @@ namespace WarcraftPlugin.Classes
             
         }
 
-        public void StartGlow(CCSPlayerController player, Color color, int duration)
+        public static void SetGlowOnEntity(CBaseEntity? entity, Color GlowColor)
         {
-            var pawn = player.PlayerPawn.Value;
-
-            // Retrieve the player's current model name
-            var modelName = pawn.CBodyComponent.SceneNode.GetSkeletonInstance().ModelState.ModelName;
-            Console.WriteLine($"[DEBUG] Model name retrieved: {modelName}");
-
-            // Create relay and glow model entities
-            var relayModel = Utilities.CreateEntityByName<CBaseModelEntity>("prop_dynamic");
-            var glowModel = Utilities.CreateEntityByName<CBaseModelEntity>("prop_dynamic");
-
-            if (relayModel == null || glowModel == null)
-            {
-                Console.WriteLine("[DEBUG] Failed to create relay or glow model.");
+            if (entity == null || !entity.IsValid)
                 return;
-            }
-            Console.WriteLine("[DEBUG] Successfully created relay and glow models.");
 
-            // Set up the relay model
-            relayModel.SetModel(modelName);
-            relayModel.Spawnflags = 256U;
-            relayModel.RenderMode = RenderMode_t.kRenderNone;
-            Console.WriteLine("[DEBUG] Relay model properties set.");
+            CDynamicProp Glow = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic")!;
+            Glow.Spawnflags = 256;
+            Glow.Render = Color.Transparent;
+            Glow.CBodyComponent!.SceneNode!.Owner!.Entity!.Flags = (uint)(Glow.CBodyComponent!.SceneNode!.Owner!.Entity!.Flags & ~(1 << 2));
+            Glow.SetModel(entity.CBodyComponent!.SceneNode!.GetSkeletonInstance().ModelState.ModelName);
+            Glow.DispatchSpawn();
+            Glow.Glow.GlowColorOverride = GlowColor;
+            Glow.Glow.GlowRange = 5000;
+            Glow.Glow.GlowRangeMin = 0;
+            Glow.Glow.GlowTeam = -1; // -1 = Both, 2 = T, 3 = CT
+            Glow.Glow.GlowType = 3;
+            Glow.Glow.GlowTime = 8;
 
-            // Set up the glow model
-            glowModel.SetModel(modelName);
-            glowModel.Spawnflags = 256U;
-            glowModel.Glow.GlowColorOverride = color;
-            glowModel.Glow.GlowRange = 5000;
-
-            // Log all potential GlowType values (example of iteration, adjust as needed)
-            for (int i = 0; i <= 10; i++) // Adjust range to cover all GlowType values you think might exist
-            {
-                glowModel.Glow.GlowType = i;
-                Console.WriteLine($"[DEBUG] Testing GlowType: {i}");
-            }
-
-            glowModel.Glow.GlowType = 3; // Use the intended GlowType here
-            Console.WriteLine($"[DEBUG] Final GlowType set: {glowModel.Glow.GlowType}");
-            glowModel.RenderMode = RenderMode_t.kRenderGlow;
-
-            // Spawn the entities
-            relayModel.DispatchSpawn();
-            glowModel.DispatchSpawn();
-            Console.WriteLine("[DEBUG] Models spawned.");
-
-            // Attach the models
-            relayModel.AcceptInput("FollowEntity", pawn, relayModel, "!activator");
-            glowModel.AcceptInput("FollowEntity", relayModel, glowModel, "!activator");
-            Console.WriteLine("[DEBUG] Models attached.");
-
-            // Set a timer to clean up the glow effect
-            if (duration > 0)
-            {
-                WarcraftPlugin.Instance.AddTimer(duration, () =>
-                {
-                    // Remove the glow and relay models after the duration
-                    Console.WriteLine("[DEBUG] Cleaning up models.");
-                    glowModel?.RemoveIfValid();
-                    relayModel?.RemoveIfValid();
-                });
-            }
+            Glow.Teleport(entity.AbsOrigin, entity.AbsRotation, entity.AbsVelocity);
+            Glow.AcceptInput("SetParent", entity, Glow, "!activator");
         }
-
-
-
 
         private void Ultimate()
         {
-           StartGlow(Player, Color.Blue, 5);
-           StartCooldown(3);
+            int repetitions = 14;
+            float interval = 0.5f; // seconds
+            if (WarcraftPlayer.GetAbilityLevel(3) < 1 || !IsAbilityReady(3))
+            {
+                Console.WriteLine("[INFO] Ultimate cannot be used (ability level too low or on cooldown).");
+                return;
+            }
+            if (!canUseUltimate)
+            {
+                Console.WriteLine("[INFO] Ultimate is on cooldown!");
+                return;
+            }
+
+            for (int i = 0; i < repetitions; i++)
+            {
+                // Schedule the function to run at i * interval seconds
+                float delay = i * interval;
+                WarcraftPlugin.Instance.AddTimer(delay, () =>
+                {
+                    SetGlowOnEntity(Player.PlayerPawn.Value, Color.Red);
+                });
+            }
+
+            StartCooldown(3);
         }
+
 
         private void PlayerShoot(EventWeaponFire @event)
         {
