@@ -277,7 +277,14 @@ namespace WarcraftPlugin.Classes
             }
             killer.PlayerPawn.Value.SetColor(Color.Red);
 
-            // Set a timer to reset the color after 2 seconds
+            // EFFECT CODE
+            string redCircleParticle = "particles/explosions_fx/explosion_c4_ground_residual_ash.vpcf";
+            float particleDuration = 2.0f;
+            var particle = Warcraft.SpawnParticle(killer.PlayerPawn.Value.AbsOrigin, redCircleParticle, particleDuration);
+
+            particle.SetParent(killer.PlayerPawn.Value);
+
+           // END EFFECT CODE
             WarcraftPlugin.Instance.AddTimer(2.0f, () =>
             {
                 if (killer.PlayerPawn?.Value != null && killer.PlayerPawn.Value.IsValid)
