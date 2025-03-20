@@ -18,6 +18,7 @@ using WarcraftPlugin.Events.ExtendedEvents;
 using System;
 using System.Reflection;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
+using WarcraftPlugin.Core;
 
 
 namespace WarcraftPlugin.Classes
