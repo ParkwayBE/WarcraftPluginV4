@@ -142,8 +142,6 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
-            
-
             // ✅ Ensure we get a valid coordinate set
             Console.WriteLine($"[DEBUG] SmokeDetonate Coordinates - X: {detonate.X}, Y: {detonate.Y}, Z: {detonate.Z}");
 
@@ -158,36 +156,50 @@ namespace WarcraftPlugin.Classes
                 effect.GiveSmokeIfNeeded();
             }
 
+            // ✅ Set ultimate availability with the 20-second window
             SetUltimateAvailability(true, player);
         }
-        
+
         private void SetUltimateAvailability(bool availability, CCSPlayerController player)
         {
-            // Set the variable based on the availability parameter
-            canUseUltimate = availability;
+            var playerId = player.SteamID;
 
-            // If we're setting it to true, start a timer to turn it back off after 20 seconds
+            // ✅ Log the initial state
+            Console.WriteLine($"[INFO] SetUltimateAvailability called: {availability} for {player.PlayerName}");
+
+            // ✅ Cancel any existing timer for this player
+            if (smokeTimers.TryGetValue(player, out var existingTimer))
+            {
+                Console.WriteLine("[INFO] Cancelling existing timer.");
+                existingTimer.Kill();
+                smokeTimers.Remove(player);
+            }
+
+            // ✅ If setting availability to true, start a new timer
             if (availability)
             {
-                
+                Console.WriteLine("[INFO] Starting a new 20-second timer for ultimate availability.");
+                canUseUltimate = true;
 
-                // Cancel any existing timer for this player
-                if (smokeTimers.ContainsKey(Player))
-                {
-                    smokeTimers[Player].Kill();
-                    smokeTimers.Remove(Player);
-                }
-
-                // Start a new timer
                 var timer = WarcraftPlugin.Instance.AddTimer(20f, () =>
                 {
+                    Console.WriteLine("[INFO] 20 seconds elapsed. Setting canUseUltimate to false.");
                     canUseUltimate = false;
-                    smokeTimers.Remove(Player); // Remove the timer reference after it finishes
+
+                    // Remove the timer reference after it finishes
+                    smokeTimers.Remove(player);
                 });
 
-                smokeTimers[Player] = timer;
+                smokeTimers[player] = timer;
             }
-        } 
+            else
+            {
+                // ✅ If setting to false, simply ensure `canUseUltimate` is off
+                Console.WriteLine("[INFO] Setting canUseUltimate to false.");
+                canUseUltimate = false;
+            }
+        }
+
 
         internal class SetGravityEffect(CCSPlayerController owner, float gravity, float duration)
     : WarcraftEffect(owner, duration)
