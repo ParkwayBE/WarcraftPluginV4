@@ -323,8 +323,8 @@ namespace WarcraftPlugin.Classes
             }
             killer.PlayerPawn.Value.SetColor(Color.Red);
             SpawnParticles();
-            killer.PlayLocalSound("sounds/ambient/ambience/rainscapes/thunder_close04.vsnd");
-            victim.PlayLocalSound("sounds/ambient/ambience/rainscapes/thunder_close04.vsnd");
+            killer.PlayLocalSound("sounds/ambient/ambience/creatures/dog_bark_close.vsnd");
+            victim.PlayLocalSound("sounds/ambient/ambience/creatures/dog_bark_close.vsnd");
 
 
             WarcraftPlugin.Instance.AddTimer(3.0f, () =>
