@@ -24,7 +24,7 @@ namespace WarcraftPlugin.Classes
         private readonly Dictionary<CCSPlayerController, SmokeSupplyEffect> activeEffects = new();
         private readonly int _MovementSpeedMult = 10;
         private Dictionary<ulong, Vector> lastSmokePositions = new Dictionary<ulong, Vector>();
-        private Dictionary<string, ITimer> smokeTimers = new();
+        private Dictionary<CCSPlayerController, CounterStrikeSharp.API.Modules.Timers.Timer> smokeTimers = new();
         private bool isAlive = false;
 
         public override List<IWarcraftAbility> Abilities =>
@@ -158,7 +158,7 @@ namespace WarcraftPlugin.Classes
                 effect.GiveSmokeIfNeeded();
             }
 
-            //SetUltimateAvailability(true, Player);
+            SetUltimateAvailability(true, player);
         }
         
         private void SetUltimateAvailability(bool availability, CCSPlayerController player)
@@ -169,23 +169,23 @@ namespace WarcraftPlugin.Classes
             // If we're setting it to true, start a timer to turn it back off after 20 seconds
             if (availability)
             {
-                var playerId = player.SteamID;
+                
 
                 // Cancel any existing timer for this player
-                if (smokeTimers.ContainsKey(playerId))
+                if (smokeTimers.ContainsKey(Player))
                 {
-                    smokeTimers[playerId].Kill();
-                    smokeTimers.Remove(playerId);
+                    smokeTimers[Player].Kill();
+                    smokeTimers.Remove(Player);
                 }
 
                 // Start a new timer
                 var timer = WarcraftPlugin.Instance.AddTimer(20f, () =>
                 {
                     canUseUltimate = false;
-                    smokeTimers.Remove(playerId); // Remove the timer reference after it finishes
+                    smokeTimers.Remove(Player); // Remove the timer reference after it finishes
                 });
 
-                smokeTimers[playerId] = timer;
+                smokeTimers[Player] = timer;
             }
         } 
 
