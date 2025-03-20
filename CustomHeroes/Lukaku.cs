@@ -21,6 +21,7 @@ using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using WarcraftPlugin.Core;
 using WarcraftPlugin.Summons;
 using static g3.RoundRectGenerator;
+using CounterStrikeSharp.API.Modules.Entities;
 
 
 namespace WarcraftPlugin.Classes
@@ -101,14 +102,14 @@ namespace WarcraftPlugin.Classes
             public override void OnStart()
             {
                 owner.PrintToChat("football sytsem start");
-                footBalls.Add(new FootBall(owner, owner.PlayerPawn.Value.AbsOrigin));
+                footBalls.Add(new FootBall(Owner));
                 footBalls[0].Activate();
                 owner.PrintToChat("You have used a ball");
             }
             public override void OnTick()
             {
                 owner.PrintToChat("tick");
-                footBalls[0].UpdateLocation(owner);
+                footBalls[0].UpdateLocation(Owner);
          
             }
             public override void OnFinish() { }

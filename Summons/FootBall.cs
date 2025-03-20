@@ -14,12 +14,11 @@ namespace WarcraftPlugin.Summons
         private Vector posInfrontOfPlayer;
         private Vector changedLocation;
 
-        public Vector Position { get; set; } = new(70, -70, 90);
+        //public Vector Position { get; set; } = new(70, -70, 90);
 
-        public FootBall(CCSPlayerController owner, Vector position)
+        public FootBall(CCSPlayerController owner)
         {
             _owner = owner;
-            Position = position;
  
         }
 
