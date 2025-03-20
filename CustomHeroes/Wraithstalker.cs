@@ -67,6 +67,7 @@ namespace WarcraftPlugin.Classes
             Glow.Glow.GlowRangeMin = 0;
             Glow.Glow.GlowTeam = -1; // -1 = Both, 2 = T, 3 = CT
             Glow.Glow.GlowType = 3;
+            Glow.Glow.GlowTime = 8;
 
             Glow.Teleport(entity.AbsOrigin, entity.AbsRotation, entity.AbsVelocity);
             Glow.AcceptInput("SetParent", entity, Glow, "!activator");
