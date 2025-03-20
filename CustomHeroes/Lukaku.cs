@@ -53,7 +53,7 @@ namespace WarcraftPlugin.Classes
             footBalls.Add(new FootBall(Player, Player.PlayerPawn.Value.AbsOrigin));
             footBalls.Add(new FootBall(Player, Player.PlayerPawn.Value.AbsOrigin));
             footBalls.Add(new FootBall(Player, Player.PlayerPawn.Value.AbsOrigin));
-            WarcraftPlugin.Instance.AddTimer(0.2f, () => {Player.PlayLocalSound("sounds/ambient/misc/techno_overpass.vsnd"); });
+            //WarcraftPlugin.Instance.AddTimer(0.2f, () => {Player.PlayLocalSound("sounds/ambient/misc/techno_overpass.vsnd"); });
             Player.PrintToChat("you have 3 footballs");
         }
 
