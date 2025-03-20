@@ -64,7 +64,7 @@ namespace WarcraftPlugin.Classes
             Glow.SetModel(entity.CBodyComponent!.SceneNode!.GetSkeletonInstance().ModelState.ModelName);
             Glow.DispatchSpawn();
             Glow.Glow.GlowColorOverride = GlowColor;
-            Glow.Glow.GlowRange = 1500;
+            Glow.Glow.GlowRange = 500;
             Glow.Glow.GlowRangeMin = 0;
             Glow.Glow.GlowTeam = -1; // -1 = Both, 2 = T, 3 = CT
             Glow.Glow.GlowType = 3;
