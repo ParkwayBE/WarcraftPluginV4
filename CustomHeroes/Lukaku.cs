@@ -35,7 +35,7 @@ namespace WarcraftPlugin.Classes
 
         List<FootBall> footBalls = new List<FootBall>();
         int footballsRemaining = 0;
-        FootballSystem fbs;
+        FootballAimSystem fbs;
         bool footballIsSpawned = false;
 
         public override List<IWarcraftAbility> Abilities =>
@@ -69,7 +69,7 @@ namespace WarcraftPlugin.Classes
                 {
                     Console.WriteLine("decreasing available balls and spawn the football");
                     footballsRemaining--;
-                    fbs = new FootballSystem(Player, 0.01f, footBalls);
+                    fbs = new FootballAimSystem(Player, 0.01f, footBalls);
                     fbs.Start();
                     footballIsSpawned = true;
                     StartCooldown(3);
@@ -81,8 +81,10 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("Already have a ball,");
                 fbs.Destroy();
                 footBalls[0].StayPut(Player);
+                footBalls[0].TraceHits(Player);
                 footBalls.RemoveAt(footBalls.Count - 1);
                 footballIsSpawned = false;
+
                 StartCooldown(3);
             }
 
@@ -109,7 +111,7 @@ namespace WarcraftPlugin.Classes
             }
         }
         */
-        internal class FootballSystem(CCSPlayerController owner, float onTickInterval, List<FootBall> footBalls) : WarcraftEffect(owner, onTickInterval: onTickInterval)
+        internal class FootballAimSystem(CCSPlayerController owner, float onTickInterval, List<FootBall> footBalls) : WarcraftEffect(owner, onTickInterval: onTickInterval)
         {
             public override void OnStart()
             {
@@ -125,6 +127,7 @@ namespace WarcraftPlugin.Classes
             }
             public override void OnFinish() { }
         }
+        
 
     }
 
