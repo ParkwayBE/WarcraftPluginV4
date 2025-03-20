@@ -57,9 +57,9 @@ namespace WarcraftPlugin.Classes
 
             if (WarcraftPlayer.GetAbilityLevel(2) > 0)
             {
-                float additionalSpeed = WarcraftPlayer.GetAbilityLevel(2) * _MovementSpeedMult;
-                Player.PlayerPawn.Value.VelocityModifier += additionalSpeed;
-                Console.WriteLine("Adding speed to player.");
+                var pawn = Player.PlayerPawn.Value;
+                pawn.VelocityModifier = 1 + 0.12f * WarcraftPlayer.GetAbilityLevel(2);
+                
             }
 
 
