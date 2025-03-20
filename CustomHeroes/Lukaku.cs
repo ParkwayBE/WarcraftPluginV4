@@ -81,8 +81,10 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("Already have a ball,");
                 fbs.Destroy();
                 footBalls[0].StayPut(Player);
+                footBalls[0].TraceHits(Player);
                 footBalls.RemoveAt(footBalls.Count - 1);
                 footballIsSpawned = false;
+
                 StartCooldown(3);
             }
 
