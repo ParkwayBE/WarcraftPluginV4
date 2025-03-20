@@ -1,14 +1,6 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using WarcraftPlugin.Helpers;
-using static g3.RoundRectGenerator;
-using static g3.SetGroupBehavior;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace WarcraftPlugin.Summons
@@ -41,7 +33,8 @@ namespace WarcraftPlugin.Summons
 
             _ballProp.SetParent(_ball, new Vector(0, 0, 0));
             _ballProp.CBodyComponent.SceneNode.GetSkeletonInstance().Scale = 1;
-            _ball.Teleport(_owner.CalculatePositionInFront(Position), _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            Vector changedLocation = new Vector (_owner.PlayerPawn.Value.AbsOrigin.X+=0.1f, _owner.PlayerPawn.Value.AbsOrigin.Y, _owner.PlayerPawn.Value.AbsOrigin.Z+=0.1f);
+            _ball.Teleport(changedLocation, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
 
         }
         private void Deactivate()
