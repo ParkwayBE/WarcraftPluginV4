@@ -7,6 +7,7 @@ using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Models;
 using WarcraftPlugin.Events.ExtendedEvents;
+using WarcraftPlugin.Core.Preload;
 
 
 
@@ -281,6 +282,7 @@ namespace WarcraftPlugin.Classes
             float offset = 30.0f; // Adjust the offset as needed
             float particleDuration = 3.0f;
             string redCircleParticle = "particles/weapons/cs_weapon_fx/weapon_sensorgren_detonate.vpcf";
+            string redCircleParticle2 = "particles / explosions_fx / explosion_c4_light.vpcf"
 
             var basePosition = killer.PlayerPawn.Value.AbsOrigin.Clone();
             basePosition.Z += 50; // Raise all particles above the ground
@@ -292,7 +294,7 @@ namespace WarcraftPlugin.Classes
             // Spawn particle 2 (offset slightly in X)
             var particle2Position = basePosition.Clone();
             particle2Position.X += offset;
-            var particle2 = Warcraft.SpawnParticle(particle2Position, redCircleParticle, particleDuration);
+            var particle2 = Warcraft.SpawnParticle(particle2Position, redCircleParticle2, particleDuration);
             particle2.SetParent(killer.PlayerPawn.Value);
 
             // Spawn particle 3 (offset slightly in Y)
