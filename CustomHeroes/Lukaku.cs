@@ -60,7 +60,7 @@ namespace WarcraftPlugin.Classes
         {
             if (footBalls.Count > 0)
             {
-                Console.WriteLine("Lukaku used ultimate!");
+                Player.PrintToChat("Lukaku has used a ball!");
                 footBalls[0].Activate();
                 footBalls.RemoveAt(footBalls.Count - 1);
             }
