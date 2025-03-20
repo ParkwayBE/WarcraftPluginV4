@@ -14,12 +14,11 @@ namespace WarcraftPlugin.Summons
         private Vector posInfrontOfPlayer;
         private Vector changedLocation;
 
-        public Vector Position { get; set; } = new(70, -70, 90);
+        //public Vector Position { get; set; } = new(70, -70, 90);
 
-        public FootBall(CCSPlayerController owner, Vector position)
+        public FootBall(CCSPlayerController owner)
         {
             _owner = owner;
-            Position = position;
  
         }
 
@@ -50,7 +49,7 @@ namespace WarcraftPlugin.Summons
             var distance = 60;
             var height = 10;
             posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
-            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
            
         }
     }
