@@ -108,7 +108,7 @@ namespace WarcraftPlugin.Classes
             }
         }
 
-        
+
 
         private void OnSmokeDetonate(EventSmokegrenadeDetonate @event)
         {
@@ -120,11 +120,22 @@ namespace WarcraftPlugin.Classes
 
             var player = @event.Userid;
 
-            // Store the last smoke grenade location for this player
-            lastSmokePositions[player.SteamID] = @event.Position;
+            // ✅ Extract smoke grenade entity and get its position
+            var smokeEntity = @event.SmokeGrenade;
+            if (smokeEntity == null)
+            {
+                Console.WriteLine("[ERROR] Could not find smoke grenade entity! Aborting.");
+                return;
+            }
 
-            Console.WriteLine($"[DEBUG] Stored smoke location for {player.PlayerName}: {@event.Position}");
+            var smokePosition = smokeEntity.AbsOrigin; // ✅ Get smoke grenade's position
+
+            // ✅ Store the last smoke grenade location for this player
+            lastSmokePositions[player.SteamID] = smokePosition;
+
+            Console.WriteLine($"[DEBUG] Stored smoke location for {player.PlayerName}: {smokePosition}");
         }
+
 
 
         internal class SetGravityEffect(CCSPlayerController owner, float gravity, float duration)
@@ -373,8 +384,8 @@ namespace WarcraftPlugin.Classes
 
             Console.WriteLine($"[INFO] Spawning HE grenade at {smokePosition} for {Player.PlayerName}");
 
-            // Spawn an HE grenade at the stored smoke position
-            var heGrenade = Utilities.CreateEntityByName("hegrenade_projectile");
+            // ✅ Correct way to create a grenade entity
+            var heGrenade = WarcraftPlugin.Instance.CreateEntity("hegrenade_projectile");
             if (heGrenade == null)
             {
                 Console.WriteLine("[ERROR] Failed to create HE grenade entity!");
@@ -386,15 +397,16 @@ namespace WarcraftPlugin.Classes
 
             Console.WriteLine("[INFO] HE grenade spawned! Detonating immediately...");
 
-            // Make the grenade explode instantly
+            // ✅ Make the grenade explode instantly
             WarcraftPlugin.Instance.AddTimer(0.1f, () =>
             {
                 heGrenade.TakeDamage(9999, Player, Player);
                 Console.WriteLine("[INFO] HE grenade exploded at smoke position!");
             });
 
-            //  Start Cooldown
+            // ✅ Start Cooldown
             StartCooldown(3);
         }
+
     }
 }
