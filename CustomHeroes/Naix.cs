@@ -209,7 +209,7 @@ namespace WarcraftPlugin.Classes
 
         int repetitionCount = 0;
         int maxRepetitions = 3;
-        float delayBetweenRepetitions = 3.0f; // Matches the particle duration
+        float delayBetweenRepetitions = 1.0f; // Matches the particle duration
 
         void SpawnParticles()
         {
