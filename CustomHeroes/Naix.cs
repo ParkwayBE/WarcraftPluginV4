@@ -280,7 +280,8 @@ namespace WarcraftPlugin.Classes
 
             // EFFECT CODE
             float offset = 70.0f; // Adjust the offset as needed
-            float particleDuration = 4.0f;
+            float particleDuration = 12.0f;
+            float particleDuration2 = 4.0f;
             string redCircleParticle = "particles/weapons/cs_weapon_fx/weapon_sensorgren_detonate.vpcf";
             string redCircleParticle2 = "particles/inferno_fx/explosion_incend_air_core.vpcf";
 
@@ -305,7 +306,7 @@ namespace WarcraftPlugin.Classes
 
             // particle 4 
             var particle4Position = basePosition.Clone();
-            var particle4 = Warcraft.SpawnParticle(particle4Position, redCircleParticle2, particleDuration);
+            var particle4 = Warcraft.SpawnParticle(particle4Position, redCircleParticle2, particleDuration2);
             particle4.SetParent(killer.PlayerPawn.Value);
 
             // END EFFECT CODE
