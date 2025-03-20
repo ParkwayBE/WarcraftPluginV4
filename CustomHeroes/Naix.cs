@@ -158,7 +158,7 @@ namespace WarcraftPlugin.Classes
                 effect.GiveSmokeIfNeeded();
             }
 
-            SetUltimateAvailability(true, Player);
+            //SetUltimateAvailability(true, Player);
         }
         
         private void SetUltimateAvailability(bool availability, CCSPlayerController player)
