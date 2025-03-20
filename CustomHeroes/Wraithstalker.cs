@@ -36,7 +36,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Assimilation", "On Kill: Movement speed and reduced gravity for 3/5/7/9/10 seconds, this also grants a blindstack max 2, which blinds an enemy when he spots you."),
             new WarcraftAbility("Phantom Cloak", "Standing still for  2.5 - 0.5 seconds makes you invisible and your next shot deals bonus damage."),
             new WarcraftAbility("Shadowstrike", "After you exited Phantom Cloak your next hit will cause bonus damage and grant you a guaranteed skull"),
-            new WarcraftCooldownAbility("Marked for prey", "Scan the area where you are looking, highlight enemies close for x seconds and slow them down. Killing a marked target grants a skull. Skulls give you lasting benefits untill mapchange.", 60f)
+            new WarcraftCooldownAbility("Marked for prey", "Scan the area where you are looking, highlight enemies close for x seconds and slow them down. Killing a marked target grants a skull. Skulls give you lasting benefits untill mapchange.", 5f)
         ];
 
         public override void Register()
@@ -73,7 +73,7 @@ namespace WarcraftPlugin.Classes
             glowModel.Spawnflags = 256U;
             glowModel.Glow.GlowColorOverride = color;
             glowModel.Glow.GlowRange = 8000;
-            glowModel.Glow.GlowType = 2;
+            glowModel.Glow.GlowType = 1;
             glowModel.RenderMode = RenderMode_t.kRenderGlow;
 
             // Spawn the entities
@@ -100,7 +100,7 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-           StartGlow(Player, Color.Blue, 20);
+           StartGlow(Player, Color.Blue, 5);
            StartCooldown(3);
         }
 
