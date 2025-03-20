@@ -35,7 +35,7 @@ namespace WarcraftPlugin.Classes
         public override void Register()
         {
             Console.WriteLine("[INFO] Registering Naix hooks...");
-            HookEvent<EventSmokegrenadeDetonate>(SmokegrenadeDetonate);
+            HookEvent<EventSmokegrenadeDetonate>(OnSmokeDetonate);
             HookEvent<EventPlayerHurtOther>(PlayerKill);
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerJump>(PlayerJump);
@@ -128,17 +128,22 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
-            Player.PrintToChat(detonate.Z.ToString());
-            Player.PrintToChat(detonate.Y.ToString());
-            Player.PrintToChat(detonate.X.ToString());
+            // Log all potential position values
+            Console.WriteLine($"[DEBUG] SmokeDetonate Position - X: {detonate.X}, Y: {detonate.Y}, Z: {detonate.Z}");
 
-            // ✅ Retrieve smoke grenade position from event data
+            // Ensure we have a valid position
             Vector smokePosition = new Vector(detonate.X, detonate.Y, detonate.Z);
+            if (smokePosition == null)
+            {
+                Console.WriteLine("[ERROR] Failed to retrieve smoke grenade position!");
+                return;
+            }
 
             // ✅ Store the last smoke grenade position
             lastSmokePositions[player.SteamID] = smokePosition;
             Console.WriteLine($"[DEBUG] Stored smoke position for {player.PlayerName}: {smokePosition}");
         }
+
 
 
 
