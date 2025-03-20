@@ -61,23 +61,24 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            Player.PrintToChat("start ult");
+            Console.WriteLine("pressed ult");
             if (!footballIsSpawned)
             {
-                Player.PrintToChat("first time ult");
+                Console.WriteLine("You don't have a football");
                 if (footballsRemaining > 0)
                 {
+                    Console.WriteLine("decreasing available balls and spawn the football");
                     footballsRemaining--;
                     fbs = new FootballSystem(Player, 0.01f, footBalls);
                     fbs.Start();
                     footballIsSpawned = true;
-
+                    StartCooldown(3);
                 }
 
             }
             else
             {
-                Player.PrintToChat("second time ult");
+                Console.WriteLine("Already have a ball,");
                 fbs.Destroy();
                 footBalls[0].StayPut(Player);
                 footBalls.RemoveAt(footBalls.Count - 1);
