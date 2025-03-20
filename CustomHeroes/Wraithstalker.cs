@@ -22,10 +22,21 @@ using WarcraftPlugin.Core;
 using WarcraftPlugin.Summons;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 
 namespace WarcraftPlugin.Classes
 {
+    public static class PlayerExtensions
+    {
+        public static string GetRealPlayerName(this CCSPlayerController player)
+        {
+            if (player == null || !player.IsValid) return string.Empty;
+            var playerNameClean = Regex.Replace(player.PlayerName, @"\d+\s\[.*\]\s", "");
+            return playerNameClean;
+        }
+    }
+
     public class Wraithstalker : WarcraftClass
     {
         public override string DisplayName => "Wraithstalker";
@@ -104,38 +115,27 @@ namespace WarcraftPlugin.Classes
 
         private void FindAndLogNearbyPlayers(float radius)
         {
-            // Get the player's current position and look direction
-            var playerPosition = Player.PlayerPawn.Value.AbsOrigin;  // Current position
-            var lookDirection = Player.PlayerPawn.Value.EyeAngles;   // Direction we're looking in
-
-            // Offset the position in the direction we're looking
-            var offsetVector = new Vector();
-            NativeAPI.AngleVectors(lookDirection.Handle, offsetVector.Handle, nint.Zero, nint.Zero);
-            offsetVector *= 200.0f; // Move 200 units forward in the look direction
-            var targetPosition = playerPosition + offsetVector;
-
-            // Iterate through all players and find those within the radius
+            var playerPosition = Player.PlayerPawn.Value.AbsOrigin;
             var players = Utilities.GetPlayers();
+
             foreach (var otherPlayer in players)
             {
                 if (!otherPlayer.IsAlive() || otherPlayer.UserId == Player.UserId)
                     continue;
 
-                // Calculate the squared distance between the target position and the other player's position
                 var otherPlayerPosition = otherPlayer.PlayerPawn.Value.AbsOrigin;
-                var distanceVector = targetPosition - otherPlayerPosition;
+                var distanceVector = playerPosition - otherPlayerPosition;
                 var distanceSquared = distanceVector.X * distanceVector.X + distanceVector.Y * distanceVector.Y + distanceVector.Z * distanceVector.Z;
 
-                // Compare squared distance to squared radius for performance
                 if (distanceSquared <= radius * radius)
                 {
-                    // If within radius, print the player's name
-                    var playerName = otherPlayer.GetRealPlayerName(); // Use the extension method
-                    Console.WriteLine($"Player found: {playerName}");
+                    Console.WriteLine($"Player found: {otherPlayer.GetRealPlayerName()}");
                 }
             }
         }
 
+
+        
 
         private void Ultimate()
         {
