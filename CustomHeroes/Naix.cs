@@ -111,26 +111,23 @@ namespace WarcraftPlugin.Classes
 
 
 
-        private void OnSmokeDetonate(EventSmokegrenadeDetonate @event)
+        private void OnSmokeDetonate(EventSmokegrenadeDetonate detonate)
         {
-            if (@event.Userid == null || !@event.Userid.IsValid)
+            if (WarcraftPlayer.GetAbilityLevel(3) > 0) // ✅ Check if the ultimate ability is unlocked
             {
-                Console.WriteLine("[ERROR] SmokeDetonate event triggered, but Userid is NULL or invalid!");
-                return;
+                if (Player == null || Player.PlayerPawn?.Value == null)
+                {
+                    Console.WriteLine("[ERROR] Player is NULL in SmokeDetonate! Aborting.");
+                    return;
+                }
+
+                // ✅ Store the last smoke grenade's position
+                lastSmokePositions[Player.SteamID] = new Vector(detonate.X, detonate.Y, detonate.Z);
+
+                Console.WriteLine($"[DEBUG] Stored smoke location for {Player.PlayerName}: {lastSmokePositions[Player.SteamID]}");
             }
-
-            var player = @event.Userid;
-            if (player == null || player.PlayerPawn?.Value == null)
-            {
-                Console.WriteLine("[ERROR] Player is NULL in SmokeDetonate! Aborting.");
-                return;
-            }
-
-            // ✅ Store the last smoke grenade position for this player
-            lastSmokePositions[player.SteamID] = player.PlayerPawn.Value.AbsOrigin.Clone();
-
-            Console.WriteLine($"[DEBUG] Stored smoke location for {player.PlayerName}: {lastSmokePositions[player.SteamID]}");
         }
+
 
 
         internal class SetGravityEffect(CCSPlayerController owner, float gravity, float duration)
