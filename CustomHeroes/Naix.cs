@@ -36,7 +36,7 @@ namespace WarcraftPlugin.Classes
         public override void Register()
         {
             Console.WriteLine("[INFO] Registering Naix hooks...");
-            HookEvent<EventSmokegrenadeDetonate>(OnSmokeDetonate);
+            HookEvent<EventSmokegrenadeDetonate>(SmokegrenadeDetonate);
             HookEvent<EventPlayerHurtOther>(PlayerKill);
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerJump>(PlayerJump);
@@ -122,9 +122,9 @@ namespace WarcraftPlugin.Classes
 
 
 
-        private void OnSmokeDetonate(EventSmokegrenadeDetonate detonate)
+        private void SmokegrenadeDetonate(EventSmokegrenadeDetonate detonate)
         {
-            Console.WriteLine("[DEBUG] OnSmokeDetonate triggered!");
+            Console.WriteLine("[DEBUG] SmokeDetonate triggered!");
 
             if (detonate.Userid == null || !detonate.Userid.IsValid)
             {
