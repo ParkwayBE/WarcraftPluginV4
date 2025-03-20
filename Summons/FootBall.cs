@@ -33,7 +33,8 @@ namespace WarcraftPlugin.Summons
 
             _ballProp.SetParent(_ball, new Vector(0, 0, 0));
             _ballProp.CBodyComponent.SceneNode.GetSkeletonInstance().Scale = 1;
-            _ball.Teleport(_owner.CalculatePositionInFront(Position), _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            Vector changedLocation = new Vector (_owner.PlayerPawn.Value.AbsOrigin.X+=1f, _owner.PlayerPawn.Value.AbsOrigin.Y, _owner.PlayerPawn.Value.AbsOrigin.Z);
+            _ball.Teleport(changedLocation, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
 
         }
         private void Deactivate()
