@@ -8,9 +8,7 @@ using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Models;
 using WarcraftPlugin.Events.ExtendedEvents;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
-using System.Threading;
+
 
 
 namespace WarcraftPlugin.Classes
