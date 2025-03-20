@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using WarcraftPlugin.Models;
-
+using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API;
@@ -50,8 +50,57 @@ namespace WarcraftPlugin.Classes
             
         }
 
+        public void StartGlow(CCSPlayerController player, Color color, int duration)
+        {
+            var pawn = player.PlayerPawn.Value;
+
+            // Retrieve the player's current model name
+            var modelName = pawn.CBodyComponent.SceneNode.GetSkeletonInstance().ModelState.ModelName;
+
+            // Create relay and glow model entities
+            var relayModel = Utilities.CreateEntityByName<CBaseModelEntity>("prop_dynamic");
+            var glowModel = Utilities.CreateEntityByName<CBaseModelEntity>("prop_dynamic");
+
+            if (relayModel == null || glowModel == null) return;
+
+            // Set up the relay model
+            relayModel.SetModel(modelName);
+            relayModel.Spawnflags = 256U;
+            relayModel.RenderMode = RenderMode_t.kRenderNone;
+
+            // Set up the glow model
+            glowModel.SetModel(modelName);
+            glowModel.Spawnflags = 256U;
+            glowModel.Glow.GlowColorOverride = color;
+            glowModel.Glow.GlowRange = 5000;
+            glowModel.Glow.GlowType = 3;
+            glowModel.RenderMode = RenderMode_t.kRenderGlow;
+
+            // Spawn the entities
+            relayModel.DispatchSpawn();
+            glowModel.DispatchSpawn();
+
+            // Attach the models
+            relayModel.AcceptInput("FollowEntity", pawn, relayModel, "!activator");
+            glowModel.AcceptInput("FollowEntity", relayModel, glowModel, "!activator");
+
+            // Set a timer to clean up the glow effect
+            if (duration > 0)
+            {
+                WarcraftPlugin.Instance.AddTimer(duration, () =>
+                {
+                    // Remove the glow and relay models after the duration
+                    glowModel?.RemoveIfValid();
+                    relayModel?.RemoveIfValid();
+                });
+            }
+        }
+
+
+
         private void Ultimate()
         {
+           StartGlow(Player, Color.Blue, 20);
            StartCooldown(3);
         }
 
