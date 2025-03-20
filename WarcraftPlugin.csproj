@@ -54,9 +54,12 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
-	<Import Project=".\PostBuild.targets" Condition="Exists('.\PostBuild.targets')" />
-  <ItemGroup>
+   <ItemGroup>
     <Compile Remove="CustomHeroes\**" />
-    <Content Include="CustomHeroes\**" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="CustomHeroes\**" />
+  </ItemGroup>
+
 </Project>
