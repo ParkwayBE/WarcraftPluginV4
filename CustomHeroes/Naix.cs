@@ -153,19 +153,31 @@ namespace WarcraftPlugin.Classes
         {
             Console.WriteLine("[DEBUG] OnSmokeDetonate triggered!");
 
-            if (Player == null || Player.PlayerPawn?.Value == null)
+            // Ensure the detonate event's Userid is valid
+            if (detonate.Userid == null || !detonate.Userid.IsValid)
+            {
+                Console.WriteLine("[ERROR] SmokeDetonate event triggered, but Userid is NULL or invalid!");
+                return;
+            }
+
+            // Extract the player from detonate.Userid
+            var player = detonate.Userid;
+            if (player == null || player.PlayerPawn?.Value == null)
             {
                 Console.WriteLine("[ERROR] Player is NULL in SmokeDetonate! Aborting.");
                 return;
             }
 
-            lastSmokePositions[Player.SteamID] = new Vector(detonate.X, detonate.Y, detonate.Z);
-            Console.WriteLine($"[INFO] Stored smoke position: {lastSmokePositions[Player.SteamID]}");
+            // Store the smoke grenade position
+            Console.WriteLine($"[DEBUG] SmokeDetonate Coordinates - X: {detonate.X}, Y: {detonate.Y}, Z: {detonate.Z}");
+            lastSmokePositions[player.SteamID] = new Vector(detonate.X, detonate.Y, detonate.Z);
+            Console.WriteLine($"[INFO] Stored smoke position for {player.PlayerName}: {lastSmokePositions[player.SteamID]}");
 
             // Start the smoke effect
-            var effect = new SmokeSupplyEffect(this, Player, 20); // 20 seconds duration
+            var effect = new SmokeSupplyEffect(this, player, 20); // 20 seconds duration
             effect.Start();
         }
+
 
 
 
