@@ -74,33 +74,42 @@ namespace WarcraftPlugin.Classes
             Glow.AcceptInput("SetParent", entity, Glow, "!activator");
         }
 
-        private void Ultimate()
+        internal class GlowEffect : WarcraftEffect
         {
-            int repetitions = 14;
-            float interval = 0.5f; // seconds
-            if (WarcraftPlayer.GetAbilityLevel(3) < 1 || !IsAbilityReady(3))
+            private readonly Color _glowColor;
+
+            public GlowEffect(CCSPlayerController owner, Color glowColor, float duration, float onTickInterval)
+                : base(owner, duration: duration, onTickInterval: onTickInterval)
             {
-                Console.WriteLine("[INFO] Ultimate cannot be used (ability level too low or on cooldown).");
-                return;
-            }
-            if (!canUseUltimate)
-            {
-                Console.WriteLine("[INFO] Ultimate is on cooldown!");
-                return;
+                _glowColor = glowColor;
             }
 
-            for (int i = 0; i < repetitions; i++)
+            public override void OnStart()
             {
-                // Schedule the function to run at i * interval seconds
-                float delay = i * interval;
-                WarcraftPlugin.Instance.AddTimer(delay, () =>
-                {
-                    SetGlowOnEntity(Player.PlayerPawn.Value, Color.Red);
-                });
+                SetGlowOnEntity(Owner.PlayerPawn.Value, _glowColor);
             }
+
+            public override void OnTick()
+            {
+                // Repeat the glow effect at every tick
+                SetGlowOnEntity(Owner.PlayerPawn.Value, _glowColor);
+            }
+
+            public override void OnFinish()
+            {
+                // Optionally clear glow when finished
+            }
+        }
+
+        private void Ultimate()
+        {
+            var duration = 7.0f;    // 7 seconds total
+            var tickRate = 0.5f;    // Every 0.5 seconds (5 ticks in total over 7 seconds)
+            new GlowEffect(Player, Color.Red, duration, tickRate).Start();
 
             StartCooldown(3);
         }
+
 
 
         private void PlayerShoot(EventWeaponFire @event)
