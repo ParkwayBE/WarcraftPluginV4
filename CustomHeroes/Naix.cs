@@ -427,5 +427,3 @@ namespace WarcraftPlugin.Classes
 
     }
 }
-
-
