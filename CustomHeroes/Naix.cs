@@ -142,7 +142,7 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
-            SetUltimateAvailability(true, player);
+            
 
             // ✅ Ensure we get a valid coordinate set
             Console.WriteLine($"[DEBUG] SmokeDetonate Coordinates - X: {detonate.X}, Y: {detonate.Y}, Z: {detonate.Z}");
@@ -157,6 +157,8 @@ namespace WarcraftPlugin.Classes
             {
                 effect.GiveSmokeIfNeeded();
             }
+
+            SetUltimateAvailability(true, player);
         }
 
         private void SetUltimateAvailability(bool availability, CCSPlayerController player)
