@@ -278,7 +278,7 @@ namespace WarcraftPlugin.Classes
             killer.PlayerPawn.Value.SetColor(Color.Red);
 
             // EFFECT CODE
-            string redCircleParticle = "particles/inferno_fx/molotov_fire01_cheap.vpcf";
+            string redCircleParticle = "particles/maps/de_shacks/shacks_policelight_red_core.vpcf";
             float particleDuration = 2.0f;
             var spawnPosition = killer.PlayerPawn.Value.AbsOrigin.Clone();
             spawnPosition.Z += 50; // Raises the particle 50 units above the ground
