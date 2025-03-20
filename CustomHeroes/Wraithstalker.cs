@@ -117,6 +117,7 @@ namespace WarcraftPlugin.Classes
         bool playerFound = false;
         private void FindAndLogNearbyPlayers(float radius)
         {
+            bool playerFound = false;
             var playerPosition = Player.PlayerPawn.Value.AbsOrigin;
             var players = Utilities.GetPlayers();
 
@@ -140,11 +141,11 @@ namespace WarcraftPlugin.Classes
             {
                 Console.WriteLine("No players found in the specified radius.");
             }
-
         }
 
 
-        
+
+
 
         private void Ultimate()
         {
