@@ -28,18 +28,17 @@ namespace WarcraftPlugin.Summons
             Deactivate();
             _ball = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
             _ball.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
-            _ball.DispatchSpawn();
 
             _ballProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
             _ballProp.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
             _ballProp.DispatchSpawn();
 
-            _ballProp.SetParent(_ball, new Vector(0, 0, 0));
+            //_ballProp.SetParent(_ball, new Vector(0, 0, 0));
             _ballProp.CBodyComponent.SceneNode.GetSkeletonInstance().Scale = 1;
             var distance = 60;
-            var height = 60;
+            var height = 10;
             posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
-            _ball.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            _ballProp.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
             
         }
         private void Deactivate()
@@ -49,7 +48,7 @@ namespace WarcraftPlugin.Summons
         public void UpdateLocation(Vector position)
         {
             var distance = 60;
-            var height = 60;
+            var height = 10;
             posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
             _ball.Teleport(changedLocation, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
            
