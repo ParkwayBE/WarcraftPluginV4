@@ -40,7 +40,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("DoSomething", "Quick"),
             new WarcraftAbility("Monkey Agility", "Increases movement speed and evasion."),
             new WarcraftAbility("Primal Roar", "Emits a roar when killing an enemy that stuns nearby enemies."),
-            new WarcraftCooldownAbility("Ballr", "Balls", 60f)
+            new WarcraftCooldownAbility("Ballr", "Balls", 0.5f)
         ];
 
         public override void Register()
@@ -64,7 +64,7 @@ namespace WarcraftPlugin.Classes
                 FootballSystem fbs = new FootballSystem(Player, 0.3f, footBalls);
                 fbs.FinishOnDestroy = true;
                 fbs.Start();
-                WarcraftPlugin.Instance.AddTimer(20f, () =>
+                WarcraftPlugin.Instance.AddTimer(5f, () =>
                 {
                     fbs.Destroy();
                 });
