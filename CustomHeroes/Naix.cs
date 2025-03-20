@@ -327,6 +327,8 @@ namespace WarcraftPlugin.Classes
             victim.PlayLocalSound("sounds/ambient/ambience/creatures/dog_bark_close.vsnd");
 
 
+
+
             WarcraftPlugin.Instance.AddTimer(3.0f, () =>
             {
                 if (killer.PlayerPawn?.Value != null && killer.PlayerPawn.Value.IsValid)
