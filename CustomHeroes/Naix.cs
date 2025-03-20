@@ -280,11 +280,12 @@ namespace WarcraftPlugin.Classes
             // EFFECT CODE
             string redCircleParticle = "particles/inferno_fx/molotov_fire01_cheap.vpcf";
             float particleDuration = 2.0f;
-            var particle = Warcraft.SpawnParticle(killer.PlayerPawn.Value.AbsOrigin, redCircleParticle, particleDuration);
-
+            var spawnPosition = killer.PlayerPawn.Value.AbsOrigin.Clone();
+            spawnPosition.Z += 50; // Raises the particle 50 units above the ground
+            var particle = Warcraft.SpawnParticle(spawnPosition, redCircleParticle, particleDuration);
             particle.SetParent(killer.PlayerPawn.Value);
 
-           // END EFFECT CODE
+            // END EFFECT CODE
             WarcraftPlugin.Instance.AddTimer(2.0f, () =>
             {
                 if (killer.PlayerPawn?.Value != null && killer.PlayerPawn.Value.IsValid)
