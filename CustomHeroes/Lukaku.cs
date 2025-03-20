@@ -36,7 +36,7 @@ namespace WarcraftPlugin.Classes
         List<FootBall> footBalls = new List<FootBall>();
         int footballsRemaining = 0;
         FootballSystem fbs;
-        bool footballIsSpawned = true;
+        bool footballIsSpawned = false;
 
         public override List<IWarcraftAbility> Abilities =>
         [
