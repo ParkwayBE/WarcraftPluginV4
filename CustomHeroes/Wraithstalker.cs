@@ -64,7 +64,7 @@ namespace WarcraftPlugin.Classes
             Glow.SetModel(entity.CBodyComponent!.SceneNode!.GetSkeletonInstance().ModelState.ModelName);
             Glow.DispatchSpawn();
             Glow.Glow.GlowColorOverride = GlowColor;
-            Glow.Glow.GlowRange = 5000;
+            Glow.Glow.GlowRange = 1500;
             Glow.Glow.GlowRangeMin = 0;
             Glow.Glow.GlowTeam = -1; // -1 = Both, 2 = T, 3 = CT
             Glow.Glow.GlowType = 3;
@@ -103,8 +103,8 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            var duration = 7.0f;    // 7 seconds total
-            var tickRate = 0.05f;    // Every 0.5 seconds (5 ticks in total over 7 seconds)
+            var duration = 7.0f;
+            var tickRate = 0.02f; 
             new GlowEffect(Player, Color.Red, duration, tickRate).Start();
 
             StartCooldown(3);
