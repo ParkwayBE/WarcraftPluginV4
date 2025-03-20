@@ -138,6 +138,7 @@ namespace WarcraftPlugin.Classes
                     var duration = 7.0f;
                     var tickRate = 0.02f;
                     new GlowEffect(otherPlayer, Color.Red, duration, tickRate).Start();
+                    otherPlayer.PrintToChat("You have been MARKED");
                 }
             }
 
