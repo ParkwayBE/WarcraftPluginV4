@@ -30,7 +30,7 @@ namespace WarcraftPlugin.Classes
 {
     public static class PlayerExtensions
     {
-        public static string GetRealPlayerName(this CCSPlayerController player)
+        public static string GetNearbyPlayersName(this CCSPlayerController player)
         {
             if (player == null || !player.IsValid) return string.Empty;
             var playerNameClean = Regex.Replace(player.PlayerName, @"\d+\s\[.*\]\s", "");
@@ -132,7 +132,7 @@ namespace WarcraftPlugin.Classes
                 float doubleRadius = 2 * radius;
                 if (distanceSquared <= doubleRadius * doubleRadius)
                 {
-                    Console.WriteLine($"Player found: {otherPlayer.GetRealPlayerName()}");
+                    Console.WriteLine($"Player found: {otherPlayer.GetNearbyPlayersName()}");
                     playerFound = true;
                     // Trigger the glow effect (if needed)
                     var duration = 7.0f;
