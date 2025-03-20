@@ -207,6 +207,51 @@ namespace WarcraftPlugin.Classes
             public override void OnTick() { /* */ }
         }
 
+        int repetitionCount = 0;
+        int maxRepetitions = 3;
+        float delayBetweenRepetitions = 3.0f; // Matches the particle duration
+
+        void SpawnParticles()
+        {
+            // EFFECT CODE
+            float offset = 70.0f; // Adjust the offset as needed
+            float particleDuration = 120.0f;
+            float particleDuration2 = 40.0f;
+            string redCircleParticle = "particles/weapons/cs_weapon_fx/weapon_sensorgren_detonate.vpcf";
+            string redCircleParticle2 = "particles/inferno_fx/explosion_incend_air_core.vpcf";
+
+            var basePosition = Player.PlayerPawn.Value.AbsOrigin.Clone();
+            basePosition.Z += 50; // Raise all particles above the ground
+
+            // Spawn particle 1 (center)
+            var particle1 = Warcraft.SpawnParticle(basePosition, redCircleParticle, particleDuration);
+            particle1.SetParent(Player.PlayerPawn.Value);
+
+            // Spawn particle 2 (offset slightly in X)
+            var particle2Position = basePosition.Clone();
+            particle2Position.X += offset;
+            var particle2 = Warcraft.SpawnParticle(particle2Position, redCircleParticle, particleDuration);
+            particle2.SetParent(Player.PlayerPawn.Value);
+
+            // Spawn particle 3 (offset slightly in Y)
+            var particle3Position = basePosition.Clone();
+            particle3Position.Y += offset;
+            var particle3 = Warcraft.SpawnParticle(particle3Position, redCircleParticle, particleDuration);
+            particle3.SetParent(Player.PlayerPawn.Value);
+
+            // particle 4 
+            var particle4Position = basePosition.Clone();
+            var particle4 = Warcraft.SpawnParticle(particle4Position, redCircleParticle2, particleDuration2);
+            particle4.SetParent(Player.PlayerPawn.Value);
+
+            // END EFFECT CODE
+
+            repetitionCount++;
+            if (repetitionCount < maxRepetitions)
+            {
+                WarcraftPlugin.Instance.AddTimer(delayBetweenRepetitions, SpawnParticles);
+            }
+        }
 
 
         private void PlayerKill(EventPlayerHurtOther @event)
@@ -278,43 +323,13 @@ namespace WarcraftPlugin.Classes
             }
             killer.PlayerPawn.Value.SetColor(Color.Red);
 
-            // EFFECT CODE
-            float offset = 70.0f; // Adjust the offset as needed
-            float particleDuration = 120.0f;
-            float particleDuration2 = 40.0f;
-            string redCircleParticle = "particles/weapons/cs_weapon_fx/weapon_sensorgren_detonate.vpcf";
-            string redCircleParticle2 = "particles/inferno_fx/explosion_incend_air_core.vpcf";
-
-            var basePosition = killer.PlayerPawn.Value.AbsOrigin.Clone();
-            basePosition.Z += 50; // Raise all particles above the ground
-
-            // Spawn particle 1 (center)
-            var particle1 = Warcraft.SpawnParticle(basePosition, redCircleParticle, particleDuration);
-            particle1.SetParent(killer.PlayerPawn.Value);
-
-            // Spawn particle 2 (offset slightly in X)
-            var particle2Position = basePosition.Clone();
-            particle2Position.X += offset;
-            var particle2 = Warcraft.SpawnParticle(particle2Position, redCircleParticle, particleDuration);
-            particle2.SetParent(killer.PlayerPawn.Value);
-
-            // Spawn particle 3 (offset slightly in Y)
-            var particle3Position = basePosition.Clone();
-            particle3Position.Y += offset;
-            var particle3 = Warcraft.SpawnParticle(particle3Position, redCircleParticle, particleDuration);
-            particle3.SetParent(killer.PlayerPawn.Value);
-
-            // particle 4 
-            var particle4Position = basePosition.Clone();
-            var particle4 = Warcraft.SpawnParticle(particle4Position, redCircleParticle2, particleDuration2);
-            particle4.SetParent(killer.PlayerPawn.Value);
-
-            // END EFFECT CODE
-            WarcraftPlugin.Instance.AddTimer(2.0f, () =>
+            
+            WarcraftPlugin.Instance.AddTimer(3.0f, () =>
             {
                 if (killer.PlayerPawn?.Value != null && killer.PlayerPawn.Value.IsValid)
                 {
                     killer.PlayerPawn.Value.SetColor(Color.AntiqueWhite);
+                    repetitionCount = 0;
                 }
             });
 
