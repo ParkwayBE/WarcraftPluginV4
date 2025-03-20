@@ -60,7 +60,13 @@ namespace WarcraftPlugin.Classes
             if (footballsRemaining > 0)
             {
                 footballsRemaining--;
-                FootballUse();
+                FootballSystem fbs = new FootballSystem(Player, 0.3f, footBalls);
+                fbs.FinishOnDestroy = true;
+                fbs.Start();
+                WarcraftPlugin.Instance.AddTimer(20f, () =>
+                {
+                    fbs.Destroy();
+                });
             }
 
 
@@ -72,6 +78,7 @@ namespace WarcraftPlugin.Classes
             // _plugin.AdminPanel.OpenAdminPanel(Player);
 
         }
+        /*
         private void FootballUse()
         {
             int maxSeconds = 5;
@@ -86,7 +93,25 @@ namespace WarcraftPlugin.Classes
                 footBalls[0].UpdateLocation(Player.PlayerPawn.Value.AbsOrigin);
             }
         }
+        */
+        internal class FootballSystem(CCSPlayerController owner, float onTickInterval, List<FootBall> footBalls) : WarcraftEffect(owner, onTickInterval: onTickInterval)
+        {
+            public override void OnStart()
+            {
+                footBalls.Add(new FootBall(owner, owner.PlayerPawn.Value.AbsOrigin));
+                footBalls[0].Activate();
+                owner.PrintToChat("You have used a ball");
+            }
+            public override void OnTick()
+            {
+                footBalls[0].UpdateLocation(owner.PlayerPawn.Value.AbsOrigin);
+         
+            }
+            public override void OnFinish() { }
+        }
+
     }
+
 }
 
 
