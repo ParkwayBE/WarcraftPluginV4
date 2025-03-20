@@ -108,7 +108,7 @@ namespace WarcraftPlugin.Classes
             public override void OnTick()
             {
                 owner.PrintToChat("tick");
-                footBalls[0].UpdateLocation(owner.PlayerPawn.Value.AbsOrigin);
+                footBalls[0].UpdateLocation(owner);
          
             }
             public override void OnFinish() { }

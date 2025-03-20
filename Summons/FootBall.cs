@@ -45,12 +45,12 @@ namespace WarcraftPlugin.Summons
         {
             _ball?.RemoveIfValid();
         }
-        public void UpdateLocation(Vector position)
+        public void UpdateLocation(CCSPlayerController owner)
         {
             var distance = 60;
             var height = 10;
-            posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
-            _ball.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
+            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
            
         }
     }
