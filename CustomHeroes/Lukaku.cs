@@ -54,20 +54,21 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            footballsRemaining = 3;
+            footballsRemaining = 10;
             //WarcraftPlugin.Instance.AddTimer(0.2f, () => {Player.PlayLocalSound("sounds/ambient/misc/techno_overpass.vsnd"); });
             Player.PrintToChat("you have 3 footballs");
         }
 
         private void Ultimate()
         {
+            Player.PrintToChat("start ult");
             if (!footballIsSpawned)
             {
+                Player.PrintToChat("first time ult");
                 if (footballsRemaining > 0)
                 {
                     footballsRemaining--;
                     fbs = new FootballSystem(Player, 0.01f, footBalls);
-                    fbs.FinishOnDestroy = true;
                     fbs.Start();
                     footballIsSpawned = true;
 
@@ -76,7 +77,7 @@ namespace WarcraftPlugin.Classes
             }
             else
             {
-                
+                Player.PrintToChat("second time ult");
                 fbs.Destroy();
                 footBalls[0].StayPut(Player);
                 footBalls.RemoveAt(footBalls.Count - 1);
