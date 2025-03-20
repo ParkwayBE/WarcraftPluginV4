@@ -279,8 +279,8 @@ namespace WarcraftPlugin.Classes
             killer.PlayerPawn.Value.SetColor(Color.Red);
 
             // EFFECT CODE
-            float offset = 30.0f; // Adjust the offset as needed
-            float particleDuration = 3.0f;
+            float offset = 70.0f; // Adjust the offset as needed
+            float particleDuration = 4.0f;
             string redCircleParticle = "particles/weapons/cs_weapon_fx/weapon_sensorgren_detonate.vpcf";
             string redCircleParticle2 = "particles/inferno_fx/explosion_incend_air_core.vpcf";
 
