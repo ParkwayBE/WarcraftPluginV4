@@ -56,7 +56,7 @@ namespace WarcraftPlugin.Classes
       
         private void PlayerShoot(EventWeaponFire @event)
         {
-            _plugin.AdminPanel.OpenAdminPanel(Player);
+            // _plugin.AdminPanel.OpenAdminPanel(Player);
 
         }
  
