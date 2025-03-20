@@ -323,6 +323,8 @@ namespace WarcraftPlugin.Classes
             }
             killer.PlayerPawn.Value.SetColor(Color.Red);
             SpawnParticles();
+            killer.PlayLocalSound("sounds/weapons/taser/taser_hit.vsnd");
+            victim.PlayLocalSound("sounds/weapons/taser/taser_hit.vsnd");
 
 
             WarcraftPlugin.Instance.AddTimer(3.0f, () =>
