@@ -13,21 +13,19 @@ using CounterStrikeSharp.API.Modules.Entities.Constants;
 
 namespace WarcraftPlugin.Classes
 {
-
+    
     internal class Naix : WarcraftClass
     {
         public override string DisplayName => "Naix";
         public override Color DefaultColor => Color.GreenYellow;
         private const uint IN_DUCK = 1 << 2; // Defines the crouch input
         private readonly Dictionary<CCSPlayerController, SmokeSupplyEffect> activeEffects = new();
-        private readonly int _MovementSpeedMult = 10;
-        private Dictionary<ulong, Vector> lastSmokePositions = new();
 
         public override List<IWarcraftAbility> Abilities =>
         [
             new WarcraftAbility("Smoke Supply", "Spawn with a smoke grenade and gain up to 0/1/2/3/4 additional smokes"),
             new WarcraftAbility("Consume", "If you kill an enemy while crouched, you teleport to the place you killed him, refill your ammo and gain 5/10/15/25/35 health"),
-            new WarcraftAbility("Acrobatics", "Gain 10/20/30/40/50% movement speed and the ability to jump further."),
+            new WarcraftAbility("Acrobatics", "Gain 5/10/15/25/35% movement speed and the ability to jump further."),
             new WarcraftCooldownAbility("Detonate", "Detonate a grenade in the middle of the last smoke you threw", 6f)
         ];
 
@@ -37,8 +35,8 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventSmokegrenadeDetonate>(SmokegrenadeDetonate);
             HookEvent<EventPlayerHurtOther>(PlayerKill);
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
-            HookEvent<EventPlayerJump>(PlayerJump);
             HookAbility(3, Ultimate);
+            Console.WriteLine("[DEBUG] Hooked EventPlayerDeath to PlayerKill.");
         }
 
 
@@ -52,124 +50,18 @@ namespace WarcraftPlugin.Classes
 
             Console.WriteLine("[INFO] Naix has spawned!");
 
-            if (WarcraftPlayer.GetAbilityLevel(2) > 0)
-            {
-                Player.PlayerPawn.Value.VelocityModifier += WarcraftPlayer.GetAbilityLevel(2) * _MovementSpeedMult;
-            }
-
-
-            // Ensuring previous effect is removed before adding a new one
+            // ✅ Ensure previous effect is removed before adding a new one
             if (activeEffects.TryGetValue(Player, out var existingEffect))
             {
                 existingEffect.Destroy();
                 activeEffects.Remove(Player);
             }
 
-            // Apply Smoke Supply Effect and track it
+            // ✅ Apply Smoke Supply Effect and track it
             var effect = new SmokeSupplyEffect(Player);
             activeEffects[Player] = effect;
             effect.Start();
         }
-
-        private void PlayerJump(EventPlayerJump @event)
-        {
-            if (WarcraftPlayer.GetAbilityLevel(2) > 0)
-            {
-                if (Player == null || Player.PlayerPawn?.Value == null)
-                {
-                    Console.WriteLine("ERROR: Player or PlayerPawn is NULL in PlayerJump!");
-                    return;
-                }
-
-                Console.WriteLine($"[DEBUG] {Player.PlayerName} jumped! Applying longjump effect...");
-                WarcraftPlugin.Instance.AddTimer(0.05f, () =>
-                {
-                    var directionAngle = Player.PlayerPawn.Value.EyeAngles;
-                    var directionVec = new Vector();
-                    NativeAPI.AngleVectors(directionAngle.Handle, directionVec.Handle, nint.Zero, nint.Zero);
-
-                    if (directionVec.Z < 0.500f)
-                    {
-                        directionVec.Z = 0.500f;
-                    }
-
-                    directionVec *= 500; // Adjust force if needed
-                    Player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
-                    Player.PlayerPawn.Value.AbsVelocity.Y = directionVec.Y;
-                    Player.PlayerPawn.Value.AbsVelocity.Z = directionVec.Z;
-
-                    Console.WriteLine($"[INFO] Applied longjump force after delay: X:{directionVec.X}, Y:{directionVec.Y}, Z:{directionVec.Z}");
-                });
-                WarcraftPlugin.Instance.AddTimer(0.05f, () =>
-                {
-                    Console.WriteLine("[INFO] Applying reduced gravity after delay.");
-                    new SetGravityEffect(Player, 0.7f, 3f).Start();
-                });
-            }
-        }
-
-
-
-        private void OnSmokeDetonate(EventSmokegrenadeDetonate @event)
-        {
-            if (@event.Userid == null || !@event.Userid.IsValid)
-            {
-                Console.WriteLine("[ERROR] SmokeDetonate event triggered, but Userid is NULL or invalid!");
-                return;
-            }
-
-            var player = @event.Userid;
-
-            // ✅ Extract smoke grenade entity and get its position
-            var smokeEntity = @event.SmokeGrenade;
-            if (smokeEntity == null)
-            {
-                Console.WriteLine("[ERROR] Could not find smoke grenade entity! Aborting.");
-                return;
-            }
-
-            var smokePosition = smokeEntity.AbsOrigin; // ✅ Get smoke grenade's position
-
-            // ✅ Store the last smoke grenade location for this player
-            lastSmokePositions[player.SteamID] = smokePosition;
-
-            Console.WriteLine($"[DEBUG] Stored smoke location for {player.PlayerName}: {smokePosition}");
-        }
-
-
-
-        internal class SetGravityEffect(CCSPlayerController owner, float gravity, float duration)
-    : WarcraftEffect(owner, duration)
-        {
-            private readonly float _gravity = gravity;
-
-            public override void OnStart()
-            {
-                if (Owner?.PlayerPawn?.Value == null)
-                {
-                    Console.WriteLine("ERROR: Owner or PlayerPawn is NULL in SetGravityEffect!");
-                    return;
-                }
-
-                Console.WriteLine($"[INFO] {Owner.PlayerName} gravity set to {_gravity}.");
-                Owner.PlayerPawn.Value.GravityScale = _gravity;
-            }
-
-            public override void OnFinish()
-            {
-                if (Owner?.PlayerPawn?.Value == null)
-                {
-                    Console.WriteLine("ERROR: Owner or PlayerPawn is NULL in SetGravityEffect OnFinish!");
-                    return;
-                }
-
-                Console.WriteLine($"[INFO] {Owner.PlayerName} gravity restored to normal.");
-                Owner.PlayerPawn.Value.GravityScale = 1.0f; // Reset to default gravity
-            }
-
-            public override void OnTick() { /* Not needed */ }
-        }
-
 
 
         private void PlayerKill(EventPlayerHurtOther @event)
@@ -279,6 +171,11 @@ namespace WarcraftPlugin.Classes
             effect.GiveSmokeIfNeeded();
         }
 
+        private void Ultimate()
+        {
+            Console.WriteLine("[INFO] Ultimate ability activated!");
+        }
+
         internal class SmokeSupplyEffect(CCSPlayerController owner) : WarcraftEffect(owner)
         {
             private int smokesGiven = 0;
@@ -363,68 +260,6 @@ namespace WarcraftPlugin.Classes
 
             // ✅ Required by WarcraftEffect (empty implementation)
             public override void OnTick() { }
-
         }
-
-        private void Ultimate()
-        {
-            Console.WriteLine("[INFO] Naix used Detonate!");
-
-            if (WarcraftPlayer.GetAbilityLevel(3) < 1 || !IsAbilityReady(3))
-            {
-                Console.WriteLine("[INFO] Ultimate cannot be used (ability level too low or on cooldown).");
-                return;
-            }
-
-            if (!lastSmokePositions.TryGetValue(Player.SteamID, out var smokePosition))
-            {
-                Console.WriteLine("[ERROR] No recorded smoke grenade location for this player! Aborting.");
-                return;
-            }
-
-            Console.WriteLine($"[INFO] Spawning HE grenade at {smokePosition} for {Player.PlayerName}");
-
-            // ✅ Adjust position like in Necromancer's PoisonCloudEffect
-            var grenadePosition = smokePosition.With(z: smokePosition.Z + 5f); // Slightly raised above ground
-
-            // ✅ Manually create HE grenade entity
-            var heGrenade = Utilities.FindAllEntitiesByDesignerName<CSmokeGrenadeProjectile>("hegrenade_projectile")
-                .Where(x => x.Thrower.Index == Player.PlayerPawn.Index)
-                .OrderByDescending(x => x.CreateTime)
-                .FirstOrDefault();
-
-            if (heGrenade == null)
-            {
-                Console.WriteLine("[ERROR] No valid HE grenade entity found! Trying to spawn manually...");
-
-                // ✅ Fallback: Manually spawn HE grenade
-                heGrenade = Utilities.CreateEntityByName("hegrenade_projectile");
-                if (heGrenade == null)
-                {
-                    Console.WriteLine("[ERROR] Failed to create HE grenade entity!");
-                    return;
-                }
-            }
-
-            // ✅ Set grenade position & ownership
-            heGrenade.Teleport(grenadePosition, Player.PlayerPawn.Value.AbsRotation, Vector.Zero);
-            heGrenade.SetOwner(Player);
-
-            Console.WriteLine($"[INFO] HE grenade spawned at {grenadePosition}. Detonating immediately...");
-
-            // ✅ Trigger instant explosion
-            WarcraftPlugin.Instance.AddTimer(0.05f, () =>
-            {
-                heGrenade.TakeDamage(9999, Player, Player); // ✅ Force explosion
-                Console.WriteLine("[INFO] HE grenade exploded at smoke position!");
-            });
-
-            // ✅ Start Cooldown
-            StartCooldown(3);
-        }
-
-
-
-
     }
 }

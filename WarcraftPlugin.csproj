@@ -62,4 +62,12 @@
     <None Include="CustomHeroes\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="CustomHeroes\Naix.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="CustomHeroes\Naix.cs" />
+  </ItemGroup>
+
 </Project>
