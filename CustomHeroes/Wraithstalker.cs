@@ -125,19 +125,22 @@ namespace WarcraftPlugin.Classes
             {
                 if (!otherPlayer.IsAlive() || otherPlayer.UserId == Player.UserId)
                     continue;
-                Console.WriteLine($"Checking player {otherPlayer.PlayerName} with team {otherPlayer.Team}");
-                if (otherPlayer.Team == Player.Team)
+
+                // Skip teammates
+                if (Player.TeamNum == otherPlayer.TeamNum)
                     continue;
 
                 var otherPlayerPosition = otherPlayer.PlayerPawn.Value.AbsOrigin;
                 var distanceVector = playerPosition - otherPlayerPosition;
                 var distanceSquared = distanceVector.X * distanceVector.X + distanceVector.Y * distanceVector.Y + distanceVector.Z * distanceVector.Z;
                 float doubleRadius = 2 * radius;
+
                 if (distanceSquared <= doubleRadius * doubleRadius)
                 {
-                    Console.WriteLine($"Player found: {otherPlayer.GetNearbyPlayersName()}");
+                    Console.WriteLine($"Enemy found: {otherPlayer.GetNearbyPlayersName()}");
                     playerFound = true;
-                    // Trigger the glow effect (if needed)
+
+                    // Trigger the glow effect
                     var duration = 7.0f;
                     var tickRate = 0.02f;
                     new GlowEffect(otherPlayer, Color.Red, duration, tickRate).Start();
@@ -147,9 +150,10 @@ namespace WarcraftPlugin.Classes
 
             if (!playerFound)
             {
-                Console.WriteLine("No players found in the specified radius.");
+                Console.WriteLine("No enemies found in the specified radius.");
             }
         }
+
 
 
 
