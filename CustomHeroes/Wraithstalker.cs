@@ -104,7 +104,7 @@ namespace WarcraftPlugin.Classes
         private void Ultimate()
         {
             var duration = 7.0f;    // 7 seconds total
-            var tickRate = 0.1f;    // Every 0.5 seconds (5 ticks in total over 7 seconds)
+            var tickRate = 0.05f;    // Every 0.5 seconds (5 ticks in total over 7 seconds)
             new GlowEffect(Player, Color.Red, duration, tickRate).Start();
 
             StartCooldown(3);
