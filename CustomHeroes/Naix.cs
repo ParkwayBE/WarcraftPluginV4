@@ -142,11 +142,12 @@ namespace WarcraftPlugin.Classes
             // ✅ Store the last smoke grenade position
             lastSmokePositions[player.SteamID] = smokePosition;
             Console.WriteLine($"[DEBUG] Stored smoke position for {player.PlayerName}: {smokePosition}");
+
+            if (!activeEffects.TryGetValue(Player, out var effect)) return;
+
+            // ✅ Grant another smoke if below ability cap
+            effect.GiveSmokeIfNeeded();
         }
-
-
-
-
 
         internal class SetGravityEffect(CCSPlayerController owner, float gravity, float duration)
     : WarcraftEffect(owner, duration)
@@ -277,16 +278,6 @@ namespace WarcraftPlugin.Classes
             }
 
             Console.WriteLine($"[SUCCESS] {killer.PlayerName} successfully used Consume on {victim.PlayerName}!");
-        }
-
-
-        private void SmokegrenadeDetonate(EventSmokegrenadeDetonate detonate)
-        {
-            var player = detonate.Userid;
-            if (!activeEffects.TryGetValue(player, out var effect)) return;
-
-            // ✅ Grant another smoke if below ability cap
-            effect.GiveSmokeIfNeeded();
         }
 
         internal class SmokeSupplyEffect(CCSPlayerController owner) : WarcraftEffect(owner)
