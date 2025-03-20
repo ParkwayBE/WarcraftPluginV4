@@ -12,7 +12,7 @@ using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace WarcraftPlugin.Summons
 {
-    internal class FootBall
+    public class FootBall
     {
         private CPhysicsPropMultiplayer _ball;
         private CDynamicProp _ballProp;
