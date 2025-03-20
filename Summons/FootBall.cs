@@ -34,12 +34,12 @@ namespace WarcraftPlugin.Summons
             _ballProp.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
             _ballProp.DispatchSpawn();
 
-            _ballProp.SetParent(_ball, new Vector(0, 0, 0));
+            //_ballProp.SetParent(_ball, new Vector(0, 0, 0));
             _ballProp.CBodyComponent.SceneNode.GetSkeletonInstance().Scale = 0.8f;
             var distance = 60;
             var height = 10;
             posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
-            _ball.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(0,1,1));
+            _ballProp.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(0,1,1));
             
         }
         private void Deactivate()
@@ -60,9 +60,9 @@ namespace WarcraftPlugin.Summons
             var distance = 60;
             var height = 10;
             posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
-            //_ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-            //_ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-            //_ballProp.SetParent(_ball);
+            _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            _ballProp.SetParent(_ball);
             
         }
     }
