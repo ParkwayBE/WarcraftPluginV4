@@ -10,6 +10,7 @@ using WarcraftPlugin.Models;
 using WarcraftPlugin.Events.ExtendedEvents;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
+using System.Threading;
 
 
 namespace WarcraftPlugin.Classes
@@ -23,6 +24,7 @@ namespace WarcraftPlugin.Classes
         private readonly Dictionary<CCSPlayerController, SmokeSupplyEffect> activeEffects = new();
         private readonly int _MovementSpeedMult = 10;
         private Dictionary<ulong, Vector> lastSmokePositions = new Dictionary<ulong, Vector>();
+        private Dictionary<CCSPlayerController, SmokePositionEffect> activeSmokeEffects = new();
         private bool isAlive = false;
 
         public override List<IWarcraftAbility> Abilities =>
@@ -69,7 +71,7 @@ namespace WarcraftPlugin.Classes
             }
 
             // Apply Smoke Supply Effect and track it
-            var effect = new SmokeSupplyEffect(Player);
+            var effect = new SmokeSupplyEffect(this, Player, 20);
             activeEffects[Player] = effect;
             effect.Start();
             canUseUltimate = true;
@@ -121,39 +123,51 @@ namespace WarcraftPlugin.Classes
             }
         }
 
+        internal class SmokePositionEffect(Naix parent, CCSPlayerController owner, Vector smokePosition)
+    : WarcraftEffect(owner, duration: 20f)
+        {
+            private Vector StoredPosition { get; set; } = smokePosition;
+            private readonly Naix _parent = parent;
+
+            public override void OnFinish()
+            {
+                Console.WriteLine($"[INFO] Smoke position expired for {Owner.PlayerName}.");
+                _parent.activeSmokeEffects.Remove(Owner);
+            }
+
+            public Vector GetSmokePosition() => StoredPosition;
+
+            public override void OnStart()
+            {
+
+            }
+            public override void OnTick() { /* Not needed */ }
+        }
+
+
+
+
 
 
         private void SmokegrenadeDetonate(EventSmokegrenadeDetonate detonate)
         {
-            Console.WriteLine("[DEBUG] SmokeDetonate triggered!");
+            Console.WriteLine("[DEBUG] OnSmokeDetonate triggered!");
 
-            if (detonate.Userid == null || !detonate.Userid.IsValid)
-            {
-                Console.WriteLine("[ERROR] SmokeDetonate event triggered, but Userid is NULL or invalid!");
-                return;
-            }
-
-            var player = detonate.Userid;
-            if (player == null || player.PlayerPawn?.Value == null)
+            if (Player == null || Player.PlayerPawn?.Value == null)
             {
                 Console.WriteLine("[ERROR] Player is NULL in SmokeDetonate! Aborting.");
                 return;
             }
 
-            // ✅ Ensure we get a valid coordinate set
-            Console.WriteLine($"[DEBUG] SmokeDetonate Coordinates - X: {detonate.X}, Y: {detonate.Y}, Z: {detonate.Z}");
+            lastSmokePositions[Player.SteamID] = new Vector(detonate.X, detonate.Y, detonate.Z);
+            Console.WriteLine($"[INFO] Stored smoke position: {lastSmokePositions[Player.SteamID]}");
 
-            // ✅ Store the last smoke grenade position in a dictionary
-            lastSmokePositions[player.SteamID] = new Vector(detonate.X, detonate.Y, detonate.Z);
-
-            Console.WriteLine($"[INFO] Stored smoke position for {player.PlayerName}: {lastSmokePositions[player.SteamID]}");
-
-            // ✅ Grant another smoke if below ability cap
-            if (activeEffects.TryGetValue(player, out var effect))
-            {
-                effect.GiveSmokeIfNeeded();
-            }
+            // Start the smoke effect
+            var effect = new SmokeSupplyEffect(this, Player, 20); // 20 seconds duration
+            effect.Start();
         }
+
+
 
 
         internal class SetGravityEffect(CCSPlayerController owner, float gravity, float duration)
@@ -287,31 +301,22 @@ namespace WarcraftPlugin.Classes
             Console.WriteLine($"[SUCCESS] {killer.PlayerName} successfully used Consume on {victim.PlayerName}!");
         }
 
-        internal class SmokeSupplyEffect(CCSPlayerController owner) : WarcraftEffect(owner)
+        internal class SmokeSupplyEffect : WarcraftEffect
         {
+            private readonly Naix _parent;
             private int smokesGiven = 0;
             private int maxSmokes = 0;
-            private WarcraftPlayer WarcraftPlayer;
+
+            public SmokeSupplyEffect(Naix parent, CCSPlayerController owner, float duration)
+                : base(owner, duration)
+            {
+                _parent = parent;
+            }
 
             public override void OnStart()
             {
                 Console.WriteLine("[DEBUG] SmokeSupplyEffect OnStart() triggered.");
-
-                if (Owner == null || Owner.PlayerPawn?.Value == null)
-                {
-                    Console.WriteLine("[ERROR] SmokeSupplyEffect started but Owner is NULL! Aborting.");
-                    return;
-                }
-
-                // ✅ Retrieve WarcraftPlayer correctly
-                WarcraftPlayer = Owner.GetWarcraftPlayer();
-                if (WarcraftPlayer == null)
-                {
-                    Console.WriteLine("[ERROR] Failed to retrieve WarcraftPlayer.");
-                    return;
-                }
-
-                maxSmokes = WarcraftPlayer.GetAbilityLevel(0);
+                maxSmokes = Owner.GetWarcraftPlayer().GetAbilityLevel(0);
                 Console.WriteLine($"[DEBUG] Retrieved ability level: {maxSmokes}");
 
                 if (maxSmokes < 1)
@@ -321,44 +326,34 @@ namespace WarcraftPlugin.Classes
                 }
 
                 Console.WriteLine($"[INFO] Smoke Supply Effect Activated - Ability Level: {maxSmokes}");
-
-                // ✅ Remove existing smokes to prevent unintended stacking
                 RemoveGrenades("weapon_smokegrenade");
-
-                // ✅ Start with 1 smoke
                 Console.WriteLine("[INFO] Granting initial smoke grenade.");
                 Owner.GiveNamedItem("weapon_smokegrenade");
-                smokesGiven = 1; // Track that we have given 1 smoke
+                smokesGiven = 1;
             }
 
-
-            // ✅ Called by `Naix` when a smoke detonates
             public void GiveSmokeIfNeeded()
             {
                 Console.WriteLine($"[DEBUG] Checking if {Owner.PlayerName} needs a smoke.");
-
                 if (smokesGiven >= maxSmokes)
                 {
                     Console.WriteLine($"[INFO] {Owner.PlayerName} has already received the max number of smokes ({maxSmokes}).");
                     return;
                 }
-
                 Console.WriteLine($"[INFO] {Owner.PlayerName} has no smokes. Giving another one.");
                 Owner.GiveNamedItem("weapon_smokegrenade");
                 smokesGiven++;
             }
 
-
             public override void OnFinish()
             {
-                Console.WriteLine($"[INFO] Smoke Supply Effect Finished for {Owner.PlayerName}");
+                Console.WriteLine($"[INFO] Smoke Supply Effect expired for {Owner.PlayerName}, clearing stored smoke position.");
+                _parent.lastSmokePositions.Remove(Owner.SteamID); // ✅ Clear position after 20 seconds
             }
 
-            // ✅ Helper function to remove old smokes
             private void RemoveGrenades(string grenadeName)
             {
                 var grenades = Owner.PlayerPawn.Value.WeaponServices.MyWeapons;
-
                 foreach (var grenade in grenades)
                 {
                     if (grenade.Value.DesignerName == grenadeName)
@@ -369,61 +364,47 @@ namespace WarcraftPlugin.Classes
                 }
             }
 
-            // ✅ Required by WarcraftEffect (empty implementation)
             public override void OnTick() { }
-
         }
+
+
 
         private bool canUseUltimate = true; // ✅ Add this at the class level
 
         private void Ultimate()
         {
-            if (WarcraftPlayer.GetAbilityLevel(3) < 1 || !IsAbilityReady(3))
-            {
-                Console.WriteLine("[INFO] Ultimate cannot be used (ability level too low or on cooldown).");
-                return;
-            }
-
             if (!canUseUltimate)
             {
                 Console.WriteLine("[INFO] Ultimate is on cooldown!");
                 return;
             }
 
-            if (!lastSmokePositions.TryGetValue(Player.SteamID, out Vector lastSmokePosition))
+            if (!activeSmokeEffects.TryGetValue(Player, out var smokeEffect))
             {
                 Console.WriteLine("[ERROR] No stored smoke grenade position for this player! Aborting ultimate.");
                 return;
             }
 
-            Console.WriteLine($"[INFO] Spawning explosion at last smoke position: {lastSmokePosition}");
+            Vector lastSmokePosition = smokeEffect.GetSmokePosition();
+            Console.WriteLine($"[INFO] Spawning explosion at {lastSmokePosition}");
 
-            // ✅ Adjust explosion position slightly above ground
-            var explosionPosition = lastSmokePosition.With(z: lastSmokePosition.Z + 10f);
-
-            // ✅ Ensure we have a valid position
-            if (explosionPosition == null)
-            {
-                Console.WriteLine("[ERROR] Explosion position is NULL! Aborting.");
-                return;
-            }
-
-            // ✅ Use predefined SpawnExplosion function
             Warcraft.SpawnExplosion(
-                pos: explosionPosition,
-                damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f), // ✅ Damage scales with ability level
+                pos: lastSmokePosition.With(z: lastSmokePosition.Z + 10f),
+                damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f),
                 radius: 250f,
                 attacker: Player,
                 killFeedIcon: KillFeedIcon.prop_exploding_barrel
             );
 
-            Console.WriteLine($"[INFO] Explosion triggered at {explosionPosition} with {50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f)} damage!");
+            // ✅ Remove effect after ultimate is used
+            smokeEffect.OnFinish();
+            activeSmokeEffects.Remove(Player);
 
-            // ✅ Start Ultimate Cooldown
             canUseUltimate = false;
-            WarcraftPlugin.Instance.AddTimer(6.0f, () => canUseUltimate = true); // Reset after 6 seconds
-            StartCooldown(3);
+            WarcraftPlugin.Instance.AddTimer(6.0f, () => canUseUltimate = true);
         }
+
+
 
 
     }
