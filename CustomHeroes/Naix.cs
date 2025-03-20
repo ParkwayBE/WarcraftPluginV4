@@ -61,7 +61,7 @@ namespace WarcraftPlugin.Classes
                     if (WarcraftPlayer.GetAbilityLevel(2) > 0)
                     {
                         var pawn = Player.PlayerPawn.Value;
-                        pawn.VelocityModifier = 1 + 0.2f * WarcraftPlayer.GetAbilityLevel(2);
+                        pawn.VelocityModifier = 1 + 0.12f * WarcraftPlayer.GetAbilityLevel(2);
                         Console.WriteLine($"[DEBUG] Current movement speed modifier after delay: {pawn.VelocityModifier}");
                     }
                 });
