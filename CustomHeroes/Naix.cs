@@ -7,9 +7,6 @@ using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Models;
 using WarcraftPlugin.Events.ExtendedEvents;
-using WarcraftPlugin.Core.Preload;
-
-
 
 namespace WarcraftPlugin.Classes
 {
@@ -44,7 +41,6 @@ namespace WarcraftPlugin.Classes
             HookAbility(3, Ultimate);
         }
 
-
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
             if (Player == null || Player.PlayerPawn?.Value == null)
@@ -64,7 +60,6 @@ namespace WarcraftPlugin.Classes
                 });
 
             }
-
 
             // Ensuring previous effect is removed before adding a new one
             if (activeEffects.TryGetValue(Player, out var existingEffect))
@@ -463,7 +458,5 @@ namespace WarcraftPlugin.Classes
             WarcraftPlugin.Instance.AddTimer(6.0f, () => canUseUltimate = true); // Reset after 6 seconds
             StartCooldown(3);
         }
-
-
     }
 }
