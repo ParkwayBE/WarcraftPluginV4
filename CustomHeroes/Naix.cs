@@ -72,7 +72,7 @@ namespace WarcraftPlugin.Classes
             var effect = new SmokeSupplyEffect(Player);
             activeEffects[Player] = effect;
             effect.Start();
-
+            canUseUltimate = true;
             isAlive = true;
         }
 
