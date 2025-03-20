@@ -402,7 +402,7 @@ namespace WarcraftPlugin.Classes
 
             canUseUltimate = false;
             WarcraftPlugin.Instance.AddTimer(6.0f, () => canUseUltimate = true); // Reset after 6 seconds
-            StartCooldown(6);
+            StartCooldown(3);
         }
 
 
