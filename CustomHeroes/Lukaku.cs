@@ -72,7 +72,7 @@ namespace WarcraftPlugin.Classes
                     fbs = new FootballSystem(Player, 0.01f, footBalls);
                     fbs.Start();
                     footballIsSpawned = true;
-
+                    StartCooldown(3);
                 }
 
             }
