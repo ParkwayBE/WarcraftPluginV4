@@ -21,6 +21,7 @@ using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using WarcraftPlugin.Core;
 using WarcraftPlugin.Summons;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
+using System.Linq;
 
 
 namespace WarcraftPlugin.Classes
@@ -64,7 +65,7 @@ namespace WarcraftPlugin.Classes
             Glow.SetModel(entity.CBodyComponent!.SceneNode!.GetSkeletonInstance().ModelState.ModelName);
             Glow.DispatchSpawn();
             Glow.Glow.GlowColorOverride = GlowColor;
-            Glow.Glow.GlowRange = 500;
+            Glow.Glow.GlowRange = 1000;
             Glow.Glow.GlowRangeMin = 0;
             Glow.Glow.GlowTeam = -1; // -1 = Both, 2 = T, 3 = CT
             Glow.Glow.GlowType = 3;
@@ -101,14 +102,54 @@ namespace WarcraftPlugin.Classes
             }
         }
 
+        private void FindAndLogNearbyPlayers(float radius)
+        {
+            // Get the player's current position and look direction
+            var playerPosition = Player.PlayerPawn.Value.AbsOrigin;  // Current position
+            var lookDirection = Player.PlayerPawn.Value.EyeAngles;   // Direction we're looking in
+
+            // Offset the position in the direction we're looking
+            var offsetVector = new Vector();
+            NativeAPI.AngleVectors(lookDirection.Handle, offsetVector.Handle, nint.Zero, nint.Zero);
+            offsetVector *= 300.0f; // Move 300 units forward in the look direction
+            var targetPosition = playerPosition + offsetVector;
+
+            // Iterate through all players and find those within the radius
+            var players = Utilities.GetPlayers();
+            foreach (var otherPlayer in players)
+            {
+                if (!otherPlayer.IsAlive() || otherPlayer.UserId == Player.UserId)
+                    continue;
+
+                // Calculate the squared distance between the target position and the other player's position
+                var otherPlayerPosition = otherPlayer.PlayerPawn.Value.AbsOrigin;
+                var distanceVector = targetPosition - otherPlayerPosition;
+                var distanceSquared = distanceVector.X * distanceVector.X + distanceVector.Y * distanceVector.Y + distanceVector.Z * distanceVector.Z;
+                string PlayerNameString = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+                // Compare squared distance to squared radius for performance
+                if (distanceSquared <= radius * radius)
+                {
+                    // If within radius, print the player's name
+                    var playerName = PlayerNameString ?? "Unknown";
+                    Console.WriteLine($"Player found: {playerName}");
+                }
+            }
+        }
+
         private void Ultimate()
         {
+            // Trigger the glow effect (if needed)
             var duration = 7.0f;
-            var tickRate = 0.02f; 
-            new GlowEffect(Player, Color.Red, duration, tickRate).Start();
+            var tickRate = 0.02f;
+            /* new GlowEffect(Player, Color.Red, duration, tickRate).Start(); // UNCOMMENT THIS LINE TO ENABLE GLOW EFFECT AGAIN */
 
+            // Find and log nearby players
+            FindAndLogNearbyPlayers(500f);
+
+            // Start cooldown for the ultimate ability
             StartCooldown(3);
         }
+
 
 
 
