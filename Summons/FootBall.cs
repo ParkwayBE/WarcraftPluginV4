@@ -1,8 +1,13 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Helpers;
 using static g3.RoundRectGenerator;
+using static WarcraftPlugin.Summons.FootBall;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace WarcraftPlugin.Summons
@@ -14,6 +19,7 @@ namespace WarcraftPlugin.Summons
         private CCSPlayerController _owner;
         private Vector posInfrontOfPlayer;
         private Vector changedLocation;
+        private FootballHitSystem hitSystem;
 
         //public Vector Position { get; set; } = new(70, -70, 90);
 
@@ -63,8 +69,46 @@ namespace WarcraftPlugin.Summons
             _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
             _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
             _ballProp.SetParent(_ball);
-            
+       
+
+
         }
+
+        public void TraceHits(CCSPlayerController owner)
+        {
+            hitSystem = new FootballHitSystem(owner, 0.01f, _ball);
+            hitSystem.Start();
+        }
+        public void StopTraceHits()
+        {
+            hitSystem.Destroy();
+        }
+        internal class FootballHitSystem(CCSPlayerController owner, float onTickInterval, CPhysicsPropMultiplayer ball) : WarcraftEffect(owner, onTickInterval: onTickInterval)
+        {
+           
+            public override void OnStart()
+            {
+               
+            }
+            public override void OnTick()
+            {
+                var ballBox = ball.CollisionBox();
+                var players = Utilities.GetPlayers();
+                var playersInBox = players.Where(x => x.PawnIsAlive && ballBox.Contains(x.PlayerPawn.Value.AbsOrigin));
+
+                if (playersInBox.Any())
+                {
+                    foreach ( var player in playersInBox)
+                    {
+                        Owner.PrintToChat($"Hit {player.PlayerName}");
+                        
+                    }
+                }
+            }
+            public override void OnFinish() { }
+        }
+
+
     }
 
 }
