@@ -219,7 +219,7 @@ namespace WarcraftPlugin.Classes
         private void Ultimate()
         {
             // Find and log nearby players
-            NearbyPlayers(500f, 300f); // Radius, forward offset
+            NearbyPlayers(1000f, 1000f); // Radius, forward offset
             
             // Start cooldown for the ultimate ability
             StartCooldown(3);
