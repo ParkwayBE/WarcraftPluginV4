@@ -222,88 +222,68 @@ namespace WarcraftPlugin.Classes
             public override void OnTick()
             {            }
         }
+        
 
         internal class PhantomCloakEffect : WarcraftEffect
         {
-            private float _stillTime;
-            private readonly float _requiredStillTime;
-            private bool _isCloaked;
+            private Vector _previousPosition;
+            private Vector _currentPosition;
+            private Timer? _positionComparisonTimer;
 
-            private readonly Action onFinishCallback;
-
-            public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel, Action onFinish)
-                : base(owner, duration: float.MaxValue, onTickInterval: 0.1f)
+            public PhantomCloakEffect(CCSPlayerController owner)
+                : base(owner, duration: float.MaxValue) // Run indefinitely
             {
-                _requiredStillTime = Math.Max(0.5f, 3.0f - (abilityLevel * 0.5f));
-                onFinishCallback = onFinish;
             }
-
 
             public override void OnStart()
             {
-                _stillTime = 0f;
-                _isCloaked = false;
-                Console.WriteLine($"[PhantomCloak] Required stand still time set to {_requiredStillTime} seconds.");
-            }
+                Console.WriteLine("OnStart is called");
+                _previousPosition = Owner.PlayerPawn.Value.AbsOrigin;
+                _currentPosition = _previousPosition;
 
-            public override void OnTick()
-            {
-                var velocity = Owner.PlayerPawn.Value.AbsVelocity;
-                var isMoving = Math.Abs(velocity.X) > 0.1f || Math.Abs(velocity.Y) > 0.1f || Math.Abs(velocity.Z) > 0.1f;
-                Console.WriteLine($"[PhantomCloak] Current velocity: {velocity} seconds.");
-                Console.WriteLine("Tick EFFECT ACTIVE");
+                Console.WriteLine($"[PositionTracker] Initial position: {_currentPosition}");
 
-                if (!isMoving)
+                int tickCount = 0;
+
+                _positionComparisonTimer = WarcraftPlugin.Instance.AddTimer(1.0f, () =>
                 {
-                    _stillTime += OnTickInterval;
-                    Console.WriteLine($"[PhantomCloak] Standing still for {_stillTime:0.00}/{_requiredStillTime}s");
+                    tickCount++;
 
-                    if (!_isCloaked && _stillTime >= _requiredStillTime)
+                    if (tickCount == 1)
                     {
-                        ApplyCloak();
-                        _isCloaked = true;
+                        _currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
+                        Console.WriteLine($"[PositionTracker] Captured current position: {_currentPosition}");
                     }
-                }
-                else
-                {
-                    if (_isCloaked)
+                    else if (tickCount == 2)
                     {
-                        RemoveCloak();
-                        _isCloaked = false;
+                        Console.WriteLine("[PositionTracker] Comparing positions:");
+                        Console.WriteLine($"   Previous: {_previousPosition}");
+                        Console.WriteLine($"   Current:  {_currentPosition}");
+
+                        if (_previousPosition.X == _currentPosition.X &&
+                            _previousPosition.Y == _currentPosition.Y &&
+                            _previousPosition.Z == _currentPosition.Z)
+                        {
+                            Console.WriteLine("You're standing still!");
+                        }
+
+                        // Shift positions for next comparison
+                        _previousPosition = _currentPosition;
+                        _currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
+
+                        tickCount = 1; // restart cycle
                     }
-
-                    if (_stillTime > 0f)
-                    {
-                        Console.WriteLine("[PhantomCloak] Movement detected, resetting timer.");
-                    }
-
-                    _stillTime = 0f;
-                }
-            }
-
-            private void ApplyCloak()
-            {
-                int level = Owner.GetWarcraftPlayer().GetAbilityLevel(1);
-                int alpha = Math.Max(130, 255 - (level * 25));
-                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
-                Console.WriteLine("[PhantomCloak] Cloak applied!");
-            }
-
-            private void RemoveCloak()
-            {
-                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
-                Console.WriteLine("[PhantomCloak] Cloak removed.");
+                }, repeat: true);
             }
 
             public override void OnFinish()
             {
-                if (_isCloaked)
-                    RemoveCloak();
-
-                onFinishCallback?.Invoke();
-                Console.WriteLine("[PhantomCloak] Effect ended.");
+                Console.WriteLine("OnFinish is called");
+                _positionComparisonTimer?.Kill();
+                Console.WriteLine("[PositionTracker] Timer stopped.");
             }
         }
+
 
 
 
