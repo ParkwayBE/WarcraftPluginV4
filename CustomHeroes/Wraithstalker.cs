@@ -254,12 +254,12 @@ namespace WarcraftPlugin.Classes
                         _previousPosition.Y == _currentPosition.Y &&
                         _previousPosition.Z == _currentPosition.Z)
                     {
-                        CloakEnable(Owner);
+                        CloakEnable(Player);
                         Console.WriteLine("You're standing still!");
                     }
                     else
                     {
-                        CloakDisable(Owner);
+                        CloakDisable(Player);
                         Console.WriteLine("You are currently Moving.");
                     }
                 }, TimerFlags.REPEAT);
