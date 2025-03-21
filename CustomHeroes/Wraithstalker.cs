@@ -196,28 +196,32 @@ namespace WarcraftPlugin.Classes
 
         private void ResetSkullsForPlayer(CCSPlayerController player)
         {
-            if (player == null || !player.IsValid)
+            if (player == null)
                 return;
 
-            if (skullTracker.ContainsKey(player.SteamID))
+            if (skullTracker.Remove(player.SteamID))
             {
-                Console.WriteLine($"[Skulls] Resetting skulls for {player.PlayerName} ({player.SteamID})");
-                skullTracker[player.SteamID] = 0;
+                Console.WriteLine($"[Skulls] Removed skull entry for {player.PlayerName} ({player.SteamID})");
             }
         }
+
 
         public void OnPlayerConnect(EventPlayerConnect @event)
         {
             Console.WriteLine("resetting Skulls");
-            var player = @event.Userid;
-            ResetSkullsForPlayer(player);
+            if (@event.Userid != null)
+            {
+                ResetSkullsForPlayer(@event.Userid);
+            }
         }
 
 
         private void PlayerDisconnect(EventPlayerDisconnect @event)
         {
-            var player = @event.Userid;
-            ResetSkullsForPlayer(player);
+            if (@event.Userid != null)
+            {
+                ResetSkullsForPlayer(@event.Userid);
+            }
         }
 
 
