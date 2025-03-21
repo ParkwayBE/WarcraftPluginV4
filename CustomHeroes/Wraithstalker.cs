@@ -31,53 +31,52 @@ using CounterStrikeSharp.API.Modules.Timers;
 namespace WarcraftPlugin.Classes
 {
     public class Wraithstalker : WarcraftClass
-        private bool cloakDamageAvailable = false;
-    private Timer? damageDisableTimer = null;
     {
+        private Timer? damageDisableTimer = null;
         public override string DisplayName => "Wraithstalker";
 
-    private readonly WarcraftPlugin _plugin;
-    public override Color DefaultColor => Color.CadetBlue;
-    private bool canUseUltimate = true;
-    private bool _CanUseCloakEffect = true;
-    private static HashSet<int> playersWithActiveCloak = new();
-    private static Dictionary<ulong, bool> cloakDamageAvailable = new();
-    private static Dictionary<ulong, Timer> damageDisableTimers = new();
+        private readonly WarcraftPlugin _plugin;
+        public override Color DefaultColor => Color.CadetBlue;
+        private bool canUseUltimate = true;
+        private bool _CanUseCloakEffect = true;
+        private static HashSet<int> playersWithActiveCloak = new();
+        private static Dictionary<ulong, bool> cloakDamageAvailable = new();
+        private static Dictionary<ulong, Timer> damageDisableTimers = new();
 
 
 
-    public override List<IWarcraftAbility> Abilities =>
-    [
-        new WarcraftAbility("Assimilation", "On Kill: Movement speed and reduced gravity for 3/5/7/9/10 seconds, this also grants a blindstack max 2, which blinds an enemy when he spots you."),
-            new WarcraftAbility("Phantom Cloak", "Standing still for  2.5 - 0.5 seconds makes you invisible and your next shot deals bonus damage."),
-            new WarcraftAbility("Shadowstrike", "After you exited Phantom Cloak your next hit will cause bonus damage and grant you a guaranteed skull"),
-            new WarcraftCooldownAbility("Marked for prey", "Scan the area where you are looking, highlight enemies close for x seconds and slow them down. Killing a marked target grants a skull. Skulls give you lasting benefits untill mapchange.", 5f)
-    ];
+        public override List<IWarcraftAbility> Abilities =>
+        [
+            new WarcraftAbility("Assimilation", "On Kill: Movement speed and reduced gravity for 3/5/7/9/10 seconds, this also grants a blindstack max 2, which blinds an enemy when he spots you."),
+                new WarcraftAbility("Phantom Cloak", "Standing still for  2.5 - 0.5 seconds makes you invisible and your next shot deals bonus damage."),
+                new WarcraftAbility("Shadowstrike", "After you exited Phantom Cloak your next hit will cause bonus damage and grant you a guaranteed skull"),
+                new WarcraftCooldownAbility("Marked for prey", "Scan the area where you are looking, highlight enemies close for x seconds and slow them down. Killing a marked target grants a skull. Skulls give you lasting benefits untill mapchange.", 5f)
+        ];
 
-    public override void Register()
-    {
-        HookEvent<EventPlayerSpawn>(PlayerSpawn);
-        HookEvent<EventPlayerDeath>(OnPlayerDeath);
-        HookEvent<EventRoundEnd>(OnRoundEnd);
-
-        HookAbility(3, Ultimate);
-    }
-    private void PlayerSpawn(EventPlayerSpawn spawn)
-    {
-
-        var playerId = Player.Slot;
-        RemovePhantomCloakEffect();
-
-        if (playersWithActiveCloak.Contains(playerId))
-            return;
-
-        int level = WarcraftPlayer.GetAbilityLevel(1);
-        if (level > 0)
+        public override void Register()
         {
-            new PhantomCloakEffect(Player, level).Start();
-        }
+            HookEvent<EventPlayerSpawn>(PlayerSpawn);
+            HookEvent<EventPlayerDeath>(OnPlayerDeath);
+            HookEvent<EventRoundEnd>(OnRoundEnd);
 
-    }
+            HookAbility(3, Ultimate);
+        }
+        private void PlayerSpawn(EventPlayerSpawn spawn)
+        {
+
+            var playerId = Player.Slot;
+            RemoveCloakEffect();
+
+            if (playersWithActiveCloak.Contains(playerId))
+                return;
+
+            int level = WarcraftPlayer.GetAbilityLevel(1);
+            if (level > 0)
+            {
+                new PhantomCloakEffect(Player, level).Start();
+            }
+
+        }
 
     private void OnPlayerDeath(EventPlayerDeath death)
     {
@@ -89,17 +88,21 @@ namespace WarcraftPlugin.Classes
         RemoveCloakEffect();
     }
 
-    private void RemoveCloakEffect()
-    {
-                .OfType<PhantomCloakEffect>()
-                .FirstOrDefault();
+        private void RemoveCloakEffect()
+        {
+            var effect = WarcraftPlugin.Instance
+                .EffectManager
+                .GetEffectsByType<PhantomCloakEffect>()
+                .FirstOrDefault(x => x.Owner.Handle == Player.Handle);
 
-        effect?.Destroy();
-    }
+            effect?.Destroy(); // Only call Destroy() if effect is not null
+        }
 
 
 
-    public static void SetGlowOnEntity(CBaseEntity? entity, Color GlowColor)
+
+
+        public static void SetGlowOnEntity(CBaseEntity? entity, Color GlowColor)
     {
         if (entity == null || !entity.IsValid)
             return;
@@ -255,7 +258,7 @@ namespace WarcraftPlugin.Classes
         private readonly int _abilityLevel;
 
         public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
-            : base(owner, duration: float.MaxValue, destroyOnDeath: true, destroyOnRoundEnd: true, destroyOnRaceChange: true)
+            : base(owner, duration: float.MaxValue, destroyOnDeath: true, destroyOnRoundEnd: true)
         {
             _abilityLevel = abilityLevel;
         }
@@ -357,21 +360,29 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerHurt(EventPlayerHurtOther @event)
         {
-            if (@event.Attacker != Player || !@event.Userid.IsValid || !cloakDamageAvailable)
+            if (@event.Attacker != Player || !@event.Userid.IsValid)
                 return;
 
-            if (cloakDamageAvailable.TryGetValue(attacker.SteamID, out bool canBonus) && canBonus)
+            if (!cloakDamageAvailable.TryGetValue(@event.Attacker.SteamID, out var canBonus) || !canBonus)
+                return;
+
+            var abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
+            var victim = @event.Userid;
+            var attacker = @event.Attacker;
+
+            if (canBonus)
             {
                 int bonusDamage = abilityLevel * 10;
                 @event.AddBonusDamage(bonusDamage);
                 victim.PrintToChat($"You received {bonusDamage} bonus damage from the shadows!");
 
                 // Reset so it doesn't apply again
-                cloakDamageAvailable[attacker.SteamID] = false;
+                cloakDamageAvailable[@event.Attacker.SteamID] = false;
+                @event.Userid.PrintToChat($"\x07[Wraithstalker] You received {bonusDamage} bonus damage from a cloaked enemy!");
             }
 
 
-            @event.Userid.PrintToChat($"\x07[Wraithstalker] You received {bonusDamage} bonus damage from a cloaked enemy!");
+
         }
 
         private void PlayerShoot(EventWeaponFire @event)
