@@ -27,6 +27,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using CounterStrikeSharp.API.Modules.Timers;
 using System.Reflection.Emit;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using System.Numerics;
 
 
 
@@ -63,6 +64,7 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerDisconnect>(PlayerDisconnect);
             HookEvent<EventPlayerConnect>(OnPlayerConnect);
+            HookEvent<EventPlayerJump>(PlayerJump);
 
             HookAbility(3, Ultimate);
         }
@@ -116,6 +118,41 @@ namespace WarcraftPlugin.Classes
 
         }
 
+        private void PlayerJump(EventPlayerJump @event)
+        {
+            int skulls = GetSkullCount(Player);
+            if (WarcraftPlayer.GetAbilityLevel(0) > 0)
+            {
+                if (Player == null || Player.PlayerPawn?.Value == null)
+                {
+                    Console.WriteLine("ERROR: Player or PlayerPawn is NULL in PlayerJump!");
+                    return;
+                }
+
+                WarcraftPlugin.Instance.AddTimer(0.05f, () =>
+                {
+                    var directionAngle = Player.PlayerPawn.Value.EyeAngles;
+                    var directionVec = new Vector();
+                    NativeAPI.AngleVectors(directionAngle.Handle, directionVec.Handle, nint.Zero, nint.Zero);
+
+                    if (directionVec.Z < 0.275f)
+                    {
+                        directionVec.Z = 0.275f;
+                    }
+
+                    directionVec *= 15 * skulls; // Adjust force if needed
+                    Player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
+                    Player.PlayerPawn.Value.AbsVelocity.Y = directionVec.Y;
+                    Player.PlayerPawn.Value.AbsVelocity.Z = directionVec.Z;
+                });
+                WarcraftPlugin.Instance.AddTimer(0.05f, () =>
+                {
+                    Console.WriteLine("[INFO] Applying reduced gravity after delay.");
+                    new SetGravityEffect(Player, 0.5f, 3f).Start();
+                });
+            }
+        }
+
         private void ResetSkullsForPlayer(CCSPlayerController player)
         {
             if (player == null || !player.IsValid)
@@ -130,11 +167,7 @@ namespace WarcraftPlugin.Classes
 
         public void OnPlayerConnect(EventPlayerConnect @event)
         {
-            Console.WriteLine("Attempting to reset Skulls");
-            Console.WriteLine("Attempting to reset Skulls");
-            Console.WriteLine("Attempting to reset Skulls");
-            Console.WriteLine("Attempting to reset Skulls");
-            Console.WriteLine("Attempting to reset Skulls");
+            Console.WriteLine("resetting Skulls");
             var player = @event.Userid;
             ResetSkullsForPlayer(player);
         }
