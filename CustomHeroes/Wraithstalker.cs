@@ -42,6 +42,8 @@ namespace WarcraftPlugin.Classes
         private readonly Dictionary<int, PhantomCloakEffect> activeCloakEffects = new();
         private PhantomCloakEffect cloakEffect;
         private static Dictionary<ulong, int> skullTracker = new();
+        private const int MaxSkulls = 40;
+
 
 
 
@@ -130,6 +132,29 @@ namespace WarcraftPlugin.Classes
             }
         }
 
+        private int GetSkullCount(CCSPlayerController player)
+        {
+            return skullTracker.TryGetValue(player.SteamID, out var count) ? Math.Min(count, MaxSkulls) : 0;
+        }
+
+        private void ApplySkullBonuses(CCSPlayerController player)
+        {
+            int skulls = GetSkullCount(player);
+            int bonusHealth = skulls * 2;
+
+            // Default speed (260 is CS2 default walk speed)
+            float baseSpeed = 260f;
+            float newSpeed = baseSpeed + (baseSpeed * (skulls * 0.01f)); // +1% per skull
+
+            // Apply bonuses
+            player.PlayerPawn.Value.Health += bonusHealth;
+            player.PlayerPawn.Value.MovementServices.Maxspeed = newSpeed;
+
+            player.PrintToChat($"\x07[Wraithstalker] You have {skulls} skull(s). (+{bonusHealth} HP, +{skulls}% speed)");
+        }
+
+
+
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
@@ -141,6 +166,10 @@ namespace WarcraftPlugin.Classes
             cloakEffect.Start();
             activeCloakEffects[Player.Slot] = cloakEffect;
 
+            WarcraftPlugin.Instance.AddTimer(0.2f, () =>
+            {
+                ApplySkullBonuses(Player);
+            });
         }
 
 
