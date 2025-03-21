@@ -254,7 +254,13 @@ namespace WarcraftPlugin.Classes
                         _previousPosition.Y == _currentPosition.Y &&
                         _previousPosition.Z == _currentPosition.Z)
                     {
+                        CloakEnable();
                         Console.WriteLine("You're standing still!");
+                    }
+                    else
+                    {
+                        CloakDisable();
+                        Console.WriteLine("You are currently Moving.");
                     }
                 }, TimerFlags.REPEAT);
             }
@@ -269,6 +275,22 @@ namespace WarcraftPlugin.Classes
             }
         }
 
+        private void CloakEnable(CCSPlayerController Player)
+        {
+            Player.PrintToCenter("You have become 90% invisible!");
+            int abilityLevel = Owner.GetWarcraftPlayer().GetAbilityLevel(1); // Level 1–5
+            int alpha = 100 + ((5 - abilityLevel) * 20); // Level 5 = 100, Level 4 = 120, ..., Level 1 = 180
+            Player.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
+
+        }
+
+        private void CloakDisable(CCSPlayerController Player)
+        {
+            Player.PrintToCenter("You are now visible!");
+            Player.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
+
+
+        }
 
 
 
