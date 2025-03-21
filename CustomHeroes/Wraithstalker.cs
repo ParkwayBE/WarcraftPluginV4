@@ -211,9 +211,9 @@ namespace WarcraftPlugin.Classes
             private bool _isCloaked;
 
             public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
-                : base(owner, duration: float.MaxValue, onTickInterval: 0.1f) // Effect runs indefinitely until removed
+                : base(owner, duration: float.MaxValue, onTickInterval: 0.1f)
             {
-                _requiredStillTime = 2.5f - (abilityLevel * 0.5f);
+                _requiredStillTime = 3.0f - (abilityLevel * 0.5f); // Levels 1–5 result in 2.5 to 0.5 seconds
             }
 
             public override void OnStart()
@@ -221,21 +221,20 @@ namespace WarcraftPlugin.Classes
                 _lastPosition = Owner.PlayerPawn.Value.AbsOrigin;
                 _stillTime = 0f;
                 _isCloaked = false;
-                Console.WriteLine("[PhantomCloak] Required stand still time set to " + _requiredStillTime + " seconds.");
+                Console.WriteLine($"[PhantomCloak] Required stand still time set to {_requiredStillTime} seconds.");
             }
 
             public override void OnTick()
             {
                 var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
+                float movementThresholdSquared = 4.0f; // ~2 units buffer
 
-                float movementThreshold = 1.0f; // small buffer to avoid float jitter triggering
-                float distanceMoved =
-                    (currentPosition.X - _lastPosition.X) * (currentPosition.X - _lastPosition.X) +
-                    (currentPosition.Y - _lastPosition.Y) * (currentPosition.Y - _lastPosition.Y) +
-                    (currentPosition.Z - _lastPosition.Z) * (currentPosition.Z - _lastPosition.Z);
+                float dx = currentPosition.X - _lastPosition.X;
+                float dy = currentPosition.Y - _lastPosition.Y;
+                float dz = currentPosition.Z - _lastPosition.Z;
+                float distanceSquared = dx * dx + dy * dy + dz * dz;
 
-
-                if (distanceMoved < movementThreshold)
+                if (distanceSquared < movementThresholdSquared)
                 {
                     _stillTime += OnTickInterval;
                     Console.WriteLine($"[PhantomCloak] Standing still for {_stillTime:0.00}/{_requiredStillTime}s");
@@ -253,6 +252,7 @@ namespace WarcraftPlugin.Classes
                         RemoveCloak();
                         _isCloaked = false;
                     }
+
                     _stillTime = 0f;
                     _lastPosition = currentPosition;
                 }
@@ -281,11 +281,6 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("[PhantomCloak] Effect ended.");
             }
         }
-
-
-
-
-
 
 
         private void Ultimate()
