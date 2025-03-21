@@ -67,7 +67,7 @@ namespace WarcraftPlugin.Classes
                 if (footballsRemaining > 0)
                 {
                     footBaller.ActivateBall();
-                    
+                    footballIsSpawned = true;
                     StartCooldown(3);
                 }
 
