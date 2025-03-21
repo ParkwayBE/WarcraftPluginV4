@@ -207,45 +207,31 @@ namespace WarcraftPlugin.Classes
 
         internal class PhantomCloakEffect : WarcraftEffect
         {
-            private Vector _lastPosition;
             private float _stillTime;
             private readonly float _requiredStillTime;
             private bool _isCloaked;
-            private Timer? _tickTimer;
 
             public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
-                : base(owner, duration: float.MaxValue)
+                : base(owner, duration: float.MaxValue, onTickInterval: 0.1f)
             {
-                _requiredStillTime = 3.0f - (abilityLevel * 0.5f); // Levels 1–5 = 2.5 to 0.5s
+                _requiredStillTime = Math.Max(0.5f, 3.0f - (abilityLevel * 0.5f));
             }
 
             public override void OnStart()
             {
-                Console.WriteLine("[PhantomCloak] OnStart called.");
-                _lastPosition = Owner.PlayerPawn.Value.AbsOrigin;
                 _stillTime = 0f;
                 _isCloaked = false;
                 Console.WriteLine($"[PhantomCloak] Required stand still time set to {_requiredStillTime} seconds.");
-
-                _tickTimer = WarcraftPlugin.Instance.AddTimer(0.1f, TickLoop, TimerFlags.REPEAT);
             }
 
-            private void TickLoop()
+            public override void OnTick()
             {
-                if (!Owner.IsValid || !Owner.IsAlive())
-                    return;
+                var velocity = Owner.PlayerPawn.Value.AbsVelocity;
+                var isMoving = Math.Abs(velocity.X) > 0.1f || Math.Abs(velocity.Y) > 0.1f || Math.Abs(velocity.Z) > 0.1f;
 
-                var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
-                float dx = currentPosition.X - _lastPosition.X;
-                float dy = currentPosition.Y - _lastPosition.Y;
-                float dz = currentPosition.Z - _lastPosition.Z;
-                float distanceMoved = (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
-
-                float movementThreshold = 0.1f;
-
-                if (distanceMoved < movementThreshold)
+                if (!isMoving)
                 {
-                    _stillTime += 0.1f;
+                    _stillTime += OnTickInterval;
                     Console.WriteLine($"[PhantomCloak] Standing still for {_stillTime:0.00}/{_requiredStillTime}s");
 
                     if (!_isCloaked && _stillTime >= _requiredStillTime)
@@ -263,17 +249,18 @@ namespace WarcraftPlugin.Classes
                     }
 
                     if (_stillTime > 0f)
+                    {
                         Console.WriteLine("[PhantomCloak] Movement detected, resetting timer.");
+                    }
 
                     _stillTime = 0f;
-                    _lastPosition = currentPosition;
                 }
             }
 
             private void ApplyCloak()
             {
-                int abilityLevel = Owner.GetWarcraftPlayer().GetAbilityLevel(1);
-                int alpha = Math.Max(130, 255 - (abilityLevel * 25));
+                int level = Owner.GetWarcraftPlayer().GetAbilityLevel(1);
+                int alpha = Math.Max(130, 255 - (level * 25));
                 Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
                 Console.WriteLine("[PhantomCloak] Cloak applied!");
             }
@@ -281,28 +268,20 @@ namespace WarcraftPlugin.Classes
             private void RemoveCloak()
             {
                 Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
-                Console.WriteLine("[PhantomCloak] Cloak removed due to movement.");
+                Console.WriteLine("[PhantomCloak] Cloak removed.");
             }
 
             public override void OnFinish()
             {
-                if (_tickTimer != null)
-                {
-                    _tickTimer.Kill();
-                    _tickTimer = null;
-                }
-
                 if (_isCloaked)
-                {
                     RemoveCloak();
-                }
 
                 Console.WriteLine("[PhantomCloak] Effect ended.");
             }
-
-            // Needed to satisfy abstract base class
-            public override void OnTick() { }
         }
+
+
+
 
         private void Ultimate()
         {
