@@ -145,7 +145,7 @@ namespace WarcraftPlugin.Classes
 
             player.PrintToChat($"\x07[Wraithstalker] You have {skulls} skull(s). (+{bonusHealth} HP, +{skulls}% speed)");
 
-
+        }
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
