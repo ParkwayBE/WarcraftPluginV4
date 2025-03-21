@@ -67,16 +67,21 @@ namespace WarcraftPlugin.Summons
         }
         public void StayPut(CCSPlayerController owner)
         {
-            StopUpdateBall();
-            var distance = 60;
-            var height = 20;
-            posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
-            _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-            _ballProp.SetParent(_ball);
-            TraceHits(owner);
+            if (_ball != null)
+            {
+                StopUpdateBall();
+                var distance = 60;
+                var height = 20;
+                posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
+                _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+                _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+                _ballProp.SetParent(_ball);
+                TraceHits(owner);
+                var power = 1800;
+                Vector velocity = _owner.CalculateVelocityAwayFromPlayer(power);
+                _ball.Teleport(null, null, velocity);
 
-
+            }
         }
 
         public void TraceHits(CCSPlayerController owner)
@@ -88,17 +93,20 @@ namespace WarcraftPlugin.Summons
         {
             aimSystem = new FootballAimSystem(owner, 0.01f, this);
             aimSystem.Start();
+            WarcraftPlugin.Instance.AddTimer(10f, () =>
+            {
+                DestroyBall();
+            });
         }
         public void DestroyBall()
         {
             hitSystem.Destroy();
+
         }
         public void StopUpdateBall()
         {
             aimSystem.Destroy();
-            var power = 1800;
-            Vector velocity = _owner.CalculateVelocityAwayFromPlayer(power);
-            _ball.Teleport(null, null, velocity);
+            
         }
         internal class FootballHitSystem(CCSPlayerController owner, float onTickInterval, FootBall football) : WarcraftEffect(owner, onTickInterval: onTickInterval)
         {
@@ -110,7 +118,7 @@ namespace WarcraftPlugin.Summons
             public override void OnTick()
             {
                 //var ballBox = ball.CollisionBox();
-                owner.PrintToChat("ball in ontick");
+                //owner.PrintToChat("ball in ontick");
                 if (football._ball != null)
                 {
                     Vector vec = new Vector(football._ball.AbsOrigin.X, football._ball.AbsOrigin.Y, football._ball.AbsOrigin.Z);
@@ -129,7 +137,7 @@ namespace WarcraftPlugin.Summons
                             // {
                             //Kill(player,owner);
 
-                            if (player != owner)
+                            if (player.DesignerName != owner.DesignerName)
                             {
                                 Warcraft.TakeDamage(player, 900000, owner, inflictor: owner);
                             }

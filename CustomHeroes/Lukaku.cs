@@ -80,10 +80,6 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("Already have a ball,");
                 football.StayPut(Player);
                 footballIsSpawned = false;
-                WarcraftPlugin.Instance.AddTimer(15f, () =>
-                {
-                    football.DestroyBall();
-                });
 
                 StartCooldown(3);
             }
