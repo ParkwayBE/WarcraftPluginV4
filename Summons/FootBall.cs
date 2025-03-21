@@ -90,6 +90,7 @@ namespace WarcraftPlugin.Summons
         }
         public void StopTraceHits()
         {
+            hitSystem.FinishOnDestroy = true;
             hitSystem.Destroy();
         }
 
@@ -125,6 +126,7 @@ namespace WarcraftPlugin.Summons
         public void UpdateBallWithAimSystem(CCSPlayerController owner, Football ball)
         {
             aimSystem = new FootballAimSystem(owner, 0.01f, ball);
+            aimSystem.FinishOnDestroy = true;
             aimSystem.Start();
             
         }
