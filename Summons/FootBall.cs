@@ -131,8 +131,9 @@ namespace WarcraftPlugin.Summons
         public void ServeBall()
         {
             aimSystem.Destroy();
-            lastAddedBall.StayPut(_owner);
+            
             lastAddedBall.TraceHits(_owner);
+            lastAddedBall.StayPut(_owner);
         }
         public void DestroyBall()
         {
