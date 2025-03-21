@@ -139,7 +139,7 @@ namespace WarcraftPlugin.Classes
                     {
                         directionVec.Z = 0.275f;
                     }
-                    int ScalingLongJump = 15 * skulls;
+                    int ScalingLongJump = Math.Max(150, 15 * skulls);
                     directionVec *= ScalingLongJump; // Adjust force if needed
                     Player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
                     Player.PlayerPawn.Value.AbsVelocity.Y = directionVec.Y;
