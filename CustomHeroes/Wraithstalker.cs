@@ -61,7 +61,7 @@ namespace WarcraftPlugin.Classes
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
             var playerId = Player.Slot;
-            var level = WarcraftPlayer.GetAbilityLevel(1)
+            var level = WarcraftPlayer.GetAbilityLevel(1);
 
             RemoveCloakEffect(); // <- this line replaces RemovePhantomCloakEffect()
             var cloakEffect = new PhantomCloakEffect(Player, level);
