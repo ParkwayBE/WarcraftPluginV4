@@ -41,6 +41,8 @@ namespace WarcraftPlugin.Classes
         private bool _CanUseCloakEffect = true;
         private readonly Dictionary<int, PhantomCloakEffect> activeCloakEffects = new();
         private PhantomCloakEffect cloakEffect;
+        private static Dictionary<ulong, int> skullTracker = new();
+
 
 
 
@@ -50,7 +52,7 @@ namespace WarcraftPlugin.Classes
 
         public override List<IWarcraftAbility> Abilities =>
         [
-            new WarcraftAbility("Assimilation", "On Kill: Movement speed and reduced gravity for 3/5/7/9/10 seconds, this also grants a blindstack max 2, which blinds an enemy when he spots you."),
+            new WarcraftAbility("Assimilation", "On Kill: Gain a Skull, skulls last untill the end of the game and give various bonusstats."),
             new WarcraftAbility("Phantom Cloak", "Standing still for  2.5 - 0.5 seconds makes you invisible and your next shot deals bonus damage."),
             new WarcraftAbility("Shadowstrike", "After you exited Phantom Cloak your next hit will cause bonus damage and grant you a guaranteed skull"),
             new WarcraftCooldownAbility("Marked for prey", "Scan the area where you are looking, highlight enemies close for x seconds and slow them down. Killing a marked target grants a skull. Skulls give you lasting benefits untill mapchange.", 5f)
@@ -62,6 +64,7 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerDeath>(OnPlayerDeath);
             HookEvent<EventRoundEnd>(OnRoundEnd);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
+            HookEvent<EventPlayerDisconnect>(PlayerDisconnect);
 
             HookAbility(3, Ultimate);
         }
@@ -84,6 +87,46 @@ namespace WarcraftPlugin.Classes
 
                 // Disable further bonus until recloaked
                 cloakEffect._AdditionalDamage = false;
+            }
+
+            var killer = @event.Attacker;
+            var victim = @event.Userid;
+
+            if (killer == null || victim == null)
+            {
+                Console.WriteLine("[ERROR] PlayerKill failed: Killer or victim is NULL!");
+                return;
+            }
+
+            if (killer != Player)
+            {
+                Console.WriteLine($"[INFO] {killer.PlayerName} is not Wraithstalker. Ignoring kill event.");
+                return;
+            }
+
+            if (victim.PlayerPawn?.Value?.Health > 0)
+            {
+                return;
+            }
+
+            ulong attackerID = @event.Attacker.SteamID;
+
+            if (!skullTracker.ContainsKey(attackerID))
+                skullTracker[attackerID] = 0;
+
+            skullTracker[attackerID]++;
+
+            @event.Attacker.PrintToChat($"\x07[Wraithstalker] Skull claimed! Total skulls: {skullTracker[attackerID]}");
+
+        }
+
+        private void PlayerDisconnect(EventPlayerDisconnect @event)
+        {
+            ulong steamID = @event.Userid.SteamID;
+            if (skullTracker.ContainsKey(steamID))
+            {
+                skullTracker.Remove(steamID);
+                Console.WriteLine($"[Wraithstalker] Removed skull data for {steamID}");
             }
         }
 
@@ -357,7 +400,7 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("[PhantomCloak] Cloak disabled.");
             }
 
-            public override void OnTick() { } // Required by base but unused
+            public override void OnTick() { } 
         }
 
 
@@ -369,10 +412,7 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            // Find and log nearby players
             // NearbyPlayers(1000f, 1000f); // Radius, forward offset UNCOMMENT TO REGAIN MARKED ULT
-
-            // Start cooldown for the ultimate ability
             StartCooldown(3);
         }
 
