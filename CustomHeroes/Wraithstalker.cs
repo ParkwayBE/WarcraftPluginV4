@@ -73,33 +73,32 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
-            var victim = @event.Userid;
-            var attacker = @event.Attacker;
-            if (attacker == null || !attacker.IsValid || !victim.IsValid)
+            if (@event.Attacker != Player || !@event.Userid.IsValid)
                 return;
 
-            int attackerSlot = attacker.Slot;
-            int abilityLevel = attacker.GetWarcraftPlayer()?.GetAbilityLevel(1) ?? 0;
+            var victim = @event.Userid;
+            var attacker = @event.Attacker;
+            int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
 
-            if (activeCloakEffects.TryGetValue(attackerSlot, out var cloak) && cloak._AdditionalDamage)
+            if (cloakEffect._AdditionalDamage)
             {
                 Console.WriteLine("You dealt extra damage!");
-                int bonusDamage = abilityLevel * 10;
+                int bonusDamage = WarcraftPlayer.GetAbilityLevel(1) * 10;
 
                 // Apply bonus damage
                 @event.AddBonusDamage(bonusDamage);
 
                 // Notify victim
-                victim.PrintToChat($"\x07[Wraithstalker] You received {bonusDamage} bonus damage from the shadows!");
+                @event.Userid?.PrintToChat($"\x07[Wraithstalker] You received {bonusDamage} bonus damage from the shadows!");
 
                 // Disable further bonus until recloaked
-                cloak._AdditionalDamage = false;
+                cloakEffect._AdditionalDamage = false;
             }
 
-            // Check for kill and award skulls
             if (victim.PlayerPawn?.Value != null)
             {
                 int remainingHealth = victim.PlayerPawn.Value.Health - @event.DmgHealth;
+
                 if (remainingHealth <= 0)
                 {
                     if (!skullTracker.ContainsKey(attacker.SteamID))
@@ -109,8 +108,8 @@ namespace WarcraftPlugin.Classes
                     attacker.PrintToChat($"\x07[Wraithstalker] Skull claimed! Total skulls: {skullTracker[attacker.SteamID]}");
                 }
             }
-        }
 
+        }
 
         private void PlayerDisconnect(EventPlayerDisconnect @event)
         {
@@ -156,12 +155,7 @@ namespace WarcraftPlugin.Classes
         {
             var playerId = Player.Slot;
             var level = WarcraftPlayer.GetAbilityLevel(1);
-            if (level > 0)
-            {
-                var cloakEffect = new PhantomCloakEffect(Player, level);
-                activeCloakEffects[Player.Slot] = cloakEffect;
-                cloakEffect.Start();
-            }
+            cloakEffect = new PhantomCloakEffect(Player, level);
             RemoveCloakEffect(); // <- this line replaces RemovePhantomCloakEffect()
             
             cloakEffect.Start();
@@ -373,9 +367,9 @@ namespace WarcraftPlugin.Classes
                     _previousPosition = _currentPosition.Clone();
                     _currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
 
-                    Console.WriteLine("[PhantomCloak] Comparing positions:");
-                    Console.WriteLine($"   Previous: {_previousPosition}");
-                    Console.WriteLine($"   Current:  {_currentPosition}");
+                    //Console.WriteLine("[PhantomCloak] Comparing positions:");
+                    //Console.WriteLine($"   Previous: {_previousPosition}");
+                    //Console.WriteLine($"   Current:  {_currentPosition}");
 
                     if (_previousPosition.X == _currentPosition.X &&
                         _previousPosition.Y == _currentPosition.Y &&
