@@ -83,7 +83,7 @@ namespace WarcraftPlugin.Summons
 
         public void TraceHits(CCSPlayerController owner)
         {
-            hitSystem = new FootballHitSystem(_owner, 0.005f, this);
+            hitSystem = new FootballHitSystem(_owner, 0.01f, this);
             hitSystem.Start();
             WarcraftPlugin.Instance.AddTimer(10f, () =>
             {
