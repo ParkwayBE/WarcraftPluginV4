@@ -156,7 +156,7 @@ namespace WarcraftPlugin.Summons
         public override void OnStart()
         {
             owner.PrintToChat("football Aim sytsem start!");
-            owner.PrintToChat("You have used a ball");
+            owner.PrintToChat("You have used a balll");
         }
         public override void OnTick()
         {
