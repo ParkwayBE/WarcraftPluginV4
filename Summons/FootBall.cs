@@ -59,7 +59,7 @@ namespace WarcraftPlugin.Summons
         public void UpdateLocation(CCSPlayerController owner)
         {
             var distance = 60;
-            var height = 10;
+            var height = 20;
             posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
             owner.PrintToChat($"Updating Ball Position: {posInfrontOfPlayer}");
             _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
@@ -69,7 +69,7 @@ namespace WarcraftPlugin.Summons
         {
             StopUpdateBall();
             var distance = 60;
-            var height = 10;
+            var height = 20;
             posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
             _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
             _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
@@ -96,6 +96,9 @@ namespace WarcraftPlugin.Summons
         public void StopUpdateBall()
         {
             aimSystem.Destroy();
+            var power = 1800;
+            Vector velocity = _owner.CalculateVelocityAwayFromPlayer(power);
+            _ball.Teleport(null, null, velocity);
         }
         internal class FootballHitSystem(CCSPlayerController owner, float onTickInterval, FootBall football) : WarcraftEffect(owner, onTickInterval: onTickInterval)
         {
@@ -122,18 +125,15 @@ namespace WarcraftPlugin.Summons
                         foreach (var player in playersInBox)
                         {
                             owner.PrintToChat($"Hit {player.PlayerName}");
-                        // WarcraftPlugin.Instance.AddTimer(1f, () =>
-                        // {
-                        //Kill(player,owner);
-                        }
+                            // WarcraftPlugin.Instance.AddTimer(1f, () =>
+                            // {
+                            //Kill(player,owner);
 
-                        Warcraft.SpawnExplosion(
-                            pos: vec,
-                            damage: 500000f,
-                            radius: 150f,
-                            attacker: owner,
-                            killFeedIcon: KillFeedIcon.prop_exploding_barrel
-                            );
+                            if (player != owner)
+                            {
+                                Warcraft.TakeDamage(player, 900000, owner, inflictor: owner);
+                            }
+                        }
                     }
                 }
                     
