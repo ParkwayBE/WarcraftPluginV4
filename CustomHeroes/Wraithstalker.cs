@@ -234,6 +234,13 @@ namespace WarcraftPlugin.Classes
                     return;
                 }
 
+                Console.WriteLine("[PhantomCloak] OnTick() - Checking movement...");
+
+                if (_lastPosition == Owner.PlayerPawn.Value.AbsOrigin)
+                {
+                    Console.WriteLine("[PhantomCloak] Player is standing still. Time: " + _timeStill);
+                }
+
                 var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
 
                 if (_lastPosition != null && currentPosition.Equals(_lastPosition))
@@ -269,7 +276,7 @@ namespace WarcraftPlugin.Classes
                 var alpha = 255 - (abilityLevel * 30);
                 alpha = Math.Clamp(alpha, 0, 255);
 
-                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(50, 255, 255, 255));
                 Owner.PrintToChat("You have entered Phantom Cloak.");
             }
 
