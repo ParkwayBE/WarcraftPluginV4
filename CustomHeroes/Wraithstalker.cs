@@ -42,7 +42,6 @@ namespace WarcraftPlugin.Classes
         private static HashSet<int> playersWithActiveCloak = new();
         private static Dictionary<ulong, bool> cloakDamageAvailable = new();
         private static Dictionary<ulong, Timer> damageDisableTimers = new();
-        private EffectManager? _effectManager;
         private PhantomCloakEffect _effect;
 
 
@@ -60,10 +59,6 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerDeath>(OnPlayerDeath);
             HookEvent<EventRoundEnd>(OnRoundEnd);
-
-            _effectManager = WarcraftPlugin.Instance.GetType()
-        .GetField("_effectManager", BindingFlags.NonPublic | BindingFlags.Instance)?
-        .GetValue(WarcraftPlugin.Instance) as EffectManager;
 
             HookAbility(3, Ultimate);
         }
