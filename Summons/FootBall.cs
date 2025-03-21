@@ -108,7 +108,7 @@ namespace WarcraftPlugin.Summons
             {
                 //var ballBox = ball.CollisionBox();
                 owner.PrintToChat("ball in ontick");
-                if (football._ball == null)
+                if (football._ball != null)
                 {
                     Vector vec = new Vector(football._ball.AbsOrigin.X, football._ball.AbsOrigin.Y, football._ball.AbsOrigin.Z);
 
