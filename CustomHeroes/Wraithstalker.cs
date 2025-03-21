@@ -126,7 +126,7 @@ namespace WarcraftPlugin.Classes
             // Convert angles to directional vector
             var forwardVector = new Vector();
             NativeAPI.AngleVectors(eyeAngles.Handle, forwardVector.Handle, nint.Zero, nint.Zero);
-            forwardVector *= forwardOffset;
+            forwardVector *= forwardOffset; // OFFSET NOT WORKING YET , FIX IT
 
             // Calculate the forward offset position
             var scanOrigin = playerPosition + forwardVector;
@@ -158,6 +158,7 @@ namespace WarcraftPlugin.Classes
                     var tickRate = 0.02f;
                     new GlowEffect(otherPlayer, Color.Red, duration, tickRate).Start();
                     otherPlayer.PrintToChat("You have been MARKED");
+                    new UltimateSlowEffect(otherPlayer, 5.0f, 130f).Start();
                 }
             }
 
@@ -168,6 +169,44 @@ namespace WarcraftPlugin.Classes
         }
 
 
+        internal class UltimateSlowEffect : WarcraftEffect
+        {
+            private readonly float _slowAmount;
+            private float _originalSpeed;
+
+            public UltimateSlowEffect(CCSPlayerController owner, float duration, float slowAmount)
+                : base(owner, duration: duration)
+            {
+                _slowAmount = slowAmount;
+            }
+
+            public override void OnStart()
+            {
+                if (Owner.PlayerPawn.Value == null)
+                    return;
+
+                // Store original speed
+                _originalSpeed = Owner.PlayerPawn.Value.MovementServices.Maxspeed;
+
+                // Reduce speed (clamp to prevent negative values)
+                Owner.PlayerPawn.Value.MovementServices.Maxspeed = Math.Max(10, _originalSpeed - _slowAmount);
+
+                // Debug log
+                Console.WriteLine($"[DEBUG] {Owner.PlayerName} is slowed for {Duration} seconds! New speed: {Owner.PlayerPawn.Value.MovementServices.Maxspeed}");
+            }
+
+            public override void OnFinish()
+            {
+                if (Owner.PlayerPawn.Value == null)
+                    return;
+
+                // Restore original speed
+                Owner.PlayerPawn.Value.MovementServices.Maxspeed = _originalSpeed;
+
+                // Debug log
+                Console.WriteLine($"[DEBUG] {Owner.PlayerName} slow effect ended. Speed restored to {Owner.PlayerPawn.Value.MovementServices.Maxspeed}");
+            }
+        }
 
 
 
@@ -175,11 +214,9 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-
-
             // Find and log nearby players
             NearbyPlayers(500f, 300f); // Radius, forward offset
-
+            
             // Start cooldown for the ultimate ability
             StartCooldown(3);
         }

@@ -45,6 +45,7 @@
     <None Update="lang\en.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="CustomHeroes\Wraithstalker.cs" />
     <None Include="Resources\nuget\Readme.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
@@ -56,6 +57,9 @@
   </ItemGroup>
 <ItemGroup>
   <Compile Include="CustomHeroes\**" Condition="'$(Configuration)' == 'Debug'" />
+</ItemGroup>
+<ItemGroup>
+  <Compile Remove="CustomHeroes\Wraithstalker.cs" />
 </ItemGroup>
 
 </Project>
