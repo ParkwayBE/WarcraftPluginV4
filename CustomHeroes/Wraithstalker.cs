@@ -68,11 +68,25 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
+            if (@event.Attacker != Player || cloakEffect == null)
+                return;
+
             if (cloakEffect._AdditionalDamage)
             {
                 Console.WriteLine("You dealt extra damage!");
+                int bonusDamage = WarcraftPlayer.GetAbilityLevel(1) * 10;
+
+                // Apply bonus damage
+                @event.AddBonusDamage(bonusDamage);
+
+                // Notify victim
+                @event.Userid?.PrintToChat($"\x07[Wraithstalker] You received {bonusDamage} bonus damage from the shadows!");
+
+                // Disable further bonus until recloaked
+                cloakEffect._AdditionalDamage = false;
             }
         }
+
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
