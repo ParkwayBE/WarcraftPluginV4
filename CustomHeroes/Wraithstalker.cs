@@ -226,6 +226,7 @@ namespace WarcraftPlugin.Classes
 
             public override void OnTick()
             {
+                Console.WriteLine("[PhantomCloak] Tick active");
                 var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
 
                 float dx = currentPosition.X - _lastPosition.X;
