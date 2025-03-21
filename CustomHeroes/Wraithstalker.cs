@@ -37,7 +37,7 @@ namespace WarcraftPlugin.Classes
         private readonly WarcraftPlugin _plugin;
         public override Color DefaultColor => Color.CadetBlue;
         private bool canUseUltimate = true;
-        private bool CanUseCloakEffect = true;
+        private bool _CanUseCloakEffect = true;
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -56,12 +56,13 @@ namespace WarcraftPlugin.Classes
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
 
-            if (canUseCloakEffect)
+            if (!_canUseCloakEffect) return;
+            if (_CanUseCloakEffect)
             {
                 var level = WarcraftPlayer.GetAbilityLevel(1);
                 if (level > 0)
                     new PhantomCloakEffect(Player, level).Start();
-                CanUseCloakEffect = false;
+                _canUseCloakEffect = false;
                 Console.WriteLine("Can use cloak effect was true, applying cloak on spawn.");
             }
         }
