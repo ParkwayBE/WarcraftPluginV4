@@ -43,7 +43,7 @@ namespace WarcraftPlugin.Classes
         private static Dictionary<ulong, bool> cloakDamageAvailable = new();
         private static Dictionary<ulong, Timer> damageDisableTimers = new();
         private EffectManager? _effectManager;
-
+        private PhantomCloakEffect _effect;
 
 
 
@@ -79,7 +79,9 @@ namespace WarcraftPlugin.Classes
             int level = WarcraftPlayer.GetAbilityLevel(1);
             if (level > 0)
             {
-                new PhantomCloakEffect(Player, level).Start();
+                _effect = new PhantomCloakEffect(Player, level);
+                _effect.Start();
+                Console.WriteLine("Started CloakEffect");
             }
 
         }
@@ -94,26 +96,14 @@ namespace WarcraftPlugin.Classes
         RemoveCloakEffect(Player);
     }
 
-        private void RemoveCloakEffect(CCSPlayerController player)
-        {
-            if (_effectManager is null)
-            {
-                Console.WriteLine("[PhantomCloak] EffectManager not found.");
-                return;
-            }
+    private void RemoveCloakEffect(CCSPlayerController player)
+    {
+        Console.WriteLine("Attempting to remove CloakEffect");
+        _effect.Destroy();
+        Console.WriteLine("Removed CloakEffect");
 
-            var effects = _effectManager
-                .GetEffectsByType<PhantomCloakEffect>()
-                .Where(effect => effect.Owner.Handle == player.Handle)
-                .ToList();
-
-            foreach (var effect in effects)
-            {
-                effect.Destroy();
-            }
-
-            Console.WriteLine($"[PhantomCloak] Removed all cloak effects for {player.PlayerName}.");
         }
+
 
 
 
