@@ -342,7 +342,7 @@ namespace WarcraftPlugin.Classes
             var scanOrigin = playerPosition + forwardVector;
 
             // 🔴 DEBUG Laser from eye to scan center
-            Warcraft.DrawLaserBetween(Player.EyePosition(-10), scanOrigin, Color.Red, 7.0f);
+            Warcraft.DrawLaserBetween(Player.EyePosition(10), scanOrigin, Color.Red, 7.0f);
 
             var players = Utilities.GetPlayers();
 
