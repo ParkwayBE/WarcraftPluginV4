@@ -40,7 +40,7 @@ namespace WarcraftPlugin.Classes
         private bool _CanUseCloakEffect = true;
         private readonly Dictionary<int, PhantomCloakEffect> activeCloakEffects = new();
         private bool cloakDamageAvailable = false;
-        private float cloakLastActivated = 0f;
+        private Timer? damageDisableTimer;
 
 
 
@@ -314,21 +314,23 @@ namespace WarcraftPlugin.Classes
                 int alpha = 100 + (5 - _abilityLevel) * 20; // L5 = 100, L1 = 180
                 Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
                 Console.WriteLine($"[PhantomCloak] Cloak enabled (alpha={alpha}).");
+                cloakDamageAvailable = false;
 
-                var race = Owner.GetWarcraftPlayer().GetClass() as Wraithstalker;
-                if (race is not null)
-                {
-                    race.cloakDamageAvailable = true;
-                    race.cloakLastActivated = Server.CurrentTime;
 
-                    Console.WriteLine("[PhantomCloak] Cloak applied! Bonus damage available.");
-                }
             }
 
             private void DisableCloak()
             {
+                cloakDamageAvailable = true;
                 Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
                 Console.WriteLine("[PhantomCloak] Cloak disabled.");
+                damageDisableTimer?.Kill(); // Reset if already counting down
+                damageDisableTimer = WarcraftPlugin.Instance.AddTimer(5f, () =>
+                {
+                    cloakDamageAvailable = false;
+                    Console.WriteLine("[PhantomCloak] Bonus damage window expired.");
+                });
+
             }
 
             public override void OnTick() { } // Required by base but unused
@@ -336,19 +338,35 @@ namespace WarcraftPlugin.Classes
 
 
 
-        private void PlayerHurt(EventPlayerHurtOther @event)
+        private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
-            if (@event.Attacker != Player) return;
+            if (@event.Attacker != Player)
+                return;
 
-            float timeSinceCloak = Server.CurrentTime - cloakLastActivated;
+            var cloakEffect = WarcraftPlugin.Instance.EffectManager
+                .GetEffectsByType<PhantomCloakEffect>()
+                .FirstOrDefault(x => x.Owner.Handle == Player.Handle);
 
-            if (cloakDamageAvailable && timeSinceCloak <= 3.0f)
+            if (cloakEffect != null && cloakEffect.cloakDamageAvailable)
             {
-                @event.AddBonusDamage(15); // Example: deal +15 bonus damage
-                cloakDamageAvailable = false;
-                Console.WriteLine("[PhantomCloak] Bonus damage applied and consumed.");
+                int bonusDamage = 15; // or scale based on ability level if desired
+                @event.AddBonusDamage(bonusDamage);
+
+                Console.WriteLine("[PhantomCloak] Bonus damage applied!");
+
+                // ✅ Notify the victim
+                var victim = @event.Userid;
+                if (victim.IsValid && victim.IsAlive())
+                {
+                    victim.PrintToChat($" \u2620 You received {bonusDamage} bonus damage from a cloaked attacker!");
+                }
+
+                // Disable future bonus until cloak is recharged
+                cloakEffect.cloakDamageAvailable = false;
             }
         }
+
+
 
 
 
