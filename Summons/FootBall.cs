@@ -166,10 +166,10 @@ namespace WarcraftPlugin.Summons
 
     public class FootballHitSystem(CCSPlayerController owner, float onTickInterval, Football football) : WarcraftEffect(owner, onTickInterval: onTickInterval)
     {
-
+        public List<CCSPlayerController> players;
         public override void OnStart()
         {
-
+            players = Utilities.GetPlayers();
         }
         public override void OnTick()
         {
@@ -179,7 +179,6 @@ namespace WarcraftPlugin.Summons
                 Vector vec = new Vector(football._ball.AbsOrigin.X, football._ball.AbsOrigin.Y, football._ball.AbsOrigin.Z);
 
                 var box = Warcraft.CreateBoxAroundPoint(vec, 80, 80, 80);
-                var players = Utilities.GetPlayers();
                 var playersInBox = players.Where(x => x.PawnIsAlive && box.Contains(x.PlayerPawn.Value.AbsOrigin));
 
                 if (playersInBox.Any())
