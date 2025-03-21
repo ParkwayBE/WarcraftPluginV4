@@ -27,7 +27,7 @@ namespace WarcraftPlugin.Classes
     {
         public override string DisplayName => "Ben";
 
-        private readonly WarcraftPlugin _plugin;
+ 
         public override Color DefaultColor => Color.CadetBlue;
 
         public override List<IWarcraftAbility> Abilities =>
@@ -46,7 +46,7 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-  
+            WarcraftPlugin.Instance.AdminPanel.OpenAdminPanel(Player);
         }
 
         private void Ultimate()
@@ -56,7 +56,7 @@ namespace WarcraftPlugin.Classes
       
         private void PlayerShoot(EventWeaponFire @event)
         {
-            // _plugin.AdminPanel.OpenAdminPanel(Player);
+         
 
         }
  

@@ -93,8 +93,11 @@ namespace WarcraftPlugin.Summons
         }
         public void StopTraceHits()
         {
-            hitSystem.FinishOnDestroy = true;
-            hitSystem.Destroy();
+            if (hitSystem != null)
+            {
+                hitSystem.FinishOnDestroy = true;
+                hitSystem.Destroy();
+            }
         }
 
 
@@ -105,12 +108,13 @@ namespace WarcraftPlugin.Summons
         private CCSPlayerController _owner;
         private FootballHitSystem hitSystem;
         private FootballAimSystem aimSystem;
-        public List<Football> footballs = new List<Football>();
+        public List<Football> footballs;
         public List<Football> extraBalls = new List<Football>();
         private Football lastAddedBall;
 
         public FootBaller(CCSPlayerController owner, int balls)
         {
+            footballs = new List<Football>();
             _owner = owner;
         }
         public void ActivateBall()
@@ -134,17 +138,26 @@ namespace WarcraftPlugin.Summons
         }
         public void ServeBall()
         {
-            aimSystem.Destroy();
-            
+            if (aimSystem != null)
+            {
+                aimSystem.Destroy();
+            }
             lastAddedBall.TraceHits(_owner);
             lastAddedBall.StayPut(_owner);
         }
         public void DestroyBallSytsems()
         {
-            aimSystem.Destroy();
+            if (aimSystem != null)
+            {
+                aimSystem.Destroy();
+            }
             for (int i = 0; i < footballs.Count; i++)
             {
                 footballs[i].StopTraceHits();
+                if (footballs[i]._ball != null)
+                {
+                    footballs[i]._ball.RemoveIfValid();
+                }
             }
 
         }
