@@ -193,7 +193,7 @@ namespace WarcraftPlugin.Summons
                         owner.PrintToChat($"Hit {player.PlayerName}");
                         if (player.PlayerName != owner.PlayerName)
                         {
-                            Warcraft.TakeDamage(player, 900000, owner, killFeedIcon: KillFeedIcon.snowball, inflictor: owner)
+                            Warcraft.TakeDamage(player, 900000, owner, killFeedIcon: KillFeedIcon.snowball, inflictor: owner);
                             //fb = new Football(owner);
                             //fb.UpdateLocation(owner);
                         }
