@@ -62,6 +62,7 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventRoundEnd>(OnRoundEnd);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerDisconnect>(PlayerDisconnect);
+            HookEvent<EventPlayerConnect>(OnPlayerConnect);
 
             HookAbility(3, Ultimate);
         }
@@ -125,6 +126,17 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine($"[Skulls] Resetting skulls for {player.PlayerName} ({player.SteamID})");
                 skullTracker[player.SteamID] = 0;
             }
+        }
+
+        public void OnPlayerConnect(EventPlayerConnect @event)
+        {
+            Console.WriteLine("Attempting to reset Skulls");
+            Console.WriteLine("Attempting to reset Skulls");
+            Console.WriteLine("Attempting to reset Skulls");
+            Console.WriteLine("Attempting to reset Skulls");
+            Console.WriteLine("Attempting to reset Skulls");
+            var player = @event.Userid;
+            ResetSkullsForPlayer(player);
         }
 
 
