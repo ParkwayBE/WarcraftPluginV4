@@ -133,15 +133,18 @@ namespace WarcraftPlugin.Classes
             int bonusHealth = skulls * 2;
 
             // Default speed (260 is CS2 default walk speed)
-            float baseSpeed = 260f;
-            float newSpeed = baseSpeed + (baseSpeed * (skulls * 0.01f)); // +1% per skull
 
             int currentHealth = Player.PlayerPawn.Value.Health;
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
             int healAmount = abilityLevel * 1;
             int newHealth = currentHealth + skulls * healAmount;
             Player.SetHp(newHealth);
-            player.PlayerPawn.Value.MovementServices.Maxspeed = newSpeed;
+
+            var pawn = Player.PlayerPawn.Value;
+            const float SkullSpeedDivisor = 66.666f;
+            float bonusSpeed = Math.Min(0.6f, skulls / SkullSpeedDivisor);
+            pawn.VelocityModifier = 1f + bonusSpeed;
+
 
             player.PrintToChat($"\x07[Wraithstalker] You have {skulls} skull(s). (+{bonusHealth} HP, +{skulls}% speed)");
 
