@@ -73,32 +73,33 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
-            if (@event.Attacker != Player || !@event.Userid.IsValid)
-                return;
-
             var victim = @event.Userid;
             var attacker = @event.Attacker;
-            int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
+            if (attacker == null || !attacker.IsValid || !victim.IsValid)
+                return;
 
-            if (cloakEffect._AdditionalDamage)
+            int attackerSlot = attacker.Slot;
+            int abilityLevel = attacker.GetWarcraftPlayer()?.GetAbilityLevel(1) ?? 0;
+
+            if (activeCloakEffects.TryGetValue(attackerSlot, out var cloak) && cloak._AdditionalDamage)
             {
                 Console.WriteLine("You dealt extra damage!");
-                int bonusDamage = WarcraftPlayer.GetAbilityLevel(1) * 10;
+                int bonusDamage = abilityLevel * 10;
 
                 // Apply bonus damage
                 @event.AddBonusDamage(bonusDamage);
 
                 // Notify victim
-                @event.Userid?.PrintToChat($"\x07[Wraithstalker] You received {bonusDamage} bonus damage from the shadows!");
+                victim.PrintToChat($"\x07[Wraithstalker] You received {bonusDamage} bonus damage from the shadows!");
 
                 // Disable further bonus until recloaked
-                cloakEffect._AdditionalDamage = false;
+                cloak._AdditionalDamage = false;
             }
 
+            // Check for kill and award skulls
             if (victim.PlayerPawn?.Value != null)
             {
                 int remainingHealth = victim.PlayerPawn.Value.Health - @event.DmgHealth;
-
                 if (remainingHealth <= 0)
                 {
                     if (!skullTracker.ContainsKey(attacker.SteamID))
@@ -108,8 +109,8 @@ namespace WarcraftPlugin.Classes
                     attacker.PrintToChat($"\x07[Wraithstalker] Skull claimed! Total skulls: {skullTracker[attacker.SteamID]}");
                 }
             }
-
         }
+
 
         private void PlayerDisconnect(EventPlayerDisconnect @event)
         {
