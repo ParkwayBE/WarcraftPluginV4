@@ -24,6 +24,8 @@ using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using CounterStrikeSharp.API.Modules.Timers;
+
 
 
 namespace WarcraftPlugin.Classes
@@ -291,6 +293,8 @@ namespace WarcraftPlugin.Classes
                 Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
                 Console.WriteLine("[PhantomCloak] Cloak removed due to movement.");
             }
+
+            public override void OnTick() { }
 
             public override void OnFinish()
             {
