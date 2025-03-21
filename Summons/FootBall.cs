@@ -67,19 +67,21 @@ namespace WarcraftPlugin.Summons
         }
         public void StayPut(CCSPlayerController owner)
         {
-            StopUpdateBall();
-            var distance = 60;
-            var height = 20;
-            posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
-            _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-            _ballProp.SetParent(_ball);
-            TraceHits(owner);
-            var power = 1800;
-            Vector velocity = _owner.CalculateVelocityAwayFromPlayer(power);
-            _ball.Teleport(null, null, velocity);
+            if (_ball != null)
+            {
+                StopUpdateBall();
+                var distance = 60;
+                var height = 20;
+                posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
+                _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+                _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+                _ballProp.SetParent(_ball);
+                TraceHits(owner);
+                var power = 1800;
+                Vector velocity = _owner.CalculateVelocityAwayFromPlayer(power);
+                _ball.Teleport(null, null, velocity);
 
-
+            }
         }
 
         public void TraceHits(CCSPlayerController owner)
@@ -91,10 +93,15 @@ namespace WarcraftPlugin.Summons
         {
             aimSystem = new FootballAimSystem(owner, 0.01f, this);
             aimSystem.Start();
+            WarcraftPlugin.Instance.AddTimer(10f, () =>
+            {
+                DestroyBall();
+            });
         }
         public void DestroyBall()
         {
             hitSystem.Destroy();
+
         }
         public void StopUpdateBall()
         {
@@ -111,7 +118,7 @@ namespace WarcraftPlugin.Summons
             public override void OnTick()
             {
                 //var ballBox = ball.CollisionBox();
-                owner.PrintToChat("ball in ontick");
+                //owner.PrintToChat("ball in ontick");
                 if (football._ball != null)
                 {
                     Vector vec = new Vector(football._ball.AbsOrigin.X, football._ball.AbsOrigin.Y, football._ball.AbsOrigin.Z);
