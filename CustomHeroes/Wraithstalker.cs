@@ -66,28 +66,34 @@ namespace WarcraftPlugin.Classes
             if (playersWithActiveCloak.Contains(playerId))
                 return;
 
-            var level = WarcraftPlayer.GetAbilityLevel(1);
+            int level = WarcraftPlayer.GetAbilityLevel(1);
             if (level > 0)
             {
-                new PhantomCloakEffect(Player).Start();
-
-                playersWithActiveCloak.Add(playerId);
-                Console.WriteLine("Cloak effect applied to player " + playerId);
+                new PhantomCloakEffect(Player, level).Start();
             }
 
         }
 
         private void OnPlayerDeath(EventPlayerDeath death)
         {
-            if (death.Userid != Player) return;
-
-            RemovePhantomCloakEffect();
+            RemoveCloakEffect();
         }
 
         private void OnRoundEnd(EventRoundEnd round)
         {
-            RemovePhantomCloakEffect();
+            RemoveCloakEffect();
         }
+
+        private void RemoveCloakEffect()
+        {
+            var effect = WarcraftPlugin.Instance.EffectManager
+                .GetActiveEffects(Player)
+                .OfType<PhantomCloakEffect>()
+                .FirstOrDefault();
+
+            effect?.Destroy(); 
+        }
+
 
 
         public static void SetGlowOnEntity(CBaseEntity? entity, Color GlowColor)
@@ -242,10 +248,13 @@ namespace WarcraftPlugin.Classes
             private Vector _previousPosition;
             private Vector _currentPosition;
             private Timer? _positionComparisonTimer;
+            private bool _isCloaked;
+            private readonly int _abilityLevel;
 
-            public PhantomCloakEffect(CCSPlayerController owner)
-                : base(owner, duration: float.MaxValue) // Run indefinitely
+            public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
+                : base(owner, duration: float.MaxValue, destroyOnDeath: true, destroyOnRoundEnd: true, destroyOnRaceChange: true)
             {
+                _abilityLevel = abilityLevel;
             }
 
             public override void OnStart()
@@ -255,14 +264,12 @@ namespace WarcraftPlugin.Classes
                 _previousPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
                 _currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
 
-                Console.WriteLine($"[PositionTracker] Initial position: {_currentPosition}");
-
                 _positionComparisonTimer = WarcraftPlugin.Instance.AddTimer(1.0f, () =>
                 {
                     _previousPosition = _currentPosition.Clone();
                     _currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
 
-                    Console.WriteLine("[PositionTracker] Comparing positions:");
+                    Console.WriteLine("[PhantomCloak] Comparing positions:");
                     Console.WriteLine($"   Previous: {_previousPosition}");
                     Console.WriteLine($"   Current:  {_currentPosition}");
 
@@ -270,51 +277,52 @@ namespace WarcraftPlugin.Classes
                         _previousPosition.Y == _currentPosition.Y &&
                         _previousPosition.Z == _currentPosition.Z)
                     {
-                        CloakEnable();
-                        Console.WriteLine("You're standing still!");
+                        if (!_isCloaked)
+                        {
+                            EnableCloak();
+                            _isCloaked = true;
+                        }
                     }
                     else
                     {
-                        CloakDisable();
-                        Console.WriteLine("You are currently Moving.");
+                        if (_isCloaked)
+                        {
+                            DisableCloak();
+                            _isCloaked = false;
+                        }
                     }
                 }, TimerFlags.REPEAT);
             }
 
-            public override void OnTick() { }
-
-            private void CloakEnable()
-            {
-                Owner.PrintToCenter("You have become 90% invisible!");
-                int abilityLevel = Owner.GetWarcraftPlayer().GetAbilityLevel(1); // Level 1–5
-                int alpha = 100 + ((5 - abilityLevel) * 20); // Level 5 = 100, Level 4 = 120, ..., Level 1 = 180
-                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
-
-            }
-
-            private void CloakDisable()
-            {
-                Owner.PrintToCenter("You are now visible!");
-                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
-
-
-            }
-
-            private void RemovePhantomCloakEffect()
-            {
-                Owner.GetActiveEffects().OfType<PhantomCloakEffect>().FirstOrDefault()?.Destroy();
-            }
-
-
             public override void OnFinish()
             {
-                Console.WriteLine("[PhantomCloak] OnFinish is called");
+                Console.WriteLine("[PhantomCloak] OnFinish called.");
                 _positionComparisonTimer?.Kill();
-                Console.WriteLine("[PositionTracker] Timer stopped.");
+                if (_isCloaked)
+                {
+                    DisableCloak();
+                    _isCloaked = false;
+                }
             }
+
+            private void EnableCloak()
+            {
+                int alpha = 100 + (5 - _abilityLevel) * 20; // L5 = 100, L1 = 180
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
+                Console.WriteLine($"[PhantomCloak] Cloak enabled (alpha={alpha}).");
+            }
+
+            private void DisableCloak()
+            {
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
+                Console.WriteLine("[PhantomCloak] Cloak disabled.");
+            }
+
+            public override void OnTick() { } // Required by base but unused
         }
 
-        
+
+
 
 
 
