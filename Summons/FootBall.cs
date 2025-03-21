@@ -30,7 +30,7 @@ namespace WarcraftPlugin.Summons
  
         }
 
-        public void Activate(CCSPlayerController owner, FootBall ball)
+        public void Activate(CCSPlayerController owner)
         {
             Deactivate();
             _ball = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
@@ -47,7 +47,7 @@ namespace WarcraftPlugin.Summons
             var height = 10;
             posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
             _ballProp.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(0,1,1));
-            UpdateBall(owner, ball);
+            UpdateBall(owner);
         }
         private void Deactivate()
         {
@@ -78,12 +78,12 @@ namespace WarcraftPlugin.Summons
 
         public void TraceHits(CCSPlayerController owner)
         {
-            hitSystem = new FootballHitSystem(owner, 0.001f, _ball);
+            hitSystem = new FootballHitSystem(owner, 0.01f, _ball);
             hitSystem.Start();
         }
-        public void UpdateBall(CCSPlayerController owner, FootBall ball)
+        public void UpdateBall(CCSPlayerController owner)
         {
-            aimSystem = new FootballAimSystem(owner, 0.001f, ball);
+            aimSystem = new FootballAimSystem(owner, 0.01f, this);
             aimSystem.Start();
         }
         public void DestroyBall()
