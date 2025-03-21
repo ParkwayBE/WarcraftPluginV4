@@ -52,7 +52,7 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            new PhantomCloakEffect(Player, WarcraftPlayer.GetAbilityLevel(1)).Start();
+           
 
         }
 
@@ -297,8 +297,10 @@ namespace WarcraftPlugin.Classes
         private void Ultimate()
         {
             // Find and log nearby players
-            NearbyPlayers(1000f, 1000f); // Radius, forward offset
-            
+            // NearbyPlayers(1000f, 1000f); // Radius, forward offset UNCOMMENT TO REGAIN MARKED ULT
+
+            new PhantomCloakEffect(Player, WarcraftPlayer.GetAbilityLevel(1)).Start();
+
             // Start cooldown for the ultimate ability
             StartCooldown(3);
         }
