@@ -75,6 +75,9 @@ namespace WarcraftPlugin.Summons
             _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
             _ballProp.SetParent(_ball);
             TraceHits(owner);
+            var power = 1800;
+            Vector velocity = _owner.CalculateVelocityAwayFromPlayer(power);
+            _ball.Teleport(null, null, velocity);
 
 
         }
@@ -96,9 +99,7 @@ namespace WarcraftPlugin.Summons
         public void StopUpdateBall()
         {
             aimSystem.Destroy();
-            var power = 1800;
-            Vector velocity = _owner.CalculateVelocityAwayFromPlayer(power);
-            _ball.Teleport(null, null, velocity);
+            
         }
         internal class FootballHitSystem(CCSPlayerController owner, float onTickInterval, FootBall football) : WarcraftEffect(owner, onTickInterval: onTickInterval)
         {
