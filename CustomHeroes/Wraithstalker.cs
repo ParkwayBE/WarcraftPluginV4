@@ -228,6 +228,7 @@ namespace WarcraftPlugin.Classes
             {
                 var velocity = Owner.PlayerPawn.Value.AbsVelocity;
                 var isMoving = Math.Abs(velocity.X) > 0.1f || Math.Abs(velocity.Y) > 0.1f || Math.Abs(velocity.Z) > 0.1f;
+                Console.WriteLine($"[PhantomCloak] Current velocity: {velocity} seconds.");
 
                 if (!isMoving)
                 {
