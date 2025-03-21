@@ -53,6 +53,10 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
+            if(footBaller != null)
+            {
+                footBaller = null;
+            }
             footballsRemaining = 10;
             //WarcraftPlugin.Instance.AddTimer(0.2f, () => {Player.PlayLocalSound("sounds/ambient/misc/techno_overpass.vsnd"); });
             Player.PrintToChat("you have 3 footballs");
