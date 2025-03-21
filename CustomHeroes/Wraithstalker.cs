@@ -189,7 +189,7 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerShoot(EventWeaponFire @event)
         {
-           
+           // 
 
         }
 
