@@ -46,12 +46,6 @@ namespace WarcraftPlugin.Classes
 
 
 
-
-
-
-
-
-
         public override List<IWarcraftAbility> Abilities =>
         [
             new WarcraftAbility("Assimilation", "On Kill: Gain a Skull, skulls last untill the end of the game and give various bonusstats on spawn."),
@@ -70,6 +64,8 @@ namespace WarcraftPlugin.Classes
 
             HookAbility(3, Ultimate);
         }
+
+
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
@@ -111,6 +107,9 @@ namespace WarcraftPlugin.Classes
 
         }
 
+
+
+
         private void PlayerDisconnect(EventPlayerDisconnect @event)
         {
             ulong steamID = @event.Userid.SteamID;
@@ -120,6 +119,8 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine($"[Wraithstalker] Removed skull data for {steamID}");
             }
         }
+
+
 
         private int GetSkullCount(CCSPlayerController player)
         {
@@ -143,11 +144,6 @@ namespace WarcraftPlugin.Classes
             player.PlayerPawn.Value.MovementServices.Maxspeed = newSpeed;
 
             player.PrintToChat($"\x07[Wraithstalker] You have {skulls} skull(s). (+{bonusHealth} HP, +{skulls}% speed)");
-
-
-
-        }
-
 
 
 
