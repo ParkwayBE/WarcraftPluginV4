@@ -1,11 +1,14 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using WarcraftPlugin.Core.Effects;
+using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
+using WarcraftPlugin.Models;
 using static g3.RoundRectGenerator;
 using static WarcraftPlugin.Summons.FootBall;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
@@ -78,7 +81,7 @@ namespace WarcraftPlugin.Summons
 
         public void TraceHits(CCSPlayerController owner)
         {
-            hitSystem = new FootballHitSystem(owner, 0.01f, _ball);
+            hitSystem = new FootballHitSystem(owner, 0.005f, _ball);
             hitSystem.Start();
         }
         public void UpdateBall(CCSPlayerController owner)
@@ -115,12 +118,23 @@ namespace WarcraftPlugin.Summons
 
                     if (playersInBox.Any())
                     {
-                        foreach (var player in playersInBox)
-                        {
-                            owner.PrintToChat($"Hit {player.PlayerName}");
+                        //foreach (var player in playersInBox)
+                        //{
+                        //owner.PrintToChat($"Hit {player.PlayerName}");
+                        // WarcraftPlugin.Instance.AddTimer(1f, () =>
+                        // {
+                        //Kill(player,owner);
+                        //});
 
-                        }
+                        Warcraft.SpawnExplosion(
+                            pos: vec,
+                            damage: 500000f,
+                            radius: 150f,
+                            attacker: owner,
+                            killFeedIcon: KillFeedIcon.prop_exploding_barrel
+                            );
                     }
+                    
                 }
             }
             public override void OnFinish() { }
