@@ -54,7 +54,7 @@ namespace WarcraftPlugin.Classes
 
         public override List<IWarcraftAbility> Abilities =>
         [
-            new WarcraftAbility("Assimilation", "On Kill: Gain a Skull, skulls last untill the end of the game and give various bonusstats."),
+            new WarcraftAbility("Assimilation", "On Kill: Gain a Skull, skulls last untill the end of the game and give various bonusstats on spawn."),
             new WarcraftAbility("Phantom Cloak", "Standing still for  2.5 - 0.5 seconds makes you invisible and your next shot deals bonus damage."),
             new WarcraftAbility("Shadowstrike", "After you exited Phantom Cloak your next hit will cause bonus damage and grant you a guaranteed skull"),
             new WarcraftCooldownAbility("Marked for prey", "Scan the area where you are looking, highlight enemies close for x seconds and slow them down. Killing a marked target grants a skull. Skulls give you lasting benefits untill mapchange.", 5f)
@@ -73,8 +73,12 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
-            if (@event.Attacker != Player || cloakEffect == null)
+            if (@event.Attacker != Player || !@event.Userid.IsValid)
                 return;
+
+            var victim = @event.Userid;
+            var attacker = @event.Attacker;
+            int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
 
             if (cloakEffect._AdditionalDamage)
             {
@@ -91,34 +95,19 @@ namespace WarcraftPlugin.Classes
                 cloakEffect._AdditionalDamage = false;
             }
 
-            var killer = @event.Attacker;
-            var victim = @event.Userid;
-
-            if (killer == null || victim == null)
+            if (victim.PlayerPawn?.Value != null)
             {
-                Console.WriteLine("[ERROR] PlayerKill failed: Killer or victim is NULL!");
-                return;
+                int remainingHealth = victim.PlayerPawn.Value.Health - @event.DmgHealth;
+
+                if (remainingHealth <= 0)
+                {
+                    if (!skullTracker.ContainsKey(attacker.SteamID))
+                        skullTracker[attacker.SteamID] = 0;
+
+                    skullTracker[attacker.SteamID]++;
+                    attacker.PrintToChat($"\x07[Wraithstalker] Skull claimed! Total skulls: {skullTracker[attacker.SteamID]}");
+                }
             }
-
-            if (killer != Player)
-            {
-                Console.WriteLine($"[INFO] {killer.PlayerName} is not Wraithstalker. Ignoring kill event.");
-                return;
-            }
-
-            if (victim.PlayerPawn?.Value?.Health > 0)
-            {
-                return;
-            }
-
-            ulong attackerID = @event.Attacker.SteamID;
-
-            if (!skullTracker.ContainsKey(attackerID))
-                skullTracker[attackerID] = 0;
-
-            skullTracker[attackerID]++;
-
-            @event.Attacker.PrintToChat($"\x07[Wraithstalker] Skull claimed! Total skulls: {skullTracker[attackerID]}");
 
         }
 
