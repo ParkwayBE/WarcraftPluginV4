@@ -154,6 +154,10 @@ namespace WarcraftPlugin.Summons
             for (int i = 0; i < footballs.Count; i++)
             {
                 footballs[i].StopTraceHits();
+                if (footballs[i]._ball != null)
+                {
+                    footballs[i]._ball.RemoveIfValid();
+                }
             }
 
         }
