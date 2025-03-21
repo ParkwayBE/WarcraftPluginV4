@@ -41,7 +41,7 @@ namespace WarcraftPlugin.Summons
             _ballProp.DispatchSpawn();
 
 
-            _ballProp.CBodyComponent.SceneNode.GetSkeletonInstance().Scale = 0.8f;
+            //_ballProp.CBodyComponent.SceneNode.GetSkeletonInstance().Scale = 0.8f;
            // var distance = 60;
            //var height = 10;
             //Vector posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
@@ -83,7 +83,7 @@ namespace WarcraftPlugin.Summons
 
         public void TraceHits(CCSPlayerController owner)
         {
-            hitSystem = new FootballHitSystem(_owner, 0.01f, this);
+            hitSystem = new FootballHitSystem(_owner, 0.005f, this);
             hitSystem.Start();
             WarcraftPlugin.Instance.AddTimer(10f, () =>
             {
