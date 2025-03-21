@@ -473,7 +473,7 @@ namespace WarcraftPlugin.Classes
                             EnableCloak();
                             _isCloaked = true;
                             _AdditionalDamage = false;
-                            Player.PlayLocalSound("sounds/physics/fruit/fruit_impact_02.vsnd");
+                            Owner.PlayLocalSound("sounds/physics/fruit/fruit_impact_02.vsnd");
                         }
                     }
                     else
