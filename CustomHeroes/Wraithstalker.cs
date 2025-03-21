@@ -38,6 +38,8 @@ namespace WarcraftPlugin.Classes
         public override Color DefaultColor => Color.CadetBlue;
         private bool canUseUltimate = true;
         private bool _CanUseCloakEffect = true;
+        private static HashSet<int> playersWithActiveCloak = new();
+
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -56,15 +58,23 @@ namespace WarcraftPlugin.Classes
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
 
-            if (!_canUseCloakEffect) return;
-            if (_CanUseCloakEffect)
+            var playerId = Player.Slot;
+
+            if (playersWithActiveCloak.Contains(playerId))
+                return;
+
+            var level = WarcraftPlayer.GetAbilityLevel(1);
+            if (level > 0)
             {
-                var level = WarcraftPlayer.GetAbilityLevel(1);
-                if (level > 0)
-                    new PhantomCloakEffect(Player, level).Start();
-                _canUseCloakEffect = false;
-                Console.WriteLine("Can use cloak effect was true, applying cloak on spawn.");
+                new PhantomCloakEffect(Player, level, () =>
+                {
+                    playersWithActiveCloak.Remove(playerId);
+                }).Start();
+
+                playersWithActiveCloak.Add(playerId);
+                Console.WriteLine("Cloak effect applied to player " + playerId);
             }
+
         }
 
         public static void SetGlowOnEntity(CBaseEntity? entity, Color GlowColor)
@@ -219,11 +229,15 @@ namespace WarcraftPlugin.Classes
             private readonly float _requiredStillTime;
             private bool _isCloaked;
 
-            public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
+            private readonly Action onFinishCallback;
+
+            public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel, Action onFinish)
                 : base(owner, duration: float.MaxValue, onTickInterval: 0.1f)
             {
                 _requiredStillTime = Math.Max(0.5f, 3.0f - (abilityLevel * 0.5f));
+                onFinishCallback = onFinish;
             }
+
 
             public override void OnStart()
             {
@@ -286,8 +300,8 @@ namespace WarcraftPlugin.Classes
                 if (_isCloaked)
                     RemoveCloak();
 
+                onFinishCallback?.Invoke();
                 Console.WriteLine("[PhantomCloak] Effect ended.");
-                Owner.CanUseCloakEffect = true;
             }
         }
 
