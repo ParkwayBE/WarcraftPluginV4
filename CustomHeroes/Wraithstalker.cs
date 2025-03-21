@@ -205,78 +205,76 @@ namespace WarcraftPlugin.Classes
 
         internal class PhantomCloakEffect : WarcraftEffect
         {
-            private float _requiredStandStillTime;
             private Vector _lastPosition;
-            private float _standingTime = 0f;
-            private bool _hasStarted = false;
-            private bool _isCloaked = false;
+            private float _stillTime;
+            private readonly float _requiredStillTime;
+            private bool _isCloaked;
 
             public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
-                : base(owner, duration: 999f, onTickInterval: 0.1f) // Continuous
+                : base(owner, duration: float.MaxValue, onTickInterval: 0.1f) // Effect runs indefinitely until removed
             {
-                _requiredStandStillTime = Math.Max(0.5f, 2.5f - (abilityLevel * 0.5f));
+                _requiredStillTime = 2.5f - (abilityLevel * 0.5f);
             }
 
             public override void OnStart()
             {
-                Console.WriteLine($"[PhantomCloak] Required stand still time set to {_requiredStandStillTime} seconds.");
                 _lastPosition = Owner.PlayerPawn.Value.AbsOrigin;
-                _hasStarted = true;
+                _stillTime = 0f;
+                _isCloaked = false;
+                Console.WriteLine("[PhantomCloak] Required stand still time set to " + _requiredStillTime + " seconds.");
             }
 
             public override void OnTick()
             {
-                if (!Owner.IsValid || !Owner.IsAlive()) return;
-
                 var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
 
-                if (PositionsEqual(_lastPosition, currentPosition))
-                {
-                    _standingTime += OnTickInterval;
-                    Console.WriteLine($"[PhantomCloak] Standing still for {_standingTime:0.00}/{_requiredStandStillTime}s");
+                float movementThreshold = 1.0f; // small buffer to avoid float jitter triggering
+                float distanceMoved = (currentPosition - _lastPosition).LengthSquared();
 
-                    if (_standingTime >= _requiredStandStillTime && !_isCloaked)
+                if (distanceMoved < movementThreshold)
+                {
+                    _stillTime += OnTickInterval;
+                    Console.WriteLine($"[PhantomCloak] Standing still for {_stillTime:0.00}/{_requiredStillTime}s");
+
+                    if (!_isCloaked && _stillTime >= _requiredStillTime)
                     {
                         ApplyCloak();
+                        _isCloaked = true;
                     }
                 }
                 else
                 {
                     if (_isCloaked)
+                    {
                         RemoveCloak();
-
-                    _standingTime = 0f;
+                        _isCloaked = false;
+                    }
+                    _stillTime = 0f;
                     _lastPosition = currentPosition;
                 }
             }
 
             private void ApplyCloak()
             {
-                _isCloaked = true;
+                int abilityLevel = Owner.GetWarcraftPlayer().GetAbilityLevel(1);
+                int alpha = Math.Max(130, 255 - (abilityLevel * 25));
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
                 Console.WriteLine("[PhantomCloak] Cloak applied!");
-                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(100, 255, 255, 255));
             }
 
             private void RemoveCloak()
             {
-                _isCloaked = false;
-                Console.WriteLine("[PhantomCloak] Cloak removed.");
                 Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
+                Console.WriteLine("[PhantomCloak] Cloak removed due to movement.");
             }
 
             public override void OnFinish()
             {
                 if (_isCloaked)
+                {
                     RemoveCloak();
-
+                }
                 Console.WriteLine("[PhantomCloak] Effect ended.");
-            }
-
-            private bool PositionsEqual(Vector a, Vector b)
-            {
-                return Math.Abs(a.X - b.X) < 1.0f &&
-                       Math.Abs(a.Y - b.Y) < 1.0f &&
-                       Math.Abs(a.Z - b.Z) < 1.0f;
             }
         }
 
