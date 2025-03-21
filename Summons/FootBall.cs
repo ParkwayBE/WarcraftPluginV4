@@ -104,18 +104,22 @@ namespace WarcraftPlugin.Summons
             public override void OnTick()
             {
                 //var ballBox = ball.CollisionBox();
-                Vector vec = new Vector(ball.AbsOrigin.X, ball.AbsOrigin.Y, ball.AbsOrigin.Z);
-                
-                var box = Warcraft.CreateBoxAroundPoint(vec, 100, 100, 100);
-                //owner.PrintToChat($"Ball Box x: {box.Center.x} | y: {box.Center.z}");
-                var players = Utilities.GetPlayers();
-                var playersInBox = players.Where(x => x.PawnIsAlive && box.Contains(x.PlayerPawn.Value.AbsOrigin));
-
-                if (playersInBox.Any())
+                if (ball == null)
                 {
-                    foreach ( var player in playersInBox)
+                    Vector vec = new Vector(ball.AbsOrigin.X, ball.AbsOrigin.Y, ball.AbsOrigin.Z);
+
+                    var box = Warcraft.CreateBoxAroundPoint(vec, 100, 100, 100);
+                    //owner.PrintToChat($"Ball Box x: {box.Center.x} | y: {box.Center.z}");
+                    var players = Utilities.GetPlayers();
+                    var playersInBox = players.Where(x => x.PawnIsAlive && box.Contains(x.PlayerPawn.Value.AbsOrigin));
+
+                    if (playersInBox.Any())
                     {
-                        owner.PrintToChat($"Hit {player.PlayerName}");  
+                        foreach (var player in playersInBox)
+                        {
+                            owner.PrintToChat($"Hit {player.PlayerName}");
+
+                        }
                     }
                 }
             }
