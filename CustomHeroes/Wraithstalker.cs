@@ -246,22 +246,29 @@ namespace WarcraftPlugin.Classes
             
             cloakEffect.Start();
             activeCloakEffects[Player.Slot] = cloakEffect;
+            Player.GiveNamedItem("weapon_ssg08");
 
             WarcraftPlugin.Instance.AddTimer(0.2f, () =>
             {
                 ApplySkullBonuses(Player);
+                Player.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = true;
             });
+            
+
+
         }
 
 
         private void OnPlayerDeath(EventPlayerDeath death)
         {
             RemoveCloakEffect();
+            Player.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
         }
 
         private void OnRoundEnd(EventRoundEnd round)
         {
             RemoveCloakEffect();
+            Player.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
         }
 
         private void RemoveCloakEffect()
@@ -274,10 +281,6 @@ namespace WarcraftPlugin.Classes
                 activeCloakEffects.Remove(playerId);
             }
         }
-
-
-
-
 
         public static void SetGlowOnEntity(CBaseEntity? entity, Color GlowColor)
         {
