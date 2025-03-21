@@ -115,7 +115,7 @@ namespace WarcraftPlugin.Classes
         }
 
         bool playerFound = false;
-        private void FindAndLogNearbyPlayers(float radius, float forwardOffset = 300f)
+        private void NearbyPlayers(float radius, float forwardOffset = 300f)
         {
             bool playerFound = false;
 
@@ -178,7 +178,7 @@ namespace WarcraftPlugin.Classes
 
 
             // Find and log nearby players
-            FindAndLogNearbyPlayers(500f, 300f); // Radius, forward offset
+            NearbyPlayers(500f, 300f); // Radius, forward offset
 
             // Start cooldown for the ultimate ability
             StartCooldown(3);
