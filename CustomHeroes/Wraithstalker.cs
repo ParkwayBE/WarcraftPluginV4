@@ -156,7 +156,12 @@ namespace WarcraftPlugin.Classes
         {
             var playerId = Player.Slot;
             var level = WarcraftPlayer.GetAbilityLevel(1);
-            cloakEffect = new PhantomCloakEffect(Player, level);
+            if (level > 0)
+            {
+                var cloakEffect = new PhantomCloakEffect(Player, level);
+                activeCloakEffects[Player.Slot] = cloakEffect;
+                cloakEffect.Start();
+            }
             RemoveCloakEffect(); // <- this line replaces RemovePhantomCloakEffect()
             
             cloakEffect.Start();
@@ -368,9 +373,9 @@ namespace WarcraftPlugin.Classes
                     _previousPosition = _currentPosition.Clone();
                     _currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
 
-                    //Console.WriteLine("[PhantomCloak] Comparing positions:");
-                    //Console.WriteLine($"   Previous: {_previousPosition}");
-                    //Console.WriteLine($"   Current:  {_currentPosition}");
+                    Console.WriteLine("[PhantomCloak] Comparing positions:");
+                    Console.WriteLine($"   Previous: {_previousPosition}");
+                    Console.WriteLine($"   Current:  {_currentPosition}");
 
                     if (_previousPosition.X == _currentPosition.X &&
                         _previousPosition.Y == _currentPosition.Y &&
