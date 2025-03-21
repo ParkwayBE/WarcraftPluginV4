@@ -52,7 +52,8 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            
+            new PhantomCloakEffect(Player, WarcraftPlayer.GetAbilityLevel(1)).Start();
+
         }
 
         public static void SetGlowOnEntity(CBaseEntity? entity, Color GlowColor)
@@ -201,7 +202,77 @@ namespace WarcraftPlugin.Classes
             {            }
         }
 
+        internal class PhantomCloakEffect : WarcraftEffect
+        {
+            private readonly float _timeToCloak;
+            private float _timeStandingStill = 0f;
+            private readonly float _requiredTimeStanding;
+            private bool _isCloaked = false;
 
+            public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
+                : base(owner, duration: 0f, onTickInterval: 0.1f) // run every 0.1 seconds, no forced duration
+            {
+                _requiredTimeStanding = 2.5f - ((abilityLevel - 1) * 0.5f); // Level 1 = 2.5s, Level 5 = 0.5s
+            }
+
+            public override void OnStart()
+            {
+                // Optional: Owner.PrintToChat("[DEBUG] Phantom Cloak activated");
+            }
+
+            public override void OnTick()
+            {
+                if (!Owner.IsValid || !Owner.IsAlive())
+                {
+                    Destroy();
+                    return;
+                }
+
+                var velocity = Owner.PlayerPawn.Value.AbsVelocity;
+                float speed = MathF.Sqrt(velocity.X * velocity.X + velocity.Y * velocity.Y);
+
+                if (speed < 5.0f) // Threshold for "not moving"
+                {
+                    _timeStandingStill += OnTickInterval;
+
+                    if (!_isCloaked && _timeStandingStill >= _requiredTimeStanding)
+                    {
+                        ApplyCloak();
+                    }
+                }
+                else
+                {
+                    // Reset the timer and uncloak if moving
+                    _timeStandingStill = 0f;
+
+                    if (_isCloaked)
+                    {
+                        RemoveCloak();
+                    }
+                }
+            }
+
+            public override void OnFinish()
+            {
+                RemoveCloak();
+            }
+
+            private void ApplyCloak()
+            {
+                _isCloaked = true;
+                int abilityLevel = Owner.GetWarcraftPlayer().GetAbilityLevel(1);
+                int alpha = 255 - (abilityLevel * 25); // Level 1 = 230, Level 5 = 130
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
+                // Optional: Owner.PrintToChat("You are now cloaked.");
+            }
+
+            private void RemoveCloak()
+            {
+                _isCloaked = false;
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
+                // Optional: Owner.PrintToChat("Cloak removed.");
+            }
+        }
 
 
 
