@@ -38,7 +38,8 @@ namespace WarcraftPlugin.Classes
         public override Color DefaultColor => Color.CadetBlue;
         private bool canUseUltimate = true;
         private bool _CanUseCloakEffect = true;
-        private static HashSet<int> playersWithActiveCloak = new();
+        private readonly Dictionary<int, PhantomCloakEffect> activeCloakEffects = new();
+
 
 
         public override List<IWarcraftAbility> Abilities =>
@@ -62,15 +63,10 @@ namespace WarcraftPlugin.Classes
             var playerId = Player.Slot;
 
             RemoveCloakEffect(); // <- this line replaces RemovePhantomCloakEffect()
+            var cloakEffect = new PhantomCloakEffect(Player, level);
+            cloakEffect.Start();
+            activeCloakEffects[Player.Slot] = cloakEffect;
 
-            if (playersWithActiveCloak.Contains(playerId))
-                return;
-
-            int level = WarcraftPlayer.GetAbilityLevel(1);
-            if (level > 0)
-            {
-                new PhantomCloakEffect(Player, level).Start();
-            }
         }
 
 
@@ -86,12 +82,15 @@ namespace WarcraftPlugin.Classes
 
         private void RemoveCloakEffect()
         {
-            var effect = WarcraftPlugin.Instance.EffectManager
-                .GetEffectsByType<PhantomCloakEffect>()
-                .FirstOrDefault(e => e.Owner.Handle == Player.Handle);
+            int playerId = Player.Slot;
 
-            effect?.Destroy();
+            if (activeCloakEffects.TryGetValue(playerId, out var effect))
+            {
+                effect.Destroy();
+                activeCloakEffects.Remove(playerId);
+            }
         }
+
 
 
 
@@ -252,7 +251,7 @@ namespace WarcraftPlugin.Classes
             private readonly int _abilityLevel;
 
             public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
-                : base(owner, duration: float.MaxValue, destroyOnDeath: true, destroyOnRoundEnd: true, destroyOnRaceChange: true)
+                : base(owner, duration: float.MaxValue, destroyOnDeath: true, destroyOnRoundEnd: true)
             {
                 _abilityLevel = abilityLevel;
             }
