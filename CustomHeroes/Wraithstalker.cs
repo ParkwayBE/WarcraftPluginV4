@@ -52,6 +52,8 @@ namespace WarcraftPlugin.Classes
         public override void Register()
         {
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
+            HookEvent<EventPlayerDeath>(OnPlayerDeath);
+            HookEvent<EventRoundEnd>(OnRoundEnd);
 
             HookAbility(3, Ultimate);
         }
@@ -59,6 +61,7 @@ namespace WarcraftPlugin.Classes
         {
 
             var playerId = Player.Slot;
+            RemovePhantomCloakEffect();
 
             if (playersWithActiveCloak.Contains(playerId))
                 return;
@@ -73,6 +76,19 @@ namespace WarcraftPlugin.Classes
             }
 
         }
+
+        private void OnPlayerDeath(EventPlayerDeath death)
+        {
+            if (death.Userid != Player) return;
+
+            RemovePhantomCloakEffect();
+        }
+
+        private void OnRoundEnd(EventRoundEnd round)
+        {
+            RemovePhantomCloakEffect();
+        }
+
 
         public static void SetGlowOnEntity(CBaseEntity? entity, Color GlowColor)
         {
@@ -254,18 +270,41 @@ namespace WarcraftPlugin.Classes
                         _previousPosition.Y == _currentPosition.Y &&
                         _previousPosition.Z == _currentPosition.Z)
                     {
-                        CloakEnable(Player);
+                        CloakEnable();
                         Console.WriteLine("You're standing still!");
                     }
                     else
                     {
-                        CloakDisable(Player);
+                        CloakDisable();
                         Console.WriteLine("You are currently Moving.");
                     }
                 }, TimerFlags.REPEAT);
             }
 
             public override void OnTick() { }
+
+            private void CloakEnable()
+            {
+                Owner.PrintToCenter("You have become 90% invisible!");
+                int abilityLevel = Owner.GetWarcraftPlayer().GetAbilityLevel(1); // Level 1–5
+                int alpha = 100 + ((5 - abilityLevel) * 20); // Level 5 = 100, Level 4 = 120, ..., Level 1 = 180
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
+
+            }
+
+            private void CloakDisable()
+            {
+                Owner.PrintToCenter("You are now visible!");
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
+
+
+            }
+
+            private void RemovePhantomCloakEffect()
+            {
+                Owner.GetActiveEffects().OfType<PhantomCloakEffect>().FirstOrDefault()?.Destroy();
+            }
+
 
             public override void OnFinish()
             {
@@ -275,22 +314,7 @@ namespace WarcraftPlugin.Classes
             }
         }
 
-        private void CloakEnable(CCSPlayerController Player)
-        {
-            Player.PrintToCenter("You have become 90% invisible!");
-            int abilityLevel = Player.GetWarcraftPlayer().GetAbilityLevel(1); // Level 1–5
-            int alpha = 100 + ((5 - abilityLevel) * 20); // Level 5 = 100, Level 4 = 120, ..., Level 1 = 180
-            Player.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
-
-        }
-
-        private void CloakDisable(CCSPlayerController Player)
-        {
-            Player.PrintToCenter("You are now visible!");
-            Player.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
-
-
-        }
+        
 
 
 
