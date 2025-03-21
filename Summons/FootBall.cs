@@ -179,7 +179,6 @@ namespace WarcraftPlugin.Summons
                 Vector vec = new Vector(football._ball.AbsOrigin.X, football._ball.AbsOrigin.Y, football._ball.AbsOrigin.Z);
 
                 var box = Warcraft.CreateBoxAroundPoint(vec, 100, 100, 100);
-                owner.PrintToChat($"Ball Box x: {box.Center.x} | y: {box.Center.z}");
                 var players = Utilities.GetPlayers();
                 var playersInBox = players.Where(x => x.PawnIsAlive && box.Contains(x.PlayerPawn.Value.AbsOrigin));
 
@@ -193,8 +192,6 @@ namespace WarcraftPlugin.Summons
                             Warcraft.TakeDamage(player, 900000, owner, inflictor: owner);
                             Football fb = new Football(owner);
                             fb.UpdateLocation(owner);
-
-
                         }
                     }
                 }
