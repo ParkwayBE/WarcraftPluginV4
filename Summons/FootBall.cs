@@ -10,32 +10,26 @@ using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
 using static g3.RoundRectGenerator;
-using static WarcraftPlugin.Summons.FootBall;
+using static WarcraftPlugin.Summons.FootBaller;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace WarcraftPlugin.Summons
 {
-    public class FootBall
+    public class Football
     {
-        private CPhysicsPropMultiplayer _ball;
+        public CPhysicsPropMultiplayer _ball;
         private CDynamicProp _ballProp;
         private CCSPlayerController _owner;
-        private Vector posInfrontOfPlayer;
-        private Vector changedLocation;
-        private FootballHitSystem hitSystem;
-        private FootballAimSystem aimSystem;
+        public FootballHitSystem hitSystem;
+        public bool isActive = false;
 
-        //public Vector Position { get; set; } = new(70, -70, 90);
-
-        public FootBall(CCSPlayerController owner)
+        public Football(CCSPlayerController owner) 
         {
             _owner = owner;
- 
         }
-
         public void Activate(CCSPlayerController owner)
-        {
-            Deactivate();
+        { 
+            isActive = true;
             _ball = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
             _ball.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
             _ball.DispatchSpawn();
@@ -44,40 +38,41 @@ namespace WarcraftPlugin.Summons
             _ballProp.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
             _ballProp.DispatchSpawn();
 
-            //_ballProp.SetParent(_ball, new Vector(0, 0, 0));
+
             _ballProp.CBodyComponent.SceneNode.GetSkeletonInstance().Scale = 0.8f;
-            var distance = 60;
-            var height = 10;
-            posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
-            _ballProp.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(0,1,1));
-            UpdateBall(owner);
+           // var distance = 60;
+           //var height = 10;
+            //Vector posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
+            //_ballProp.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(0, 1, 1));
+            //UpdateBall(owner);
         }
-        private void Deactivate()
-        {
-            _ball?.RemoveIfValid();
-        }
+       
         public void UpdateLocation(CCSPlayerController owner)
         {
             var distance = 60;
-            var height = 20;
-            posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
+            var height = 30;
+            Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
             owner.PrintToChat($"Updating Ball Position: {posInfrontOfPlayer}");
             _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-            
+
+        }
+        public void UpdateLocation(Vector pos)
+        {
+            _ball.Teleport(pos);
         }
         public void StayPut(CCSPlayerController owner)
         {
             if (_ball != null)
             {
-                StopUpdateBall();
+                //StopUpdateBall();
                 var distance = 60;
-                var height = 20;
-                posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
+                var height = 30;
+                Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
                 _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
                 _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
                 _ballProp.SetParent(_ball);
                 TraceHits(owner);
-                var power = 1800;
+                var power = 2300;
                 Vector velocity = _owner.CalculateVelocityAwayFromPlayer(power);
                 _ball.Teleport(null, null, velocity);
 
@@ -88,82 +83,127 @@ namespace WarcraftPlugin.Summons
         {
             hitSystem = new FootballHitSystem(owner, 0.01f, this);
             hitSystem.Start();
-        }
-        public void UpdateBall(CCSPlayerController owner)
-        {
-            aimSystem = new FootballAimSystem(owner, 0.01f, this);
-            aimSystem.Start();
             WarcraftPlugin.Instance.AddTimer(10f, () =>
             {
-                DestroyBall();
+                StopTraceHits();
             });
+        }
+        public void StopTraceHits()
+        {
+            hitSystem.Destroy();
+        }
+
+
+    }
+    public class FootBaller
+    {
+        
+        private CCSPlayerController _owner;
+        private FootballHitSystem hitSystem;
+        private FootballAimSystem aimSystem;
+        public List<Football> footballs = new List<Football>();
+        public List<Football> extraBalls = new List<Football>();
+        private Football lastAddedBall;
+
+        public FootBaller(CCSPlayerController owner, int balls)
+        {
+            _owner = owner;
+        }
+        public void ActivateBall()
+        {
+            lastAddedBall = new Football(_owner);
+            footballs.Add(lastAddedBall);
+            int i = 0;
+            while (!footballs[i].isActive || i < footballs.Count)
+            {
+                i++;
+            }
+
+            footballs[i].Activate(_owner);
+           
+            UpdateBallWithAimSystem(_owner, footballs[i]);
+            
+        }
+        
+        public void UpdateBallWithAimSystem(CCSPlayerController owner, Football ball)
+        {
+            aimSystem = new FootballAimSystem(owner, 0.01f, ball);
+            aimSystem.Start();
+            
+        }
+        public void ServeBall()
+        {
+            aimSystem.Destroy();
+            lastAddedBall.StayPut(_owner);
+            lastAddedBall.TraceHits(_owner);
         }
         public void DestroyBall()
         {
-            hitSystem.Destroy();
+            
 
         }
         public void StopUpdateBall()
         {
-            aimSystem.Destroy();
+            
             
         }
-        internal class FootballHitSystem(CCSPlayerController owner, float onTickInterval, FootBall football) : WarcraftEffect(owner, onTickInterval: onTickInterval)
+        
+
+
+    }
+    public class FootballAimSystem(CCSPlayerController owner, float onTickInterval, Football ball) : WarcraftEffect(owner, onTickInterval: onTickInterval)
+    {
+        public override void OnStart()
         {
-           
-            public override void OnStart()
+            owner.PrintToChat("football Aim sytsem start!");
+            owner.PrintToChat("You have used a ball");
+        }
+        public override void OnTick()
+        {
+            owner.PrintToChat("tick");
+            ball.UpdateLocation(Owner);
+        }
+        public override void OnFinish() { }
+    }
+
+    public class FootballHitSystem(CCSPlayerController owner, float onTickInterval, Football football) : WarcraftEffect(owner, onTickInterval: onTickInterval)
+    {
+
+        public override void OnStart()
+        {
+
+        }
+        public override void OnTick()
+        {
+
+            if (football._ball != null)
             {
-               
-            }
-            public override void OnTick()
-            {
-                //var ballBox = ball.CollisionBox();
-                //owner.PrintToChat("ball in ontick");
-                if (football._ball != null)
+                Vector vec = new Vector(football._ball.AbsOrigin.X, football._ball.AbsOrigin.Y, football._ball.AbsOrigin.Z);
+
+                var box = Warcraft.CreateBoxAroundPoint(vec, 100, 100, 100);
+                owner.PrintToChat($"Ball Box x: {box.Center.x} | y: {box.Center.z}");
+                var players = Utilities.GetPlayers();
+                var playersInBox = players.Where(x => x.PawnIsAlive && box.Contains(x.PlayerPawn.Value.AbsOrigin));
+
+                if (playersInBox.Any())
                 {
-                    Vector vec = new Vector(football._ball.AbsOrigin.X, football._ball.AbsOrigin.Y, football._ball.AbsOrigin.Z);
-
-                    var box = Warcraft.CreateBoxAroundPoint(vec, 100, 100, 100);
-                    owner.PrintToChat($"Ball Box x: {box.Center.x} | y: {box.Center.z}");
-                    var players = Utilities.GetPlayers();
-                    var playersInBox = players.Where(x => x.PawnIsAlive && box.Contains(x.PlayerPawn.Value.AbsOrigin));
-
-                    if (playersInBox.Any())
+                    foreach (var player in playersInBox)
                     {
-                        foreach (var player in playersInBox)
+                        owner.PrintToChat($"Hit {player.PlayerName}");
+                        if (player.DesignerName != owner.DesignerName)
                         {
-                            owner.PrintToChat($"Hit {player.PlayerName}");
-                            // WarcraftPlugin.Instance.AddTimer(1f, () =>
-                            // {
-                            //Kill(player,owner);
+                            Warcraft.TakeDamage(player, 900000, owner, inflictor: owner);
+                            Football fb = new Football(owner);
+                            fb.UpdateLocation(owner);
 
-                            if (player.DesignerName != owner.DesignerName)
-                            {
-                                Warcraft.TakeDamage(player, 900000, owner, inflictor: owner);
-                            }
+
                         }
                     }
                 }
-                    
-                
             }
-            public override void OnFinish() { }
-        }
 
-        internal class FootballAimSystem(CCSPlayerController owner, float onTickInterval, FootBall ball) : WarcraftEffect(owner, onTickInterval: onTickInterval)
-        {
-            public override void OnStart()
-            {
-                owner.PrintToChat("football Aim sytsem start!");
-                owner.PrintToChat("You have used a ball");
-            }
-            public override void OnTick()
-            {
-                owner.PrintToChat("tick");
-                ball.UpdateLocation(Owner);
-            }
-            public override void OnFinish() { }
+
         }
+        public override void OnFinish() { }
     }
-
 }
