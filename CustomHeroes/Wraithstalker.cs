@@ -53,7 +53,8 @@ namespace WarcraftPlugin.Classes
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
-            new PhantomCloakEffect(Player, abilityLevel).Start();
+            new PhantomCloakEffect(Player, WarcraftPlayer.GetAbilityLevel(1)).Start();
+
 
 
         }
@@ -208,36 +209,45 @@ namespace WarcraftPlugin.Classes
         {
             private float _requiredStandStillTime;
             private Vector _lastPosition;
-            private float _standingTime;
+            private float _standingTime = 0f;
+            private bool _hasStarted = false;
 
             public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
-                : base(owner, duration: 0, onTickInterval: 0.1f) // We’ll run indefinitely unless manually stopped
+                : base(owner, duration: 30f, onTickInterval: 0.1f) // 30 sec effect, checks every 0.1s
             {
-                _requiredStandStillTime = Math.Max(0.5f, 2.5f - (abilityLevel * 0.5f));
-                Console.WriteLine($"[PhantomCloak] Required stand still time set to {_requiredStandStillTime} seconds.");
+                _requiredStandStillTime = 2.5f - (abilityLevel * 0.5f);
+                if (_requiredStandStillTime < 0.5f)
+                    _requiredStandStillTime = 0.5f;
             }
 
             public override void OnStart()
             {
-                _lastPosition = Owner.PlayerPawn.Value.AbsOrigin;
-                _standingTime = 0f;
-                Console.WriteLine("[PhantomCloak] Effect started.");
+                Console.WriteLine($"[PhantomCloak] Required stand still time set to {_requiredStandStillTime} seconds.");
             }
 
             public override void OnTick()
             {
-                var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
-                var distance = (_lastPosition - currentPosition).Length();
+                if (!Owner.IsValid || !Owner.IsAlive())
+                    return;
 
-                if (distance < 1.0f)
+                var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
+
+                if (!_hasStarted)
+                {
+                    _lastPosition = currentPosition;
+                    _hasStarted = true;
+                    return;
+                }
+
+                if (PositionsEqual(_lastPosition, currentPosition))
                 {
                     _standingTime += OnTickInterval;
-                    Console.WriteLine($"[PhantomCloak] Standing still for {_standingTime} seconds.");
+                    Console.WriteLine($"[PhantomCloak] Standing still for {_standingTime:0.00}/{_requiredStandStillTime}s");
 
                     if (_standingTime >= _requiredStandStillTime)
                     {
                         ApplyCloak();
-                        Destroy(); // Stop ticking
+                        Destroy(); // Only apply once and stop the effect
                     }
                 }
                 else
@@ -249,16 +259,24 @@ namespace WarcraftPlugin.Classes
 
             private void ApplyCloak()
             {
-                Console.WriteLine("[PhantomCloak] Cloak applied.");
-                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(60, 255, 255, 255)); // Partial invisibility
+                Console.WriteLine("[PhantomCloak] Cloak applied!");
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(100, 255, 255, 255)); // example alpha
+                                                                                     // You can trigger extra effects or buffs here
             }
 
             public override void OnFinish()
             {
-                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255)); // Reset visibility
-                Console.WriteLine("[PhantomCloak] Cloak removed.");
+                Console.WriteLine("[PhantomCloak] Effect ended.");
+            }
+
+            private bool PositionsEqual(Vector a, Vector b)
+            {
+                return Math.Abs(a.X - b.X) < 1.0f &&
+                       Math.Abs(a.Y - b.Y) < 1.0f &&
+                       Math.Abs(a.Z - b.Z) < 1.0f;
             }
         }
+
 
 
 
