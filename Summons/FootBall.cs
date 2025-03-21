@@ -81,7 +81,7 @@ namespace WarcraftPlugin.Summons
 
         public void TraceHits(CCSPlayerController owner)
         {
-            hitSystem = new FootballHitSystem(owner, 0.01f, _ball);
+            hitSystem = new FootballHitSystem(owner, 0.01f, this);
             hitSystem.Start();
         }
         public void UpdateBall(CCSPlayerController owner)
@@ -97,7 +97,7 @@ namespace WarcraftPlugin.Summons
         {
             aimSystem.Destroy();
         }
-        internal class FootballHitSystem(CCSPlayerController owner, float onTickInterval, CPhysicsPropMultiplayer ball) : WarcraftEffect(owner, onTickInterval: onTickInterval)
+        internal class FootballHitSystem(CCSPlayerController owner, float onTickInterval, FootBall football) : WarcraftEffect(owner, onTickInterval: onTickInterval)
         {
            
             public override void OnStart()
@@ -108,9 +108,9 @@ namespace WarcraftPlugin.Summons
             {
                 //var ballBox = ball.CollisionBox();
                 owner.PrintToChat("ball in ontick");
-                if (ball == null)
+                if (football._ball != null)
                 {
-                    Vector vec = new Vector(ball.AbsOrigin.X, ball.AbsOrigin.Y, ball.AbsOrigin.Z);
+                    Vector vec = new Vector(football._ball.AbsOrigin.X, football._ball.AbsOrigin.Y, football._ball.AbsOrigin.Z);
 
                     var box = Warcraft.CreateBoxAroundPoint(vec, 100, 100, 100);
                     owner.PrintToChat($"Ball Box x: {box.Center.x} | y: {box.Center.z}");
@@ -135,8 +135,9 @@ namespace WarcraftPlugin.Summons
                             killFeedIcon: KillFeedIcon.prop_exploding_barrel
                             );
                     }
-                    
                 }
+                    
+                
             }
             public override void OnFinish() { }
         }
