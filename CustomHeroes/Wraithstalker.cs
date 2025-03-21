@@ -52,6 +52,8 @@ namespace WarcraftPlugin.Classes
         public override void Register()
         {
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
+            HookEvent<EventPlayerDeath>(OnPlayerDeath);
+            HookEvent<EventRoundEnd>(OnRoundEnd);
 
             HookAbility(3, Ultimate);
         }
@@ -59,6 +61,7 @@ namespace WarcraftPlugin.Classes
         {
 
             var playerId = Player.Slot;
+            RemovePhantomCloakEffect();
 
             if (playersWithActiveCloak.Contains(playerId))
                 return;
@@ -73,6 +76,19 @@ namespace WarcraftPlugin.Classes
             }
 
         }
+
+        private void OnPlayerDeath(EventPlayerDeath death)
+        {
+            if (death.Userid != Player) return;
+
+            RemovePhantomCloakEffect();
+        }
+
+        private void OnRoundEnd(EventRoundEnd round)
+        {
+            RemovePhantomCloakEffect();
+        }
+
 
         public static void SetGlowOnEntity(CBaseEntity? entity, Color GlowColor)
         {
@@ -283,6 +299,12 @@ namespace WarcraftPlugin.Classes
 
 
             }
+
+            private void RemovePhantomCloakEffect()
+            {
+                Owner.GetActiveEffects().OfType<PhantomCloakEffect>().FirstOrDefault()?.Destroy();
+            }
+
 
             public override void OnFinish()
             {
