@@ -32,26 +32,22 @@ namespace WarcraftPlugin.Classes
 {
     public class Wraithstalker : WarcraftClass
     {
-        private Timer? damageDisableTimer = null;
         public override string DisplayName => "Wraithstalker";
 
         private readonly WarcraftPlugin _plugin;
         public override Color DefaultColor => Color.CadetBlue;
         private bool canUseUltimate = true;
         private bool _CanUseCloakEffect = true;
-        private static HashSet<int> playersWithActiveCloak = new();
-        private static Dictionary<ulong, bool> cloakDamageAvailable = new();
-        private static Dictionary<ulong, Timer> damageDisableTimers = new();
-        private PhantomCloakEffect _effect;
+        private readonly Dictionary<int, PhantomCloakEffect> activeCloakEffects = new();
 
 
 
         public override List<IWarcraftAbility> Abilities =>
         [
             new WarcraftAbility("Assimilation", "On Kill: Movement speed and reduced gravity for 3/5/7/9/10 seconds, this also grants a blindstack max 2, which blinds an enemy when he spots you."),
-                new WarcraftAbility("Phantom Cloak", "Standing still for  2.5 - 0.5 seconds makes you invisible and your next shot deals bonus damage."),
-                new WarcraftAbility("Shadowstrike", "After you exited Phantom Cloak your next hit will cause bonus damage and grant you a guaranteed skull"),
-                new WarcraftCooldownAbility("Marked for prey", "Scan the area where you are looking, highlight enemies close for x seconds and slow them down. Killing a marked target grants a skull. Skulls give you lasting benefits untill mapchange.", 5f)
+            new WarcraftAbility("Phantom Cloak", "Standing still for  2.5 - 0.5 seconds makes you invisible and your next shot deals bonus damage."),
+            new WarcraftAbility("Shadowstrike", "After you exited Phantom Cloak your next hit will cause bonus damage and grant you a guaranteed skull"),
+            new WarcraftCooldownAbility("Marked for prey", "Scan the area where you are looking, highlight enemies close for x seconds and slow them down. Killing a marked target grants a skull. Skulls give you lasting benefits untill mapchange.", 5f)
         ];
 
         public override void Register()
@@ -64,97 +60,89 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-
             var playerId = Player.Slot;
-            RemoveCloakEffect(Player);
+            var level = WarcraftPlayer.GetAbilityLevel(1);
 
-            if (playersWithActiveCloak.Contains(playerId))
-                return;
+            RemoveCloakEffect(); // <- this line replaces RemovePhantomCloakEffect()
+            var cloakEffect = new PhantomCloakEffect(Player, level);
+            cloakEffect.Start();
+            activeCloakEffects[Player.Slot] = cloakEffect;
 
-            int level = WarcraftPlayer.GetAbilityLevel(1);
-            if (level > 0)
+        }
+
+
+        private void OnPlayerDeath(EventPlayerDeath death)
+        {
+            RemoveCloakEffect();
+        }
+
+        private void OnRoundEnd(EventRoundEnd round)
+        {
+            RemoveCloakEffect();
+        }
+
+        private void RemoveCloakEffect()
+        {
+            int playerId = Player.Slot;
+
+            if (activeCloakEffects.TryGetValue(playerId, out var effect))
             {
-                _effect = new PhantomCloakEffect(Player, level);
-                _effect.Start();
-                Console.WriteLine("Started CloakEffect");
+                effect.Destroy();
+                activeCloakEffects.Remove(playerId);
             }
-
         }
-
-    private void OnPlayerDeath(EventPlayerDeath death)
-    {
-        RemoveCloakEffect(Player);
-    }
-
-    private void OnRoundEnd(EventRoundEnd round)
-    {
-        RemoveCloakEffect(Player);
-    }
-
-    private void RemoveCloakEffect(CCSPlayerController player)
-    {
-        Console.WriteLine("Attempting to remove CloakEffect");
-        _effect.Destroy();
-        Console.WriteLine("Removed CloakEffect");
-
-        }
-
-
-
-
-
 
 
 
 
 
         public static void SetGlowOnEntity(CBaseEntity? entity, Color GlowColor)
-    {
-        if (entity == null || !entity.IsValid)
-            return;
-
-        CDynamicProp Glow = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic")!;
-        Glow.Spawnflags = 256;
-        Glow.Render = Color.Transparent;
-        Glow.CBodyComponent!.SceneNode!.Owner!.Entity!.Flags = (uint)(Glow.CBodyComponent!.SceneNode!.Owner!.Entity!.Flags & ~(1 << 2));
-        Glow.SetModel(entity.CBodyComponent!.SceneNode!.GetSkeletonInstance().ModelState.ModelName);
-        Glow.DispatchSpawn();
-        Glow.Glow.GlowColorOverride = GlowColor;
-        Glow.Glow.GlowRange = 1000;
-        Glow.Glow.GlowRangeMin = 0;
-        Glow.Glow.GlowTeam = -1; // -1 = Both, 2 = T, 3 = CT
-        Glow.Glow.GlowType = 3;
-        Glow.Glow.GlowTime = 8;
-
-        Glow.Teleport(entity.AbsOrigin, entity.AbsRotation, entity.AbsVelocity);
-        Glow.AcceptInput("SetParent", entity, Glow, "!activator");
-    }
-
-    internal class GlowEffect : WarcraftEffect
-    {
-        private readonly Color _glowColor;
-
-        public GlowEffect(CCSPlayerController owner, Color glowColor, float duration, float onTickInterval)
-            : base(owner, duration: duration, onTickInterval: onTickInterval)
         {
-            _glowColor = glowColor;
+            if (entity == null || !entity.IsValid)
+                return;
+
+            CDynamicProp Glow = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic")!;
+            Glow.Spawnflags = 256;
+            Glow.Render = Color.Transparent;
+            Glow.CBodyComponent!.SceneNode!.Owner!.Entity!.Flags = (uint)(Glow.CBodyComponent!.SceneNode!.Owner!.Entity!.Flags & ~(1 << 2));
+            Glow.SetModel(entity.CBodyComponent!.SceneNode!.GetSkeletonInstance().ModelState.ModelName);
+            Glow.DispatchSpawn();
+            Glow.Glow.GlowColorOverride = GlowColor;
+            Glow.Glow.GlowRange = 1000;
+            Glow.Glow.GlowRangeMin = 0;
+            Glow.Glow.GlowTeam = -1; // -1 = Both, 2 = T, 3 = CT
+            Glow.Glow.GlowType = 3;
+            Glow.Glow.GlowTime = 8;
+
+            Glow.Teleport(entity.AbsOrigin, entity.AbsRotation, entity.AbsVelocity);
+            Glow.AcceptInput("SetParent", entity, Glow, "!activator");
         }
 
-        public override void OnStart()
+        internal class GlowEffect : WarcraftEffect
         {
-            SetGlowOnEntity(Owner.PlayerPawn.Value, _glowColor);
-        }
+            private readonly Color _glowColor;
 
-        public override void OnTick()
-        {
-            // Repeat the glow effect at every tick
-            SetGlowOnEntity(Owner.PlayerPawn.Value, _glowColor);
-        }
+            public GlowEffect(CCSPlayerController owner, Color glowColor, float duration, float onTickInterval)
+                : base(owner, duration: duration, onTickInterval: onTickInterval)
+            {
+                _glowColor = glowColor;
+            }
 
-        public override void OnFinish()
-        {
-            // Optionally clear glow when finished
-        }
+            public override void OnStart()
+            {
+                SetGlowOnEntity(Owner.PlayerPawn.Value, _glowColor);
+            }
+
+            public override void OnTick()
+            {
+                // Repeat the glow effect at every tick
+                SetGlowOnEntity(Owner.PlayerPawn.Value, _glowColor);
+            }
+
+            public override void OnFinish()
+            {
+                // Optionally clear glow when finished
+            }
         }
 
         bool playerFound = false;
@@ -212,136 +200,125 @@ namespace WarcraftPlugin.Classes
 
 
         internal class UltimateSlowEffect : WarcraftEffect
-    {
-        private readonly float _slowAmount;
-        private float _originalSpeed;
-
-        public UltimateSlowEffect(CCSPlayerController owner, float duration, float slowAmount)
-            : base(owner, duration: duration)
         {
-            _slowAmount = slowAmount;
-        }
+            private readonly float _slowAmount;
+            private float _originalSpeed;
 
-        public override void OnStart()
-        {
-            if (Owner.PlayerPawn.Value == null)
-                return;
-
-            // Store original speed
-            _originalSpeed = Owner.PlayerPawn.Value.MovementServices.Maxspeed;
-
-            // Reduce speed (clamp to prevent negative values)
-            Owner.PlayerPawn.Value.MovementServices.Maxspeed = Math.Max(10, _originalSpeed - _slowAmount);
-
-
-            // Debug log
-            Console.WriteLine($"[DEBUG] {Owner.PlayerName} is slowed for {Duration} seconds! New speed: {Owner.PlayerPawn.Value.MovementServices.Maxspeed}");
-        }
-
-        public override void OnFinish()
-        {
-            if (Owner.PlayerPawn.Value == null)
-                return;
-
-            // Restore original speed
-            Owner.PlayerPawn.Value.MovementServices.Maxspeed = _originalSpeed;
-
-            // Debug log
-            Console.WriteLine($"[DEBUG] {Owner.PlayerName} slow effect ended. Speed restored to {Owner.PlayerPawn.Value.MovementServices.Maxspeed}");
-        }
-
-        public override void OnTick()
-        { }
-    }
-
-
-    internal class PhantomCloakEffect : WarcraftEffect
-    {
-        private Vector _previousPosition;
-        private Vector _currentPosition;
-        private Timer? _positionComparisonTimer;
-        private bool _isCloaked;
-        private readonly int _abilityLevel;
-
-        public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
-            : base(owner, duration: float.MaxValue, destroyOnDeath: true, destroyOnRoundEnd: true)
-        {
-            _abilityLevel = abilityLevel;
-        }
-
-        public override void OnStart()
-        {
-            Console.WriteLine("[PhantomCloak] OnStart is called");
-
-            _previousPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
-            _currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
-
-            _positionComparisonTimer = WarcraftPlugin.Instance.AddTimer(1.0f, () =>
+            public UltimateSlowEffect(CCSPlayerController owner, float duration, float slowAmount)
+                : base(owner, duration: duration)
             {
-                _previousPosition = _currentPosition.Clone();
+                _slowAmount = slowAmount;
+            }
+
+            public override void OnStart()
+            {
+                if (Owner.PlayerPawn.Value == null)
+                    return;
+
+                // Store original speed
+                _originalSpeed = Owner.PlayerPawn.Value.MovementServices.Maxspeed;
+
+                // Reduce speed (clamp to prevent negative values)
+                Owner.PlayerPawn.Value.MovementServices.Maxspeed = Math.Max(10, _originalSpeed - _slowAmount);
+
+
+                // Debug log
+                Console.WriteLine($"[DEBUG] {Owner.PlayerName} is slowed for {Duration} seconds! New speed: {Owner.PlayerPawn.Value.MovementServices.Maxspeed}");
+            }
+
+            public override void OnFinish()
+            {
+                if (Owner.PlayerPawn.Value == null)
+                    return;
+
+                // Restore original speed
+                Owner.PlayerPawn.Value.MovementServices.Maxspeed = _originalSpeed;
+
+                // Debug log
+                Console.WriteLine($"[DEBUG] {Owner.PlayerName} slow effect ended. Speed restored to {Owner.PlayerPawn.Value.MovementServices.Maxspeed}");
+            }
+
+            public override void OnTick()
+            { }
+        }
+
+
+        internal class PhantomCloakEffect : WarcraftEffect
+        {
+            private Vector _previousPosition;
+            private Vector _currentPosition;
+            private Timer? _positionComparisonTimer;
+            private bool _isCloaked;
+            private readonly int _abilityLevel;
+
+            public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
+                : base(owner, duration: float.MaxValue, destroyOnDeath: true, destroyOnRoundEnd: true)
+            {
+                _abilityLevel = abilityLevel;
+            }
+
+            public override void OnStart()
+            {
+                Console.WriteLine("[PhantomCloak] OnStart is called");
+
+                _previousPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
                 _currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
 
-                Console.WriteLine("[PhantomCloak] Comparing positions:");
-                Console.WriteLine($"   Previous: {_previousPosition}");
-                Console.WriteLine($"   Current:  {_currentPosition}");
-
-                if (_previousPosition.X == _currentPosition.X &&
-                    _previousPosition.Y == _currentPosition.Y &&
-                    _previousPosition.Z == _currentPosition.Z)
+                _positionComparisonTimer = WarcraftPlugin.Instance.AddTimer(1.0f, () =>
                 {
-                    if (!_isCloaked)
-                    {
-                        EnableCloak();
-                        _isCloaked = true;
-                        cloakDamageAvailable[Owner.SteamID] = false;
+                    _previousPosition = _currentPosition.Clone();
+                    _currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
 
-                    }
-                }
-                else
-                {
-                    if (_isCloaked)
-                    {
-                        DisableCloak();
-                        _isCloaked = false;
-                        cloakDamageAvailable[Owner.SteamID] = true;
-                        if (damageDisableTimers.TryGetValue(Owner.SteamID, out var timer))
-                            timer.Kill(); // cancel previous
+                    Console.WriteLine("[PhantomCloak] Comparing positions:");
+                    Console.WriteLine($"   Previous: {_previousPosition}");
+                    Console.WriteLine($"   Current:  {_currentPosition}");
 
-                        damageDisableTimers[Owner.SteamID] = WarcraftPlugin.Instance.AddTimer(5f, () =>
+                    if (_previousPosition.X == _currentPosition.X &&
+                        _previousPosition.Y == _currentPosition.Y &&
+                        _previousPosition.Z == _currentPosition.Z)
+                    {
+                        if (!_isCloaked)
                         {
-                            cloakDamageAvailable[Owner.SteamID] = false;
-                        });
-
+                            EnableCloak();
+                            _isCloaked = true;
+                        }
                     }
-                }
-            }, TimerFlags.REPEAT);
-        }
-
-        public override void OnFinish()
-        {
-            Console.WriteLine("[PhantomCloak] OnFinish called.");
-            _positionComparisonTimer?.Kill();
-            if (_isCloaked)
-            {
-                DisableCloak();
-                _isCloaked = false;
+                    else
+                    {
+                        if (_isCloaked)
+                        {
+                            DisableCloak();
+                            _isCloaked = false;
+                        }
+                    }
+                }, TimerFlags.REPEAT);
             }
-        }
 
-        private void EnableCloak()
-        {
-            int alpha = 100 + (5 - _abilityLevel) * 20; // L5 = 100, L1 = 180
-            Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
-            Console.WriteLine($"[PhantomCloak] Cloak enabled (alpha={alpha}).");
-        }
+            public override void OnFinish()
+            {
+                Console.WriteLine("[PhantomCloak] OnFinish called.");
+                _positionComparisonTimer?.Kill();
+                if (_isCloaked)
+                {
+                    DisableCloak();
+                    _isCloaked = false;
+                }
+            }
 
-        private void DisableCloak()
-        {
-            Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
-            Console.WriteLine("[PhantomCloak] Cloak disabled.");
-        }
+            private void EnableCloak()
+            {
+                int alpha = 100 + (5 - _abilityLevel) * 20; // L5 = 100, L1 = 180
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
+                Console.WriteLine($"[PhantomCloak] Cloak enabled (alpha={alpha}).");
+            }
 
-        public override void OnTick() { } // Required by base but unused
+            private void DisableCloak()
+            {
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
+                Console.WriteLine("[PhantomCloak] Cloak disabled.");
+            }
+
+            public override void OnTick() { } // Required by base but unused
         }
 
 
@@ -363,34 +340,6 @@ namespace WarcraftPlugin.Classes
 
 
 
-
-        private void PlayerHurt(EventPlayerHurtOther @event)
-        {
-            if (@event.Attacker != Player || !@event.Userid.IsValid)
-                return;
-
-            if (!cloakDamageAvailable.TryGetValue(@event.Attacker.SteamID, out var canBonus) || !canBonus)
-                return;
-
-            var abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
-            var victim = @event.Userid;
-            var attacker = @event.Attacker;
-
-            if (canBonus)
-            {
-                int bonusDamage = abilityLevel * 10;
-                @event.AddBonusDamage(bonusDamage);
-                victim.PrintToChat($"You received {bonusDamage} bonus damage from the shadows!");
-
-                // Reset so it doesn't apply again
-                cloakDamageAvailable[@event.Attacker.SteamID] = false;
-                @event.Userid.PrintToChat($"\x07[Wraithstalker] You received {bonusDamage} bonus damage from a cloaked enemy!");
-            }
-
-
-
-        }
-
         private void PlayerShoot(EventWeaponFire @event)
         {
             // 
@@ -400,11 +349,3 @@ namespace WarcraftPlugin.Classes
 
     }
 }
-
-
-
-
-
-
-
-
