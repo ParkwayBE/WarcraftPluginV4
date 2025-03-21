@@ -229,7 +229,11 @@ namespace WarcraftPlugin.Classes
                 var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
 
                 float movementThreshold = 1.0f; // small buffer to avoid float jitter triggering
-                float distanceMoved = (currentPosition - _lastPosition).LengthSquared();
+                float distanceMoved =
+                    (currentPosition.X - _lastPosition.X) * (currentPosition.X - _lastPosition.X) +
+                    (currentPosition.Y - _lastPosition.Y) * (currentPosition.Y - _lastPosition.Y) +
+                    (currentPosition.Z - _lastPosition.Z) * (currentPosition.Z - _lastPosition.Z);
+
 
                 if (distanceMoved < movementThreshold)
                 {
