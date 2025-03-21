@@ -209,23 +209,36 @@ namespace WarcraftPlugin.Classes
             private float _stillTime;
             private readonly float _requiredStillTime;
             private bool _isCloaked;
+            private Timer? _tickTimer;
 
             public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
-                : base(owner, duration: float.MaxValue, onTickInterval: 0.1f)
+                : base(owner, duration: float.MaxValue)
             {
-                _requiredStillTime = 3.0f - (abilityLevel * 0.5f); // Levels 1–5 result in 2.5 to 0.5 seconds
+                _requiredStillTime = 3.0f - (abilityLevel * 0.5f);
             }
 
             public override void OnStart()
             {
+                Console.WriteLine("[PhantomCloak] OnStart called.");
                 _lastPosition = Owner.PlayerPawn.Value.AbsOrigin;
                 _stillTime = 0f;
                 _isCloaked = false;
+
                 Console.WriteLine($"[PhantomCloak] Required stand still time set to {_requiredStillTime} seconds.");
+
+                // Start ticking manually if not handled by base
+                _tickTimer = WarcraftPlugin.Instance.AddTimer(0.1f, TickHandler, TimerFlags.REPEAT);
             }
 
-            public override void OnTick()
+            private void TickHandler()
             {
+                if (!Owner.IsValid || !Owner.PlayerPawn.IsValid)
+                {
+                    Console.WriteLine("[PhantomCloak] Owner invalid, stopping effect.");
+                    _tickTimer?.Kill();
+                    return;
+                }
+
                 Console.WriteLine("[PhantomCloak] Tick active");
                 var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
 
@@ -234,11 +247,11 @@ namespace WarcraftPlugin.Classes
                 float dz = currentPosition.Z - _lastPosition.Z;
                 float distanceMoved = (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
 
-                float movementThreshold = 0.1f; // VERY sensitive to movement, almost anything triggers
+                float movementThreshold = 0.1f;
 
                 if (distanceMoved < movementThreshold)
                 {
-                    _stillTime += OnTickInterval;
+                    _stillTime += 0.1f;
                     Console.WriteLine($"[PhantomCloak] Standing still for {_stillTime:0.00}/{_requiredStillTime}s");
 
                     if (!_isCloaked && _stillTime >= _requiredStillTime)
@@ -257,7 +270,7 @@ namespace WarcraftPlugin.Classes
 
                     if (_stillTime > 0f)
                     {
-                        Console.WriteLine($"[PhantomCloak] Movement detected, resetting cloak timer.");
+                        Console.WriteLine("[PhantomCloak] Movement detected, resetting cloak timer.");
                     }
 
                     _stillTime = 0f;
@@ -281,13 +294,17 @@ namespace WarcraftPlugin.Classes
 
             public override void OnFinish()
             {
+                _tickTimer?.Kill();
+
                 if (_isCloaked)
                 {
                     RemoveCloak();
                 }
+
                 Console.WriteLine("[PhantomCloak] Effect ended.");
             }
         }
+
 
 
         private void Ultimate()
