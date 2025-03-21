@@ -42,6 +42,8 @@ namespace WarcraftPlugin.Classes
         private static HashSet<int> playersWithActiveCloak = new();
         private static Dictionary<ulong, bool> cloakDamageAvailable = new();
         private static Dictionary<ulong, Timer> damageDisableTimers = new();
+        private EffectManager? _effectManager;
+
 
 
 
@@ -58,6 +60,10 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerDeath>(OnPlayerDeath);
             HookEvent<EventRoundEnd>(OnRoundEnd);
+
+            _effectManager = WarcraftPlugin.Instance.GetType()
+        .GetField("_effectManager", BindingFlags.NonPublic | BindingFlags.Instance)?
+        .GetValue(WarcraftPlugin.Instance) as EffectManager;
 
             HookAbility(3, Ultimate);
         }
@@ -90,16 +96,27 @@ namespace WarcraftPlugin.Classes
 
         private void RemoveCloakEffect(CCSPlayerController player)
         {
-            var cloakEffects = WarcraftPlugin.Instance
-                .EffectManager
-                .GetEffectsByType<PhantomCloakEffect>()
-                .Where(x => x.Owner.Handle == player.Handle);
+            if (_effectManager is null)
+            {
+                Console.WriteLine("[PhantomCloak] EffectManager not found.");
+                return;
+            }
 
-            foreach (var effect in cloakEffects)
+            var effects = _effectManager
+                .GetEffectsByType<PhantomCloakEffect>()
+                .Where(effect => effect.Owner.Handle == player.Handle)
+                .ToList();
+
+            foreach (var effect in effects)
             {
                 effect.Destroy();
             }
+
+            Console.WriteLine($"[PhantomCloak] Removed all cloak effects for {player.PlayerName}.");
         }
+
+
+
 
 
 
