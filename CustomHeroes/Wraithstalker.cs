@@ -52,11 +52,9 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
-            new PhantomCloakEffect(Player, WarcraftPlayer.GetAbilityLevel(1)).Start();
-
-
-
+            var level = WarcraftPlayer.GetAbilityLevel(1);
+            if (level > 0)
+                new PhantomCloakEffect(Player, level).Start();
         }
 
         public static void SetGlowOnEntity(CBaseEntity? entity, Color GlowColor)
@@ -207,79 +205,79 @@ namespace WarcraftPlugin.Classes
 
         internal class PhantomCloakEffect : WarcraftEffect
         {
-            private float _requiredStandStillTime;
             private Vector _lastPosition;
-            private float _standingTime = 0f;
-            private bool _hasStarted = false;
+            private float _stillTime;
+            private readonly float _requiredStillTime;
+            private bool _isCloaked;
 
             public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
-                : base(owner, duration: 30f, onTickInterval: 0.1f) // 30 sec effect, checks every 0.1s
+                : base(owner, duration: float.MaxValue, onTickInterval: 0.1f)
             {
-                _requiredStandStillTime = 2.5f - (abilityLevel * 0.5f);
-                if (_requiredStandStillTime < 0.5f)
-                    _requiredStandStillTime = 0.5f;
+                _requiredStillTime = 3.0f - (abilityLevel * 0.5f); // Levels 1–5 result in 2.5 to 0.5 seconds
             }
 
             public override void OnStart()
             {
-                Console.WriteLine($"[PhantomCloak] Required stand still time set to {_requiredStandStillTime} seconds.");
+                _lastPosition = Owner.PlayerPawn.Value.AbsOrigin;
+                _stillTime = 0f;
+                _isCloaked = false;
+                Console.WriteLine($"[PhantomCloak] Required stand still time set to {_requiredStillTime} seconds.");
             }
 
             public override void OnTick()
             {
-                if (!Owner.IsValid || !Owner.IsAlive())
-                    return;
+                var velocity = Owner.PlayerPawn.Value.AbsVelocity;
 
-                var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
+                float velocitySquared = velocity.X * velocity.X + velocity.Y * velocity.Y + velocity.Z * velocity.Z;
+                float velocityThreshold = 10f; // Adjust based on testing – this allows "jitter" but not actual walking
 
-                if (!_hasStarted)
+                if (velocitySquared < velocityThreshold)
                 {
-                    _lastPosition = currentPosition;
-                    _hasStarted = true;
-                    return;
-                }
+                    _stillTime += OnTickInterval;
+                    Console.WriteLine($"[PhantomCloak] Standing still for {_stillTime:0.00}/{_requiredStillTime}s");
 
-                if (PositionsEqual(_lastPosition, currentPosition))
-                {
-                    _standingTime += OnTickInterval;
-                    Console.WriteLine($"[PhantomCloak] Standing still for {_standingTime:0.00}/{_requiredStandStillTime}s");
-
-                    if (_standingTime >= _requiredStandStillTime)
+                    if (!_isCloaked && _stillTime >= _requiredStillTime)
                     {
                         ApplyCloak();
-                        Destroy(); // Only apply once and stop the effect
+                        _isCloaked = true;
                     }
                 }
                 else
                 {
-                    _standingTime = 0f;
-                    _lastPosition = currentPosition;
+                    if (_isCloaked)
+                    {
+                        RemoveCloak();
+                        _isCloaked = false;
+                    }
+
+                    _stillTime = 0f;
                 }
             }
 
+
             private void ApplyCloak()
             {
+                int abilityLevel = Owner.GetWarcraftPlayer().GetAbilityLevel(1);
+                int alpha = Math.Max(130, 255 - (abilityLevel * 25));
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
                 Console.WriteLine("[PhantomCloak] Cloak applied!");
-                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(100, 255, 255, 255)); // example alpha
-                                                                                     // You can trigger extra effects or buffs here
+            }
+
+            private void RemoveCloak()
+            {
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
+                Console.WriteLine("[PhantomCloak] Cloak removed due to movement.");
             }
 
             public override void OnFinish()
             {
+                if (_isCloaked)
+                {
+                    RemoveCloak();
+                }
                 Console.WriteLine("[PhantomCloak] Effect ended.");
             }
-
-            private bool PositionsEqual(Vector a, Vector b)
-            {
-                return Math.Abs(a.X - b.X) < 1.0f &&
-                       Math.Abs(a.Y - b.Y) < 1.0f &&
-                       Math.Abs(a.Z - b.Z) < 1.0f;
-            }
         }
-
-
-
-
 
 
         private void Ultimate()
