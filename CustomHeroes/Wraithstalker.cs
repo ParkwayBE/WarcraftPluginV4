@@ -59,9 +59,9 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-
             var playerId = Player.Slot;
-            RemovePhantomCloakEffect();
+
+            RemoveCloakEffect(); // <- this line replaces RemovePhantomCloakEffect()
 
             if (playersWithActiveCloak.Contains(playerId))
                 return;
@@ -71,8 +71,8 @@ namespace WarcraftPlugin.Classes
             {
                 new PhantomCloakEffect(Player, level).Start();
             }
-
         }
+
 
         private void OnPlayerDeath(EventPlayerDeath death)
         {
@@ -87,12 +87,12 @@ namespace WarcraftPlugin.Classes
         private void RemoveCloakEffect()
         {
             var effect = WarcraftPlugin.Instance.EffectManager
-                .GetActiveEffects(Player)
-                .OfType<PhantomCloakEffect>()
-                .FirstOrDefault();
+                .GetEffectsByType<PhantomCloakEffect>()
+                .FirstOrDefault(e => e.Owner.Handle == Player.Handle);
 
-            effect?.Destroy(); 
+            effect?.Destroy();
         }
+
 
 
 
