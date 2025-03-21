@@ -51,9 +51,9 @@ namespace WarcraftPlugin.Summons
         {
             var distance = 60;
             var height = 30;
-            Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
-            owner.PrintToChat($"Updating Ball Position: {posInfrontOfPlayer}");
-            _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            Vector posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
+            _owner.PrintToChat($"Updating Ball Position: {posInfrontOfPlayer}");
+            _ballProp.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
 
         }
         public void UpdateLocation(Vector pos)
@@ -90,6 +90,7 @@ namespace WarcraftPlugin.Summons
         }
         public void StopTraceHits()
         {
+            hitSystem.FinishOnDestroy = true;
             hitSystem.Destroy();
         }
 
@@ -125,6 +126,7 @@ namespace WarcraftPlugin.Summons
         public void UpdateBallWithAimSystem(CCSPlayerController owner, Football ball)
         {
             aimSystem = new FootballAimSystem(owner, 0.01f, ball);
+            aimSystem.FinishOnDestroy = true;
             aimSystem.Start();
             
         }
@@ -167,6 +169,7 @@ namespace WarcraftPlugin.Summons
     public class FootballHitSystem(CCSPlayerController owner, float onTickInterval, Football football) : WarcraftEffect(owner, onTickInterval: onTickInterval)
     {
         public List<CCSPlayerController> players;
+        Football fb;
         public override void OnStart()
         {
             players = Utilities.GetPlayers();
@@ -189,8 +192,8 @@ namespace WarcraftPlugin.Summons
                         if (player.PlayerName != owner.PlayerName)
                         {
                             Warcraft.TakeDamage(player, 900000, owner, inflictor: owner);
-                            Football fb = new Football(owner);
-                            fb.UpdateLocation(owner);
+                            //fb = new Football(owner);
+                            //fb.UpdateLocation(owner);
                         }
                     }
                 }
