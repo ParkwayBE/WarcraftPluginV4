@@ -115,10 +115,22 @@ namespace WarcraftPlugin.Classes
         }
 
         bool playerFound = false;
-        private void FindAndLogNearbyPlayers(float radius)
+        private void NearbyPlayers(float radius, float forwardOffset)
         {
             bool playerFound = false;
+
+            // Get the player's current position and eye direction
             var playerPosition = Player.PlayerPawn.Value.AbsOrigin;
+            var eyeAngles = Player.PlayerPawn.Value.EyeAngles;
+
+            // Convert angles to directional vector
+            var forwardVector = new Vector();
+            NativeAPI.AngleVectors(eyeAngles.Handle, forwardVector.Handle, nint.Zero, nint.Zero);
+            forwardVector *= forwardOffset;
+
+            // Calculate the forward offset position
+            var scanOrigin = playerPosition + forwardVector;
+
             var players = Utilities.GetPlayers();
 
             foreach (var otherPlayer in players)
@@ -131,8 +143,9 @@ namespace WarcraftPlugin.Classes
                     continue;
 
                 var otherPlayerPosition = otherPlayer.PlayerPawn.Value.AbsOrigin;
-                var distanceVector = playerPosition - otherPlayerPosition;
+                var distanceVector = scanOrigin - otherPlayerPosition;
                 var distanceSquared = distanceVector.X * distanceVector.X + distanceVector.Y * distanceVector.Y + distanceVector.Z * distanceVector.Z;
+
                 float doubleRadius = 2 * radius;
 
                 if (distanceSquared <= doubleRadius * doubleRadius)
@@ -150,7 +163,7 @@ namespace WarcraftPlugin.Classes
 
             if (!playerFound)
             {
-                Console.WriteLine("No enemies found in the specified radius.");
+                Console.WriteLine("No enemies found in the scan direction and radius.");
             }
         }
 
@@ -159,12 +172,13 @@ namespace WarcraftPlugin.Classes
 
 
 
+
         private void Ultimate()
         {
-           
+
 
             // Find and log nearby players
-            FindAndLogNearbyPlayers(500f);
+            NearbyPlayers(500f, 300f); // Radius, forward offset
 
             // Start cooldown for the ultimate ability
             StartCooldown(3);
@@ -175,7 +189,7 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerShoot(EventWeaponFire @event)
         {
-           
+           // 
 
         }
 
