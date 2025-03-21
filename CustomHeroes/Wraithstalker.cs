@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using CounterStrikeSharp.API.Modules.Timers;
+using System.Reflection.Emit;
 
 
 
@@ -39,6 +40,11 @@ namespace WarcraftPlugin.Classes
         private bool canUseUltimate = true;
         private bool _CanUseCloakEffect = true;
         private readonly Dictionary<int, PhantomCloakEffect> activeCloakEffects = new();
+        private PhantomCloakEffect cloakEffect;
+
+
+
+
 
 
 
@@ -55,16 +61,26 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerDeath>(OnPlayerDeath);
             HookEvent<EventRoundEnd>(OnRoundEnd);
+            HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
 
             HookAbility(3, Ultimate);
         }
+
+        private void PlayerHurtOther(EventPlayerHurtOther @event)
+        {
+            if (cloakEffect._AdditionalDamage)
+            {
+                Console.WriteLine("You dealt extra damage!");
+            }
+        }
+
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
             var playerId = Player.Slot;
             var level = WarcraftPlayer.GetAbilityLevel(1);
-
+            cloakEffect = new PhantomCloakEffect(Player, level);
             RemoveCloakEffect(); // <- this line replaces RemovePhantomCloakEffect()
-            var cloakEffect = new PhantomCloakEffect(Player, level);
+            
             cloakEffect.Start();
             activeCloakEffects[Player.Slot] = cloakEffect;
 
@@ -250,6 +266,7 @@ namespace WarcraftPlugin.Classes
             private Timer? _positionComparisonTimer;
             private bool _isCloaked;
             private readonly int _abilityLevel;
+            public bool _AdditionalDamage = false;
 
             public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
                 : base(owner, duration: float.MaxValue, destroyOnDeath: true, destroyOnRoundEnd: true)
@@ -269,9 +286,9 @@ namespace WarcraftPlugin.Classes
                     _previousPosition = _currentPosition.Clone();
                     _currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
 
-                    Console.WriteLine("[PhantomCloak] Comparing positions:");
-                    Console.WriteLine($"   Previous: {_previousPosition}");
-                    Console.WriteLine($"   Current:  {_currentPosition}");
+                    //Console.WriteLine("[PhantomCloak] Comparing positions:");
+                    //Console.WriteLine($"   Previous: {_previousPosition}");
+                    //Console.WriteLine($"   Current:  {_currentPosition}");
 
                     if (_previousPosition.X == _currentPosition.X &&
                         _previousPosition.Y == _currentPosition.Y &&
@@ -281,14 +298,22 @@ namespace WarcraftPlugin.Classes
                         {
                             EnableCloak();
                             _isCloaked = true;
+                            _AdditionalDamage = false;
                         }
                     }
                     else
                     {
                         if (_isCloaked)
                         {
+                            _AdditionalDamage = true;
                             DisableCloak();
                             _isCloaked = false;
+                            Console.WriteLine("[Wraithstalker] Additional damage for the next 7 seconds for your first hit");
+                            WarcraftPlugin.Instance.AddTimer(7.0f, () =>
+                            {
+                                _AdditionalDamage = false;
+                                Console.WriteLine("[Wraithstalker] Additional damage expired.");
+                            });
                         }
                     }
                 }, TimerFlags.REPEAT);
