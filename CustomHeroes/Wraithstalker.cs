@@ -306,7 +306,7 @@ namespace WarcraftPlugin.Classes
             // Find and log nearby players
             // NearbyPlayers(1000f, 1000f); // Radius, forward offset UNCOMMENT TO REGAIN MARKED ULT
 
-            new PhantomCloakEffect(Player, WarcraftPlayer.GetAbilityLevel(1)).Start();
+            new PhantomCloakEffect(Player, abilityLevel, duration: 10f, onTickInterval: 0.1f).Start();
 
             // Start cooldown for the ultimate ability
             StartCooldown(3);
