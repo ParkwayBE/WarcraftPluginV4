@@ -115,7 +115,7 @@ namespace WarcraftPlugin.Classes
         }
 
         bool playerFound = false;
-        private void NearbyPlayers(float radius, float forwardOffset = 300f)
+        private void NearbyPlayers(float radius, float forwardOffset)
         {
             bool playerFound = false;
 
