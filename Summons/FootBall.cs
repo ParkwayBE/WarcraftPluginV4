@@ -105,12 +105,13 @@ namespace WarcraftPlugin.Summons
         private CCSPlayerController _owner;
         private FootballHitSystem hitSystem;
         private FootballAimSystem aimSystem;
-        public List<Football> footballs = new List<Football>();
+        public List<Football> footballs;
         public List<Football> extraBalls = new List<Football>();
         private Football lastAddedBall;
 
         public FootBaller(CCSPlayerController owner, int balls)
         {
+            footballs = new List<Football>();
             _owner = owner;
         }
         public void ActivateBall()
