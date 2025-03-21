@@ -190,6 +190,7 @@ namespace WarcraftPlugin.Classes
 
                 // Reduce speed (clamp to prevent negative values)
                 Owner.PlayerPawn.Value.MovementServices.Maxspeed = Math.Max(10, _originalSpeed - _slowAmount);
+                
 
                 // Debug log
                 Console.WriteLine($"[DEBUG] {Owner.PlayerName} is slowed for {Duration} seconds! New speed: {Owner.PlayerPawn.Value.MovementServices.Maxspeed}");
@@ -206,6 +207,9 @@ namespace WarcraftPlugin.Classes
                 // Debug log
                 Console.WriteLine($"[DEBUG] {Owner.PlayerName} slow effect ended. Speed restored to {Owner.PlayerPawn.Value.MovementServices.Maxspeed}");
             }
+
+            public override void OnTick()
+            {            }
         }
 
 
