@@ -219,7 +219,7 @@ namespace WarcraftPlugin.Classes
             public override void OnTick()
             {            }
         }
-        
+
 
         internal class PhantomCloakEffect : WarcraftEffect
         {
@@ -234,19 +234,17 @@ namespace WarcraftPlugin.Classes
 
             public override void OnStart()
             {
-                Console.WriteLine("OnStart is called");
-                _previousPosition = _currentPosition;
-                _currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
+                Console.WriteLine("[PhantomCloak] OnStart is called");
+
+                _previousPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
+                _currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
 
                 Console.WriteLine($"[PositionTracker] Initial position: {_currentPosition}");
 
-                int tickCount = 0;
-
                 _positionComparisonTimer = WarcraftPlugin.Instance.AddTimer(1.0f, () =>
                 {
-                    // Shift the current position to previous before fetching a new position
-                    _previousPosition = _currentPosition;
-                    _currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
+                    _previousPosition = _currentPosition.Clone();
+                    _currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
 
                     Console.WriteLine("[PositionTracker] Comparing positions:");
                     Console.WriteLine($"   Previous: {_previousPosition}");
@@ -259,18 +257,18 @@ namespace WarcraftPlugin.Classes
                         Console.WriteLine("You're standing still!");
                     }
                 }, TimerFlags.REPEAT);
-
             }
 
-        public override void OnTick() { /* */ }
+            public override void OnTick() { }
 
             public override void OnFinish()
             {
-                Console.WriteLine("OnFinish is called");
+                Console.WriteLine("[PhantomCloak] OnFinish is called");
                 _positionComparisonTimer?.Kill();
                 Console.WriteLine("[PositionTracker] Timer stopped.");
             }
         }
+
 
 
 
