@@ -52,11 +52,9 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
-            new PhantomCloakEffect(Player, WarcraftPlayer.GetAbilityLevel(1)).Start();
-
-
-
+            var level = WarcraftPlayer.GetAbilityLevel(1);
+            if (level > 0)
+                new PhantomCloakEffect(Player, level).Start();
         }
 
         public static void SetGlowOnEntity(CBaseEntity? entity, Color GlowColor)
@@ -214,38 +212,28 @@ namespace WarcraftPlugin.Classes
             private bool _isCloaked = false;
 
             public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
-                : base(owner, duration: 30f, onTickInterval: 0.1f) // Check every 0.1s for 30s
+                : base(owner, duration: 999f, onTickInterval: 0.1f) // Continuous
             {
-                _requiredStandStillTime = 2.5f - (abilityLevel * 0.5f);
-                if (_requiredStandStillTime < 0.5f)
-                    _requiredStandStillTime = 0.5f;
+                _requiredStandStillTime = Math.Max(0.5f, 2.5f - (abilityLevel * 0.5f));
             }
 
             public override void OnStart()
             {
                 Console.WriteLine($"[PhantomCloak] Required stand still time set to {_requiredStandStillTime} seconds.");
+                _lastPosition = Owner.PlayerPawn.Value.AbsOrigin;
+                _hasStarted = true;
             }
 
             public override void OnTick()
             {
-                if (!Owner.IsValid || !Owner.IsAlive())
-                    return;
+                if (!Owner.IsValid || !Owner.IsAlive()) return;
 
                 var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
-
-                if (!_hasStarted)
-                {
-                    _lastPosition = currentPosition;
-                    _hasStarted = true;
-                    return;
-                }
 
                 if (PositionsEqual(_lastPosition, currentPosition))
                 {
                     _standingTime += OnTickInterval;
-
-                    if (!_isCloaked)
-                        Console.WriteLine($"[PhantomCloak] Standing still for {_standingTime:0.00}/{_requiredStandStillTime}s");
+                    Console.WriteLine($"[PhantomCloak] Standing still for {_standingTime:0.00}/{_requiredStandStillTime}s");
 
                     if (_standingTime >= _requiredStandStillTime && !_isCloaked)
                     {
@@ -255,9 +243,7 @@ namespace WarcraftPlugin.Classes
                 else
                 {
                     if (_isCloaked)
-                    {
                         RemoveCloak();
-                    }
 
                     _standingTime = 0f;
                     _lastPosition = currentPosition;
@@ -268,22 +254,21 @@ namespace WarcraftPlugin.Classes
             {
                 _isCloaked = true;
                 Console.WriteLine("[PhantomCloak] Cloak applied!");
-                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(100, 255, 255, 255)); // Stealthy!
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(100, 255, 255, 255));
             }
 
             private void RemoveCloak()
             {
                 _isCloaked = false;
                 Console.WriteLine("[PhantomCloak] Cloak removed.");
-                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255)); // Fully visible again
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
             }
 
             public override void OnFinish()
             {
                 if (_isCloaked)
-                {
                     RemoveCloak();
-                }
+
                 Console.WriteLine("[PhantomCloak] Effect ended.");
             }
 
