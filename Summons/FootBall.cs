@@ -178,7 +178,7 @@ namespace WarcraftPlugin.Summons
             {
                 Vector vec = new Vector(football._ball.AbsOrigin.X, football._ball.AbsOrigin.Y, football._ball.AbsOrigin.Z);
 
-                var box = Warcraft.CreateBoxAroundPoint(vec, 100, 100, 100);
+                var box = Warcraft.CreateBoxAroundPoint(vec, 80, 80, 80);
                 var players = Utilities.GetPlayers();
                 var playersInBox = players.Where(x => x.PawnIsAlive && box.Contains(x.PlayerPawn.Value.AbsOrigin));
 
@@ -187,7 +187,7 @@ namespace WarcraftPlugin.Summons
                     foreach (var player in playersInBox)
                     {
                         owner.PrintToChat($"Hit {player.PlayerName}");
-                        if (player.DesignerName != owner.DesignerName)
+                        if (player.PlayerName != owner.PlayerName)
                         {
                             Warcraft.TakeDamage(player, 900000, owner, inflictor: owner);
                             Football fb = new Football(owner);
