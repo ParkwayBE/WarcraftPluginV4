@@ -50,6 +50,7 @@ namespace WarcraftPlugin.Classes
         {
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerDeath>(PlayerDeath);
+            HookEvent<EventPlayerDisconnect>(PlayerDisconnect);
             HookAbility(3, Ultimate);
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
@@ -89,8 +90,15 @@ namespace WarcraftPlugin.Classes
         private void PlayerDeath(EventPlayerDeath dead)
         {
             canUseUlt = false;
+            footBaller.DestroyBallSytsems();
 
         }
+
+        private void PlayerDisconnect(EventPlayerDisconnect @event)
+        {
+            footBaller.DestroyBallSytsems();
+        }
+
 
     }
 

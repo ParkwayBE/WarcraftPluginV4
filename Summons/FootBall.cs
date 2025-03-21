@@ -139,9 +139,13 @@ namespace WarcraftPlugin.Summons
             lastAddedBall.TraceHits(_owner);
             lastAddedBall.StayPut(_owner);
         }
-        public void DestroyBall()
+        public void DestroyBallSytsems()
         {
-            
+            aimSystem.Destroy();
+            for (int i = 0; i < footballs.Count; i++)
+            {
+                footballs[i].StopTraceHits();
+            }
 
         }
         public void StopUpdateBall()
