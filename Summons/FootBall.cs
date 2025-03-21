@@ -130,7 +130,7 @@ namespace WarcraftPlugin.Summons
                             // {
                             //Kill(player,owner);
 
-                            if (player != owner)
+                            if (player.DesignerName != owner.DesignerName)
                             {
                                 Warcraft.TakeDamage(player, 900000, owner, inflictor: owner);
                             }
