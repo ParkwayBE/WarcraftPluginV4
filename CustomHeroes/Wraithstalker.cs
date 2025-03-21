@@ -226,12 +226,16 @@ namespace WarcraftPlugin.Classes
 
             public override void OnTick()
             {
-                var velocity = Owner.PlayerPawn.Value.AbsVelocity;
+                var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
 
-                float velocitySquared = velocity.X * velocity.X + velocity.Y * velocity.Y + velocity.Z * velocity.Z;
-                float velocityThreshold = 10f; // Adjust based on testing – this allows "jitter" but not actual walking
+                float dx = currentPosition.X - _lastPosition.X;
+                float dy = currentPosition.Y - _lastPosition.Y;
+                float dz = currentPosition.Z - _lastPosition.Z;
+                float distanceMoved = (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
 
-                if (velocitySquared < velocityThreshold)
+                float movementThreshold = 0.1f; // VERY sensitive to movement, almost anything triggers
+
+                if (distanceMoved < movementThreshold)
                 {
                     _stillTime += OnTickInterval;
                     Console.WriteLine($"[PhantomCloak] Standing still for {_stillTime:0.00}/{_requiredStillTime}s");
@@ -250,10 +254,15 @@ namespace WarcraftPlugin.Classes
                         _isCloaked = false;
                     }
 
+                    if (_stillTime > 0f)
+                    {
+                        Console.WriteLine($"[PhantomCloak] Movement detected, resetting cloak timer.");
+                    }
+
                     _stillTime = 0f;
+                    _lastPosition = currentPosition;
                 }
             }
-
 
             private void ApplyCloak()
             {
