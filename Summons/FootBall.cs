@@ -86,7 +86,7 @@ namespace WarcraftPlugin.Summons
         }
         public void UpdateBall(CCSPlayerController owner)
         {
-            aimSystem = new FootballAimSystem(owner, 0.01f, this);
+            aimSystem = new FootballAimSystem(owner, 0.1f, this);
             aimSystem.Start();
         }
         public void DestroyBall()
