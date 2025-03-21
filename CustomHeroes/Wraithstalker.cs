@@ -254,7 +254,7 @@ namespace WarcraftPlugin.Classes
             }
 
 
-            WarcraftPlugin.Instance.AddTimer(0.2f, () =>
+            WarcraftPlugin.Instance.AddTimer(0.5f, () =>
             {
                 ApplySkullBonuses(Player);
                 Player.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = true;

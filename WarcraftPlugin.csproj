@@ -46,6 +46,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="CustomHeroes\Naix.cs" />
+    <None Include="CustomHeroes\Wraithstalker.cs" />
     <None Include="Resources\nuget\Readme.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
@@ -60,6 +61,7 @@
 </ItemGroup>
 <ItemGroup>
   <Compile Remove="CustomHeroes\Naix.cs" />
+  <Compile Remove="CustomHeroes\Wraithstalker.cs" />
 </ItemGroup>
 
 </Project>
