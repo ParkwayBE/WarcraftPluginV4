@@ -234,7 +234,7 @@ namespace WarcraftPlugin.Classes
             public override void OnTick()
             {
                 var velocity = Owner.PlayerPawn.Value.AbsVelocity;
-                // var isMoving = Math.Abs(velocity.X) > 0.1f || Math.Abs(velocity.Y) > 0.1f || Math.Abs(velocity.Z) > 0.1f;
+                var isMoving = Math.Abs(velocity.X) > 0.1f || Math.Abs(velocity.Y) > 0.1f || Math.Abs(velocity.Z) > 0.1f;
                 Console.WriteLine($"[PhantomCloak] Current velocity: {velocity} seconds.");
                 Console.WriteLine("Tick EFFECT ACTIVE");
 
@@ -286,7 +286,7 @@ namespace WarcraftPlugin.Classes
                     RemoveCloak();
 
                 Console.WriteLine("[PhantomCloak] Effect ended.");
-                CanUseCloakEffect = true;
+                Owner.CanUseCloakEffect = true;
             }
         }
 
