@@ -37,6 +37,7 @@ namespace WarcraftPlugin.Classes
         private readonly WarcraftPlugin _plugin;
         public override Color DefaultColor => Color.CadetBlue;
         private bool canUseUltimate = true;
+        private bool CanUseCloakEffect = true;
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -54,9 +55,15 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            var level = WarcraftPlayer.GetAbilityLevel(1);
-            if (level > 0)
-                new PhantomCloakEffect(Player, level).Start();
+
+            if (canUseCloakEffect)
+            {
+                var level = WarcraftPlayer.GetAbilityLevel(1);
+                if (level > 0)
+                    new PhantomCloakEffect(Player, level).Start();
+                CanUseCloakEffect = false;
+                Console.WriteLine("Can use cloak effect was true, applying cloak on spawn.");
+            }
         }
 
         public static void SetGlowOnEntity(CBaseEntity? entity, Color GlowColor)
@@ -229,6 +236,7 @@ namespace WarcraftPlugin.Classes
                 var velocity = Owner.PlayerPawn.Value.AbsVelocity;
                 // var isMoving = Math.Abs(velocity.X) > 0.1f || Math.Abs(velocity.Y) > 0.1f || Math.Abs(velocity.Z) > 0.1f;
                 Console.WriteLine($"[PhantomCloak] Current velocity: {velocity} seconds.");
+                Console.WriteLine("Tick EFFECT ACTIVE");
 
                 if (!isMoving)
                 {
@@ -278,6 +286,7 @@ namespace WarcraftPlugin.Classes
                     RemoveCloak();
 
                 Console.WriteLine("[PhantomCloak] Effect ended.");
+                CanUseCloakEffect = true;
             }
         }
 
