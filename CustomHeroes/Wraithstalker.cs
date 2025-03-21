@@ -269,9 +269,9 @@ namespace WarcraftPlugin.Classes
                     _previousPosition = _currentPosition.Clone();
                     _currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
 
-                    Console.WriteLine("[PhantomCloak] Comparing positions:");
-                    Console.WriteLine($"   Previous: {_previousPosition}");
-                    Console.WriteLine($"   Current:  {_currentPosition}");
+                    //Console.WriteLine("[PhantomCloak] Comparing positions:");
+                    //Console.WriteLine($"   Previous: {_previousPosition}");
+                    //Console.WriteLine($"   Current:  {_currentPosition}");
 
                     if (_previousPosition.X == _currentPosition.X &&
                         _previousPosition.Y == _currentPosition.Y &&
