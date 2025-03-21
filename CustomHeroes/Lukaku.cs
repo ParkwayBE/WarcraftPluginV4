@@ -33,9 +33,8 @@ namespace WarcraftPlugin.Classes
         private readonly WarcraftPlugin _plugin;
         public override Color DefaultColor => Color.CadetBlue;
 
-        List<FootBall> footBalls = new List<FootBall>();
-        int footballsRemaining = 0;
-        FootballAimSystem fbs;
+        FootBall football;
+        int footballsRemaining = 10;
         bool footballIsSpawned = false;
 
         public override List<IWarcraftAbility> Abilities =>
@@ -68,10 +67,9 @@ namespace WarcraftPlugin.Classes
                 if (footballsRemaining > 0)
                 {
                     Console.WriteLine("decreasing available balls and spawn the football");
-                    footballsRemaining--;
-                    fbs = new FootballAimSystem(Player, 0.01f, footBalls);
-                    fbs.Start();
+                    football = new FootBall(Player);
                     footballIsSpawned = true;
+                    footballsRemaining--;
                     StartCooldown(3);
                 }
 
@@ -79,11 +77,12 @@ namespace WarcraftPlugin.Classes
             else
             {
                 Console.WriteLine("Already have a ball,");
-                fbs.Destroy();
-                footBalls[0].StayPut(Player);
-                footBalls[0].TraceHits(Player);
-                footBalls.RemoveAt(footBalls.Count - 1);
+                football.StayPut(Player);
                 footballIsSpawned = false;
+                WarcraftPlugin.Instance.AddTimer(15f, () =>
+                {
+                    football.DestroyBall();
+                });
 
                 StartCooldown(3);
             }
@@ -111,22 +110,7 @@ namespace WarcraftPlugin.Classes
             }
         }
         */
-        internal class FootballAimSystem(CCSPlayerController owner, float onTickInterval, List<FootBall> footBalls) : WarcraftEffect(owner, onTickInterval: onTickInterval)
-        {
-            public override void OnStart()
-            {
-                owner.PrintToChat("football sytsem start");
-                footBalls.Add(new FootBall(Owner));
-                footBalls[0].Activate();
-                owner.PrintToChat("You have used a ball");
-            }
-            public override void OnTick()
-            {
-                owner.PrintToChat("tick");
-                footBalls[0].UpdateLocation(Owner);
-            }
-            public override void OnFinish() { }
-        }
+        
         
 
     }
