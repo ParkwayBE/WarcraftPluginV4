@@ -112,16 +112,13 @@ namespace WarcraftPlugin.Summons
         public void ActivateBall()
         {
             lastAddedBall = new Football(_owner);
-            footballs.Add(lastAddedBall);
-            int i = 0;
-            while (!footballs[i].isActive || i < footballs.Count)
-            {
-                i++;
-            }
+            lastAddedBall.isActive = true;
+            lastAddedBall.Activate(_owner);
 
-            footballs[i].Activate(_owner);
+            footballs.Add(lastAddedBall);
+   
            
-            UpdateBallWithAimSystem(_owner, footballs[i]);
+            UpdateBallWithAimSystem(_owner, lastAddedBall);
             
         }
         
