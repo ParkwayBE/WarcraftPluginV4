@@ -150,7 +150,7 @@ namespace WarcraftPlugin.Classes
                 WarcraftPlugin.Instance.AddTimer(0.05f, () =>
                 {
                     Console.WriteLine("[INFO] Applying reduced gravity after delay.");
-                    new SetGravityEffect(Player, 0.5f, 3f).Start();
+                    new SetGravityEffect(Player, 0.5f, 6f).Start();
                 });
             }
         }
@@ -328,7 +328,7 @@ namespace WarcraftPlugin.Classes
         }
 
         bool playerFound = false;
-        private void NearbyPlayers(float radius, float forwardOffset)
+        private void NearbyPlayers(float radius)
         {
             bool playerFound = false;
 
@@ -337,12 +337,12 @@ namespace WarcraftPlugin.Classes
 
             var forwardVector = new Vector();
             NativeAPI.AngleVectors(eyeAngles.Handle, forwardVector.Handle, nint.Zero, nint.Zero);
-            forwardVector *= forwardOffset;
+            forwardVector *= radius;  // This is now the *center* of the scan
 
             var scanOrigin = playerPosition + forwardVector;
 
-            // DEBUG: Draw line between player and scan origin
-            Warcraft.DrawLaserBetween(Player.EyePosition(-10), scanOrigin, Color.Red, 7.0f);
+            // 🔴 DEBUG Laser from eye to scan center
+            Warcraft.DrawLaserBetween(Player.EyePosition(20), scanOrigin, Color.Red, 7.0f);
 
             var players = Utilities.GetPlayers();
 
@@ -358,13 +358,10 @@ namespace WarcraftPlugin.Classes
                 var distanceVector = scanOrigin - otherPlayerPosition;
                 var distanceSquared = distanceVector.X * distanceVector.X + distanceVector.Y * distanceVector.Y + distanceVector.Z * distanceVector.Z;
 
-                float doubleRadius = 2 * radius;
-
-                if (distanceSquared <= doubleRadius * doubleRadius)
+                if (distanceSquared <= radius * radius)  // radius is still the AOE size
                 {
                     playerFound = true;
 
-                    // Trigger glow and slow effects
                     var duration = 7.0f;
                     var tickRate = 0.02f;
                     new GlowEffect(otherPlayer, Color.Red, duration, tickRate).Start();
@@ -378,6 +375,7 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("No enemies found in the scan direction and radius.");
             }
         }
+
 
 
         internal class UltimateSlowEffect : WarcraftEffect
@@ -520,7 +518,7 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            NearbyPlayers(1000f, 1000f);
+            NearbyPlayers(1000f);
             StartCooldown(3);
         }
 
