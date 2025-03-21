@@ -235,8 +235,8 @@ namespace WarcraftPlugin.Classes
             public override void OnStart()
             {
                 Console.WriteLine("OnStart is called");
-                _previousPosition = Owner.PlayerPawn.Value.AbsOrigin;
-                _currentPosition = _previousPosition;
+                _previousPosition = _currentPosition;
+                _currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
 
                 Console.WriteLine($"[PositionTracker] Initial position: {_currentPosition}");
 
