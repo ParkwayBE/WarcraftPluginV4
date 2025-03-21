@@ -135,11 +135,17 @@ namespace WarcraftPlugin.Classes
             float baseSpeed = 260f;
             float newSpeed = baseSpeed + (baseSpeed * (skulls * 0.01f)); // +1% per skull
 
-            // Apply bonuses
-            player.PlayerPawn.Value.Health += bonusHealth;
+            int currentHealth = Player.PlayerPawn.Value.Health;
+            int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
+            int healAmount = abilityLevel * 1;
+            int newHealth = currentHealth + skulls * healAmount;
+            Player.SetHp(newHealth);
             player.PlayerPawn.Value.MovementServices.Maxspeed = newSpeed;
 
             player.PrintToChat($"\x07[Wraithstalker] You have {skulls} skull(s). (+{bonusHealth} HP, +{skulls}% speed)");
+
+
+
         }
 
 
