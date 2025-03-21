@@ -106,7 +106,7 @@ namespace WarcraftPlugin.Summons
                 //var ballBox = ball.CollisionBox();
                 Vector vec = new Vector(ball.AbsOrigin.X, ball.AbsOrigin.Y, ball.AbsOrigin.Z);
                 
-                var box = Warcraft.CreateBoxAroundPoint(vec, 50, 50, 50);
+                var box = Warcraft.CreateBoxAroundPoint(vec, 100, 100, 100);
                 //owner.PrintToChat($"Ball Box x: {box.Center.x} | y: {box.Center.z}");
                 var players = Utilities.GetPlayers();
                 var playersInBox = players.Where(x => x.PawnIsAlive && box.Contains(x.PlayerPawn.Value.AbsOrigin));
