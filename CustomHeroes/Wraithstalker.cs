@@ -39,6 +39,9 @@ namespace WarcraftPlugin.Classes
         private bool canUseUltimate = true;
         private bool _CanUseCloakEffect = true;
         private readonly Dictionary<int, PhantomCloakEffect> activeCloakEffects = new();
+        private bool cloakDamageAvailable = false;
+        private float cloakLastActivated = 0f;
+
 
 
 
@@ -55,6 +58,7 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerDeath>(OnPlayerDeath);
             HookEvent<EventRoundEnd>(OnRoundEnd);
+            HookEvent<EventPlayerHurtOther>(PlayerHurt);
 
             HookAbility(3, Ultimate);
         }
@@ -63,7 +67,7 @@ namespace WarcraftPlugin.Classes
             var playerId = Player.Slot;
             var level = WarcraftPlayer.GetAbilityLevel(1);
 
-            RemoveCloakEffect(); // <- this line replaces RemovePhantomCloakEffect()
+            RemoveCloakEffect(); // Failsafe on removing the Cloak effect properly
             var cloakEffect = new PhantomCloakEffect(Player, level);
             cloakEffect.Start();
             activeCloakEffects[Player.Slot] = cloakEffect;
@@ -310,6 +314,15 @@ namespace WarcraftPlugin.Classes
                 int alpha = 100 + (5 - _abilityLevel) * 20; // L5 = 100, L1 = 180
                 Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
                 Console.WriteLine($"[PhantomCloak] Cloak enabled (alpha={alpha}).");
+
+                var race = Owner.GetWarcraftPlayer().GetClass() as Wraithstalker;
+                if (race is not null)
+                {
+                    race.cloakDamageAvailable = true;
+                    race.cloakLastActivated = Server.CurrentTime;
+
+                    Console.WriteLine("[PhantomCloak] Cloak applied! Bonus damage available.");
+                }
             }
 
             private void DisableCloak()
@@ -323,6 +336,19 @@ namespace WarcraftPlugin.Classes
 
 
 
+        private void PlayerHurt(EventPlayerHurtOther @event)
+        {
+            if (@event.Attacker != Player) return;
+
+            float timeSinceCloak = Server.CurrentTime - cloakLastActivated;
+
+            if (cloakDamageAvailable && timeSinceCloak <= 3.0f)
+            {
+                @event.AddBonusDamage(15); // Example: deal +15 bonus damage
+                cloakDamageAvailable = false;
+                Console.WriteLine("[PhantomCloak] Bonus damage applied and consumed.");
+            }
+        }
 
 
 
