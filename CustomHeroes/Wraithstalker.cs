@@ -135,9 +135,9 @@ namespace WarcraftPlugin.Classes
                     var directionVec = new Vector();
                     NativeAPI.AngleVectors(directionAngle.Handle, directionVec.Handle, nint.Zero, nint.Zero);
 
-                    if (directionVec.Z < 0.375f)
+                    if (directionVec.Z < 0.475f)
                     {
-                        directionVec.Z = 0.375f;
+                        directionVec.Z = 0.475f;
                     }
                     int baseForce = 300;
                     int perSkull = 7;
