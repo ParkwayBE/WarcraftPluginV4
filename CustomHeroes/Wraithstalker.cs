@@ -61,6 +61,7 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerDeath>(OnPlayerDeath);
             HookEvent<EventRoundEnd>(OnRoundEnd);
+            HookEvent<EventRoundStart>(OnRoundStart);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerDisconnect>(PlayerDisconnect);
             HookEvent<EventPlayerConnect>(OnPlayerConnect);
@@ -69,7 +70,14 @@ namespace WarcraftPlugin.Classes
             HookAbility(3, Ultimate);
         }
 
-
+        private void OnRoundStart(EventRoundStart @event)
+        {
+            WarcraftPlugin.Instance.AddTimer(0.5f, () =>
+            {
+                ApplySkullBonuses(Player);
+                Player.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = true;
+            });
+        }
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
@@ -254,16 +262,6 @@ namespace WarcraftPlugin.Classes
             {
                 Player.GiveNamedItem("weapon_ssg08");
             }
-
-
-            WarcraftPlugin.Instance.AddTimer(0.5f, () =>
-            {
-                ApplySkullBonuses(Player);
-                Player.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = true;
-            });
-            
-
-
         }
 
 
