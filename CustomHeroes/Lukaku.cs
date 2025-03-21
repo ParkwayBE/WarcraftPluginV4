@@ -33,7 +33,7 @@ namespace WarcraftPlugin.Classes
         private readonly WarcraftPlugin _plugin;
         public override Color DefaultColor => Color.CadetBlue;
 
-        FootBall football;
+        FootBaller footBaller;
         int footballsRemaining = 10;
         bool footballIsSpawned = false;
 
@@ -56,6 +56,7 @@ namespace WarcraftPlugin.Classes
             footballsRemaining = 10;
             //WarcraftPlugin.Instance.AddTimer(0.2f, () => {Player.PlayLocalSound("sounds/ambient/misc/techno_overpass.vsnd"); });
             Player.PrintToChat("you have 3 footballs");
+            footBaller = new FootBaller(Player, 20);
         }
 
         private void Ultimate()
@@ -63,22 +64,17 @@ namespace WarcraftPlugin.Classes
             Console.WriteLine("pressed ult");
             if (!footballIsSpawned)
             {
-                Console.WriteLine("You don't have a football");
                 if (footballsRemaining > 0)
                 {
-                    Console.WriteLine("decreasing available balls and spawn the football");
-                    football = new FootBaller(Player);
-                    football.Activate(Player);
-                    footballIsSpawned = true;
-                    footballsRemaining--;
+                    footBaller.ActivateBall();
+                    
                     StartCooldown(3);
                 }
 
             }
             else
             {
-                Console.WriteLine("Already have a ball,");
-                football.StayPut(Player);
+                footBaller.ServeBall();
                 footballIsSpawned = false;
 
                 StartCooldown(3);
