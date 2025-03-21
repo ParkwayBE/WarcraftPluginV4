@@ -246,7 +246,13 @@ namespace WarcraftPlugin.Classes
             
             cloakEffect.Start();
             activeCloakEffects[Player.Slot] = cloakEffect;
-            Player.GiveNamedItem("weapon_ssg08");
+            bool HasScout = Player.PlayerPawn.Value.WeaponServices.MyWeapons.Any(w => w?.Value?.DesignerName == "weapon_ssg08");
+
+            if (!HasScout)
+            {
+                Player.GiveNamedItem("weapon_ssg08");
+            }
+
 
             WarcraftPlugin.Instance.AddTimer(0.2f, () =>
             {
