@@ -24,6 +24,8 @@ using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using CounterStrikeSharp.API.Modules.Timers;
+
 
 
 namespace WarcraftPlugin.Classes
@@ -209,32 +211,50 @@ namespace WarcraftPlugin.Classes
             private float _stillTime;
             private readonly float _requiredStillTime;
             private bool _isCloaked;
+            private Timer? _tickTimer;
 
             public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
-                : base(owner, duration: float.MaxValue, onTickInterval: 0.1f)
+                : base(owner, duration: float.MaxValue)
             {
-                _requiredStillTime = 3.0f - (abilityLevel * 0.5f); // Levels 1–5 result in 2.5 to 0.5 seconds
+                _requiredStillTime = 3.0f - (abilityLevel * 0.5f);
             }
 
             public override void OnStart()
             {
+                Console.WriteLine("[PhantomCloak] OnStart called.");
                 _lastPosition = Owner.PlayerPawn.Value.AbsOrigin;
                 _stillTime = 0f;
                 _isCloaked = false;
+
                 Console.WriteLine($"[PhantomCloak] Required stand still time set to {_requiredStillTime} seconds.");
+
+                // Start ticking manually if not handled by base
+                _tickTimer = WarcraftPlugin.Instance.AddTimer(0.1f, TickHandler, TimerFlags.REPEAT);
             }
 
-            public override void OnTick()
+            private void TickHandler()
             {
-                var velocity = Owner.PlayerPawn.Value.AbsVelocity;
-
-                float velocitySquared = velocity.X * velocity.X + velocity.Y * velocity.Y + velocity.Z * velocity.Z;
-                float velocityThreshold = 10f; // Adjust based on testing – this allows "jitter" but not actual walking
-
-                if (velocitySquared < velocityThreshold)
+                if (!Owner.IsValid || !Owner.PlayerPawn.IsValid)
                 {
-                    _stillTime += OnTickInterval;
-                    Console.WriteLine($"[PhantomCloak] Standing still for {_stillTime:0.00}/{_requiredStillTime}s");
+                    Console.WriteLine("[PhantomCloak] Owner invalid, stopping effect.");
+                    _tickTimer?.Kill();
+                    return;
+                }
+
+                // Console.WriteLine("[PhantomCloak] Tick active");
+                var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
+
+                float dx = currentPosition.X - _lastPosition.X;
+                float dy = currentPosition.Y - _lastPosition.Y;
+                float dz = currentPosition.Z - _lastPosition.Z;
+                float distanceMoved = (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
+
+                float movementThreshold = 0.1f;
+
+                if (distanceMoved < movementThreshold)
+                {
+                    _stillTime += 0.1f;
+                    // Console.WriteLine($"[PhantomCloak] Standing still for {_stillTime:0.00}/{_requiredStillTime}s");
 
                     if (!_isCloaked && _stillTime >= _requiredStillTime)
                     {
@@ -250,10 +270,15 @@ namespace WarcraftPlugin.Classes
                         _isCloaked = false;
                     }
 
+                    if (_stillTime > 0f)
+                    {
+                        Console.WriteLine("[PhantomCloak] Movement detected, resetting cloak timer.");
+                    }
+
                     _stillTime = 0f;
+                    _lastPosition = currentPosition;
                 }
             }
-
 
             private void ApplyCloak()
             {
@@ -269,15 +294,21 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("[PhantomCloak] Cloak removed due to movement.");
             }
 
+            public override void OnTick() { }
+
             public override void OnFinish()
             {
+                _tickTimer?.Kill();
+
                 if (_isCloaked)
                 {
                     RemoveCloak();
                 }
+
                 Console.WriteLine("[PhantomCloak] Effect ended.");
             }
         }
+
 
 
         private void Ultimate()
