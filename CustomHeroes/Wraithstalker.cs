@@ -139,8 +139,8 @@ namespace WarcraftPlugin.Classes
                     {
                         directionVec.Z = 0.275f;
                     }
-
-                    directionVec *= 15 * skulls; // Adjust force if needed
+                    var ScalingLongJump = 15 * skulls;
+                    directionVec *= ScalingLongJump; // Adjust force if needed
                     Player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
                     Player.PlayerPawn.Value.AbsVelocity.Y = directionVec.Y;
                     Player.PlayerPawn.Value.AbsVelocity.Z = directionVec.Z;
