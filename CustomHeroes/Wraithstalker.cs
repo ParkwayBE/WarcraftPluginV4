@@ -338,7 +338,7 @@ namespace WarcraftPlugin.Classes
 
 
 
-        private void PlayerHurtOther(EventPlayerHurtOther @event)
+        private void PlayerHurt(EventPlayerHurtOther @event)
         {
             if (@event.Attacker != Player)
                 return;
