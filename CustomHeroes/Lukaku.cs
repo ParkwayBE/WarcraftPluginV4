@@ -35,6 +35,7 @@ namespace WarcraftPlugin.Classes
 
         FootBaller footBaller;
         int footballsRemaining = 10;
+        bool canUseUlt = false;
         bool footballIsSpawned = false;
 
         public override List<IWarcraftAbility> Abilities =>
@@ -48,6 +49,7 @@ namespace WarcraftPlugin.Classes
         public override void Register()
         {
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
+            HookEvent<EventPlayerDeath>(PlayerDeath);
             HookAbility(3, Ultimate);
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
@@ -59,6 +61,7 @@ namespace WarcraftPlugin.Classes
             footballsRemaining = 10;
             Player.PrintToChat("you have 3 footballs");
             footBaller = new FootBaller(Player, 20);
+            canUseUlt = true;
         }
 
         private void Ultimate()
@@ -83,6 +86,12 @@ namespace WarcraftPlugin.Classes
             }
 
         }
+        private void PlayerDeath(EventPlayerDeath dead)
+        {
+            canUseUlt = false;
+
+        }
+
     }
 
 }
