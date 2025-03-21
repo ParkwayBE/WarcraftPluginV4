@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using CounterStrikeSharp.API.Modules.Timers;
 using System.Reflection.Emit;
+using CounterStrikeSharp.API.Core.Attributes.Registration;
 
 
 
@@ -61,7 +62,6 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventRoundEnd>(OnRoundEnd);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerDisconnect>(PlayerDisconnect);
-            HookEvent<EventGameNewmap>(OnGameNewmap);
 
             HookAbility(3, Ultimate);
         }
@@ -115,13 +115,23 @@ namespace WarcraftPlugin.Classes
 
         }
 
+        private void ResetSkullsForPlayer(CCSPlayerController player)
+        {
+            if (player == null || !player.IsValid)
+                return;
 
+            if (skullTracker.ContainsKey(player.SteamID))
+            {
+                Console.WriteLine($"[Skulls] Resetting skulls for {player.PlayerName} ({player.SteamID})");
+                skullTracker[player.SteamID] = 0;
+            }
+        }
 
 
         private void PlayerDisconnect(EventPlayerDisconnect @event)
         {
-            skullTracker.Clear();
-            Console.WriteLine("Cleared the skulltracker.");
+            var player = @event.Userid;
+            ResetSkullsForPlayer(player);
         }
 
 
@@ -297,13 +307,6 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("No enemies found in the scan direction and radius.");
             }
         }
-
-        private void OnGameNewmap(EventGameNewmap @event)
-        {
-            skullTracker.Clear();
-            Console.WriteLine("[Wraithstalker] All skull data has been reset due to new map.");
-        }
-
 
         internal class UltimateSlowEffect : WarcraftEffect
         {
