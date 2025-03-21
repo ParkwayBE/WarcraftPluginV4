@@ -93,8 +93,11 @@ namespace WarcraftPlugin.Summons
         }
         public void StopTraceHits()
         {
-            hitSystem.FinishOnDestroy = true;
-            hitSystem.Destroy();
+            if (hitSystem != null)
+            {
+                hitSystem.FinishOnDestroy = true;
+                hitSystem.Destroy();
+            }
         }
 
 
@@ -135,14 +138,19 @@ namespace WarcraftPlugin.Summons
         }
         public void ServeBall()
         {
-            aimSystem.Destroy();
-            
+            if (aimSystem != null)
+            {
+                aimSystem.Destroy();
+            }
             lastAddedBall.TraceHits(_owner);
             lastAddedBall.StayPut(_owner);
         }
         public void DestroyBallSytsems()
         {
-            aimSystem.Destroy();
+            if (aimSystem != null)
+            {
+                aimSystem.Destroy();
+            }
             for (int i = 0; i < footballs.Count; i++)
             {
                 footballs[i].StopTraceHits();
