@@ -70,11 +70,18 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
-            if (@event.Attacker != Player || !@event.Userid.IsValid)
+            if (@event.Attacker == null || @event.Userid == null)
                 return;
 
-            var victim = @event.Userid;
             var attacker = @event.Attacker;
+            var victim = @event.Userid;
+
+            if (!attacker.IsValid || !victim.IsValid)
+                return;
+
+            if (attacker.PlayerPawn?.Value == null || victim.PlayerPawn?.Value == null)
+                return;
+
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
 
             if (cloakEffect._AdditionalDamage)
