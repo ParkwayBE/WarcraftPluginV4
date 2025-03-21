@@ -41,6 +41,9 @@ namespace WarcraftPlugin.Classes
     private bool canUseUltimate = true;
     private bool _CanUseCloakEffect = true;
     private static HashSet<int> playersWithActiveCloak = new();
+    private static Dictionary<ulong, bool> cloakDamageAvailable = new();
+    private static Dictionary<ulong, Timer> damageDisableTimers = new();
+
 
 
     public override List<IWarcraftAbility> Abilities =>
@@ -281,6 +284,8 @@ namespace WarcraftPlugin.Classes
                     {
                         EnableCloak();
                         _isCloaked = true;
+                        cloakDamageAvailable[Owner.SteamID] = false;
+
                     }
                 }
                 else
@@ -289,6 +294,15 @@ namespace WarcraftPlugin.Classes
                     {
                         DisableCloak();
                         _isCloaked = false;
+                        cloakDamageAvailable[Owner.SteamID] = true;
+                        if (damageDisableTimers.TryGetValue(Owner.SteamID, out var timer))
+                            timer.Kill(); // cancel previous
+
+                        damageDisableTimers[Owner.SteamID] = WarcraftPlugin.Instance.AddTimer(5f, () =>
+                        {
+                            cloakDamageAvailable[Owner.SteamID] = false;
+                        });
+
                     }
                 }
             }, TimerFlags.REPEAT);
@@ -346,11 +360,16 @@ namespace WarcraftPlugin.Classes
             if (@event.Attacker != Player || !@event.Userid.IsValid || !cloakDamageAvailable)
                 return;
 
-            // Reset cloak bonus so it can't be used multiple times
-            cloakDamageAvailable = false;
+            if (cloakDamageAvailable.TryGetValue(attacker.SteamID, out bool canBonus) && canBonus)
+            {
+                int bonusDamage = abilityLevel * 10;
+                @event.AddBonusDamage(bonusDamage);
+                victim.PrintToChat($"You received {bonusDamage} bonus damage from the shadows!");
 
-            int bonusDamage = 10 + (WarcraftPlayer.GetAbilityLevel(1) * 2);
-            @event.AddBonusDamage(bonusDamage);
+                // Reset so it doesn't apply again
+                cloakDamageAvailable[attacker.SteamID] = false;
+            }
+
 
             @event.Userid.PrintToChat($"\x07[Wraithstalker] You received {bonusDamage} bonus damage from a cloaked enemy!");
         }
