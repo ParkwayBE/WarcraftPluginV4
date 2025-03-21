@@ -265,7 +265,8 @@ namespace WarcraftPlugin.Classes
                 _isCloaked = true;
 
                 // Make player partially invisible
-                var alpha = 255 - (WarcraftPlayer.GetAbilityLevel(1) * 30); // Reverse scale
+                var abilityLevel = Owner.GetWarcraftPlayer().GetAbilityLevel(1);
+                var alpha = 255 - (abilityLevel * 30);
                 alpha = Math.Clamp(alpha, 0, 255);
 
                 Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
