@@ -211,9 +211,10 @@ namespace WarcraftPlugin.Classes
             private Vector _lastPosition;
             private float _standingTime = 0f;
             private bool _hasStarted = false;
+            private bool _isCloaked = false;
 
             public PhantomCloakEffect(CCSPlayerController owner, int abilityLevel)
-                : base(owner, duration: 30f, onTickInterval: 0.1f) // 30 sec effect, checks every 0.1s
+                : base(owner, duration: 30f, onTickInterval: 0.1f) // Check every 0.1s for 30s
             {
                 _requiredStandStillTime = 2.5f - (abilityLevel * 0.5f);
                 if (_requiredStandStillTime < 0.5f)
@@ -242,16 +243,22 @@ namespace WarcraftPlugin.Classes
                 if (PositionsEqual(_lastPosition, currentPosition))
                 {
                     _standingTime += OnTickInterval;
-                    Console.WriteLine($"[PhantomCloak] Standing still for {_standingTime:0.00}/{_requiredStandStillTime}s");
 
-                    if (_standingTime >= _requiredStandStillTime)
+                    if (!_isCloaked)
+                        Console.WriteLine($"[PhantomCloak] Standing still for {_standingTime:0.00}/{_requiredStandStillTime}s");
+
+                    if (_standingTime >= _requiredStandStillTime && !_isCloaked)
                     {
                         ApplyCloak();
-                        Destroy(); // Only apply once and stop the effect
                     }
                 }
                 else
                 {
+                    if (_isCloaked)
+                    {
+                        RemoveCloak();
+                    }
+
                     _standingTime = 0f;
                     _lastPosition = currentPosition;
                 }
@@ -259,13 +266,24 @@ namespace WarcraftPlugin.Classes
 
             private void ApplyCloak()
             {
+                _isCloaked = true;
                 Console.WriteLine("[PhantomCloak] Cloak applied!");
-                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(100, 255, 255, 255)); // example alpha
-                                                                                     // You can trigger extra effects or buffs here
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(100, 255, 255, 255)); // Stealthy!
+            }
+
+            private void RemoveCloak()
+            {
+                _isCloaked = false;
+                Console.WriteLine("[PhantomCloak] Cloak removed.");
+                Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255)); // Fully visible again
             }
 
             public override void OnFinish()
             {
+                if (_isCloaked)
+                {
+                    RemoveCloak();
+                }
                 Console.WriteLine("[PhantomCloak] Effect ended.");
             }
 
@@ -276,6 +294,7 @@ namespace WarcraftPlugin.Classes
                        Math.Abs(a.Z - b.Z) < 1.0f;
             }
         }
+
 
 
 
