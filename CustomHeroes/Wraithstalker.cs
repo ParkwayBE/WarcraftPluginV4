@@ -87,7 +87,7 @@ namespace WarcraftPlugin.Classes
 
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
 
-            if (cloakEffect._AdditionalDamage)
+            if (cloakEffect != null && cloakEffect._AdditionalDamage)
             {
                 Console.WriteLine("You dealt extra damage!");
                 int bonusDamage = WarcraftPlayer.GetAbilityLevel(1) * 10;
