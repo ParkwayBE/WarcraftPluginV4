@@ -93,8 +93,8 @@ namespace WarcraftPlugin.Classes
                 int bonusDamage = WarcraftPlayer.GetAbilityLevel(1) * 10;
 
                 // Apply bonus damage
-                if (attacker.TeamNum != victim.TeamNum)
-                    continue;
+                if (attacker.TeamNum == victim.TeamNum)
+                    return;
                 @event.AddBonusDamage(bonusDamage);
 
                 // Notify victim
