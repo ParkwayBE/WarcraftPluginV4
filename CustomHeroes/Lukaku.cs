@@ -68,6 +68,7 @@ namespace WarcraftPlugin.Classes
                 {
                     Console.WriteLine("decreasing available balls and spawn the football");
                     football = new FootBall(Player);
+                    football.Activate(Player);
                     footballIsSpawned = true;
                     footballsRemaining--;
                     StartCooldown(3);
