@@ -66,7 +66,7 @@ namespace WarcraftPlugin.Classes
             var level = WarcraftPlayer.GetAbilityLevel(1);
             if (level > 0)
             {
-                new PlayerPositionTrackerEffect(Player).Start();
+                new PhantomCloakEffect(Player).Start();
 
                 playersWithActiveCloak.Add(playerId);
                 Console.WriteLine("Cloak effect applied to player " + playerId);
@@ -270,10 +270,11 @@ namespace WarcraftPlugin.Classes
 
                         tickCount = 1; // restart cycle
                     }
-                }, repeat: true);
+                }, TimerFlags.REPEAT);
+
             }
 
-            public override void OnTick() { /* */ }
+        public override void OnTick() { /* */ }
 
             public override void OnFinish()
             {
