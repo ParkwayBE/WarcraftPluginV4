@@ -241,7 +241,7 @@ namespace WarcraftPlugin.Classes
                     return;
                 }
 
-                Console.WriteLine("[PhantomCloak] Tick active");
+                // Console.WriteLine("[PhantomCloak] Tick active");
                 var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
 
                 float dx = currentPosition.X - _lastPosition.X;
@@ -254,7 +254,7 @@ namespace WarcraftPlugin.Classes
                 if (distanceMoved < movementThreshold)
                 {
                     _stillTime += 0.1f;
-                    Console.WriteLine($"[PhantomCloak] Standing still for {_stillTime:0.00}/{_requiredStillTime}s");
+                    // Console.WriteLine($"[PhantomCloak] Standing still for {_stillTime:0.00}/{_requiredStillTime}s");
 
                     if (!_isCloaked && _stillTime >= _requiredStillTime)
                     {
