@@ -76,7 +76,7 @@ namespace WarcraftPlugin.Summons
 
         public void TraceHits(CCSPlayerController owner)
         {
-            hitSystem = new FootballHitSystem(owner, 0.01f, _ball);
+            hitSystem = new FootballHitSystem(owner, 0.001f, _ball);
             hitSystem.Start();
         }
         public void StopTraceHits()
@@ -93,6 +93,7 @@ namespace WarcraftPlugin.Summons
             public override void OnTick()
             {
                 var ballBox = ball.CollisionBox();
+                owner.PrintToChat($"Ball Box x: {ballBox.Center.x} | y: {ballBox.Center.z}");
                 var players = Utilities.GetPlayers();
                 var playersInBox = players.Where(x => x.PawnIsAlive && ballBox.Contains(x.PlayerPawn.Value.AbsOrigin));
 
@@ -100,7 +101,7 @@ namespace WarcraftPlugin.Summons
                 {
                     foreach ( var player in playersInBox)
                     {
-                        Owner.PrintToChat($"Hit {player.PlayerName}");
+                        owner.PrintToChat($"Hit {player.PlayerName}");
                         
                     }
                 }
