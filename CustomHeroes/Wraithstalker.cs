@@ -28,16 +28,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace WarcraftPlugin.Classes
 {
-    public static class PlayerExtensions
-    {
-        public static string GetNearbyPlayers(this CCSPlayerController player)
-        {
-            if (player == null || !player.IsValid) return string.Empty;
-            var playerNameClean = Regex.Replace(player.PlayerName, @"\d+\s\[.*\]\s", "");
-            return playerNameClean;
-        }
-    }
-
     public class Wraithstalker : WarcraftClass
     {
         public override string DisplayName => "Wraithstalker";
@@ -150,7 +140,6 @@ namespace WarcraftPlugin.Classes
 
                 if (distanceSquared <= doubleRadius * doubleRadius)
                 {
-                    Console.WriteLine($"Enemy found: {otherPlayer.GetNearbyPlayers()}");
                     playerFound = true;
 
                     // Trigger the glow effect
