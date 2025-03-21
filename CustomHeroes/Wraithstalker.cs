@@ -271,13 +271,14 @@ namespace WarcraftPlugin.Classes
         }
 
         int repetitionCount = 0;
-        int maxRepetitions = 5;
+        int maxRepetitions = 2;
         float delayBetweenRepetitions = 2.0f;
 
         void SpawnParticles()
         {
             // EFFECT CODE
-            float offset = 150.0f; // Adjust the offset as needed
+            float offset = 150.0f;
+            float Zoffset = 50f;// Adjust the offset as needed
             float particleDuration = 120.0f;
             float particleDuration2 = 40.0f;
             string redCircleParticle = "particles/lighting/light_gaslamp_glow.vpcf";
@@ -293,12 +294,14 @@ namespace WarcraftPlugin.Classes
             // Spawn particle 2 (offset slightly in X)
             var particle2Position = basePosition.Clone();
             particle2Position.X += offset;
+            particle2Position.Z += Zoffset;
             var particle2 = Warcraft.SpawnParticle(particle2Position, redCircleParticle, particleDuration);
             particle2.SetParent(Player.PlayerPawn.Value);
 
             // Spawn particle 3 (offset slightly in Y)
             var particle3Position = basePosition.Clone();
             particle3Position.Y += offset;
+            particle2Position.Z += Zoffset;
             var particle3 = Warcraft.SpawnParticle(particle3Position, redCircleParticle, particleDuration);
             particle3.SetParent(Player.PlayerPawn.Value);
 
