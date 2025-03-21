@@ -51,8 +51,8 @@ namespace WarcraftPlugin.Classes
         public override List<IWarcraftAbility> Abilities =>
         [
             new WarcraftAbility("Assimilation", "On Kill: Gain a Skull, skulls last untill the end of the game and give various bonusstats on spawn."),
-            new WarcraftAbility("Phantom Cloak", "Standing still for  2.5 - 0.5 seconds makes you invisible and your next shot deals bonus damage."),
-            new WarcraftAbility("Shadowstrike", "After you exited Phantom Cloak your next hit will cause bonus damage and grant you a guaranteed skull"),
+            new WarcraftAbility("Phantom Cloak", "Standing still for  2.5 - 0.5 seconds makes you invisible."),
+            new WarcraftAbility("Shadowstrike", "After you exited Phantom Cloak your next hit will cause bonus damage."),
             new WarcraftCooldownAbility("Marked for prey", "Scan the area where you are looking, highlight enemies close for x seconds and slow them down. Killing a marked target grants a skull. Skulls give you lasting benefits untill mapchange.", 5f)
         ];
 
@@ -221,9 +221,6 @@ namespace WarcraftPlugin.Classes
         {
             int skulls = GetSkullCount(player);
             int bonusHealth = skulls * 2;
-
-            // Default speed (260 is CS2 default walk speed)
-
             int currentHealth = Player.PlayerPawn.Value.Health;
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
             int healAmount = abilityLevel * 1;
@@ -321,7 +318,6 @@ namespace WarcraftPlugin.Classes
 
             public override void OnTick()
             {
-                // Repeat the glow effect at every tick
                 SetGlowOnEntity(Owner.PlayerPawn.Value, _glowColor);
             }
 
@@ -524,7 +520,7 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            // NearbyPlayers(1000f, 1000f); // Radius, forward offset UNCOMMENT TO REGAIN MARKED ULT
+            NearbyPlayers(1000f, 1000f);
             StartCooldown(3);
         }
 
