@@ -67,7 +67,7 @@ namespace WarcraftPlugin.Classes
                 if (footballsRemaining > 0)
                 {
                     Console.WriteLine("decreasing available balls and spawn the football");
-                    football = new FootBall(Player);
+                    football = new FootBaller(Player);
                     football.Activate(Player);
                     footballIsSpawned = true;
                     footballsRemaining--;
