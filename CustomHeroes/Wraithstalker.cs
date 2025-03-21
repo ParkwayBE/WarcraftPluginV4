@@ -244,31 +244,19 @@ namespace WarcraftPlugin.Classes
 
                 _positionComparisonTimer = WarcraftPlugin.Instance.AddTimer(1.0f, () =>
                 {
-                    tickCount++;
+                    // Shift the current position to previous before fetching a new position
+                    _previousPosition = _currentPosition;
+                    _currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
 
-                    if (tickCount == 1)
+                    Console.WriteLine("[PositionTracker] Comparing positions:");
+                    Console.WriteLine($"   Previous: {_previousPosition}");
+                    Console.WriteLine($"   Current:  {_currentPosition}");
+
+                    if (_previousPosition.X == _currentPosition.X &&
+                        _previousPosition.Y == _currentPosition.Y &&
+                        _previousPosition.Z == _currentPosition.Z)
                     {
-                        _currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
-                        Console.WriteLine($"[PositionTracker] Captured current position: {_currentPosition}");
-                    }
-                    else if (tickCount == 2)
-                    {
-                        Console.WriteLine("[PositionTracker] Comparing positions:");
-                        Console.WriteLine($"   Previous: {_previousPosition}");
-                        Console.WriteLine($"   Current:  {_currentPosition}");
-
-                        if (_previousPosition.X == _currentPosition.X &&
-                            _previousPosition.Y == _currentPosition.Y &&
-                            _previousPosition.Z == _currentPosition.Z)
-                        {
-                            Console.WriteLine("You're standing still!");
-                        }
-
-                        // Shift positions for next comparison
-                        _previousPosition = _currentPosition;
-                        _currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
-
-                        tickCount = 1; // restart cycle
+                        Console.WriteLine("You're standing still!");
                     }
                 }, TimerFlags.REPEAT);
 
