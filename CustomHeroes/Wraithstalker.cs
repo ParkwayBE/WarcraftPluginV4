@@ -61,6 +61,7 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventRoundEnd>(OnRoundEnd);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerDisconnect>(PlayerDisconnect);
+            HookEvent<EventGameNewmap>(OnGameNewmap);
 
             HookAbility(3, Ultimate);
         }
@@ -112,12 +113,8 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerDisconnect(EventPlayerDisconnect @event)
         {
-            ulong steamID = @event.Userid.SteamID;
-            if (skullTracker.ContainsKey(steamID))
-            {
-                skullTracker.Remove(steamID);
-                Console.WriteLine($"[Wraithstalker] Removed skull data for {steamID}");
-            }
+            skullTracker.Clear();
+            Console.WriteLine("Cleared the skulltracker.");
         }
 
 
@@ -292,6 +289,12 @@ namespace WarcraftPlugin.Classes
             {
                 Console.WriteLine("No enemies found in the scan direction and radius.");
             }
+        }
+
+        private void OnGameNewmap(EventGameNewmap @event)
+        {
+            skullTracker.Clear();
+            Console.WriteLine("[Wraithstalker] All skull data has been reset due to new map.");
         }
 
 
