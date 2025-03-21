@@ -65,7 +65,7 @@ namespace WarcraftPlugin.Classes
         {
 
             var playerId = Player.Slot;
-            RemoveCloakEffect();
+            RemoveCloakEffect(Player);
 
             if (playersWithActiveCloak.Contains(playerId))
                 return;
@@ -80,23 +80,27 @@ namespace WarcraftPlugin.Classes
 
     private void OnPlayerDeath(EventPlayerDeath death)
     {
-        RemoveCloakEffect();
+        RemoveCloakEffect(Player);
     }
 
     private void OnRoundEnd(EventRoundEnd round)
     {
-        RemoveCloakEffect();
+        RemoveCloakEffect(Player);
     }
 
-        private void RemoveCloakEffect()
+        private void RemoveCloakEffect(CCSPlayerController player)
         {
-            var effect = WarcraftPlugin.Instance
+            var cloakEffects = WarcraftPlugin.Instance
                 .EffectManager
                 .GetEffectsByType<PhantomCloakEffect>()
-                .FirstOrDefault(x => x.Owner.Handle == Player.Handle);
+                .Where(x => x.Owner.Handle == player.Handle);
 
-            effect?.Destroy(); // Only call Destroy() if effect is not null
+            foreach (var effect in cloakEffects)
+            {
+                effect.Destroy();
+            }
         }
+
 
 
 
