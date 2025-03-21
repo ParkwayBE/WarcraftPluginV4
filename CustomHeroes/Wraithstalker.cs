@@ -332,17 +332,17 @@ namespace WarcraftPlugin.Classes
         {
             bool playerFound = false;
 
-            // Get the player's current position and eye direction
             var playerPosition = Player.PlayerPawn.Value.AbsOrigin;
             var eyeAngles = Player.PlayerPawn.Value.EyeAngles;
 
-            // Convert angles to directional vector
             var forwardVector = new Vector();
             NativeAPI.AngleVectors(eyeAngles.Handle, forwardVector.Handle, nint.Zero, nint.Zero);
-            forwardVector *= forwardOffset; // OFFSET NOT WORKING YET , FIX IT
+            forwardVector *= forwardOffset;
 
-            // Calculate the forward offset position
             var scanOrigin = playerPosition + forwardVector;
+
+            // DEBUG: Draw line between player and scan origin
+            Warcraft.DrawLaserBetween(Player.EyePosition(-10), scanOrigin, Color.Red, 7.0f);
 
             var players = Utilities.GetPlayers();
 
@@ -351,7 +351,6 @@ namespace WarcraftPlugin.Classes
                 if (!otherPlayer.IsAlive() || otherPlayer.UserId == Player.UserId)
                     continue;
 
-                // Skip teammates
                 if (Player.TeamNum == otherPlayer.TeamNum)
                     continue;
 
@@ -365,12 +364,12 @@ namespace WarcraftPlugin.Classes
                 {
                     playerFound = true;
 
-                    // Trigger the glow effect
+                    // Trigger glow and slow effects
                     var duration = 7.0f;
                     var tickRate = 0.02f;
                     new GlowEffect(otherPlayer, Color.Red, duration, tickRate).Start();
-                    otherPlayer.PrintToChat("You have been MARKED");
                     new UltimateSlowEffect(otherPlayer, 5.0f, 130f).Start();
+                    otherPlayer.PrintToChat("You have been MARKED");
                 }
             }
 
@@ -379,6 +378,7 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("No enemies found in the scan direction and radius.");
             }
         }
+
 
         internal class UltimateSlowEffect : WarcraftEffect
         {
