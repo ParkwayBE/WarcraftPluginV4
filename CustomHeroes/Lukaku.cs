@@ -48,7 +48,6 @@ namespace WarcraftPlugin.Classes
         public override void Register()
         {
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
-            HookEvent<EventWeaponFire>(PlayerShoot);
             HookAbility(3, Ultimate);
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
@@ -58,7 +57,6 @@ namespace WarcraftPlugin.Classes
                 footBaller = null;
             }
             footballsRemaining = 10;
-            //WarcraftPlugin.Instance.AddTimer(0.2f, () => {Player.PlayLocalSound("sounds/ambient/misc/techno_overpass.vsnd"); });
             Player.PrintToChat("you have 3 footballs");
             footBaller = new FootBaller(Player, 20);
         }
@@ -85,31 +83,6 @@ namespace WarcraftPlugin.Classes
             }
 
         }
-
-        private void PlayerShoot(EventWeaponFire @event)
-        {
-            // _plugin.AdminPanel.OpenAdminPanel(Player);
-
-        }
-        /*
-        private void FootballUse()
-        {
-            int maxSeconds = 5;
-            DateTime startTime = DateTime.Now;
-            footBalls.Add(new FootBall(Player, Player.PlayerPawn.Value.AbsOrigin));
-            footBalls[0].Activate();
-            Player.PrintToChat("You have used a ball");
-            
-
-            while ((DateTime.Now - startTime).TotalSeconds < maxSeconds)
-            {
-                footBalls[0].UpdateLocation(Player.PlayerPawn.Value.AbsOrigin);
-            }
-        }
-        */
-        
-        
-
     }
 
 }
