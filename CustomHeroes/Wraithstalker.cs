@@ -378,6 +378,19 @@ namespace WarcraftPlugin.Classes
                     new GlowEffect(otherPlayer, Color.Red, duration, tickRate).Start();
                     new UltimateSlowEffect(otherPlayer, 5.0f, 130f).Start();
                     otherPlayer.PrintToChat("You have been MARKED");
+                    otherPlayer.PlayLocalSound("sounds/physics/fruit/fruit_impact_02.vsnd");
+                    WarcraftPlugin.Instance.AddTimer(0.2f, () =>
+                    {
+                        otherPlayer.PlayLocalSound("sounds/physics/fruit/fruit_impact_02.vsnd");
+                    });
+                    WarcraftPlugin.Instance.AddTimer(0.4f, () =>
+                    {
+                        otherPlayer.PlayLocalSound("sounds/physics/fruit/fruit_impact_02.vsnd");
+                    });
+                    WarcraftPlugin.Instance.AddTimer(0.6f, () =>
+                    {
+                        otherPlayer.PlayLocalSound("sounds/physics/fruit/fruit_impact_02.vsnd");
+                    });
                 }
             }
 
