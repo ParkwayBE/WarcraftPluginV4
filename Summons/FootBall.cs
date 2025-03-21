@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
+using WarcraftPlugin.Core;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
@@ -26,10 +28,10 @@ namespace WarcraftPlugin.Summons
         public Football(CCSPlayerController owner) 
         {
             _owner = owner;
-
+            Activate(owner);
         }
         public void Activate(CCSPlayerController owner)
-        {
+        { 
             isActive = true;
             _ball = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
             _ball.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
