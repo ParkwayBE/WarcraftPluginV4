@@ -150,7 +150,7 @@ namespace WarcraftPlugin.Classes
                 WarcraftPlugin.Instance.AddTimer(0.05f, () =>
                 {
                     Console.WriteLine("[INFO] Applying reduced gravity after delay.");
-                    new SetGravityEffect(Player, 0.5f, 3f).Start();
+                    new SetGravityEffect(Player, 0.5f, 6f).Start();
                 });
             }
         }
