@@ -153,6 +153,35 @@ namespace WarcraftPlugin.Classes
             }
         }
 
+        internal class SetGravityEffect(CCSPlayerController owner, float gravity, float duration)
+    : WarcraftEffect(owner, duration)
+        {
+            private readonly float _gravity = gravity;
+
+            public override void OnStart()
+            {
+                if (Owner?.PlayerPawn?.Value == null)
+                {
+                    Console.WriteLine("ERROR: Owner or PlayerPawn is NULL in SetGravityEffect!");
+                    return;
+                }
+                Owner.PlayerPawn.Value.GravityScale = _gravity;
+            }
+
+            public override void OnFinish()
+            {
+                if (Owner?.PlayerPawn?.Value == null)
+                {
+                    Console.WriteLine("ERROR: Owner or PlayerPawn is NULL in SetGravityEffect OnFinish!");
+                    return;
+                }
+                Owner.PlayerPawn.Value.GravityScale = 1.0f; // Reset to default gravity
+            }
+
+            public override void OnTick() { /* */ }
+        }
+
+
         private void ResetSkullsForPlayer(CCSPlayerController player)
         {
             if (player == null || !player.IsValid)
