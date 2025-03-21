@@ -135,11 +135,13 @@ namespace WarcraftPlugin.Classes
                     var directionVec = new Vector();
                     NativeAPI.AngleVectors(directionAngle.Handle, directionVec.Handle, nint.Zero, nint.Zero);
 
-                    if (directionVec.Z < 0.275f)
+                    if (directionVec.Z < 0.375f)
                     {
-                        directionVec.Z = 0.275f;
+                        directionVec.Z = 0.375f;
                     }
-                    int ScalingLongJump = Math.Max(150, 15 * skulls);
+                    int baseForce = 300;
+                    int perSkull = 7;
+                    int ScalingLongJump = baseForce + (perSkull * skulls);
                     directionVec *= ScalingLongJump; // Adjust force if needed
                     Player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
                     Player.PlayerPawn.Value.AbsVelocity.Y = directionVec.Y;
