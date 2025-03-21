@@ -26,6 +26,8 @@ namespace WarcraftPlugin.Summons
         public Football(CCSPlayerController owner) 
         {
             _owner = owner;
+            Activate(owner);
+
         }
         public void Activate(CCSPlayerController owner)
         { 
@@ -114,7 +116,6 @@ namespace WarcraftPlugin.Summons
         {
             lastAddedBall = new Football(_owner);
             lastAddedBall.isActive = true;
-            lastAddedBall.Activate(_owner);
 
             footballs.Add(lastAddedBall);
    
@@ -181,7 +182,7 @@ namespace WarcraftPlugin.Summons
             {
                 Vector vec = new Vector(football._ball.AbsOrigin.X, football._ball.AbsOrigin.Y, football._ball.AbsOrigin.Z);
 
-                var box = Warcraft.CreateBoxAroundPoint(vec, 80, 80, 80);
+                var box = Warcraft.CreateBoxAroundPoint(vec, 100, 100, 100);
                 var playersInBox = players.Where(x => x.PawnIsAlive && box.Contains(x.PlayerPawn.Value.AbsOrigin));
 
                 if (playersInBox.Any())
