@@ -118,13 +118,13 @@ namespace WarcraftPlugin.Summons
 
                     if (playersInBox.Any())
                     {
-                        //foreach (var player in playersInBox)
-                        //{
-                        //owner.PrintToChat($"Hit {player.PlayerName}");
+                        foreach (var player in playersInBox)
+                        {
+                            owner.PrintToChat($"Hit {player.PlayerName}");
                         // WarcraftPlugin.Instance.AddTimer(1f, () =>
                         // {
                         //Kill(player,owner);
-                        //});
+                        }
 
                         Warcraft.SpawnExplosion(
                             pos: vec,
