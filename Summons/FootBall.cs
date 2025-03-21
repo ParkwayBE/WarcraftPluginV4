@@ -192,8 +192,8 @@ namespace WarcraftPlugin.Summons
                         if (player.PlayerName != owner.PlayerName)
                         {
                             Warcraft.TakeDamage(player, 900000, owner, inflictor: owner);
-                            //fb = new Football(owner);
-                            //fb.UpdateLocation(owner);
+                            fb = new Football(owner);
+                            fb.UpdateLocation(owner);
                         }
                     }
                 }
