@@ -116,6 +116,6 @@ namespace WarcraftPlugin.Models
         usp_silencer,
         usp_silencer_off,
         xm1014,
-        zone_repulsor
+        zone_repulsor,
     }
 }
