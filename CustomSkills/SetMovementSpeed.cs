@@ -16,7 +16,7 @@ namespace WarcraftPlugin.CustomSkills
     {
         private readonly float _speedMultiplier;
 
-        public SetMovementSpeed(CCSPlayerController owner, float duration, float speedMultiplier)
+        public SetMovementSpeed(CCSPlayerController owner, float speedMultiplier, float duration)
             : base(owner, duration)
         {
             _speedMultiplier = speedMultiplier;
@@ -24,14 +24,9 @@ namespace WarcraftPlugin.CustomSkills
 
         public override void OnStart()
         {
-            WarcraftPlugin.Instance.AddTimer(0.5f, () =>
-            {
-                Owner.PrintToChat($"[TEST] Speed set to {_speedMultiplier}x for {Duration}s");
-                var pawn = Owner.PlayerPawn.Value;
-                pawn.VelocityModifier = 1f + 0.1f * _speedMultiplier;
-            });
-            
-
+            Owner.PrintToChat($"[TEST] Speed set to {_speedMultiplier}x for {Duration}s");
+            var pawn = Owner.PlayerPawn.Value;
+            pawn.VelocityModifier = 1f + 0.1f * _speedMultiplier;
         }
 
         public override void OnFinish()
@@ -42,13 +37,5 @@ namespace WarcraftPlugin.CustomSkills
 
         public override void OnTick()
         {/*       */ }
-    }
-
-    public static class SkillFunctions
-    {
-        public static void MovementSpeed(CCSPlayerController player, float amount, float duration)
-        {
-            new SetMovementSpeed(player, duration, amount).Start();
-        }
     }
 }
