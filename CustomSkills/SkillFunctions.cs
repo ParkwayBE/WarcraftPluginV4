@@ -17,9 +17,9 @@ namespace WarcraftPlugin.CustomSkills
         {
             new SetBonusHealth(player, amount).Start();
         }
-        public static void SetInvisibility(CCSPlayerController player, float duration)
+        public static void SetInvisibility(CCSPlayerController player, float duration, int alpha)
         {
-            new SetInvisibility(player, duration).Start();
+            new SetInvisibility(player, duration, alpha).Start();
         }
     }
 }
