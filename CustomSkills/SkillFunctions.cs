@@ -41,7 +41,15 @@ namespace WarcraftPlugin.CustomSkills
 
             if (Warcraft.RollDice(100, chancePercent)) // simple roll: 1 in `chance`
             {
-                new FreezePlayerEffect(attacker, duration, target).Start();
+                int roll = new Random().Next(1, 101);
+                Console.WriteLine($"[Freeze] Rolled: {roll} vs Chance: {chancePercent}");
+
+                if (roll <= chancePercent)
+                {
+                    Console.WriteLine("[Freeze] Freeze applied!");
+                    new FreezePlayerEffect(attacker, duration, target).Start();
+                }
+
             }
         }
 
