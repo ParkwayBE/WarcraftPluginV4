@@ -11,12 +11,13 @@ namespace WarcraftPlugin.CustomSkills
     {
         public static void LeechHealth(CCSPlayerController attacker, int chancePercent, float healPercent, int damageDealt)
         {
+            Console.WriteLine("PlayerHurtOther Event has succesfully triggered LeechHealth");
             if (attacker == null || !attacker.IsValid || !attacker.IsAlive())
-                Console.WriteLine("Attacker is null or invalid or not alive");
-            return;
+                return;
+       
+            
 
             if (!Warcraft.RollDice(1, 100 / chancePercent))
-                Console.WriteLine("not lucky enough");
                 return;
 
             int currentHealth = attacker.PlayerPawn.Value.Health;
