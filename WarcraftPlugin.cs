@@ -133,7 +133,7 @@ namespace WarcraftPlugin
             CooldownManager = new CooldownManager();
             CooldownManager.Initialize();
 
-            _admin = new AdminPanel(this, _database);
+            _admin = new AdminPanel(this);
 
             if (Config.ShowCommandAdverts)
             {
