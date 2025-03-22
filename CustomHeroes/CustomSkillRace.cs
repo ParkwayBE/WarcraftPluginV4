@@ -41,6 +41,12 @@ namespace WarcraftPlugin.Classes
             HealthEffect.Start();
         }
 
+        public static void Invisibility(CCSPlayerController player, float amount, float duration)
+        {
+            var InvisEffect = new SetInvisibility(player, duration, int amount);
+            InvisEffect.Start();
+        }
+
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
             Console.WriteLine("CustomSkillRace has spawned!");
@@ -48,6 +54,7 @@ namespace WarcraftPlugin.Classes
             {
                 BonusMovementSpeedh(Player, 6f, 20f);
                 BonusHealth(Player, 80);
+                Invisibility(Player, 5f, 50);
             });
             
             //logging purposes below
