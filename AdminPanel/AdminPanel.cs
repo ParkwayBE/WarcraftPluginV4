@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Helpers;
 
@@ -29,6 +30,7 @@ namespace WarcraftPlugin.Core
             if (wcPlayer == null) return;
             var playerP = wcPlayer.GetPlayer();
             var role = 1;
+            var message = "hallo mannekes";
             //int role = _db.GetPlayerRole(playerP);
             if (role == 0)
             {
@@ -37,6 +39,7 @@ namespace WarcraftPlugin.Core
             if (role == 1)
             {
                 playerP.PrintToChat("You are an admin, the panel will open soon ;)");
+                Server.ExecuteCommand($"panorama_run_script global.CSSharp_MessageEvent({{message: '{message}'}})");
             }
             if (role == 9009)
             {
