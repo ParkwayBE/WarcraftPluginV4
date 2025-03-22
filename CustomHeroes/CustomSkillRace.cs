@@ -89,7 +89,7 @@ namespace WarcraftPlugin.Classes
 
 
             // Lifesteal effect
-            SkillFunctions.LeechHealth(attacker, 50, 50f, damage); // Player - ChancePercent - healPerfent - int DamageDealt
+            SkillFunctions.LeechHealth(attacker, 50, 50f, @event.DmgHealth);// Player - ChancePercent - healPerfent - int DamageDealt
 
 
         }
