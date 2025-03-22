@@ -14,12 +14,14 @@ namespace WarcraftPlugin.CustomSkills
             Console.WriteLine("PlayerHurtOther Event has succesfully triggered LeechHealth");
             if (attacker == null || !attacker.IsValid || !attacker.IsAlive())
                 return;
-       
+
+            Console.WriteLine("Player is not null and play is valid and alive");
             
 
             if (!Warcraft.RollDice(1, 100 / chancePercent))
                 return;
 
+            Console.WriteLine("Player is about to heal some health from lifesteal");
             int currentHealth = attacker.PlayerPawn.Value.Health;
 
             int healAmount = (int)(damageDealt * (healPercent / 100f));
