@@ -66,13 +66,13 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            TeleportUltimate(Player);
+            SkillFunctions.TeleportUltimate(Player);
             StartCooldown(3); // Index 3 = Ultimate
         }
 
         private void OnPlayerPing(EventPlayerPing ping)
         {
-            HandleTeleportPing(Player, ping.X, ping.Y, ping.Z);
+            SkillFunctions.HandleTeleportPing(Player, ping.X, ping.Y, ping.Z);
         }
 
     }
