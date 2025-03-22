@@ -21,5 +21,17 @@ namespace WarcraftPlugin.CustomSkills
         {
             new SetInvisibility(player, duration, alpha).Start();
         }
+        // Teleport Skill
+        public static void TeleportUltimate(CCSPlayerController player)
+        {
+            TeleportSkill.Execute(player);
+        }
+
+        public static void HandleTeleportPing(CCSPlayerController player, float x, float y, float z)
+        {
+            TeleportSkill.HandlePing(player, x, y, z);
+        }
+        // end Teleport skill
+
     }
 }

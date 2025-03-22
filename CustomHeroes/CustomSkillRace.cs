@@ -66,20 +66,14 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            if (IsAbilityReady(3))
-            {
-                StartCooldown(3);
-                TeleportSkill.Execute(Player);
-            }
-            Console.WriteLine("CustomSkillRace used ultimate!");
+            TeleportUltimate(Player);
+            StartCooldown(3); // Index 3 = Ultimate
         }
 
         private void OnPlayerPing(EventPlayerPing ping)
         {
-            if (IsAbilityReady(3))
-            {
-                TeleportSkill.HandlePing(Player, ping.X, ping.Y, ping.Z);
-            }
+            HandleTeleportPing(Player, ping.X, ping.Y, ping.Z);
         }
+
     }
 }
