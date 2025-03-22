@@ -44,8 +44,12 @@ namespace WarcraftPlugin.Classes
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
             Console.WriteLine("CustomSkillRace has spawned!");
-            BonusMovementSpeedh(Player, 6f, 20f);
-            BonusHealth(Player, 80);
+            WarcraftPlugin.Instance.AddTimer(0.5f, () =>
+            {
+                BonusMovementSpeedh(Player, 6f, 20f);
+                BonusHealth(Player, 80);
+            });
+            
             //logging purposes below
             var pawn = Player.PlayerPawn.Value;
             var NewMovementSpeed = pawn.VelocityModifier;
