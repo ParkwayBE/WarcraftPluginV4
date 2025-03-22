@@ -24,6 +24,7 @@ namespace WarcraftPlugin.CustomSkills
 
             // ✅ Apply new health
             pawn.Health = newHealth;
+            Console.WriteLine($"You have leeched health for {healAmount} And you now have {newHealth}");
 
             // ✅ Notify engine of health change
             Utilities.SetStateChanged(pawn, "CBaseEntity", "m_iHealth");
