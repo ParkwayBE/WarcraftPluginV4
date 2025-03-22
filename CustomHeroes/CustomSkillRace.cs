@@ -56,7 +56,7 @@ namespace WarcraftPlugin.Classes
             Console.WriteLine("CustomSkillRace has spawned!");
             WarcraftPlugin.Instance.AddTimer(0.5f, () =>
             {
-                BonusMovementSpeedh(Player, 6f, 0);
+                BonusMovementSpeedh(Player, 6f, 999f);
                 BonusHealth(Player, 880);
                 Invisibility(Player, 20f, 100);
             });
