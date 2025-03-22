@@ -23,7 +23,19 @@ namespace WarcraftPlugin.CustomSkills
             if (currentHealth < 200)
             {
                 int newHealth = Math.Min(currentHealth + healAmount, 200);
-                pawn.Health = newHealth;  // ✅ Directly set HP
+                //pawn.Health = newHealth;  // ✅ Directly set HP
+
+
+                attacker.SetHp(newHealth);
+
+
+
+
+
+
+
+
+
                 attacker.PrintToChat($"[Vampiric Touch] You leeched {healAmount} health.");
 
                 Warcraft.SpawnParticle(pawn.AbsOrigin.Clone().Add(z: 40), "particles/blood_impact/blood_impact_basic.vpcf", 0.6f);
