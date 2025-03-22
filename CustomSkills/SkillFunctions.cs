@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CounterStrikeSharp.API.Core;
+using WarcraftPlugin.Helpers;
 
 namespace WarcraftPlugin.CustomSkills
 {
@@ -32,6 +33,17 @@ namespace WarcraftPlugin.CustomSkills
             TeleportSkill.HandlePing(player, x, y, z);
         }
         // end Teleport skill
+
+        public static void FreezePlayer(CCSPlayerController attacker, CCSPlayerController target, int chancePercent, float duration)
+        {
+            if (!target.IsAlive() || !attacker.IsAlive())
+                return;
+
+            if (Warcraft.RollDice(1, chancePercent)) // simple roll: 1 in `chance`
+            {
+                new FreezePlayerEffect(attacker, duration, target).Start();
+            }
+        }
 
     }
 }

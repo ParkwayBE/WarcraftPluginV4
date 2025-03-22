@@ -70,6 +70,22 @@ namespace WarcraftPlugin.Classes
             StartCooldown(3); // Index 3 = Ultimate
         }
 
+        private void PlayerHurtOther(EventPlayerHurtOther @event)
+        {
+            if (@event.Attacker == null || @event.Userid == null) return;
+
+            var attacker = @event.Attacker;
+            var victim = @event.Userid;
+
+            if (!attacker.IsValid || !victim.IsValid || attacker.UserId == victim.UserId)
+                return;
+
+            // Example usage
+            SkillFunctions.FreezePlayer(attacker, victim, 50, 1.5f); // 25% chance to freeze for 1.5 seconds
+        }
+
+
+
         private void OnPlayerPing(EventPlayerPing ping)
         {
             SkillFunctions.HandleTeleportPing(Player, ping.X, ping.Y, ping.Z);
