@@ -54,7 +54,7 @@ namespace WarcraftPlugin.Classes
             {
                 BonusMovementSpeedh(Player, 6f, 20f);
                 BonusHealth(Player, 80);
-                Invisibility(Player, 5f, 50);
+                Invisibility(Player, 20f, 100);
             });
             
             //logging purposes below
