@@ -10,7 +10,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities;
 using WarcraftPlugin.Core.Effects;
 
-namespace CustomSkills
+namespace WarcraftPlugin.CustomSkills
 {
     public class SetMovementSpeed : WarcraftEffect
     {
