@@ -84,7 +84,7 @@ namespace WarcraftPlugin.Classes
                 return;
 
             // Example usage
-            SkillFunctions.FreezePlayer(attacker, victim, 50, 1.5f); // 25% chance to freeze for 1.5 seconds
+            SkillFunctions.FreezePlayer(attacker, victim, 50, 3.5f); // 25% chance to freeze for 1.5 seconds
         }
 
 
