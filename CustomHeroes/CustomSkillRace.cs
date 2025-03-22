@@ -41,9 +41,9 @@ namespace WarcraftPlugin.Classes
             HealthEffect.Start();
         }
 
-        public static void Invisibility(CCSPlayerController player, float amount, float duration)
+        public static void Invisibility(CCSPlayerController player, float duration, int amount)
         {
-            var InvisEffect = new SetInvisibility(player, duration, int amount);
+            var InvisEffect = new SetInvisibility(player, duration, amount);
             InvisEffect.Start();
         }
 
