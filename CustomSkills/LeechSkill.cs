@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities;
 using WarcraftPlugin.Helpers;
@@ -18,29 +19,19 @@ namespace WarcraftPlugin.CustomSkills
 
             int healAmount = (int)(damageDealt * (healPercent / 100f));
             var pawn = attacker.PlayerPawn.Value;
-            var currentHealth = pawn.Health;
 
-            if (currentHealth < 200)
-            {
-                int newHealth = Math.Min(currentHealth + healAmount, 200);
-                //pawn.Health = newHealth;  // ✅ Directly set HP
+            int newHealth = pawn.Health + healAmount;
 
+            // ✅ Apply new health
+            pawn.Health = newHealth;
 
-                attacker.SetHp(newHealth);
+            // ✅ Notify engine of health change
+            Utilities.SetStateChanged(pawn, "CBaseEntity", "m_iHealth");
 
-
-
-
-
-
-
-
-
-                attacker.PrintToChat($"[Vampiric Touch] You leeched {healAmount} health.");
-
-                Warcraft.SpawnParticle(pawn.AbsOrigin.Clone().Add(z: 40), "particles/blood_impact/blood_impact_basic.vpcf", 0.6f);
-                Warcraft.SpawnParticle(pawn.AbsOrigin.Clone().Add(z: 50), "particles/ui/ui_playerhealthbuff_red.vpcf", 0.4f);
-            }
+            // ✅ Feedback
+            attacker.PrintToChat($"[Vampiric Touch] You leeched {healAmount} health.");
+            Warcraft.SpawnParticle(pawn.AbsOrigin.Clone().Add(z: 40), "particles/blood_impact/blood_impact_basic.vpcf", 0.6f);
+            Warcraft.SpawnParticle(pawn.AbsOrigin.Clone().Add(z: 50), "particles/ui/ui_playerhealthbuff_red.vpcf", 0.4f);
         }
     }
 }
