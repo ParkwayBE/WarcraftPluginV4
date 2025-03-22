@@ -24,10 +24,13 @@ namespace WarcraftPlugin.CustomSkills
 
         public override void OnStart()
         {
-           
-            Owner.PrintToChat($"[TEST] Speed set to {_speedMultiplier}x for {Duration}s");
-            var pawn = Owner.PlayerPawn.Value;
-            pawn.VelocityModifier = 1f + 0.1f * _speedMultiplier;
+            WarcraftPlugin.Instance.AddTimer(0.5f, () =>
+            {
+                Owner.PrintToChat($"[TEST] Speed set to {_speedMultiplier}x for {Duration}s");
+                var pawn = Owner.PlayerPawn.Value;
+                pawn.VelocityModifier = 1f + 0.1f * _speedMultiplier;
+            });
+            
 
         }
 
