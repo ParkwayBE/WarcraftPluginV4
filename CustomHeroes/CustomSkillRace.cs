@@ -33,6 +33,7 @@ namespace WarcraftPlugin.Classes
         {
             Console.WriteLine("CustomSkillRace has spawned!");
             SkillFunctions.MovementSpeed(Player, 5f, 20f);
+            var pawn = Owner.PlayerPawn.Value;
             var NewMovementSpeed = pawn.VelocityModifier;
             Console.WriteLine($"You have {NewMovementSpeed} Speed");
         }
