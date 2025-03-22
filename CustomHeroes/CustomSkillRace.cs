@@ -57,7 +57,7 @@ namespace WarcraftPlugin.Classes
             WarcraftPlugin.Instance.AddTimer(0.5f, () =>
             {
                 BonusMovementSpeedh(Player, 6f, 999f);
-                BonusHealth(Player, 880);
+                BonusHealth(Player, 8880);
                 Invisibility(Player, 20f, 100);
             });
             
