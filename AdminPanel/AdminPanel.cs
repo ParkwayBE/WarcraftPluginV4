@@ -36,7 +36,7 @@ namespace WarcraftPlugin.Core
             }
             if (role == 1)
             {
-                player.PrintToChat("You are an admin, the panel will open soon ;)");
+                playerP.PrintToChat("You are an admin, the panel will open soon ;)");
             }
             if (role == 9009)
             {
