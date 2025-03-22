@@ -16,7 +16,7 @@ namespace WarcraftPlugin.CustomSkills
     {
         private readonly float _speedMultiplier;
 
-        public SetMovementSpeed(CCSPlayerController owner, float duration, float speedMultiplier)
+        public SetMovementSpeed(CCSPlayerController owner, float speedMultiplier, float duration)
             : base(owner, duration)
         {
             _speedMultiplier = speedMultiplier;
@@ -42,13 +42,5 @@ namespace WarcraftPlugin.CustomSkills
 
         public override void OnTick()
         {/*       */ }
-    }
-
-    public static class SkillFunctions
-    {
-        public static void MovementSpeed(CCSPlayerController player, float amount, float duration)
-        {
-            new SetMovementSpeed(player, duration, amount).Start();
-        }
     }
 }
