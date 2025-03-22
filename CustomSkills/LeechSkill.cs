@@ -9,7 +9,7 @@ namespace WarcraftPlugin.CustomSkills
 {
     public static class LeechSkill
     {
-        public static void LeechSkill(CCSPlayerController attacker, int chancePercent, float healPercent, int damageDealt)
+        public static void LeechHealth(CCSPlayerController attacker, int chancePercent, float healPercent, int damageDealt)
         {
             if (attacker == null || !attacker.IsValid || !attacker.IsAlive())
                 Console.WriteLine("Attacker is null or invalid or not alive");
@@ -19,10 +19,13 @@ namespace WarcraftPlugin.CustomSkills
                 Console.WriteLine("not lucky enough");
                 return;
 
+            int currentHealth = attacker.PlayerPawn.Value.Health;
+
             int healAmount = (int)(damageDealt * (healPercent / 100f));
             var pawn = attacker.PlayerPawn.Value;
 
-            int newHealth = pawn.Health + healAmount;
+
+            int newHealth = currentHealth + healAmount;
 
             // ✅ Apply new health
             // pawn.Health = newHealth;
@@ -36,7 +39,7 @@ namespace WarcraftPlugin.CustomSkills
             // ✅ Feedback
             attacker.PrintToChat($"[Vampiric Touch] You leeched {healAmount} health.");
             Warcraft.SpawnParticle(pawn.AbsOrigin.Clone().Add(z: 40), "particles/blood_impact/blood_impact_basic.vpcf", 0.6f);
-            Warcraft.SpawnParticle(pawn.AbsOrigin.Clone().Add(z: 50), "particles/ui/ui_playerhealthbuff_red.vpcf", 0.4f);
+            // Warcraft.SpawnParticle(pawn.AbsOrigin.Clone().Add(z: 50), "particles/ui/ui_playerhealthbuff_red.vpcf", 0.4f);
         }
     }
 }
