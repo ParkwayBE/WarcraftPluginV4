@@ -32,14 +32,12 @@ namespace WarcraftPlugin.Classes
         public static void BonusMovementSpeedh(CCSPlayerController player, float amount, float duration)
         {
             var SpeedEffect = new SetMovementSpeed(player, amount, duration);
-            WarcraftPlugin.Instance.RegisterEffect(SpeedEffect); // keeps it alive
             SpeedEffect.Start();
         }
 
         public static void BonusHealth(CCSPlayerController player, float amount, float duration)
         {
             var HealthEffect = new SetBonusHealth(player, amount, duration);
-            WarcraftPlugin.Instance.RegisterEffect(HealthEffect); // keeps it alive
             HealthEffect.Start();
         }
 
