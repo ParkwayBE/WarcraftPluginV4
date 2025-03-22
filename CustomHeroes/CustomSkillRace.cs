@@ -74,6 +74,5 @@ namespace WarcraftPlugin.Classes
         {
             SkillFunctions.HandleTeleportPing(Player, ping.X, ping.Y, ping.Z);
         }
-
     }
 }

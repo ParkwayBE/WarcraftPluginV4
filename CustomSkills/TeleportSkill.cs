@@ -18,6 +18,7 @@ namespace WarcraftPlugin.CustomSkills
         public static void HandlePing(CCSPlayerController player, float pingX, float pingY, float pingZ)
         {
             var offset = 40f;
+            var Zoffset = 60f;
             var origin = player.PlayerPawn.Value.AbsOrigin;
 
             float deltaX = origin.X - pingX;
@@ -27,7 +28,7 @@ namespace WarcraftPlugin.CustomSkills
 
             float newX = pingX + deltaX / distance * offset;
             float newY = pingY + deltaY / distance * offset;
-            float newZ = pingZ + deltaZ / distance * offset;
+            float newZ = pingZ + deltaZ / distance * Zoffset;
 
             // Effects + teleport
             player.PlayLocalSound("sounds/weapons/fx/nearmiss/bulletltor06.vsnd");
