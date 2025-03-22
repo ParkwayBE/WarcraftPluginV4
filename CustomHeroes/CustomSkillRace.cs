@@ -35,9 +35,9 @@ namespace WarcraftPlugin.Classes
             SpeedEffect.Start();
         }
 
-        public static void BonusHealth(CCSPlayerController player, float amount, float duration)
+        public static void BonusHealth(CCSPlayerController player, float amount)
         {
-            var HealthEffect = new SetBonusHealth(player, amount, duration);
+            var HealthEffect = new SetBonusHealth(player, amount);
             HealthEffect.Start();
         }
 
@@ -45,7 +45,7 @@ namespace WarcraftPlugin.Classes
         {
             Console.WriteLine("CustomSkillRace has spawned!");
             BonusMovementSpeedh(Player, 6f, 20f);
-            BonusHealth(Player, 80, 0f);
+            BonusHealth(Player, 80f);
             //logging purposes below
             var pawn = Player.PlayerPawn.Value;
             var NewMovementSpeed = pawn.VelocityModifier;
