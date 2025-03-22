@@ -17,9 +17,9 @@ namespace WarcraftPlugin.CustomSkills
 
             Console.WriteLine("Player is not null and play is valid and alive");
             
-
-            if (!Warcraft.RollDice(1, 100 / chancePercent))
+            if (!Warcraft.RollDice(chancePercent, 100))
                 return;
+
 
             Console.WriteLine("Player is about to heal some health from lifesteal");
             int currentHealth = attacker.PlayerPawn.Value.Health;
