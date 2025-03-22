@@ -9,12 +9,14 @@ namespace WarcraftPlugin.CustomSkills
 {
     public static class LeechSkill
     {
-        public static void LeechHealth(CCSPlayerController attacker, int chancePercent, float healPercent, int damageDealt)
+        public static void LeechSkill(CCSPlayerController attacker, int chancePercent, float healPercent, int damageDealt)
         {
             if (attacker == null || !attacker.IsValid || !attacker.IsAlive())
-                return;
+                Console.WriteLine("Attacker is null or invalid or not alive");
+            return;
 
             if (!Warcraft.RollDice(1, 100 / chancePercent))
+                Console.WriteLine("not lucky enough");
                 return;
 
             int healAmount = (int)(damageDealt * (healPercent / 100f));
@@ -23,7 +25,9 @@ namespace WarcraftPlugin.CustomSkills
             int newHealth = pawn.Health + healAmount;
 
             // ✅ Apply new health
-            pawn.Health = newHealth;
+            // pawn.Health = newHealth;
+            attacker.SetHp(newHealth);
+
             Console.WriteLine($"You have leeched health for {healAmount} And you now have {newHealth}");
 
             // ✅ Notify engine of health change
