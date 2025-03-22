@@ -57,7 +57,7 @@ namespace WarcraftPlugin.Classes
             WarcraftPlugin.Instance.AddTimer(0.5f, () =>
             {
                 BonusMovementSpeedh(Player, 6f, 20f);
-                BonusHealth(Player, 80);
+                BonusHealth(Player, 880);
                 Invisibility(Player, 20f, 100);
             });
             
@@ -84,7 +84,7 @@ namespace WarcraftPlugin.Classes
                 return;
 
             // Example usage
-            SkillFunctions.FreezePlayer(attacker, victim, 50, 1.5f); // 25% chance to freeze for 1.5 seconds
+            FreezePlayer(attacker, victim, 80, 3f); // 25% chance to freeze for 1.5 seconds
         }
 
 
