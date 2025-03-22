@@ -3,7 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using WarcraftPlugin.Models;
-using CustomSkills;
+using WarcraftPlugin.CustomSkills;
+
 
 namespace WarcraftPlugin.Classes
 {
