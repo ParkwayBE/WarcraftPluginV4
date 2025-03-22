@@ -46,7 +46,7 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            //WarcraftPlugin.Instance.AdminPanel.OpenAdminPanel(Player);
+           WarcraftPlugin.Admin.OpenAdminPanel(Player);
         }
 
         private void Ultimate()

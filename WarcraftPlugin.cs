@@ -62,7 +62,9 @@ namespace WarcraftPlugin
         internal CooldownManager CooldownManager;
         internal AdvertManager AdvertManager;
         private Database _database;
-        internal AdminPanel AdminPanel;
+
+        internal static AdminPanel _admin;
+        public static AdminPanel Admin => _admin;
 
         public Config Config { get; set; } = null!;
 
@@ -131,7 +133,7 @@ namespace WarcraftPlugin
             CooldownManager = new CooldownManager();
             CooldownManager.Initialize();
 
-            AdminPanel = new AdminPanel(this, _database);
+            _admin = new AdminPanel(this, _database);
 
             if (Config.ShowCommandAdverts)
             {
