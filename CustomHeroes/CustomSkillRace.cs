@@ -25,6 +25,7 @@ namespace WarcraftPlugin.Classes
         public override void Register()
         {
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
+            HookEvent<EventPlayerPing>(OnPlayerPing);
 
             HookAbility(3, Ultimate);
         }
@@ -65,7 +66,20 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
+            if (IsAbilityReady(3))
+            {
+                StartCooldown(3);
+                TeleportSkill.Execute(Player);
+            }
             Console.WriteLine("CustomSkillRace used ultimate!");
+        }
+
+        private void OnPlayerPing(EventPlayerPing ping)
+        {
+            if (IsAbilityReady(3))
+            {
+                TeleportSkill.HandlePing(Player, ping.X, ping.Y, ping.Z);
+            }
         }
     }
 }
