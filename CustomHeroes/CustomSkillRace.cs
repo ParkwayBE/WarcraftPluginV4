@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using WarcraftPlugin.Models;
 using WarcraftPlugin.CustomSkills;
+using WarcraftPlugin.Events.ExtendedEvents;
+
 
 
 namespace WarcraftPlugin.Classes
