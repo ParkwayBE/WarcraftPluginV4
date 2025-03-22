@@ -39,7 +39,7 @@ namespace WarcraftPlugin.CustomSkills
             if (!target.IsAlive() || !attacker.IsAlive())
                 return;
 
-            if (Warcraft.RollDice(1, chancePercent)) // simple roll: 1 in `chance`
+            if (Warcraft.RollDice(100, chancePercent)) // simple roll: 1 in `chance`
             {
                 new FreezePlayerEffect(attacker, duration, target).Start();
             }
