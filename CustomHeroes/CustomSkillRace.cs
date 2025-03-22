@@ -19,7 +19,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("TEST MOVEMENT SPEED", "STEST"),
             new WarcraftAbility("TEST HEALTH", "TEST"),
             new WarcraftAbility("TEST INVISIBILITY", "TEST"),
-            new WarcraftCooldownAbility("TEST TELEPORT", " TEST ", 60f)
+            new WarcraftCooldownAbility("TEST TELEPORT", " TEST ", 5f)
         ];
 
         public override void Register()
