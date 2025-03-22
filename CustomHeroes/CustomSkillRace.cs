@@ -19,12 +19,13 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("TEST MOVEMENT SPEED", "STEST"),
             new WarcraftAbility("TEST HEALTH", "TEST"),
             new WarcraftAbility("TEST INVISIBILITY", "TEST"),
-            new WarcraftCooldownAbility("TEST TELEPORT", " TEST ", 60f)
+            new WarcraftCooldownAbility("TEST TELEPORT", " TEST ", 5f)
         ];
 
         public override void Register()
         {
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
+            HookEvent<EventPlayerPing>(OnPlayerPing);
 
             HookAbility(3, Ultimate);
         }
@@ -54,7 +55,7 @@ namespace WarcraftPlugin.Classes
             {
                 BonusMovementSpeedh(Player, 6f, 20f);
                 BonusHealth(Player, 80);
-                Invisibility(Player, 5f, 50);
+                Invisibility(Player, 20f, 100);
             });
             
             //logging purposes below
@@ -65,7 +66,14 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            Console.WriteLine("CustomSkillRace used ultimate!");
+            SkillFunctions.TeleportUltimate(Player);
+            StartCooldown(3); // Index 3 = Ultimate
         }
+
+        private void OnPlayerPing(EventPlayerPing ping)
+        {
+            SkillFunctions.HandleTeleportPing(Player, ping.X, ping.Y, ping.Z);
+        }
+
     }
 }

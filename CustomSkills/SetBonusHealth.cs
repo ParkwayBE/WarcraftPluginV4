@@ -1,7 +1,8 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities;
-using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Helpers;
+using WarcraftPlugin.Core.Effects;
+
 
 namespace WarcraftPlugin.CustomSkills
 {
@@ -22,7 +23,8 @@ namespace WarcraftPlugin.CustomSkills
             // Set health if alive
             if (pawn != null && Owner.IsAlive())
             {
-                pawn.Health += _bonusHealth;
+                int newHealth = pawn.Health + _bonusHealth;
+                Owner.SetHp(newHealth);
                 Owner.PrintToChat($"[TEST] You gained {_bonusHealth} bonus health.");
             }
         }
