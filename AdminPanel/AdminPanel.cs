@@ -12,22 +12,24 @@ namespace WarcraftPlugin.Core
 {
 
 
-    internal class AdminPanel
+    public class AdminPanel
     {
         private readonly WarcraftPlugin _plugin;
-        Database _db;
-        public AdminPanel(WarcraftPlugin plugin, Database db)
+      
+        public AdminPanel(WarcraftPlugin plugin)
         {
             _plugin = plugin;
-            _db = db;
+        
         }
 
         public void OpenAdminPanel(CCSPlayerController player)
         {
+            
             var wcPlayer = _plugin.GetWcPlayer(player);
             if (wcPlayer == null) return;
             var playerP = wcPlayer.GetPlayer();
-            int role = _db.GetPlayerRole(playerP);
+            var role = 1;
+            //int role = _db.GetPlayerRole(playerP);
             if (role == 0)
             {
                 player.PrintToChat("You are a player, You cant use admin panel");
@@ -44,7 +46,7 @@ namespace WarcraftPlugin.Core
         }
         public void ChangeRole(CCSPlayerController player, int role)
         {
-            _db.ChangePlayerRole(player, role);
+            //_db.ChangePlayerRole(player, role);
         }
 
     }
