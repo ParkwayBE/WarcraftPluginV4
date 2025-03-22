@@ -599,16 +599,5 @@ namespace WarcraftPlugin.Classes
             NearbyPlayers(1000f);
             StartCooldown(3);
         }
-
-
-
-
-        private void PlayerShoot(EventWeaponFire @event)
-        {
-            // 
-
-        }
-
-
     }
 }
