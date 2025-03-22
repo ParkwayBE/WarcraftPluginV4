@@ -83,8 +83,15 @@ namespace WarcraftPlugin.Classes
             if (!attacker.IsValid || !victim.IsValid || attacker.UserId == victim.UserId)
                 return;
 
-            // Example usage
+            // Slowing effect
             SkillFunctions.FreezePlayer(attacker, victim, 50, 3.5f); // 25% chance to freeze for 1.5 seconds
+
+
+
+            // Lifesteal effect
+            SkillFunctions.LeechHealth(attacker, 50, 50f, damage); // Player - ChancePercent - healPerfent - int DamageDealt
+
+
         }
 
 

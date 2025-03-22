@@ -53,5 +53,11 @@ namespace WarcraftPlugin.CustomSkills
             }
         }
 
+        public static void LeechHealth(CCSPlayerController attacker, int chancePercent, float healPercent, int damageDealt)
+        {
+            LeechSkill.LeechHealth(attacker, chancePercent, healPercent, damageDealt);
+        }
+
+
     }
 }
