@@ -26,6 +26,7 @@ namespace WarcraftPlugin.Classes
         {
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerPing>(OnPlayerPing);
+            HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
 
             HookAbility(3, Ultimate);
         }
