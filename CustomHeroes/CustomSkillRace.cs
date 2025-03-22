@@ -35,7 +35,7 @@ namespace WarcraftPlugin.Classes
             SpeedEffect.Start();
         }
 
-        public static void BonusHealth(CCSPlayerController player, float amount)
+        public static void BonusHealth(CCSPlayerController player, int amount)
         {
             var HealthEffect = new SetBonusHealth(player, amount);
             HealthEffect.Start();
