@@ -23,7 +23,7 @@ namespace WarcraftPlugin.CustomSkills
 
             WarcraftPlugin.Instance.AddTimer(0.3f, () =>
             {
-                Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false; // allow pickups!
+                Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
 
                 DropAllWeaponsExceptAllowed();
 
@@ -53,7 +53,6 @@ namespace WarcraftPlugin.CustomSkills
             WarcraftPlugin.Instance.AddTimer(0.2f, () =>
             {
                 GiveAllowedWeapons();
-                // ❌ Do not re-enable PreventWeaponPickup
             });
         }
 
