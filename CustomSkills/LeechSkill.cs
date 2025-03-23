@@ -26,6 +26,7 @@ namespace WarcraftPlugin.CustomSkills
 
             int healAmount = (int)(damageDealt * (healPercent / 100f));
             var pawn = attacker.PlayerPawn.Value;
+            
 
 
             int newHealth = currentHealth + healAmount;
@@ -42,7 +43,7 @@ namespace WarcraftPlugin.CustomSkills
             // ✅ Feedback
             attacker.PrintToChat($"[Vampiric Touch] You leeched {healAmount} health.");
             Warcraft.SpawnParticle(pawn.AbsOrigin.Clone().Add(z: 40), "particles/blood_impact/blood_impact_basic.vpcf", 0.6f);
-            // Warcraft.SpawnParticle(pawn.AbsOrigin.Clone().Add(z: 50), "particles/ui/ui_playerhealthbuff_red.vpcf", 0.4f);
+            Warcraft.SpawnParticle(pawn.AbsOrigin.Clone().Add(z: 50), "particles/ui/ui_playerhealthbuff_red.vpcf", 0.4f);
         }
     }
 }
