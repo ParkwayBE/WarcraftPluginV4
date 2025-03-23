@@ -9,7 +9,7 @@ namespace WarcraftPlugin.CustomSkills
 {
     public static class LeechSkill
     {
-        public static void LeechHealth(CCSPlayerController attacker, int chancePercent, float healPercent, int damageDealt)
+        public static void LeechHealth(CCSPlayerController attacker, CCSPlayerController victim, int chancePercent, float healPercent, int damageDealt)
         {
             Console.WriteLine("PlayerHurtOther Event has succesfully triggered LeechHealth");
             if (attacker == null || !attacker.IsValid || !attacker.IsAlive())
@@ -26,7 +26,7 @@ namespace WarcraftPlugin.CustomSkills
 
             int healAmount = (int)(damageDealt * (healPercent / 100f));
             var pawn = attacker.PlayerPawn.Value;
-            
+            var victimPawn = victim.PlayerPawn.Value;
 
 
             int newHealth = currentHealth + healAmount;
@@ -43,7 +43,8 @@ namespace WarcraftPlugin.CustomSkills
             // ✅ Feedback
             attacker.PrintToChat($"[Vampiric Touch] You leeched {healAmount} health.");
             Warcraft.SpawnParticle(pawn.AbsOrigin.Clone().Add(z: 40), "particles/blood_impact/blood_impact_basic.vpcf", 0.6f);
-            
+            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 50), "particles/environment/directional_glow01_flare.vpcf", 0.4f);
+
         }
     }
 }
