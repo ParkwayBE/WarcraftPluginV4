@@ -91,7 +91,7 @@ namespace WarcraftPlugin.Classes
             // SkillFunctions.FreezePlayer(attacker, victim, 50, 3.5f); // 50% chance to freeze for 3.5 seconds
 
             // Slowing Effect
-            // SkillFunctions.SlowTarget(attacker, victim, 50, 3.5f); // 50% chance to freeze for 3.5 seconds
+            SkillFunctions.SlowTarget(attacker, victim, 50, 3.5f); // 50% chance to freeze for 3.5 seconds
 
 
             // Lifesteal effect
