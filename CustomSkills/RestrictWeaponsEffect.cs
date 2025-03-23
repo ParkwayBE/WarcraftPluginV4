@@ -21,20 +21,19 @@ namespace WarcraftPlugin.CustomSkills
             if (!Owner.IsValid || Owner.PlayerPawn?.Value == null)
                 return;
 
-            // Delay to avoid early-round weapon replication issues
             WarcraftPlugin.Instance.AddTimer(0.3f, () =>
             {
-                Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
+                Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false; // allow pickups!
 
                 DropAllWeaponsExceptAllowed();
 
                 WarcraftPlugin.Instance.AddTimer(0.2f, () =>
                 {
                     GiveAllowedWeapons();
-                    Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = true;
                 });
             });
         }
+
 
         public override void OnTick()
         {
@@ -49,16 +48,15 @@ namespace WarcraftPlugin.CustomSkills
 
             Console.WriteLine($"[RestrictWeaponsEffect] Disallowed weapon detected: {weaponName}");
 
-            Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
-
             DropAllWeaponsExceptAllowed();
 
             WarcraftPlugin.Instance.AddTimer(0.2f, () =>
             {
                 GiveAllowedWeapons();
-                Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = true;
+                // ❌ Do not re-enable PreventWeaponPickup
             });
         }
+
 
         public override void OnFinish()
         {
