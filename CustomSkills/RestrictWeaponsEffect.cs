@@ -18,36 +18,29 @@ namespace WarcraftPlugin.CustomSkills
 
         public override void OnStart()
         {
-            Console.WriteLine("ATTEMPTING TO VERIFY USER IN ONSTART.");
             if (!Owner.IsValid || Owner.PlayerPawn?.Value == null)
                 return;
 
-            Console.WriteLine("USER IS VALID.");
+            // Delay to avoid early-round weapon replication issues
             WarcraftPlugin.Instance.AddTimer(0.3f, () =>
             {
-                Console.WriteLine("Disabling weaponpickup prevention.");
                 Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
 
-                Console.WriteLine("ATTEMPTING TO REMOVE WEAPONS.");
-                RemoveAllWeapons();
+                DropAllWeaponsExceptAllowed();
 
                 WarcraftPlugin.Instance.AddTimer(0.2f, () =>
                 {
-                    Console.WriteLine("ATTEMPTING TO GIVE ALLOWED WEAPONS.");
                     GiveAllowedWeapons();
                     Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = true;
-                    Console.WriteLine("WEAPON PREVENTION ENABLED.");
                 });
             });
         }
 
         public override void OnTick()
         {
-            Console.WriteLine("ONTICK IS WORKING AND ATTEMPTING TO VERIFY USER.");
             if (!Owner.IsValid || Owner.PlayerPawn?.Value == null)
                 return;
 
-            Console.WriteLine("ONTICK HAS VERIFIED THE USER.");
             var activeWeapon = Owner.PlayerPawn.Value.WeaponServices?.ActiveWeapon?.Value;
             var weaponName = activeWeapon?.DesignerName;
 
@@ -58,7 +51,7 @@ namespace WarcraftPlugin.CustomSkills
 
             Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
 
-            RemoveAllWeapons();
+            DropAllWeaponsExceptAllowed();
 
             WarcraftPlugin.Instance.AddTimer(0.2f, () =>
             {
@@ -75,17 +68,37 @@ namespace WarcraftPlugin.CustomSkills
             Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
         }
 
-        private void RemoveAllWeapons()
+        private void DropAllWeaponsExceptAllowed()
         {
-            var inventory = Owner.PlayerPawn.Value.WeaponServices.MyWeapons;
-            var toRemove = inventory
-                .Select(h => h.Value)
-                .Where(e => e != null)
-                .ToList(); // clone list to avoid mutation during iteration
+            var pawn = Owner.PlayerPawn.Value;
+            var weapons = pawn.WeaponServices.MyWeapons;
+            if (weapons == null) return;
 
-            foreach (var weapon in toRemove)
+            for (int i = weapons.Count - 1; i >= 0; i--)
             {
-                weapon.Remove();
+                var weapon = weapons[i].Value;
+                if (weapon == null || !_allowedWeapons.Contains(weapon.DesignerName))
+                {
+                    Console.WriteLine($"[RestrictWeaponsEffect] Dropping disallowed weapon: {weapon?.DesignerName}");
+                    DropWeaponByDesignerName(Owner, weapon?.DesignerName ?? "");
+                }
+            }
+        }
+
+        private void DropWeaponByDesignerName(CCSPlayerController player, string weaponName)
+        {
+            if (player == null || !player.IsValid || string.IsNullOrEmpty(weaponName)) return;
+
+            var pawn = player.PlayerPawn.Value;
+            if (pawn == null || !pawn.IsValid || !player.PawnIsAlive || pawn.WeaponServices == null) return;
+
+            var matchedWeapon = pawn.WeaponServices.MyWeapons
+                .FirstOrDefault(x => x.Value?.DesignerName == weaponName);
+
+            if (matchedWeapon != null && matchedWeapon.IsValid)
+            {
+                pawn.WeaponServices.ActiveWeapon.Raw = matchedWeapon.Raw;
+                player.DropActiveWeapon();
             }
         }
 

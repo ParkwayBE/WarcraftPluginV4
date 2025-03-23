@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Helpers;
 
+
 namespace WarcraftPlugin.CustomSkills
 {
     public static class SkillFunctions
@@ -81,7 +82,5 @@ namespace WarcraftPlugin.CustomSkills
         {
             new RestrictWeaponsEffect(player, duration, allowedWeapons).Start();
         }
-
-
     }
 }

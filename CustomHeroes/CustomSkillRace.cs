@@ -53,23 +53,23 @@ namespace WarcraftPlugin.Classes
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
             Console.WriteLine("CustomSkillRace has spawned!");
+
             WarcraftPlugin.Instance.AddTimer(0.5f, () =>
             {
                 BonusMovementSpeedh(Player, 6f, 999f);
                 BonusHealth(Player, 8880);
                 Invisibility(Player, 20f, 100);
 
+                // Only allow these weapons:
                 var allowedWeapons = new List<string> { "weapon_knife", "weapon_flashbang", "weapon_ssg08" };
                 SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f);
-
-
             });
-            
-            //logging purposes below
+
             var pawn = Player.PlayerPawn.Value;
             var NewMovementSpeed = pawn.VelocityModifier;
             Console.WriteLine($"You have {NewMovementSpeed} Speed");
         }
+
 
         private void Ultimate()
         {
