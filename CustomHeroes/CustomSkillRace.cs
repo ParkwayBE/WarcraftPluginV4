@@ -62,7 +62,7 @@ namespace WarcraftPlugin.Classes
 
                 // Only allow these weapons:
                 var allowedWeapons = new List<string> { "weapon_knife", "weapon_flashbang", "weapon_ssg08" };
-                SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f);
+                SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f); // Added description of how it works now
             });
 
             var pawn = Player.PlayerPawn.Value;
