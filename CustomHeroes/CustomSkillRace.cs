@@ -29,7 +29,6 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerPing>(OnPlayerPing);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
-
             HookAbility(3, Ultimate);
         }
 
@@ -59,13 +58,6 @@ namespace WarcraftPlugin.Classes
                 BonusMovementSpeedh(Player, 6f, 999f);
                 BonusHealth(Player, 8880);
                 Invisibility(Player, 20f, 100);
-
-                // You can customize this list!
-                var restricted = new List<string> { "weapon_ak47", "weapon_awp", "weapon_m4a1" };
-
-                // Call the effect!
-                SkillFunctions.RestrictWeapons(Player, restricted, 20f); // 20 second restriction
-
 
             });
             
