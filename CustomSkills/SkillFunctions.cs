@@ -58,6 +58,24 @@ namespace WarcraftPlugin.CustomSkills
             LeechSkill.LeechHealth(attacker, victim, chancePercent, healPercent, damageDealt);
         }
 
+        public static void SlowTarget(CCSPlayerController attacker, CCSPlayerController target, int chancePercent, float duration)
+        {
+            if (!target.IsAlive() || !attacker.IsAlive())
+                return;
+
+            if (Warcraft.RollDice(100, chancePercent)) // simple roll: 1 in `chance`
+            {
+                int roll = new Random().Next(1, 101);
+                Console.WriteLine($"[Freeze] Rolled: {roll} vs Chance: {chancePercent}");
+
+                if (roll <= chancePercent)
+                {
+                    Console.WriteLine("[Freeze] Freeze applied!");
+                    new FreezePlayerEffect(attacker, duration, target).Start();
+                }
+
+            }
+        }
 
     }
 }
