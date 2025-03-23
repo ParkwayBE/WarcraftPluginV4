@@ -60,7 +60,7 @@ namespace WarcraftPlugin.Classes
                 Invisibility(Player, 20f, 100);
 
                 var allowedWeapons = new List<string> { "weapon_knife", "weapon_flashbang", "weapon_ssg08" };
-                SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f); // duration = 999s (whole round)
+                SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f);
 
 
             });

@@ -82,5 +82,6 @@ namespace WarcraftPlugin.CustomSkills
             new RestrictWeaponsEffect(player, duration, allowedWeapons).Start();
         }
 
+
     }
 }

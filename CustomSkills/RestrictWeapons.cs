@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API.Core;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using WarcraftPlugin.Core.Effects;
 
 namespace WarcraftPlugin.CustomSkills
@@ -20,16 +21,17 @@ namespace WarcraftPlugin.CustomSkills
             if (!Owner.IsValid || Owner.PlayerPawn?.Value == null)
                 return;
 
-            Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
-
-            // Remove weapons first
-            RemoveAllWeapons();
-
-            // Delay weapon re-granting
-            WarcraftPlugin.Instance.AddTimer(0.2f, () =>
+            WarcraftPlugin.Instance.AddTimer(0.3f, () =>
             {
-                GiveAllowedWeapons();
-                Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = true;
+                Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
+
+                RemoveAllWeapons();
+
+                WarcraftPlugin.Instance.AddTimer(0.2f, () =>
+                {
+                    GiveAllowedWeapons();
+                    Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = true;
+                });
             });
         }
 
@@ -39,13 +41,12 @@ namespace WarcraftPlugin.CustomSkills
                 return;
 
             var activeWeapon = Owner.PlayerPawn.Value.WeaponServices?.ActiveWeapon?.Value;
-            var currentWeapon = activeWeapon?.DesignerName;
+            var weaponName = activeWeapon?.DesignerName;
 
-            if (string.IsNullOrEmpty(currentWeapon) || _allowedWeapons.Contains(currentWeapon))
+            if (string.IsNullOrEmpty(weaponName) || _allowedWeapons.Contains(weaponName))
                 return;
 
-            // Illegal weapon detected
-            Console.WriteLine($"[RestrictWeaponsEffect] Player has disallowed weapon: {currentWeapon}, resetting...");
+            Console.WriteLine($"[RestrictWeaponsEffect] Disallowed weapon detected: {weaponName}");
 
             Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
 
@@ -69,10 +70,14 @@ namespace WarcraftPlugin.CustomSkills
         private void RemoveAllWeapons()
         {
             var inventory = Owner.PlayerPawn.Value.WeaponServices.MyWeapons;
-            foreach (var weaponHandle in inventory)
+            var toRemove = inventory
+                .Select(h => h.Value)
+                .Where(e => e != null)
+                .ToList(); // clone list to avoid mutation during iteration
+
+            foreach (var weapon in toRemove)
             {
-                var entity = weaponHandle.Value;
-                entity?.Remove();
+                weapon.Remove();
             }
         }
 
