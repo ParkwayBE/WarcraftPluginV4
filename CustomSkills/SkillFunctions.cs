@@ -77,5 +77,11 @@ namespace WarcraftPlugin.CustomSkills
             }
         }
 
+        public static void RestrictWeapons(CCSPlayerController player, List<string> restrictedWeapons, float duration)
+        {
+            new RestrictWeaponsEffect(player, duration, restrictedWeapons).Start();
+        }
+
+
     }
 }

@@ -59,6 +59,9 @@ namespace WarcraftPlugin.Classes
                 BonusMovementSpeedh(Player, 6f, 999f);
                 BonusHealth(Player, 8880);
                 Invisibility(Player, 20f, 100);
+
+                SkillFunctions.RestrictWeapons(Player, new List<string> { "weapon_awp", "weapon_ak47" }, 30f);
+
             });
             
             //logging purposes below
@@ -83,14 +86,17 @@ namespace WarcraftPlugin.Classes
             if (!attacker.IsValid || !victim.IsValid || attacker.UserId == victim.UserId)
                 return;
 
-            // Slowing effect
-            SkillFunctions.FreezePlayer(attacker, victim, 50, 3.5f); // 25% chance to freeze for 1.5 seconds
-            // SkillFunctions.SlowTarget(attacker, victim, 50, 3.5f);
+            // Freeze effect
+            // SkillFunctions.FreezePlayer(attacker, victim, 50, 3.5f); // 50% chance to freeze for 3.5 seconds
+
+            // Slowing Effect
+            // SkillFunctions.SlowTarget(attacker, victim, 50, 3.5f); // 50% chance to freeze for 3.5 seconds
 
 
             // Lifesteal effect
             // SkillFunctions.LeechHealth(attacker, victim, 50, 50f, @event.DmgHealth);// Player - ChancePercent - healPercent - int DamageDealt
-            
+
+            //
 
         }
 
