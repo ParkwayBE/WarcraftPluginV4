@@ -90,6 +90,7 @@ namespace WarcraftPlugin.Classes
 
             // Lifesteal effect
             SkillFunctions.LeechHealth(attacker, 50, 50f, @event.DmgHealth);// Player - ChancePercent - healPercent - int DamageDealt
+            Warcraft.SpawnParticle(victim.AbsOrigin.Clone().Add(z: 50), "particles/environment/directional_glow01.vpcf", 0.4f);
 
 
         }
