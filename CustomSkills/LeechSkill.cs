@@ -46,7 +46,7 @@ namespace WarcraftPlugin.CustomSkills
             // ✅ Feedback
             attacker.PrintToChat($"[Vampiric Touch] You leeched {healAmount} health.");
             Warcraft.SpawnParticle(pawn.AbsOrigin.Clone().Add(z: 40), "particles/blood_impact/blood_impact_basic.vpcf", 0.6f);
-            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 50), "particles/environment/directionallight_glow01.vpcf", 0.4f);
+            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 50), "particles/weapons/cs_weapon_fx/weapon_sensorgren_detonate.vpcf", 0.4f);
 
         }
     }
