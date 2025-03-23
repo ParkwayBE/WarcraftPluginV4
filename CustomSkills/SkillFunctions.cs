@@ -5,8 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Helpers;
-using RestrictWeaponsHandler = RestrictWeapons;
-
 
 namespace WarcraftPlugin.CustomSkills
 {
@@ -79,13 +77,10 @@ namespace WarcraftPlugin.CustomSkills
             }
         }
 
-        public static void RestrictWeapons(CCSPlayerController player, List<string> allowedWeapons, string context = "pickup")
+        public static void RestrictWeapons(CCSPlayerController player, List<string> allowedWeapons, float duration = 999f)
         {
-            RestrictWeaponsHandler.Handle(player, context, allowedWeapons);
+            new RestrictWeaponsEffect(player, duration, allowedWeapons).Start();
         }
-
-
-
 
     }
 }

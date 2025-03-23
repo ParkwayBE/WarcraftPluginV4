@@ -1,55 +1,87 @@
 ﻿using CounterStrikeSharp.API.Core;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using WarcraftPlugin.Core.Effects;
 
-public static class RestrictWeapons
+namespace WarcraftPlugin.CustomSkills
 {
-    // Dictionary to store allowed weapons per player
-    private static readonly Dictionary<ulong, HashSet<string>> _allowedWeapons = new();
-
-    public static void Handle(CCSPlayerController player, string context, List<string> allowedWeapons)
+    public class RestrictWeaponsEffect : WarcraftEffect
     {
-        /* 
-        if (player == null || !player.IsValid || player.PlayerPawn?.Value == null)
-            return;
+        private readonly List<string> _allowedWeapons;
 
-        var steamId = player.SteamID;
-
-        switch (context.ToLower())
+        public RestrictWeaponsEffect(CCSPlayerController owner, float duration, List<string> allowedWeapons)
+            : base(owner, duration)
         {
-            case "spawn":
-                _allowedWeapons[steamId] = new HashSet<string>(allowedWeapons);
-                player.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
-                break;
+            _allowedWeapons = allowedWeapons;
+        }
 
-            case "pickup":
-                if (!_allowedWeapons.TryGetValue(steamId, out var allowed))
-                    return;
+        public override void OnStart()
+        {
+            if (!Owner.IsValid || Owner.PlayerPawn?.Value == null)
+                return;
 
-                var activeWeapon = player.PlayerPawn.Value.WeaponServices?.ActiveWeapon?.Value;
-                var weaponName = activeWeapon?.DesignerName;
+            Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
 
-                if (string.IsNullOrEmpty(weaponName))
-                    return;
+            // Remove weapons first
+            RemoveAllWeapons();
 
-                if (!allowed.Contains(weaponName))
-                {
-                    Console.WriteLine($"[RestrictWeapons] Blocking weapon pickup: {weaponName}");
-                    player.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = true;
-                    player.DropActiveWeapon(); // optional
-                }
-                else
-                {
-                    player.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
-                }
-                break;
+            // Delay weapon re-granting
+            WarcraftPlugin.Instance.AddTimer(0.2f, () =>
+            {
+                GiveAllowedWeapons();
+                Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = true;
+            });
+        }
 
-            case "cleanup":
-                _allowedWeapons.Remove(steamId);
-                break;
-        
-        
-          }
-        */
+        public override void OnTick()
+        {
+            if (!Owner.IsValid || Owner.PlayerPawn?.Value == null)
+                return;
+
+            var activeWeapon = Owner.PlayerPawn.Value.WeaponServices?.ActiveWeapon?.Value;
+            var currentWeapon = activeWeapon?.DesignerName;
+
+            if (string.IsNullOrEmpty(currentWeapon) || _allowedWeapons.Contains(currentWeapon))
+                return;
+
+            // Illegal weapon detected
+            Console.WriteLine($"[RestrictWeaponsEffect] Player has disallowed weapon: {currentWeapon}, resetting...");
+
+            Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
+
+            RemoveAllWeapons();
+
+            WarcraftPlugin.Instance.AddTimer(0.2f, () =>
+            {
+                GiveAllowedWeapons();
+                Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = true;
+            });
+        }
+
+        public override void OnFinish()
+        {
+            if (!Owner.IsValid || Owner.PlayerPawn?.Value == null)
+                return;
+
+            Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
+        }
+
+        private void RemoveAllWeapons()
+        {
+            var inventory = Owner.PlayerPawn.Value.WeaponServices.MyWeapons;
+            foreach (var weaponHandle in inventory)
+            {
+                var entity = weaponHandle.Value;
+                entity?.Remove();
+            }
+        }
+
+        private void GiveAllowedWeapons()
+        {
+            foreach (var weapon in _allowedWeapons)
+            {
+                Owner.GiveNamedItem(weapon);
+            }
+        }
     }
 }
