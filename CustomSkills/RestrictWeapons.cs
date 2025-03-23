@@ -18,28 +18,36 @@ namespace WarcraftPlugin.CustomSkills
 
         public override void OnStart()
         {
+            Console.WriteLine("ATTEMPTING TO VERIFY USER IN ONSTART.");
             if (!Owner.IsValid || Owner.PlayerPawn?.Value == null)
                 return;
 
+            Console.WriteLine("USER IS VALID.");
             WarcraftPlugin.Instance.AddTimer(0.3f, () =>
             {
+                Console.WriteLine("Disabling weaponpickup prevention.");
                 Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
 
+                Console.WriteLine("ATTEMPTING TO REMOVE WEAPONS.");
                 RemoveAllWeapons();
 
                 WarcraftPlugin.Instance.AddTimer(0.2f, () =>
                 {
+                    Console.WriteLine("ATTEMPTING TO GIVE ALLOWED WEAPONS.");
                     GiveAllowedWeapons();
                     Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = true;
+                    Console.WriteLine("WEAPON PREVENTION ENABLED.");
                 });
             });
         }
 
         public override void OnTick()
         {
+            Console.WriteLine("ONTICK IS WORKING AND ATTEMPTING TO VERIFY USER.");
             if (!Owner.IsValid || Owner.PlayerPawn?.Value == null)
                 return;
 
+            Console.WriteLine("ONTICK HAS VERIFIED THE USER.");
             var activeWeapon = Owner.PlayerPawn.Value.WeaponServices?.ActiveWeapon?.Value;
             var weaponName = activeWeapon?.DesignerName;
 
