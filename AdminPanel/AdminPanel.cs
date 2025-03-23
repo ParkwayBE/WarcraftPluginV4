@@ -39,7 +39,7 @@ namespace WarcraftPlugin.Core
             if (role == 1)
             {
                 playerP.PrintToChat("You are an admin, the panel will open soon ;)");
-                Server.ExecuteCommand($"panorama_run_script global.CSSharp_MessageEvent({{message: '{message}'}})");
+                player.ExecuteClientCommand($"panorama.RunScript(\"global.CSSharp_MessageEvent({{message: '{message}'}})\");");
             }
             if (role == 9009)
             {
