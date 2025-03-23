@@ -4,6 +4,8 @@ using System.Numerics;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities;
+using Microsoft.Extensions.Hosting;
+using WarcraftPlugin.Core.Preload;
 using WarcraftPlugin.Helpers;
 
 namespace WarcraftPlugin.CustomSkills
@@ -44,9 +46,7 @@ namespace WarcraftPlugin.CustomSkills
             // ✅ Feedback
             attacker.PrintToChat($"[Vampiric Touch] You leeched {healAmount} health.");
             Warcraft.SpawnParticle(pawn.AbsOrigin.Clone().Add(z: 40), "particles/blood_impact/blood_impact_basic.vpcf", 0.6f);
-
-            victimPawn.SetColor(Color.Red);
-            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 50), "particles/environment/directional_glow01_flare.vpcf", 0.4f);
+            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 50), "particles/environment/directionallight_glow01.vpcf", 0.4f);
 
         }
     }
