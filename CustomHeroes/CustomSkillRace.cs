@@ -60,7 +60,12 @@ namespace WarcraftPlugin.Classes
                 BonusHealth(Player, 8880);
                 Invisibility(Player, 20f, 100);
 
-                SkillFunctions.RestrictWeapons(Player, new List<string> { "weapon_awp", "weapon_ak47" }, 30f);
+                // You can customize this list!
+                var restricted = new List<string> { "weapon_ak47", "weapon_awp", "weapon_m4a1" };
+
+                // Call the effect!
+                SkillFunctions.RestrictWeapons(Player, restricted, 20f); // 20 second restriction
+
 
             });
             
