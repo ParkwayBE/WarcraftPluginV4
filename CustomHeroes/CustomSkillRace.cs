@@ -84,12 +84,12 @@ namespace WarcraftPlugin.Classes
                 return;
 
             // Slowing effect
-            // SkillFunctions.FreezePlayer(attacker, victim, 50, 3.5f); // 25% chance to freeze for 1.5 seconds
-            SkillFunctions.SlowTarget(attacker, victim, 50, 3.5f);
+            SkillFunctions.FreezePlayer(attacker, victim, 50, 3.5f); // 25% chance to freeze for 1.5 seconds
+            // SkillFunctions.SlowTarget(attacker, victim, 50, 3.5f);
 
 
             // Lifesteal effect
-            SkillFunctions.LeechHealth(attacker, victim, 50, 50f, @event.DmgHealth);// Player - ChancePercent - healPercent - int DamageDealt
+            // SkillFunctions.LeechHealth(attacker, victim, 50, 50f, @event.DmgHealth);// Player - ChancePercent - healPercent - int DamageDealt
             
 
         }
