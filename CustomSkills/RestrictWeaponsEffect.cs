@@ -102,9 +102,22 @@ namespace WarcraftPlugin.CustomSkills
 
         private void GiveAllowedWeapons()
         {
-            foreach (var weapon in _allowedWeapons)
+            var pawn = Owner.PlayerPawn.Value;
+            var inventory = pawn.WeaponServices.MyWeapons;
+
+            foreach (var weaponName in _allowedWeapons)
             {
-                Owner.GiveNamedItem(weapon);
+                bool alreadyHasWeapon = inventory.Any(w => w.Value?.DesignerName == weaponName);
+
+                if (!alreadyHasWeapon)
+                {
+                    Console.WriteLine($"[RestrictWeaponsEffect] Giving allowed weapon: {weaponName}");
+                    Owner.GiveNamedItem(weaponName);
+                }
+                else
+                {
+                    Console.WriteLine($"[RestrictWeaponsEffect] Skipping {weaponName}, already in inventory.");
+                }
             }
         }
     }
