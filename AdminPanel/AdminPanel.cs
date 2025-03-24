@@ -40,7 +40,9 @@ namespace WarcraftPlugin.Core
             {
                 playerP.PrintToChat("You are an admin, the panel will open soon ;)");
                 //player.ExecuteClientCommand($"panorama.RunScript(\"global.CSSharp_MessageEvent({{message: '{message}'}})\");");
-                player.ExecuteClientCommand("GameEvents.SendCustomGameEvent('CSSharp_MessageEvent', { message: 'Hello from CSSharp!' });");
+                string command = $"GameEvents.SendCustomGameEventToClient('CSSharp_MessageEvent', {{ message: '{message}' }});";
+                //player.ExecuteClientCommand("GameEvents.SendCustomGameEvent('CSSharp_MessageEvent', { message: 'Hello from CSSharp!' });");
+                player.ExecuteClientCommandFromServer(command);
             }
             if (role == 9009)
             {
