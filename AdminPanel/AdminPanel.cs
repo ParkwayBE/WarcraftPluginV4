@@ -49,14 +49,13 @@ namespace WarcraftPlugin.Core
                 //player.ExecuteClientCommandFromServer(command);
                 Console.WriteLine("admin panel test");
                 //Server.ExecuteCommand(command);
-
+                playerP.PrintToCenterHtml("test");
 
             }
             if (role == 9009)
             {
                 player.PrintToChat("Nah, no roles for u");
             }
-
 
         }
         public void ChangeRole(CCSPlayerController player, int role)
