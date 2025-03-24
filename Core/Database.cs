@@ -58,6 +58,20 @@ namespace WarcraftPlugin.Core
 
             return 1;
         }
+
+        public void UpdatePlayerName(ulong steamId, string name)
+        {
+            _connection.Execute(
+                "INSERT INTO playernames (steamid, name) VALUES (@SteamId, @Name) ON CONFLICT(steamid) DO UPDATE SET name = @Name;",
+                new { SteamId = steamId.ToString(), Name = name });
+        }
+
+        public string? GetPlayerName(string steamId)
+        {
+            return _connection.QueryFirstOrDefault<string?>("SELECT name FROM playernames WHERE steamid = @SteamId", new { SteamId = steamId });
+        }
+
+
         internal int GetPlayerRoleExtra(CCSPlayerControllerExtra player)
         {
             var dbPlayer = _connection.QueryFirstOrDefault<DatabasePlayer>(@"

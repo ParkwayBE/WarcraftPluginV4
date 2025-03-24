@@ -132,7 +132,7 @@ namespace WarcraftPlugin.Core
             int rank = 1;
             foreach (var row in results)
             {
-                var name = Utilities.GetPlayerFromSteamId(row.SteamId)?.PlayerName ?? $"SteamID: {row.SteamId}";
+                string? name = _database?.GetPlayerName(row.SteamId.ToString()) ?? $"SteamID: {row.SteamId}";
                 player.PrintToChat($"#{rank}: {name} - {row.TotalLevel} levels");
                 rank++;
             }

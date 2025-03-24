@@ -306,8 +306,12 @@ namespace WarcraftPlugin
         {
             var player = new CCSPlayerController(NativeAPI.GetEntityFromIndex(slot + 1));
             Console.WriteLine($"Put in server {player.Handle}");
+
             // No bots, invalid clients or non-existent clients.
             if (!player.IsValid || player.IsBot) return;
+
+            // ✅ Update or insert player's name into playernames table
+            _database?.UpdatePlayerName(player.SteamID, player.PlayerName);
 
             if (!_database.PlayerExistsInDatabase(player.SteamID))
             {
@@ -318,6 +322,7 @@ namespace WarcraftPlugin
 
             Console.WriteLine("Player just connected: " + WarcraftPlayers[player.Handle]);
         }
+
 
         internal WarcraftPlayer ChangeClass(CCSPlayerController player, string classInternalName)
         {
