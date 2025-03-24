@@ -30,7 +30,7 @@ namespace WarcraftPlugin.CustomSkills
             _originalSpeed = _target.PlayerPawn.Value.VelocityModifier;
             pawn.VelocityModifier = pawn.VelocityModifier / 2;
             pawn.SetColor(Color.BlueViolet);
-            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 100), "particles/maps/cs_office/office_leak_splash.vpcf", 0.4f);
+            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 100), "particles/rain_fx/snow.vpcf", 0.4f);
         }
 
 
@@ -44,9 +44,9 @@ namespace WarcraftPlugin.CustomSkills
         public override void OnTick() 
         {
             var victimPawn = _target.PlayerPawn.Value;
-            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 50), "particles/maps/cs_office/office_leak_splash.vpcf", 0.4f);
-            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/maps/cs_office/office_leak_splash.vpcf", 0.4f);
-            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 100), "particles/maps/cs_office/office_leak_splash.vpcf", 0.4f);
+            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 100), "particles/rain_fx/snow.vpcf", 0.4f);
+            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 100), "particles/rain_fx/snow.vpcf", 0.4f);
+            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 100), "particles/rain_fx/snow.vpcf", 0.4f);
         }
     }
 }
