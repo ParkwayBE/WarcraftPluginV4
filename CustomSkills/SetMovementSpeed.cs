@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 // File: CustomSkills/MovementSpeed.cs
 
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities;
-using WarcraftPlugin.Core.Effects;
 
 namespace WarcraftPlugin.CustomSkills
 {
