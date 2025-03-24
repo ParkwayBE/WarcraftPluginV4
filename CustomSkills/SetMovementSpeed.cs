@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CounterStrikeSharp.API.Modules.Entities;
+using WarcraftPlugin.Core.Effects;
 
 // File: CustomSkills/MovementSpeed.cs
 
