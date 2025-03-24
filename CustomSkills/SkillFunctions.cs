@@ -71,8 +71,8 @@ namespace WarcraftPlugin.CustomSkills
 
                 if (roll <= chancePercent)
                 {
-                    Console.WriteLine("[Freeze] Freeze applied!");
-                    new FreezePlayerEffect(attacker, duration, target).Start();
+                    Console.WriteLine("[Freeze] Slow applied!");
+                    new SlowTarget(attacker, duration, target).Start();
                 }
 
             }
