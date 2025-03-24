@@ -67,19 +67,31 @@ namespace WarcraftPlugin.Core
                 return;
             }
 
-            var allClassData = _database.LoadClassInformationFromDatabase(player);
+            var allClassData = _database.LoadClassInformationFromDatabase(player)
+                .ToDictionary(x => x.RaceName, x => x);
 
-            if (allClassData == null || allClassData.Count == 0)
+            var allClasses = WarcraftPlugin.Instance.classManager.GetAllClasses();
+
+            int totalLevel = 0;
+            int maxLevelPerRace = WarcraftPlugin.MaxLevel;
+            int classCount = allClasses.Count();
+
+            foreach (var warcraftClass in allClasses)
             {
-                player.PrintToChat("[WCS] You don't have any race data yet.");
-                return;
+                if (allClassData.TryGetValue(warcraftClass.InternalName, out var classInfo))
+                {
+                    totalLevel += classInfo.CurrentLevel;
+                }
+                else
+                {
+                    totalLevel += 1;
+                }
             }
 
-            int totalLevel = allClassData.Sum(race => race.CurrentLevel);
-            int maxLevelPerRace = 16;
-            int maxTotalLevel = allClassData.Count * maxLevelPerRace;
+            int maxTotalLevel = classCount * maxLevelPerRace;
 
             player.PrintToChat($"[WCS] Your total level across all races is {totalLevel} / {maxTotalLevel}.");
         }
+
     }
 }
