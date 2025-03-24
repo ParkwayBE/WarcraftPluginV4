@@ -135,11 +135,12 @@ namespace WarcraftPlugin.Core
                 string? name = _database?.GetPlayerName(row.SteamId.ToString()) ?? $"SteamID: {row.SteamId}";
                 string emoji = rank switch
                 {
-                    1 => "🥇",
-                    2 => "🥈",
-                    3 => "🥉",
+                    1 => "★",
+                    2 => "☆",
+                    3 => "○",
                     _ => $"#{rank}"
                 };
+
 
                 string color = row.SteamId == player.SteamID ? "\x10" : "\x09"; // highlight if it's the local player
                 player.PrintToChat($"{emoji} {color}{name} \x01– \x07{row.TotalLevel} levels");
