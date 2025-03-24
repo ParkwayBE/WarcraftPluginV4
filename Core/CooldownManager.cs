@@ -1,4 +1,5 @@
-﻿using CounterStrikeSharp.API;
+﻿using System;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Modules.Timers;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
@@ -18,11 +19,30 @@ namespace WarcraftPlugin.Core
         {
             foreach (var player in Utilities.GetPlayers())
             {
-                var warcraftPlayer = player?.GetWarcraftPlayer();
-                if (warcraftPlayer == null) continue;
+                // Skip invalid players (disconnected, bots, etc.)
+                if (player == null || !player.IsValid || player.IsBot)
+                    continue;
+
+                // Defensive: try to fetch WarcraftPlayer
+                WarcraftPlayer? warcraftPlayer = null;
+
+                try
+                {
+                    warcraftPlayer = player.GetWarcraftPlayer();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[WCS] ⚠️ Error getting WarcraftPlayer for {player.PlayerName} ({player.SteamID}): {ex.Message}");
+                    continue;
+                }
+
+                if (warcraftPlayer == null)
+                    continue;
+
                 for (int i = 0; i < warcraftPlayer.AbilityCooldowns.Count; i++)
                 {
-                    if (warcraftPlayer.AbilityCooldowns[i] <= 0) continue;
+                    if (warcraftPlayer.AbilityCooldowns[i] <= 0)
+                        continue;
 
                     warcraftPlayer.AbilityCooldowns[i] -= 0.25f;
 
@@ -33,6 +53,7 @@ namespace WarcraftPlugin.Core
                 }
             }
         }
+
 
         internal static bool IsAvailable(WarcraftPlayer player, int abilityIndex)
         {
