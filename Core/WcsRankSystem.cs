@@ -143,7 +143,11 @@ namespace WarcraftPlugin.Core
 
 
                 string color = row.SteamId == player.SteamID ? "\x10" : "\x09"; // highlight if it's the local player
-                player.PrintToChat($"{emoji} {color}{name} \x01– \x07{row.TotalLevel} levels");
+                string paddedName = name.Length > 24 ? name.Substring(0, 24) : name.PadRight(24);
+                string paddedLevel = row.TotalLevel.ToString().PadLeft(4); // aligns right (e.g., " 208")
+
+                player.PrintToChat($"{emoji} \x09{paddedName} \x01– \x07{paddedLevel} levels");
+
                 rank++;
             }
 
