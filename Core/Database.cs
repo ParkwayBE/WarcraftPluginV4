@@ -42,6 +42,14 @@ namespace WarcraftPlugin.Core
                   `ability4level` TINYINT NULL DEFAULT 0,
                   PRIMARY KEY (`steamid`, `racename`));
                 ");
+
+            _connection.Execute(@"
+                CREATE TABLE IF NOT EXISTS `playernames` (
+                    `steamid` UNSIGNED BIG INT PRIMARY KEY,
+                    `name` TEXT
+                );
+            ");
+
         }
         internal int ChangePlayerRole(CCSPlayerController player, int role)
         {
@@ -58,6 +66,21 @@ namespace WarcraftPlugin.Core
 
             return 1;
         }
+
+        public void UpdatePlayerName(ulong steamId, string name)
+        {
+            _connection.Execute(
+                "INSERT INTO playernames (steamid, name) VALUES (@SteamId, @Name) ON CONFLICT(steamid) DO UPDATE SET name = @Name;",
+                new { SteamId = steamId.ToString(), Name = name });
+            Console.WriteLine($"[WCS] Updated player name: {name} ({steamId})");
+        }
+
+        public string? GetPlayerName(string steamId)
+        {
+            return _connection.QueryFirstOrDefault<string?>("SELECT name FROM playernames WHERE steamid = @SteamId", new { SteamId = steamId });
+        }
+
+
         internal int GetPlayerRoleExtra(CCSPlayerControllerExtra player)
         {
             var dbPlayer = _connection.QueryFirstOrDefault<DatabasePlayer>(@"
@@ -84,11 +107,16 @@ namespace WarcraftPlugin.Core
         {
             var defaultClass = WarcraftPlugin.Instance.classManager.GetDefaultClass();
             Console.WriteLine($"Adding client to database {player.SteamID}");
+
             _connection.Execute(@"
-            INSERT INTO players (`steamid`, `currentRace`)
-            VALUES(@steamid, @className)",
+        INSERT INTO players (`steamid`, `currentRace`)
+        VALUES(@steamid, @className)",
                 new { steamid = player.SteamID, className = defaultClass.InternalName });
+
+            // ✅ Save the player’s name too
+            UpdatePlayerName(player.SteamID, player.PlayerName);
         }
+
 
         internal WarcraftPlayer LoadPlayerFromDatabase(CCSPlayerController player, XpSystem xpSystem)
         {
