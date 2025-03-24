@@ -71,10 +71,12 @@ namespace WarcraftPlugin.Core
             // Send a message to all clients
    
 
+            //var player = @event.Userid;
+            //var player = Utilities.GetPlayerFromUserid(@event.Userid);
             var player = @event.Userid;
             var message = "adminPanel";
 
-            player.ExecuteClientCommandFromServer(message);
+            player.ExecuteClientCommand($"say adminPanel");
 
             return HookResult.Continue;
         }
