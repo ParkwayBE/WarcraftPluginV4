@@ -28,6 +28,7 @@ using CounterStrikeSharp.API.Modules.Timers;
 using System.Reflection.Emit;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using System.Numerics;
+using WarcraftPlugin.CustomSkills;
 
 
 
@@ -75,7 +76,6 @@ namespace WarcraftPlugin.Classes
             WarcraftPlugin.Instance.AddTimer(0.5f, () =>
             {
                 ApplySkullBonuses(Player);
-                Player.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = true;
             });
         }
 
@@ -260,12 +260,8 @@ namespace WarcraftPlugin.Classes
             
             cloakEffect.Start();
             activeCloakEffects[Player.Slot] = cloakEffect;
-            bool HasScout = Player.PlayerPawn.Value.WeaponServices.MyWeapons.Any(w => w?.Value?.DesignerName == "weapon_ssg08");
-
-            if (!HasScout)
-            {
-                Player.GiveNamedItem("weapon_ssg08");
-            }
+            var allowedWeapons = new List<string> { "weapon_knife", "weapon_ssg08" };
+            SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f); // Added description of how it works now
 
             SpawnParticles();
         }
@@ -323,13 +319,11 @@ namespace WarcraftPlugin.Classes
         private void OnPlayerDeath(EventPlayerDeath death)
         {
             RemoveCloakEffect();
-            Player.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
         }
 
         private void OnRoundEnd(EventRoundEnd round)
         {
             RemoveCloakEffect();
-            Player.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
         }
 
         private void RemoveCloakEffect()
