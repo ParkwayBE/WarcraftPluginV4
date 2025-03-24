@@ -23,6 +23,7 @@ namespace WarcraftPlugin.Core
         public AdminPanel(WarcraftPlugin plugin)
         {
             _plugin = plugin;
+
         
         }
 
