@@ -10,6 +10,7 @@ namespace WarcraftPlugin.CustomSkills
     {
         private readonly List<string> _allowedWeapons;
 
+// TODO fdfdf
         public RestrictWeaponsEffect(CCSPlayerController owner, float duration, List<string> allowedWeapons)
             : base(owner, duration)
         {
