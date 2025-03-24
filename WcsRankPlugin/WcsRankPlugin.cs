@@ -1,9 +1,9 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Modules.Timers;
 using WarcraftPlugin.Core;
 using System.Linq;
-
 
 public class WcsRankPlugin : BasePlugin
 {
@@ -11,29 +11,38 @@ public class WcsRankPlugin : BasePlugin
     public override string ModuleVersion => "1.0.0";
 
     private Database? _database;
+    private CounterStrikeSharp.API.Modules.Timers.Timer? _waitForWcPluginTimer;
 
     public override void Load(bool hotReload)
     {
         AddCommand("say", "Chat command handler", OnChatCommand);
 
-        // Delay DB hookup until WarcraftPlugin is ready
-        AddTimer(1.0f, () =>
-        {
-            if (WarcraftPlugin.WarcraftPlugin.Instance == null)
-            {
-                Server.PrintToConsole("[WCS Rank] ❌ WarcraftPlugin.Instance is still null after 1s.");
-                return;
-            }
-
-            _database = WarcraftPlugin.WarcraftPlugin.Instance.GetDatabase();
-
-            if (_database == null)
-                Server.PrintToConsole("[WCS Rank] ❌ Could not get database.");
-            else
-                Server.PrintToConsole("[WCS Rank] ✅ Database successfully linked.");
-        });
+        // Start a repeating timer that checks every second
+        _waitForWcPluginTimer = AddTimer(1.0f, WaitForWarcraftPlugin, TimerFlags.REPEAT);
     }
 
+    private void WaitForWarcraftPlugin()
+    {
+        if (WarcraftPlugin.WarcraftPlugin.Instance == null)
+        {
+            Server.PrintToConsole("[WCS Rank] ❌ Waiting for WarcraftPlugin.Instance...");
+            return;
+        }
+
+        _database = WarcraftPlugin.WarcraftPlugin.Instance.GetDatabase();
+
+        if (_database == null)
+        {
+            Server.PrintToConsole("[WCS Rank] ❌ WarcraftPlugin.Instance loaded but GetDatabase() returned null.");
+            return;
+        }
+
+        Server.PrintToConsole("[WCS Rank] ✅ WarcraftPlugin successfully linked. Rank plugin is ready!");
+
+        // Stop repeating timer now that everything is initialized
+        _waitForWcPluginTimer?.Kill();
+        _waitForWcPluginTimer = null;
+    }
 
     private void OnChatCommand(CCSPlayerController? player, CommandInfo commandInfo)
     {
