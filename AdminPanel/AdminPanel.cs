@@ -42,12 +42,11 @@ namespace WarcraftPlugin.Core
             {
                 playerP.PrintToChat("You are an admin, the panel will open soon ;)");
                 //player.ExecuteClientCommand($"panorama.RunScript(\"global.CSSharp_MessageEvent({{message: '{message}'}})\");");
-                string command = $"DispatchEvent('CSSharp_MessageEvent', {{ message: '{message}' }});";
+                //string command = $"DispatchEvent('CSSharp_MessageEvent', {{ message: '{message}' }});";
                 //player.ExecuteClientCommand("GameEvents.SendCustomGameEvent('CSSharp_MessageEvent', { message: 'Hello from CSSharp!' });");
-                player.ExecuteClientCommandFromServer(command);
+                //player.ExecuteClientCommandFromServer(command);
                 Console.WriteLine("admin panel test");
-                Server.ExecuteCommand(command);
-
+                //Server.ExecuteCommand(command);
 
 
             }
