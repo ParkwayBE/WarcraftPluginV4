@@ -16,12 +16,24 @@ public class WcsRankPlugin : BasePlugin
     {
         AddCommand("say", "Chat command handler", OnChatCommand);
 
-        // ✅ This is the line to assign the Warcraft DB instance
-        _database = WarcraftPlugin.WarcraftPlugin.Instance.GetDatabase();
+        // Delay DB hookup until WarcraftPlugin is ready
+        AddTimer(1.0f, () =>
+        {
+            if (WarcraftPlugin.WarcraftPlugin.Instance == null)
+            {
+                Server.PrintToConsole("[WCS Rank] ❌ WarcraftPlugin.Instance is still null after 1s.");
+                return;
+            }
 
-        // Optional: Debug confirmation
-        Server.PrintToConsole($"[WCS Rank] Database loaded: {_database != null}");
+            _database = WarcraftPlugin.WarcraftPlugin.Instance.GetDatabase();
+
+            if (_database == null)
+                Server.PrintToConsole("[WCS Rank] ❌ Could not get database.");
+            else
+                Server.PrintToConsole("[WCS Rank] ✅ Database successfully linked.");
+        });
     }
+
 
     private void OnChatCommand(CCSPlayerController? player, CommandInfo commandInfo)
     {
