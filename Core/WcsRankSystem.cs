@@ -79,7 +79,25 @@ namespace WarcraftPlugin.Core
                 return;
             }
 
-            int totalLevel = allClassData.Sum(race => race.CurrentLevel);
+            int totalLevel = allClassData.Sum(race => race.CurrentLevel); // ⬅️ moved higher
+
+            var connection = typeof(Database)
+                .GetField("_connection", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.GetValue(_database) as Microsoft.Data.Sqlite.SqliteConnection;
+
+            int rank = -1;
+            if (connection != null)
+            {
+                rank = connection.ExecuteScalar<int>(
+                    @"SELECT COUNT(*) + 1 FROM (
+                SELECT steamid, SUM(currentLevel) as totalLevel 
+                FROM raceinformation 
+                GROUP BY steamid 
+                HAVING totalLevel > @PlayerTotal
+            );", new { PlayerTotal = totalLevel });
+            }
+
+            // Then continue as before
             int classCount = WarcraftPlugin.Instance.classManager.GetAllClasses().Count();
             int maxLevelPerRace = 16;
             int maxTotalLevel = classCount * maxLevelPerRace;
@@ -87,8 +105,10 @@ namespace WarcraftPlugin.Core
             player.PrintToChat(" \x0B★ \x06Your WCS Rank Summary \x0B★");
             player.PrintToChat($" \x04Total Level: \x07{totalLevel.ToString().PadLeft(4)} \x01/ \x07{maxTotalLevel}");
             player.PrintToChat($" \x04Races Trained: \x07{allClassData.Count.ToString().PadLeft(2)} \x01/ \x07{classCount}");
+            player.PrintToChat($" \x04Leaderboard Rank: \x07#{rank}");
             player.PrintToChat("────────────────────────────");
         }
+
 
 
         private void ShowTop10InChat(CCSPlayerController player)
