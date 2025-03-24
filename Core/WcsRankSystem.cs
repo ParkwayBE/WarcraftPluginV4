@@ -53,7 +53,7 @@ namespace WarcraftPlugin.Core
 
             var msg = commandInfo.GetArg(1).ToLower();
 
-            if (msg is "!rank" or "!wcsrank")
+            if (msg is "!rank" or "!wcsrank" or "rank" or "wcsrank")
             {
                 ShowPlayerRank(player);
             }
@@ -104,7 +104,6 @@ namespace WarcraftPlugin.Core
                 return;
             }
 
-            // Step 1: Fetch all player data
             var connection = typeof(Database)
                 .GetField("_connection", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                 ?.GetValue(_database) as Microsoft.Data.Sqlite.SqliteConnection;
@@ -117,10 +116,10 @@ namespace WarcraftPlugin.Core
 
             var results = connection.Query<(ulong SteamId, int TotalLevel)>(
                 @"SELECT steamid, SUM(currentLevel) AS TotalLevel 
-                  FROM raceinformation 
-                  GROUP BY steamid 
-                  ORDER BY TotalLevel DESC 
-                  LIMIT 10;").ToList();
+          FROM raceinformation 
+          GROUP BY steamid 
+          ORDER BY TotalLevel DESC 
+          LIMIT 10;").ToList();
 
             if (results.Count == 0)
             {
@@ -128,14 +127,27 @@ namespace WarcraftPlugin.Core
                 return;
             }
 
-            player.PrintToChat("[WCS] Top 10 players by total level:");
+            player.PrintToChat(" \x0B★ \x06WCS Leaderboard — Top 10 Players \x0B★");
+
             int rank = 1;
             foreach (var row in results)
             {
                 string? name = _database?.GetPlayerName(row.SteamId.ToString()) ?? $"SteamID: {row.SteamId}";
-                player.PrintToChat($"#{rank}: {name} - {row.TotalLevel} levels");
+                string emoji = rank switch
+                {
+                    1 => "🥇",
+                    2 => "🥈",
+                    3 => "🥉",
+                    _ => $"#{rank}"
+                };
+
+                string color = row.SteamId == player.SteamID ? "\x10" : "\x09"; // highlight if it's the local player
+                player.PrintToChat($"{emoji} {color}{name} \x01– \x07{row.TotalLevel} levels");
                 rank++;
             }
+
+            player.PrintToChat("────────────────────────────");
         }
+
     }
 }
