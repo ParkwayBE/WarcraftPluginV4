@@ -181,6 +181,7 @@ namespace WarcraftPlugin
             RegisterListener<Listeners.OnMapStart>(OnMapStartHandler);
             RegisterListener<Listeners.OnMapEnd>(OnMapEndHandler);
             RegisterListener<Listeners.OnClientDisconnect>(OnClientDisconnectHandler);
+            RegisterEventHandler<EventPlayerSpawn>(_admin.PlayerSpawnHandler, HookMode.Pre);
 
             RegisterListener<Listeners.OnServerPrecacheResources>((manifest) =>
             {
