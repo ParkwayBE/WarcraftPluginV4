@@ -15,12 +15,14 @@ public class WcsRankPlugin : BasePlugin
 
     public override void Load(bool hotReload)
     {
+        /*
         AddCommand("say", "Chat command handler", OnChatCommand);
 
         // Start a repeating timer that checks every second
         _waitForWcPluginTimer = AddTimer(1.0f, WaitForWarcraftPlugin, TimerFlags.REPEAT);
+        */
     }
-
+    /*
     private void WaitForWarcraftPlugin()
     {
         if (WarcraftPlugin.WarcraftPlugin.Instance == null)
@@ -76,5 +78,5 @@ public class WcsRankPlugin : BasePlugin
         int maxTotalLevel = allClassData.Count * maxLevelPerRace;
 
         player.PrintToChat($"[WCS] Your total level across all races is {totalLevel} / {maxTotalLevel}.");
-    }
+    }  */
 }
