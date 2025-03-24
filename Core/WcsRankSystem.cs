@@ -6,6 +6,7 @@ using WarcraftPlugin.Core;
 using System.Linq;
 using System.Collections.Generic;
 using Dapper;
+using System;
 
 namespace WarcraftPlugin.Core
 {
@@ -81,7 +82,7 @@ namespace WarcraftPlugin.Core
 
             int totalLevel = allClassData.Sum(race => race.CurrentLevel);
 
-            // Get leaderboard rank
+            // Leaderboard rank
             var connection = typeof(Database)
                 .GetField("_connection", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                 ?.GetValue(_database) as Microsoft.Data.Sqlite.SqliteConnection;
@@ -102,36 +103,29 @@ namespace WarcraftPlugin.Core
             int maxLevelPerRace = 16;
             int maxTotalLevel = classCount * maxLevelPerRace;
 
-            // Set line width for consistent alignment
-            const int lineWidth = 40;
+            // 👇 Full-width target column for alignment (change if needed)
+            const int valueColumnStart = 36;
 
-            // Raw label/value strings
-            string label1 = "Total Level:";
-            string value1 = $"{totalLevel} / {maxTotalLevel}";
+            // Build raw lines
+            string line1 = BuildRankLine("Total Level:", $"{totalLevel} / {maxTotalLevel}", valueColumnStart);
+            string line2 = BuildRankLine("Races Trained:", $"{allClassData.Count} / {classCount}", valueColumnStart);
+            string line3 = BuildRankLine("Leaderboard Rank:", $"#{rank}", valueColumnStart);
 
-            string label2 = "Races Trained:";
-            string value2 = $"{allClassData.Count} / {classCount}";
-
-            string label3 = "Leaderboard Rank:";
-            string value3 = $"#{rank}";
-
-            // Build spaced-out strings BEFORE adding color
-            string line1Raw = label1.PadRight(lineWidth - value1.Length) + value1;
-            string line2Raw = label2.PadRight(lineWidth - value2.Length) + value2;
-            string line3Raw = label3.PadRight(lineWidth - value3.Length) + value3;
-
-            // Add color formatting after spacing
-            string line1 = $" \x04{line1Raw.Substring(0, label1.Length)}\x01{line1Raw.Substring(label1.Length)}";
-            string line2 = $" \x04{line2Raw.Substring(0, label2.Length)}\x01{line2Raw.Substring(label2.Length)}";
-            string line3 = $" \x04{line3Raw.Substring(0, label3.Length)}\x01{line3Raw.Substring(label3.Length)}";
-
-            // Send to chat
-            player.PrintToChat(" \x0B★ \x06Your WCS Rank Summary \x0B★");
+            // Print all
+            player.PrintToChat(" \x0B★ \x06Your WCS Rank Summary ★");
             player.PrintToChat(line1);
             player.PrintToChat(line2);
             player.PrintToChat(line3);
             player.PrintToChat("────────────────────────────────────────");
         }
+
+        // ✅ Helper method
+        private string BuildRankLine(string label, string value, int valueStartColumn)
+        {
+            int space = Math.Max(1, valueStartColumn - label.Length);
+            return $" \x04{label}{new string(' ', space)}\x01{value}";
+        }
+
 
 
 
