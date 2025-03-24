@@ -1,9 +1,9 @@
-﻿using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
-using WarcraftPlugin.Core; // Make sure this is correct depending on where your Database.cs lives
-using WarcraftPlugin.Models;
+using CounterStrikeSharp.API;
+using WarcraftPlugin.Core;
 using System.Linq;
+
 
 public class WcsRankPlugin : BasePlugin
 {
@@ -16,8 +16,11 @@ public class WcsRankPlugin : BasePlugin
     {
         AddCommand("say", "Chat command handler", OnChatCommand);
 
-        // Reference the WCS Database instance
+        // ✅ This is the line to assign the Warcraft DB instance
         _database = WarcraftPlugin.WarcraftPlugin.Instance.GetDatabase();
+
+        // Optional: Debug confirmation
+        Server.PrintToConsole($"[WCS Rank] Database loaded: {_database != null}");
     }
 
     private void OnChatCommand(CCSPlayerController? player, CommandInfo commandInfo)
@@ -30,7 +33,6 @@ public class WcsRankPlugin : BasePlugin
             ShowPlayerRank(player);
         }
     }
-
 
     private void ShowPlayerRank(CCSPlayerController player)
     {
