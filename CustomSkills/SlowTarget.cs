@@ -29,6 +29,7 @@ namespace WarcraftPlugin.CustomSkills
             _originalSpeed = _target.PlayerPawn.Value.VelocityModifier;
             pawn.VelocityModifier = pawn.VelocityModifier / 2;
             pawn.SetColor(Color.BlueViolet);
+            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 100), "particles/generic_fx/fx_electricspark_longtrail.vpcf", 0.4f);
         }
 
 
