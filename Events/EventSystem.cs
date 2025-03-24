@@ -246,7 +246,7 @@ namespace WarcraftPlugin.Events
                     warcraftClass?.SetDefaultAppearance();
                 });
             }
-
+            Server.ExecuteCommand($"script GameEvents.SendEventClientSide('player_spawn', {{ 'useridididididid': {@event.Userid} }})");
             return HookResult.Continue;
         }
 
