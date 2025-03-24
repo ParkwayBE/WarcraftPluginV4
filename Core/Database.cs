@@ -71,6 +71,7 @@ namespace WarcraftPlugin.Core
             _connection.Execute(
                 "INSERT INTO playernames (steamid, name) VALUES (@SteamId, @Name) ON CONFLICT(steamid) DO UPDATE SET name = @Name;",
                 new { SteamId = steamId.ToString(), Name = name });
+            Console.WriteLine($"[WCS] Updated player name: {name} ({steamId})");
         }
 
         public string? GetPlayerName(string steamId)
