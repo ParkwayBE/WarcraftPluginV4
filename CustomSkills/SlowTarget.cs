@@ -43,9 +43,9 @@ namespace WarcraftPlugin.CustomSkills
         public override void OnTick() 
         {
             var victimPawn = _target.PlayerPawn.Value;
-            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 25), "particles/weapons/cs_weapon_fx/snow_hit_player_screeneffect.vpcf", 0.4f);
-            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 50), "particles/weapons/cs_weapon_fx/snow_hit_player_screeneffect.vpcf", 0.4f);
-            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/weapons/cs_weapon_fx/snow_hit_player_screeneffect.vpcf", 0.4f);
+            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 25), "particles/weapons/cs_weapon_fx/bumpmine_active_glow2.vpcf", 0.4f);
+            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 50), "particles/weapons/cs_weapon_fx/bumpmine_active_glow_outer.vpcf", 0.4f);
+            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/weapons/cs_weapon_fx/bumpmine_active_glow_outer.vpcf", 0.4f);
         }
     }
 }
