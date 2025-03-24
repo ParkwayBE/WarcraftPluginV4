@@ -112,135 +112,115 @@ namespace WarcraftPlugin
             });
         }
 
-
         public override void Load(bool hotReload)
         {
-            try
+            base.Load(hotReload);
+
+            Localizer = LocalizerMiddleware.Load(Localizer, ModuleDirectory);
+
+            MenuAPI.Load(this, hotReload);
+
+            _instance ??= this;
+
+            XpSystem = new XpSystem(this);
+            XpSystem.GenerateXpCurve(110, 1.07f, MaxLevel);
+
+            _database = new Database();
+            classManager = new ClassManager();
+            classManager.Initialize(ModuleDirectory, Config);
+
+            EffectManager = new EffectManager();
+            EffectManager.Initialize();
+
+            CooldownManager = new CooldownManager();
+            CooldownManager.Initialize();
+
+            _admin = new AdminPanel(this);
+
+            if (Config.ShowCommandAdverts)
             {
-                Server.PrintToConsole("[WarcraftPlugin] 🔄 Load() starting...");
+                AdvertManager = new AdvertManager();
+                AdvertManager.Initialize();
+            }
 
-                base.Load(hotReload);
+            AddCommand("ultimate", "ultimate", UltimatePressed);
+            AddCommand(Localizer["command.ultimate"], "ultimate", UltimatePressed);
 
-                // your entire Load() contents here...
-                base.Load(hotReload);
+            AddCommand("changerace", "change class", (player, _) => ShowClassMenu(player));
+            AddCommand("changeclass", "change class", (player, _) => ShowClassMenu(player));
+            AddCommand("race", "change class", (player, _) => ShowClassMenu(player));
+            AddCommand("class", "change class", (player, _) => ShowClassMenu(player));
+            AddCommand("rpg", "change class", (player, _) => ShowClassMenu(player));
+            AddCommand("cr", "change class", (player, _) => ShowClassMenu(player));
+            AddCommand(Localizer["command.changeclass"], "change class", (player, _) => ShowClassMenu(player));
 
-                Localizer = LocalizerMiddleware.Load(Localizer, ModuleDirectory);
+            AddCommand("reset", "reset skills", CommandResetSkills);
+            AddCommand(Localizer["command.reset"], "reset skills", CommandResetSkills);
 
-                MenuAPI.Load(this, hotReload);
+            AddCommand("factoryreset", "reset levels", CommandFactoryReset);
+            AddCommand(Localizer["command.factoryreset"], "reset levels", CommandFactoryReset);
 
-                _instance ??= this;
-                Server.PrintToConsole("[WarcraftPlugin] ✅ Instance set.");
+            AddCommand("addxp", "addxp", CommandAddXp);
+            AddCommand(Localizer["command.addxp"], "addxp", CommandAddXp);
 
-                XpSystem = new XpSystem(this);
-                XpSystem.GenerateXpCurve(110, 1.07f, MaxLevel);
+            AddCommand("skills", "skills", (player, _) => ShowSkillsMenu(player));
+            AddCommand("level", "skills", (player, _) => ShowSkillsMenu(player));
+            AddCommand(Localizer["command.skills"], "skills", (player, _) => ShowSkillsMenu(player));
 
-                _database = new Database();
-                classManager = new ClassManager();
-                classManager.Initialize(ModuleDirectory, Config);
+            AddCommand("rpg_help", "list all commands", CommandHelp);
+            AddCommand("commands", "list all commands", CommandHelp);
+            AddCommand("wcs", "list all commands", CommandHelp);
+            AddCommand("war3menu", "list all commands", CommandHelp);
+            AddCommand(Localizer["command.help"], "list all commands", CommandHelp);
 
-                EffectManager = new EffectManager();
-                EffectManager.Initialize();
+            RegisterListener<Listeners.OnClientConnect>(OnClientPutInServerHandler);
+            RegisterListener<Listeners.OnMapStart>(OnMapStartHandler);
+            RegisterListener<Listeners.OnMapEnd>(OnMapEndHandler);
+            RegisterListener<Listeners.OnClientDisconnect>(OnClientDisconnectHandler);
 
-                CooldownManager = new CooldownManager();
-                CooldownManager.Initialize();
+            RegisterListener<Listeners.OnServerPrecacheResources>((manifest) =>
+            {
+                //Models
+                manifest.AddResource("models/weapons/w_eq_beartrap_dropped.vmdl");
+                manifest.AddResource("models/props/de_dust/hr_dust/dust_crates/dust_crate_style_01_32x32x32.vmdl");
+                manifest.AddResource("models/tools/bullet_hit_marker.vmdl");
+                manifest.AddResource("models/generic/bust_02/bust_02_a.vmdl"); //destructable prop
+                manifest.AddResource("models/weapons/w_muzzlefireshape.vmdl"); //fireball
+                manifest.AddResource("models/weapons/w_eq_bumpmine.vmdl"); //drone
+                manifest.AddResource("models/anubis/structures/pillar02_base01.vmdl"); //spring trap
+                manifest.AddResource("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
+                //manifest.AddResource("models/weapons/w_eq_tablet_dropped.vmdl");
+                //manifest.AddResource("models/weapons/w_eq_tablet.vmdl");
+                //manifest.AddResource("models/generic/conveyor_control_panel_01/conveyor_control_screen_01.vmdl");
+                //"models/props/crates/csgo_drop_crate_community_22.vmdl", shop???
+                //sounds/ui/panorama/claim_gift_01.vsnd_c // shop sound??
+                //sounds/physics/metal/playertag_pickup_01.vsnd_c //shop sound
+                manifest.AddResource("sounds/physics/body/body_medium_break3.vsnd");
 
-                _admin = new AdminPanel(this);
+                //sounds/music/survival_review_victory.vsnd_c // cool track
 
-                if (Config.ShowCommandAdverts)
+                //preload class specific resources
+                foreach (var resources in classManager.GetAllClasses().SelectMany(x => x.PreloadResources).ToList())
                 {
-                    AdvertManager = new AdvertManager();
-                    AdvertManager.Initialize();
+                    manifest.AddResource(resources);
                 }
 
-                AddCommand("ultimate", "ultimate", UltimatePressed);
-                AddCommand(Localizer["command.ultimate"], "ultimate", UltimatePressed);
-
-                AddCommand("changerace", "change class", (player, _) => ShowClassMenu(player));
-                AddCommand("changeclass", "change class", (player, _) => ShowClassMenu(player));
-                AddCommand("race", "change class", (player, _) => ShowClassMenu(player));
-                AddCommand("class", "change class", (player, _) => ShowClassMenu(player));
-                AddCommand("rpg", "change class", (player, _) => ShowClassMenu(player));
-                AddCommand("cr", "change class", (player, _) => ShowClassMenu(player));
-                AddCommand(Localizer["command.changeclass"], "change class", (player, _) => ShowClassMenu(player));
-
-                AddCommand("reset", "reset skills", CommandResetSkills);
-                AddCommand(Localizer["command.reset"], "reset skills", CommandResetSkills);
-
-                AddCommand("factoryreset", "reset levels", CommandFactoryReset);
-                AddCommand(Localizer["command.factoryreset"], "reset levels", CommandFactoryReset);
-
-                AddCommand("addxp", "addxp", CommandAddXp);
-                AddCommand(Localizer["command.addxp"], "addxp", CommandAddXp);
-
-                AddCommand("skills", "skills", (player, _) => ShowSkillsMenu(player));
-                AddCommand("level", "skills", (player, _) => ShowSkillsMenu(player));
-                AddCommand(Localizer["command.skills"], "skills", (player, _) => ShowSkillsMenu(player));
-
-                AddCommand("rpg_help", "list all commands", CommandHelp);
-                AddCommand("commands", "list all commands", CommandHelp);
-                AddCommand("wcs", "list all commands", CommandHelp);
-                AddCommand("war3menu", "list all commands", CommandHelp);
-                AddCommand(Localizer["command.help"], "list all commands", CommandHelp);
-
-                Server.PrintToConsole("[WarcraftPlugin] ✅ Finished adding commands.");
-
-
-                RegisterListener<Listeners.OnClientConnect>(OnClientPutInServerHandler);
-                RegisterListener<Listeners.OnMapStart>(OnMapStartHandler);
-                RegisterListener<Listeners.OnMapEnd>(OnMapEndHandler);
-                RegisterListener<Listeners.OnClientDisconnect>(OnClientDisconnectHandler);
-
-                RegisterListener<Listeners.OnServerPrecacheResources>((manifest) =>
+                foreach (var p in Particles.Paths)
                 {
-                    //Models
-                    manifest.AddResource("models/weapons/w_eq_beartrap_dropped.vmdl");
-                    manifest.AddResource("models/props/de_dust/hr_dust/dust_crates/dust_crate_style_01_32x32x32.vmdl");
-                    manifest.AddResource("models/tools/bullet_hit_marker.vmdl");
-                    manifest.AddResource("models/generic/bust_02/bust_02_a.vmdl"); //destructable prop
-                    manifest.AddResource("models/weapons/w_muzzlefireshape.vmdl"); //fireball
-                    manifest.AddResource("models/weapons/w_eq_bumpmine.vmdl"); //drone
-                    manifest.AddResource("models/anubis/structures/pillar02_base01.vmdl"); //spring trap
-                    manifest.AddResource("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
-                    //manifest.AddResource("models/weapons/w_eq_tablet_dropped.vmdl");
-                    //manifest.AddResource("models/weapons/w_eq_tablet.vmdl");
-                    //manifest.AddResource("models/generic/conveyor_control_panel_01/conveyor_control_screen_01.vmdl");
-                    //"models/props/crates/csgo_drop_crate_community_22.vmdl", shop???
-                    //sounds/ui/panorama/claim_gift_01.vsnd_c // shop sound??
-                    //sounds/physics/metal/playertag_pickup_01.vsnd_c //shop sound
-                    manifest.AddResource("sounds/physics/body/body_medium_break3.vsnd");
-
-                    //sounds/music/survival_review_victory.vsnd_c // cool track
-
-                    //preload class specific resources
-                    foreach (var resources in classManager.GetAllClasses().SelectMany(x => x.PreloadResources).ToList())
-                    {
-                        manifest.AddResource(resources);
-                    }
-
-                    foreach (var p in Particles.Paths)
-                    {
-                        manifest.AddResource(p);
-                    }
-
-                });
-
-                if (hotReload)
-                {
-                    OnMapStartHandler(null);
+                    manifest.AddResource(p);
                 }
 
-                _eventSystem = new EventSystem(this, Config);
-                _eventSystem.Initialize();
+            });
 
-                _database.Initialize(ModuleDirectory);
-
-
-                Server.PrintToConsole("[WarcraftPlugin] ✅ Load complete.");
-            }
-            catch (Exception ex)
+            if (hotReload)
             {
-                Server.PrintToConsole($"[WarcraftPlugin] ❌ Load() failed: {ex.Message}\n{ex.StackTrace}");
+                OnMapStartHandler(null);
             }
+
+            _eventSystem = new EventSystem(this, Config);
+            _eventSystem.Initialize();
+
+            _database.Initialize(ModuleDirectory);
         }
 
         private void ShowSkillsMenu(CCSPlayerController player)
