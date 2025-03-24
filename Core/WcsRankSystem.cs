@@ -71,30 +71,25 @@ namespace WarcraftPlugin.Core
                 return;
             }
 
-            var allClassData = _database.LoadClassInformationFromDatabase(player)
-                .ToDictionary(x => x.RaceName, x => x);
+            var allClassData = _database.LoadClassInformationFromDatabase(player);
 
-            var allClasses = WarcraftPlugin.Instance.classManager.GetAllClasses();
-
-            int totalLevel = 0;
-            int maxLevelPerRace = WarcraftPlugin.MaxLevel;
-            int classCount = allClasses.Count();
-
-            foreach (var warcraftClass in allClasses)
+            if (allClassData == null || allClassData.Count == 0)
             {
-                if (allClassData.TryGetValue(warcraftClass.InternalName, out var classInfo))
-                {
-                    totalLevel += classInfo.CurrentLevel;
-                }
-                else
-                {
-                    totalLevel += 1;
-                }
+                player.PrintToChat("[WCS] You don't have any race data yet.");
+                return;
             }
 
+            int totalLevel = allClassData.Sum(race => race.CurrentLevel);
+            int classCount = WarcraftPlugin.Instance.classManager.GetAllClasses().Count();
+            int maxLevelPerRace = 16;
             int maxTotalLevel = classCount * maxLevelPerRace;
-            player.PrintToChat($"[WCS] Your total level across all races is {totalLevel} / {maxTotalLevel}.");
+
+            player.PrintToChat(" \x0B★ \x06Your WCS Rank Summary \x0B★");
+            player.PrintToChat($" \x04Total Level: \x07{totalLevel.ToString().PadLeft(4)} \x01/ \x07{maxTotalLevel}");
+            player.PrintToChat($" \x04Races Trained: \x07{allClassData.Count.ToString().PadLeft(2)} \x01/ \x07{classCount}");
+            player.PrintToChat("────────────────────────────");
         }
+
 
         private void ShowTop10InChat(CCSPlayerController player)
         {
