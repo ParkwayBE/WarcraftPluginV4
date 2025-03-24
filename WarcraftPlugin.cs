@@ -87,6 +87,8 @@ namespace WarcraftPlugin
             WarcraftPlayers[player.Handle] = wcPlayer;
         }
 
+        public Database GetDatabase() => _database;
+
         internal static void RefreshPlayerName(CCSPlayerController player)
         {
             if (player == null || !player.IsValid) return;

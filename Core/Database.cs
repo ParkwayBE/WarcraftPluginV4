@@ -11,7 +11,7 @@ using WarcraftPlugin.Models;
 
 namespace WarcraftPlugin.Core
 {
-    internal class Database
+    public class Database
     {
         private SqliteConnection _connection;
 
