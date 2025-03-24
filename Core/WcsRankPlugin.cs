@@ -4,7 +4,7 @@ using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API;
 using System.Linq;
 
-namespace WarcraftPlugin.Core // or make a new sub-namespace if you prefer
+namespace WarcraftPlugin.Core 
 {
     public class WcsRankPlugin : BasePlugin
     {
