@@ -32,15 +32,15 @@ namespace WarcraftPlugin.CustomSkills
 
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
-                Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/weapons/cs_weapon_fx/weapon_sensorgren_glowring.vpcf", 0.4f);
+                Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/entity/path_particle_c4_wires.vpcf", 0.4f);
                 Owner.PrintToChat("weapon_sensorgren_glowring");
                 WarcraftPlugin.Instance.AddTimer(1.5f, () =>
                 {
-                    Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/weapons/cs_weapon_fx/weapon_molotov_fp_wick.vpcf", 0.4f);
+                    Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/ui/rank_carepackage_recieve_hit.vpcf", 0.4f);
                     Owner.PrintToChat("weapon_molotov_fp_wick");
                     WarcraftPlugin.Instance.AddTimer(1.5f, () =>
                     {
-                        Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/water_impact/water_splash_01_ripple_rings_secondary.vpcf", 0.4f);
+                        Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/inferno_fx/firework_crate_ground_primary_01.vpcf", 0.4f);
                         Owner.PrintToChat("water_splash_01_ripple_rings_secondary");
                         WarcraftPlugin.Instance.AddTimer(1.5f, () =>
                         {
@@ -52,25 +52,25 @@ namespace WarcraftPlugin.CustomSkills
                                 Owner.PrintToChat("waterfall_anubis");
                                 WarcraftPlugin.Instance.AddTimer(1.5f, () =>
                                 {
-                                    Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/water_fx/water_wake_fast_ripple_sides.vpcf", 0.4f);
+                                    Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/explosions_fx/explosion_child_core09b_1k.vpcf", 0.4f);
                                     Owner.PrintToChat("water_wake_fast_ripple_sides");
                                     WarcraftPlugin.Instance.AddTimer(1.5f, () =>
                                     {
-                                        Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/water_fx/water_wake_fast_ripple_rings_secondary.vpcf", 0.4f);
+                                        Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/explosions_fx/explosion_c4_interior_distort01b.vpcf", 0.4f);
                                         Owner.PrintToChat("water_wake_fast_ripple_rings_secondary");
                                         WarcraftPlugin.Instance.AddTimer(1.5f, () =>
                                         {
-                                            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/water_fx/water_wake_slow.vpcf", 0.4f);
+                                            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/ambient_fx/env_sparks_directional.vpcf", 0.4f);
                                             Owner.PrintToChat("water_wake_slow");
                                             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
                                             {
-                                                Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/unified_weapon_fx/weapon_muzzleflash_basic_spark.vpcf", 0.4f);
+                                                Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/maps/de_dust/dust_devil.vpcf", 0.4f);
                                                 Owner.PrintToChat("weapon_muzzleflash_basic_spark");
                                                 WarcraftPlugin.Instance.AddTimer(1.5f, () =>
                                                 {
-                                                    Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/unified_weapon_fx/uweapon_muzzleflash_subm_spark.vpcf", 0.4f);
+                                                    Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/inventory_items/crate_outward_groundsmoke.vpcf", 0.4f);
                                                     Owner.PrintToChat("uweapon_muzzleflash_subm_spark");
-                                                    // 1001100000
+                                                    // 
                                                     // 1 works, 0 doesn't work.
                                                     // Testing Push
                                                 });
