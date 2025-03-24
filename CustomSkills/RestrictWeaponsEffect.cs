@@ -18,7 +18,6 @@ namespace WarcraftPlugin.CustomSkills
 
         public override void OnStart()
         {
-            Console.WriteLine($"[RestrictWeaponsEffect] STARTED on {Owner.PlayerName} ({Owner.SteamID})");
             if (!Owner.IsValid || Owner.PlayerPawn?.Value == null)
                 return;
 
@@ -38,7 +37,6 @@ namespace WarcraftPlugin.CustomSkills
 
         public override void OnTick()
         {
-            Console.WriteLine($"[RestrictWeaponsEffect] TICK on {Owner.PlayerName} — checking for disallowed weapons...");
 
             if (!Owner.IsValid || Owner.PlayerPawn?.Value == null)
                 return;
