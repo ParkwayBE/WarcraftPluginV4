@@ -79,8 +79,9 @@ namespace WarcraftPlugin.Core
                 return;
             }
 
-            int totalLevel = allClassData.Sum(race => race.CurrentLevel); // ⬅️ moved higher
+            int totalLevel = allClassData.Sum(race => race.CurrentLevel);
 
+            // Get leaderboard rank
             var connection = typeof(Database)
                 .GetField("_connection", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                 ?.GetValue(_database) as Microsoft.Data.Sqlite.SqliteConnection;
@@ -97,23 +98,14 @@ namespace WarcraftPlugin.Core
             );", new { PlayerTotal = totalLevel });
             }
 
-            // Then continue as before
             int classCount = WarcraftPlugin.Instance.classManager.GetAllClasses().Count();
             int maxLevelPerRace = 16;
             int maxTotalLevel = classCount * maxLevelPerRace;
 
-            // Format values
-            string paddedLevel = $"{totalLevel} / {maxTotalLevel}".PadLeft(12);
-            string paddedTrained = $"{allClassData.Count} / {classCount}".PadLeft(12);
-            string paddedRank = $"#{rank}".PadLeft(12);
-
-            string title = " \x0B★ \x06Your WCS Rank Summary \x0B★";
-            player.PrintToChat(title);
-
-            // Create fixed widths
+            // Set line width for consistent alignment
             const int lineWidth = 40;
 
-            // Raw label/value pairs
+            // Raw label/value strings
             string label1 = "Total Level:";
             string value1 = $"{totalLevel} / {maxTotalLevel}";
 
@@ -123,26 +115,24 @@ namespace WarcraftPlugin.Core
             string label3 = "Leaderboard Rank:";
             string value3 = $"#{rank}";
 
-            // Compose fully padded lines (without color yet)
+            // Build spaced-out strings BEFORE adding color
             string line1Raw = label1.PadRight(lineWidth - value1.Length) + value1;
             string line2Raw = label2.PadRight(lineWidth - value2.Length) + value2;
             string line3Raw = label3.PadRight(lineWidth - value3.Length) + value3;
 
-            // Now inject colors
+            // Add color formatting after spacing
             string line1 = $" \x04{line1Raw.Substring(0, label1.Length)}\x01{line1Raw.Substring(label1.Length)}";
             string line2 = $" \x04{line2Raw.Substring(0, label2.Length)}\x01{line2Raw.Substring(label2.Length)}";
             string line3 = $" \x04{line3Raw.Substring(0, label3.Length)}\x01{line3Raw.Substring(label3.Length)}";
 
-            // Print
+            // Send to chat
             player.PrintToChat(" \x0B★ \x06Your WCS Rank Summary \x0B★");
             player.PrintToChat(line1);
             player.PrintToChat(line2);
             player.PrintToChat(line3);
             player.PrintToChat("────────────────────────────────────────");
-
-
-
         }
+
 
 
 
