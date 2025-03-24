@@ -102,11 +102,17 @@ namespace WarcraftPlugin.Core
             int maxLevelPerRace = 16;
             int maxTotalLevel = classCount * maxLevelPerRace;
 
+            // Format values
+            string paddedLevel = $"{totalLevel} / {maxTotalLevel}".PadLeft(12);
+            string paddedTrained = $"{allClassData.Count} / {classCount}".PadLeft(12);
+            string paddedRank = $"#{rank}".PadLeft(12);
+
             player.PrintToChat(" \x0B★ \x06Your WCS Rank Summary \x0B★");
-            player.PrintToChat($" \x04Total Level: \x07{totalLevel.ToString().PadLeft(4)} \x01/ \x07{maxTotalLevel}");
-            player.PrintToChat($" \x04Races Trained: \x07{allClassData.Count.ToString().PadLeft(2)} \x01/ \x07{classCount}");
-            player.PrintToChat($" \x04Leaderboard Rank: \x07#{rank}");
+            player.PrintToChat($" \x04Total Level:       \x07{paddedLevel}");
+            player.PrintToChat($" \x04Races Trained:    \x07{paddedTrained}");
+            player.PrintToChat($" \x04Leaderboard Rank: \x07{paddedRank}");
             player.PrintToChat("────────────────────────────");
+
         }
 
 
