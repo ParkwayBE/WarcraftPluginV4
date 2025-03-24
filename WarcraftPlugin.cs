@@ -114,6 +114,8 @@ namespace WarcraftPlugin
 
         public override void Load(bool hotReload)
         {
+
+            Server.PrintToConsole("[WarcraftPlugin] 🔄 Load() starting...");
             base.Load(hotReload);
 
             Localizer = LocalizerMiddleware.Load(Localizer, ModuleDirectory);
@@ -121,6 +123,7 @@ namespace WarcraftPlugin
             MenuAPI.Load(this, hotReload);
 
             _instance ??= this;
+            Server.PrintToConsole("[WarcraftPlugin] ✅ Instance set.");
 
             XpSystem = new XpSystem(this);
             XpSystem.GenerateXpCurve(110, 1.07f, MaxLevel);
@@ -173,6 +176,9 @@ namespace WarcraftPlugin
             AddCommand("war3menu", "list all commands", CommandHelp);
             AddCommand(Localizer["command.help"], "list all commands", CommandHelp);
 
+            Server.PrintToConsole("[WarcraftPlugin] ✅ Finished adding commands.");
+
+
             RegisterListener<Listeners.OnClientConnect>(OnClientPutInServerHandler);
             RegisterListener<Listeners.OnMapStart>(OnMapStartHandler);
             RegisterListener<Listeners.OnMapEnd>(OnMapEndHandler);
@@ -221,6 +227,9 @@ namespace WarcraftPlugin
             _eventSystem.Initialize();
 
             _database.Initialize(ModuleDirectory);
+
+            Server.PrintToConsole("[WarcraftPlugin] ✅ Load complete.");
+
         }
 
         private void ShowSkillsMenu(CCSPlayerController player)
