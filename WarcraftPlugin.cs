@@ -138,9 +138,6 @@ namespace WarcraftPlugin
 
             _admin = new AdminPanel(this);
 
-            _wcsRankPlugin = new WcsRankPlugin();
-            _wcsRankPlugin.Load(true);
-
             if (Config.ShowCommandAdverts)
             {
                 AdvertManager = new AdvertManager();
