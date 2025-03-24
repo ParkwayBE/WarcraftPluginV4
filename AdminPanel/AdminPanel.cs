@@ -6,8 +6,10 @@ using System.Text;
 using System.Threading.Tasks;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Events;
 using WarcraftPlugin.Helpers;
-
+using CounterStrikeSharp;
+using System;
 
 namespace WarcraftPlugin.Core
 {
@@ -42,9 +44,12 @@ namespace WarcraftPlugin.Core
                 //player.ExecuteClientCommand($"panorama.RunScript(\"global.CSSharp_MessageEvent({{message: '{message}'}})\");");
                 string command = $"DispatchEvent('CSSharp_MessageEvent', {{ message: '{message}' }});";
                 //player.ExecuteClientCommand("GameEvents.SendCustomGameEvent('CSSharp_MessageEvent', { message: 'Hello from CSSharp!' });");
-                //player.ExecuteClientCommandFromServer(command);
+                player.ExecuteClientCommandFromServer(command);
                 Console.WriteLine("admin panel test");
                 Server.ExecuteCommand(command);
+
+
+
             }
             if (role == 9009)
             {
