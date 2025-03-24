@@ -43,9 +43,9 @@ namespace WarcraftPlugin.CustomSkills
         public override void OnTick() 
         {
             var victimPawn = _target.PlayerPawn.Value;
-            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 25), "particles/weapons/cs_weapon_fx/weapon_snowball_impact_splat.vpcf", 0.4f);
-            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 50), "particles/weapons/cs_weapon_fx/weapon_snowball_impact_splat.vpcf", 0.4f);
-            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/weapons/cs_weapon_fx/weapon_snowball_impact_splat.vpcf", 0.4f);
+            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 25), "particles/weapons/cs_weapon_fx/weapon_snowball_trail.vpcf", 0.4f);
+            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 50), "particles/weapons/cs_weapon_fx/weapon_snowball_trail.vpcf", 0.4f);
+            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/weapons/cs_weapon_fx/weapon_snowball_trail.vpcf", 0.4f);
         }
     }
 }
