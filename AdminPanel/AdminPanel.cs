@@ -10,6 +10,7 @@ using CounterStrikeSharp.API.Modules.Events;
 using WarcraftPlugin.Helpers;
 using CounterStrikeSharp;
 using System;
+using CounterStrikeSharp.API.Core.Attributes.Registration;
 
 namespace WarcraftPlugin.Core
 {
@@ -55,10 +56,26 @@ namespace WarcraftPlugin.Core
                 player.PrintToChat("Nah, no roles for u");
             }
 
+
         }
         public void ChangeRole(CCSPlayerController player, int role)
         {
             //_db.ChangePlayerRole(player, role);
+        }
+        [GameEventHandler]
+        public HookResult PlayerSpawnHandler(EventPlayerSpawn @event, GameEventInfo info)
+        {
+            Console.WriteLine($"Player Spawned: {@event.Userid}");
+
+            // Send a message to all clients
+   
+
+            var player = @event.Userid;
+            var message = "adminPanel";
+
+            player.ExecuteClientCommandFromServer(message);
+
+            return HookResult.Continue;
         }
 
     }
