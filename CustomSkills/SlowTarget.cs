@@ -70,6 +70,8 @@ namespace WarcraftPlugin.CustomSkills
                                                 {
                                                     Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/unified_weapon_fx/uweapon_muzzleflash_subm_spark.vpcf", 0.4f);
                                                     Owner.PrintToChat("uweapon_muzzleflash_subm_spark");
+                                                    // 1001100000
+                                                    // 1 works, 0 doesn't work.
                                                 });
                                             });
                                         });
