@@ -105,11 +105,16 @@ namespace WarcraftPlugin.Core
         {
             var defaultClass = WarcraftPlugin.Instance.classManager.GetDefaultClass();
             Console.WriteLine($"Adding client to database {player.SteamID}");
+
             _connection.Execute(@"
-            INSERT INTO players (`steamid`, `currentRace`)
-            VALUES(@steamid, @className)",
+        INSERT INTO players (`steamid`, `currentRace`)
+        VALUES(@steamid, @className)",
                 new { steamid = player.SteamID, className = defaultClass.InternalName });
+
+            // ✅ Save the player’s name too
+            UpdatePlayerName(player.SteamID, player.PlayerName);
         }
+
 
         internal WarcraftPlayer LoadPlayerFromDatabase(CCSPlayerController player, XpSystem xpSystem)
         {
