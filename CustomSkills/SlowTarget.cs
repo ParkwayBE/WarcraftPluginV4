@@ -46,7 +46,7 @@ namespace WarcraftPlugin.CustomSkills
             var victimPawn = _target.PlayerPawn.Value;
             Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 50), "particles/maps/cs_office/office_leak_splash.vpcf", 0.4f);
             Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/maps/cs_office/office_leak_splash.vpcf", 0.4f);
-            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 100), "particles/maps/cs_office/office_leak_splash.vpcf", 0.4f); particles / maps / cs_office / office_leak_splash.vpcf_c
+            Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 100), "particles/maps/cs_office/office_leak_splash.vpcf", 0.4f);
         }
     }
 }
