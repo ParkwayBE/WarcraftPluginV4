@@ -24,6 +24,7 @@ namespace WarcraftPlugin.CustomSkills
         {
             _target.PrintToChat(" \x07[Freeze] You are slowed!");
             var pawn = _target.PlayerPawn.Value;
+            var victimPawn = _target.PlayerPawn.Value;
 
             // Half their speed
             _originalSpeed = _target.PlayerPawn.Value.VelocityModifier;
