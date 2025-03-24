@@ -43,12 +43,13 @@ namespace WarcraftPlugin.Core
                   PRIMARY KEY (`steamid`, `racename`));
                 ");
 
-                 _connection.Execute(@"
-                    CREATE TABLE IF NOT EXISTS `playernames` (
-                    `steamid` TEXT PRIMARY KEY,
+            _connection.Execute(@"
+                CREATE TABLE IF NOT EXISTS `playernames` (
+                    `steamid` UNSIGNED BIG INT PRIMARY KEY,
                     `name` TEXT
-                 );
+                );
             ");
+
         }
         internal int ChangePlayerRole(CCSPlayerController player, int role)
         {
