@@ -4,6 +4,8 @@ using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
 using WarcraftPlugin.Core;
 using System.Linq;
+using System.Collections.Generic;
+using Dapper;
 
 namespace WarcraftPlugin.Core
 {
@@ -17,12 +19,10 @@ namespace WarcraftPlugin.Core
         {
             _plugin = plugin;
         }
+
         public void Initialize()
         {
-            // Hook into chat commands
             _plugin.AddCommand("say", "Chat command handler", OnChatCommand);
-
-            // Wait until WarcraftPlugin is fully initialized before accessing the database
             _waitForWcPluginTimer = _plugin.AddTimer(1.0f, WaitForWarcraftPlugin, TimerFlags.REPEAT);
         }
 
@@ -43,7 +43,6 @@ namespace WarcraftPlugin.Core
             }
 
             Server.PrintToConsole("[WCS Rank] ✅ WarcraftPlugin successfully linked. Rank system is ready!");
-
             _waitForWcPluginTimer?.Kill();
             _waitForWcPluginTimer = null;
         }
@@ -53,9 +52,14 @@ namespace WarcraftPlugin.Core
             if (player == null || !player.IsValid) return;
 
             var msg = commandInfo.GetArg(1).ToLower();
-            if (msg == "!rank" || msg == "!wcsrank")
+
+            if (msg is "!rank" or "!wcsrank")
             {
                 ShowPlayerRank(player);
+            }
+            else if (msg is "!top" or "!wcstop" or "top" or "wcstop" or "top10")
+            {
+                ShowTop10InChat(player);
             }
         }
 
@@ -89,9 +93,49 @@ namespace WarcraftPlugin.Core
             }
 
             int maxTotalLevel = classCount * maxLevelPerRace;
-
             player.PrintToChat($"[WCS] Your total level across all races is {totalLevel} / {maxTotalLevel}.");
         }
 
+        private void ShowTop10InChat(CCSPlayerController player)
+        {
+            if (_database == null)
+            {
+                player.PrintToChat("[WCS] Rank system is currently unavailable.");
+                return;
+            }
+
+            // Step 1: Fetch all player data
+            var connection = typeof(Database)
+                .GetField("_connection", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.GetValue(_database) as Microsoft.Data.Sqlite.SqliteConnection;
+
+            if (connection == null)
+            {
+                player.PrintToChat("[WCS] Couldn't access database connection.");
+                return;
+            }
+
+            var results = connection.Query<(ulong SteamId, int TotalLevel)>(
+                @"SELECT steamid, SUM(currentLevel) AS TotalLevel 
+                  FROM raceinformation 
+                  GROUP BY steamid 
+                  ORDER BY TotalLevel DESC 
+                  LIMIT 10;").ToList();
+
+            if (results.Count == 0)
+            {
+                player.PrintToChat("[WCS] No player rank data found.");
+                return;
+            }
+
+            player.PrintToChat("[WCS] Top 10 players by total level:");
+            int rank = 1;
+            foreach (var row in results)
+            {
+                var name = Utilities.GetPlayerFromSteamId(row.SteamId)?.PlayerName ?? $"SteamID: {row.SteamId}";
+                player.PrintToChat($"#{rank}: {name} - {row.TotalLevel} levels");
+                rank++;
+            }
+        }
     }
 }
