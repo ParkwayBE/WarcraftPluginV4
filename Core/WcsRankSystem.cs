@@ -107,11 +107,30 @@ namespace WarcraftPlugin.Core
             string paddedTrained = $"{allClassData.Count} / {classCount}".PadLeft(12);
             string paddedRank = $"#{rank}".PadLeft(12);
 
-            player.PrintToChat(" \x0B★ \x06Your WCS Rank Summary \x0B★");
-            player.PrintToChat($" \x04Total Level:       \x07{paddedLevel}");
-            player.PrintToChat($" \x04Races Trained:    \x07{paddedTrained}");
-            player.PrintToChat($" \x04Leaderboard Rank: \x07{paddedRank}");
-            player.PrintToChat("────────────────────────────");
+            string title = " \x0B★ \x06Your WCS Rank Summary \x0B★";
+            player.PrintToChat(title);
+
+            // Create fixed widths
+            const int lineWidth = 40;
+            string label1 = "Total Level:";
+            string label2 = "Races Trained:";
+            string label3 = "Leaderboard Rank:";
+
+            // Format values
+            string value1 = $"{totalLevel} / {maxTotalLevel}";
+            string value2 = $"{allClassData.Count} / {classCount}";
+            string value3 = $"#{rank}";
+
+            // Build padded lines
+            string line1 = $" \x04{label1.PadRight(20)} \x07{value1.PadLeft(lineWidth - 22)}";
+            string line2 = $" \x04{label2.PadRight(20)} \x07{value2.PadLeft(lineWidth - 22)}";
+            string line3 = $" \x04{label3.PadRight(20)} \x07{value3.PadLeft(lineWidth - 22)}";
+
+            player.PrintToChat(line1);
+            player.PrintToChat(line2);
+            player.PrintToChat(line3);
+            player.PrintToChat("────────────────────────────────────────");
+
 
         }
 
