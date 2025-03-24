@@ -19,6 +19,7 @@ using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Core.Preload;
 using WarcraftPlugin.lang;
 
+
 namespace WarcraftPlugin
 {
     public class Config : BasePluginConfig
@@ -41,7 +42,6 @@ namespace WarcraftPlugin
             return WarcraftPlugin.Instance.GetWcPlayer(player);
         }
     }
-
     public class WarcraftPlugin : BasePlugin, IPluginConfig<Config>
     {
         private static WarcraftPlugin _instance;
