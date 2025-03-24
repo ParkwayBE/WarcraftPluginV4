@@ -21,14 +21,17 @@ namespace WarcraftPlugin.CustomSkills
 
         public override void OnStart()
         {
-            _target.PrintToChat(" \x07[Freeze] You are slowed!");
+            _target.PrintToChat(" \x07[Slow] You are slowed!");
             var pawn = _target.PlayerPawn.Value;
 
-            // Half their speed
-            _originalSpeed = _target.PlayerPawn.Value.VelocityModifier;
-            pawn.VelocityModifier = pawn.VelocityModifier / 2;
+            _originalSpeed = pawn.VelocityModifier;
+
+            float newSpeed = Math.Max(_originalSpeed * 0.5f, 0.4f);
+
+            pawn.VelocityModifier = newSpeed;
             pawn.SetColor(Color.BlueViolet);
         }
+
 
         public override void OnFinish()
         {

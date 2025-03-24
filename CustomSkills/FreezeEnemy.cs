@@ -20,9 +20,6 @@ namespace WarcraftPlugin.CustomSkills
         {
             _target.PrintToChat(" \x07[Freeze] You are frozen!");
             var pawn = _target.PlayerPawn.Value;
-
-            // Half their speed
-            pawn.VelocityModifier = pawn.VelocityModifier / 2;
             pawn.SetColor(Color.Cyan);
 
             // Draw laser for debug/visual
