@@ -106,6 +106,13 @@ namespace WarcraftPlugin.Classes
         private void OnPlayerPing(EventPlayerPing ping)
         {
             SkillFunctions.HandleTeleportPing(Player, ping.X, ping.Y, ping.Z);
+
+
+
+
+            // Storage working particles
+            // particles/weapons/cs_weapon_fx/weapon_snowball_impact_splash.vpcf
+            //
         }
     }
 }
