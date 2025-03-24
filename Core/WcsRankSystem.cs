@@ -112,24 +112,34 @@ namespace WarcraftPlugin.Core
 
             // Create fixed widths
             const int lineWidth = 40;
-            string label1 = "Total Level:";
-            string label2 = "Races Trained:";
-            string label3 = "Leaderboard Rank:";
 
-            // Format values
+            // Raw label/value pairs
+            string label1 = "Total Level:";
             string value1 = $"{totalLevel} / {maxTotalLevel}";
+
+            string label2 = "Races Trained:";
             string value2 = $"{allClassData.Count} / {classCount}";
+
+            string label3 = "Leaderboard Rank:";
             string value3 = $"#{rank}";
 
-            // Build padded lines
-            string line1 = $" \x04{label1.PadRight(20)} \x07{value1.PadLeft(lineWidth - 22)}";
-            string line2 = $" \x04{label2.PadRight(20)} \x07{value2.PadLeft(lineWidth - 22)}";
-            string line3 = $" \x04{label3.PadRight(20)} \x07{value3.PadLeft(lineWidth - 22)}";
+            // Compose fully padded lines (without color yet)
+            string line1Raw = label1.PadRight(lineWidth - value1.Length) + value1;
+            string line2Raw = label2.PadRight(lineWidth - value2.Length) + value2;
+            string line3Raw = label3.PadRight(lineWidth - value3.Length) + value3;
 
+            // Now inject colors
+            string line1 = $" \x04{line1Raw.Substring(0, label1.Length)}\x01{line1Raw.Substring(label1.Length)}";
+            string line2 = $" \x04{line2Raw.Substring(0, label2.Length)}\x01{line2Raw.Substring(label2.Length)}";
+            string line3 = $" \x04{line3Raw.Substring(0, label3.Length)}\x01{line3Raw.Substring(label3.Length)}";
+
+            // Print
+            player.PrintToChat(" \x0B★ \x06Your WCS Rank Summary \x0B★");
             player.PrintToChat(line1);
             player.PrintToChat(line2);
             player.PrintToChat(line3);
             player.PrintToChat("────────────────────────────────────────");
+
 
 
         }
