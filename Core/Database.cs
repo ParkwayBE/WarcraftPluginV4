@@ -42,6 +42,13 @@ namespace WarcraftPlugin.Core
                   `ability4level` TINYINT NULL DEFAULT 0,
                   PRIMARY KEY (`steamid`, `racename`));
                 ");
+
+                 _connection.Execute(@"
+                    CREATE TABLE IF NOT EXISTS `playernames` (
+                    `steamid` TEXT PRIMARY KEY,
+                    `name` TEXT
+                 );
+            ");
         }
         internal int ChangePlayerRole(CCSPlayerController player, int role)
         {
