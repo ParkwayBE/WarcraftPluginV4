@@ -62,6 +62,7 @@ namespace WarcraftPlugin
         internal CooldownManager CooldownManager;
         internal AdvertManager AdvertManager;
         private Database _database;
+        private WcsRankSystem _rankSystem;
 
         internal static AdminPanel _admin;
         public static AdminPanel Admin => _admin;
@@ -134,6 +135,9 @@ namespace WarcraftPlugin
 
             CooldownManager = new CooldownManager();
             CooldownManager.Initialize();
+
+            _rankSystem = new WcsRankSystem(this);
+            _rankSystem.Initialize();
 
             _admin = new AdminPanel(this);
 

@@ -1,23 +1,29 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
-using CounterStrikeSharp.API;
+using WarcraftPlugin.Core;
 using System.Linq;
 
-namespace WarcraftPlugin.Core 
+namespace WarcraftPlugin.Core
 {
-    public class WcsRankPlugin : BasePlugin
+    public class WcsRankSystem
     {
-        public override string ModuleName => "WcsRankPlugin";
-        public override string ModuleVersion => "1.0.0";
-
         private Database? _database;
-        private CounterStrikeSharp.API.Modules.Timers.Timer? _waitForWcPluginTimer;
+        private Timer? _waitForWcPluginTimer;
+        private BasePlugin _plugin;
 
-        public override void Load(bool hotReload)
+        public WcsRankSystem(BasePlugin plugin)
         {
-            AddCommand("say", "Chat command handler", OnChatCommand);
-            _waitForWcPluginTimer = AddTimer(1.0f, WaitForWarcraftPlugin, TimerFlags.REPEAT);
+            _plugin = plugin;
+        }
+        public void Initialize()
+        {
+            // Hook into chat commands
+            _plugin.AddCommand("say", "Chat command handler", OnChatCommand);
+
+            // Wait until WarcraftPlugin is fully initialized before accessing the database
+            _waitForWcPluginTimer = _plugin.AddTimer(1.0f, WaitForWarcraftPlugin, TimerFlags.REPEAT);
         }
 
         private void WaitForWarcraftPlugin()
@@ -36,7 +42,8 @@ namespace WarcraftPlugin.Core
                 return;
             }
 
-            Server.PrintToConsole("[WCS Rank] ✅ WarcraftPlugin successfully linked. Rank plugin is ready!");
+            Server.PrintToConsole("[WCS Rank] ✅ WarcraftPlugin successfully linked. Rank system is ready!");
+
             _waitForWcPluginTimer?.Kill();
             _waitForWcPluginTimer = null;
         }
