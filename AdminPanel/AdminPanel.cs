@@ -20,7 +20,7 @@ namespace WarcraftPlugin.Core
     public class AdminPanel
     {
         private readonly WarcraftPlugin _plugin;
-      
+
         public AdminPanel(WarcraftPlugin plugin)
         {
             _plugin = plugin;
@@ -30,13 +30,13 @@ namespace WarcraftPlugin.Core
 
         public void OpenAdminPanel(CCSPlayerController? player, CommandInfo commandInfo)
         {
-            
+
             var wcPlayer = _plugin.GetWcPlayer(player);
             if (wcPlayer == null) return;
             var playerP = wcPlayer.GetPlayer();
             var role = 1;
             var message = "hallo mannekes";
-            
+
             //int role = _db.GetPlayerRole(playerP);
             if (role == 0)
             {
@@ -64,24 +64,23 @@ namespace WarcraftPlugin.Core
         {
             //_db.ChangePlayerRole(player, role);
         }
-        [GameEventHandler]
-        public HookResult PlayerSpawnHandler(EventPlayerSpawn @event, GameEventInfo info)
-        {
-            Console.WriteLine($"Player Spawned: {@event.Userid}");
+        //[GameEventHandler]
+        //public HookResult PlayerSpawnHandler(EventPlayerSpawn @event, GameEventInfo info)
+        //{
+        //  Console.WriteLine($"Player Spawned: {@event.Userid}");
 
-            // Send a message to all clients
-   
+        // Send a message to all clients
 
-            //var player = @event.Userid;
-            //var player = Utilities.GetPlayerFromUserid(@event.Userid);
-            var player = @event.Userid;
-            var message = "adminPanel";
 
-            player.ExecuteClientCommand($"say adminPanel");
+        //var player = @event.Userid;
+        //var player = Utilities.GetPlayerFromUserid(@event.Userid);
+        // var player = @event.Userid;
+        //  var message = "adminPanel";
 
-            return HookResult.Continue;
-        }
+        //  player.ExecuteClientCommand($"say adminPanel");
 
+        //  return HookResult.Continue;
+        // }
     }
 }
 namespace CounterStrikeSharp.API.Core
