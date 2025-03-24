@@ -11,6 +11,7 @@ using WarcraftPlugin.Helpers;
 using CounterStrikeSharp;
 using System;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Modules.Commands;
 
 namespace WarcraftPlugin.Core
 {
@@ -23,11 +24,11 @@ namespace WarcraftPlugin.Core
         public AdminPanel(WarcraftPlugin plugin)
         {
             _plugin = plugin;
+            _plugin.AddCommand("say", "adminPanel", OpenAdminPanel);
 
-        
         }
 
-        public void OpenAdminPanel(CCSPlayerController player)
+        public void OpenAdminPanel(CCSPlayerController? player, CommandInfo commandInfo)
         {
             
             var wcPlayer = _plugin.GetWcPlayer(player);
@@ -35,6 +36,7 @@ namespace WarcraftPlugin.Core
             var playerP = wcPlayer.GetPlayer();
             var role = 1;
             var message = "hallo mannekes";
+            
             //int role = _db.GetPlayerRole(playerP);
             if (role == 0)
             {
@@ -49,7 +51,7 @@ namespace WarcraftPlugin.Core
                 //player.ExecuteClientCommandFromServer(command);
                 Console.WriteLine("admin panel test");
                 //Server.ExecuteCommand(command);
-                playerP.PrintToCenterHtml("test");
+                playerP.PrintToCenterHtml("<font color='#FFFFFF'>\" + message + \"</font>");
 
             }
             if (role == 9009)
