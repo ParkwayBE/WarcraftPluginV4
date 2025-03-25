@@ -1,10 +1,10 @@
-﻿using CounterStrikeSharp.API;
+﻿using System.Collections.Generic;
+using System.Linq;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Localization;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace WarcraftPlugin.Adverts
 {
@@ -29,7 +29,7 @@ namespace WarcraftPlugin.Adverts
 
             _advertIndex++;
 
-            if(_advertIndex >= _advertCount) _advertIndex = 0; 
+            if (_advertIndex >= _advertCount) _advertIndex = 0;
         }
     }
 }

@@ -1,8 +1,8 @@
-﻿using CounterStrikeSharp.API;
+﻿using System;
+using System.Drawing;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
-using System;
-using System.Drawing;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
 
@@ -47,7 +47,7 @@ namespace WarcraftPlugin.Summons
             if (Entity == null || !Entity.IsValid) return;
             if (!Owner.IsAlive()) Kill();
 
-            if(InterestScore <= 0)
+            if (InterestScore <= 0)
             {
                 FollowLeader();
             }
@@ -59,7 +59,7 @@ namespace WarcraftPlugin.Summons
                     AttackLeap();
                 }
             }
-            else if(IsFollowingLeader)
+            else if (IsFollowingLeader)
             {
                 //Ensure chicken is not stuck
                 float chickenDistanceToPlayer = (Owner.PlayerPawn.Value.AbsOrigin - Entity.AbsOrigin).Length();
@@ -68,7 +68,7 @@ namespace WarcraftPlugin.Summons
                     var chickenResetPoint = Owner.CalculatePositionInFront(new Vector(Random.Shared.Next(100), Random.Shared.Next(100), 5));
                     Entity.AbsOrigin.X = chickenResetPoint.X;
                     Entity.AbsOrigin.Y = chickenResetPoint.Y;
-                    Entity.AbsOrigin.Z = Owner.PlayerPawn.Value.AbsOrigin.Z+5;
+                    Entity.AbsOrigin.Z = Owner.PlayerPawn.Value.AbsOrigin.Z + 5;
                     Warcraft.SpawnParticle(Entity.AbsOrigin.Clone().Add(z: -50), "particles/entity/env_explosion/test_particle_composite_dark_outline_smoke.vpcf");
                     return;
                 }

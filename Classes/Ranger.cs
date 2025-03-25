@@ -1,19 +1,19 @@
 ﻿using System;
-using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
-using WarcraftPlugin.Helpers;
-using CounterStrikeSharp.API.Modules.Timers;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using CounterStrikeSharp.API.Modules.Memory;
-using g3;
-using WarcraftPlugin.Models;
+using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
+using CounterStrikeSharp.API.Modules.Memory;
+using CounterStrikeSharp.API.Modules.Timers;
+using CounterStrikeSharp.API.Modules.Utils;
+using g3;
 using WarcraftPlugin.Core.Effects;
-using System.Collections.Generic;
 using WarcraftPlugin.Events.ExtendedEvents;
+using WarcraftPlugin.Helpers;
+using WarcraftPlugin.Models;
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace WarcraftPlugin.Classes
 {
@@ -149,7 +149,7 @@ namespace WarcraftPlugin.Classes
         private void EndDashCooldown()
         {
             _dashOnCooldown = false;
-            Player.PrintToChat(" "+ Localizer["ranger.dash.ready"]);
+            Player.PrintToChat(" " + Localizer["ranger.dash.ready"]);
         }
         #endregion
         #region Trap

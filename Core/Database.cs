@@ -137,7 +137,7 @@ namespace WarcraftPlugin.Core
             {
                 var defaultClass = WarcraftPlugin.Instance.classManager.GetDefaultClass();
                 dbPlayer.CurrentRace = defaultClass.InternalName;
-                player.PrintToChat(" "+ WarcraftPlugin.Instance.Localizer["class.disabled", defaultClass.LocalizedDisplayName]);
+                player.PrintToChat(" " + WarcraftPlugin.Instance.Localizer["class.disabled", defaultClass.LocalizedDisplayName]);
             }
 
             var raceInformationExists = _connection.ExecuteScalar<int>(@"

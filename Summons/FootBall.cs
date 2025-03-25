@@ -1,11 +1,11 @@
-﻿using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities;
-using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata;
+using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Entities;
+using Microsoft.Extensions.Logging;
 using WarcraftPlugin.Core;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -25,13 +25,13 @@ namespace WarcraftPlugin.Summons
         public FootballHitSystem hitSystem;
         public bool isActive = false;
 
-        public Football(CCSPlayerController owner) 
+        public Football(CCSPlayerController owner)
         {
             _owner = owner;
             Activate(owner);
         }
         public void Activate(CCSPlayerController owner)
-        { 
+        {
             isActive = true;
             _ball = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
             _ball.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
@@ -43,13 +43,13 @@ namespace WarcraftPlugin.Summons
 
 
             //_ballProp.CBodyComponent.SceneNode.GetSkeletonInstance().Scale = 0.8f;
-           // var distance = 60;
-           //var height = 10;
+            // var distance = 60;
+            //var height = 10;
             //Vector posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
             //_ballProp.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(0, 1, 1));
             //UpdateBall(owner);
         }
-       
+
         public void UpdateLocation(CCSPlayerController owner)
         {
             var distance = 60;
@@ -104,7 +104,7 @@ namespace WarcraftPlugin.Summons
     }
     public class FootBaller
     {
-        
+
         private CCSPlayerController _owner;
         private FootballHitSystem hitSystem;
         private FootballAimSystem aimSystem;
@@ -123,18 +123,18 @@ namespace WarcraftPlugin.Summons
             lastAddedBall.isActive = true;
 
             footballs.Add(lastAddedBall);
-   
-           
+
+
             UpdateBallWithAimSystem(_owner, lastAddedBall);
-            
+
         }
-        
+
         public void UpdateBallWithAimSystem(CCSPlayerController owner, Football ball)
         {
             aimSystem = new FootballAimSystem(owner, 0.01f, ball);
             aimSystem.FinishOnDestroy = true;
             aimSystem.Start();
-            
+
         }
         public void ServeBall()
         {
@@ -163,10 +163,10 @@ namespace WarcraftPlugin.Summons
         }
         public void StopUpdateBall()
         {
-            
-            
+
+
         }
-        
+
 
 
     }

@@ -1,7 +1,7 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities;
-using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Core.Effects;
+using WarcraftPlugin.Helpers;
 
 
 namespace WarcraftPlugin.CustomSkills

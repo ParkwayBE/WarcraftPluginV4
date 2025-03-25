@@ -1,24 +1,23 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using System;
 using System;
 using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Drawing;
-using WarcraftPlugin.Models;
-
-using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Utils;
+using System.Drawing;
+using System.Reflection;
 using CounterStrikeSharp.API;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
+using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Memory;
+using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
+using CounterStrikeSharp.API.Modules.Utils;
+using WarcraftPlugin.Core;
+using WarcraftPlugin.Core.Effects;
+using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
-using System.Drawing;
-using WarcraftPlugin.Core.Effects;
-using System.Collections.Generic;
-using WarcraftPlugin.Events.ExtendedEvents;
-using System;
-using System.Reflection;
-using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
-using WarcraftPlugin.Core;
+using WarcraftPlugin.Models;
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 
 namespace WarcraftPlugin.Classes
@@ -27,7 +26,7 @@ namespace WarcraftPlugin.Classes
     {
         public override string DisplayName => "Ben";
 
- 
+
         public override Color DefaultColor => Color.CadetBlue;
 
         public override List<IWarcraftAbility> Abilities =>
@@ -46,21 +45,21 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-           
+
         }
 
         private void Ultimate()
         {
             Console.WriteLine("Ben used ultimate!");
         }
-      
+
         private void PlayerShoot(EventWeaponFire @event)
         {
-         
+
 
         }
- 
-        
+
+
     }
 }
 

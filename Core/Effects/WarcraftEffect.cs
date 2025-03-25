@@ -1,6 +1,6 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using System;
+using CounterStrikeSharp.API.Core;
 using Microsoft.Extensions.Localization;
-using System;
 
 namespace WarcraftPlugin.Core.Effects
 {
