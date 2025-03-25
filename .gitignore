@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Matthias ignoregitline for not tracking WarcraftPlugin.csproj changes on macbook
+WarcraftPlugin.csproj
