@@ -1,5 +1,4 @@
 ﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Helpers;
 
