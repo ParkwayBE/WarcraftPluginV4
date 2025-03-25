@@ -66,6 +66,10 @@ namespace WarcraftPlugin.Classes
             });
 
             var pawn = Player.PlayerPawn.Value;
+
+            if (Player.PlayerPawn == null || !Player.PlayerPawn.IsValid)
+                return;
+
             var NewMovementSpeed = pawn.VelocityModifier;
             Console.WriteLine($"You have {NewMovementSpeed} Speed");
         }
