@@ -1,7 +1,7 @@
-﻿using CounterStrikeSharp.API.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Core.Effects;
 
 namespace WarcraftPlugin.CustomSkills
@@ -10,7 +10,7 @@ namespace WarcraftPlugin.CustomSkills
     {
         private readonly List<string> _allowedWeapons;
 
-// TODO fdfdf
+        // TODO fdfdf
         public RestrictWeaponsEffect(CCSPlayerController owner, float duration, List<string> allowedWeapons)
             : base(owner, duration)
         {

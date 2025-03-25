@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
-using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Core.Effects;
-using WarcraftPlugin.Models;
 using WarcraftPlugin.Events.ExtendedEvents;
+using WarcraftPlugin.Helpers;
+using WarcraftPlugin.Models;
 
 namespace WarcraftPlugin.Classes
 {
@@ -51,7 +51,8 @@ namespace WarcraftPlugin.Classes
 
             if (WarcraftPlayer.GetAbilityLevel(2) > 0)
             {
-                WarcraftPlugin.Instance.AddTimer(0.2f, () => {
+                WarcraftPlugin.Instance.AddTimer(0.2f, () =>
+                {
                     if (WarcraftPlayer.GetAbilityLevel(2) > 0)
                     {
                         var pawn = Player.PlayerPawn.Value;
@@ -376,7 +377,7 @@ namespace WarcraftPlugin.Classes
                 //Start with 1 smoke
                 Console.WriteLine("[INFO] Granting initial smoke grenade.");
                 Owner.GiveNamedItem("weapon_smokegrenade");
-                smokesGiven = 1; 
+                smokesGiven = 1;
             }
 
             public void GiveSmokeIfNeeded()
@@ -446,7 +447,7 @@ namespace WarcraftPlugin.Classes
 
             Warcraft.SpawnExplosion(
                 pos: explosionPosition,
-                damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f), 
+                damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f),
                 radius: 350f, // Tweak for explosion radius
                 attacker: Player,
                 killFeedIcon: KillFeedIcon.prop_exploding_barrel

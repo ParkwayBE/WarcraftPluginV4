@@ -1,11 +1,11 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using CounterStrikeSharp.API.Core;
-using WarcraftPlugin.Core.Effects;
 using CounterStrikeSharp.API.Modules.Entities;
-using WarcraftPlugin.Helpers;
-using System;
-using WarcraftPlugin.Core.Preload;
 using Microsoft.Extensions.Hosting;
+using WarcraftPlugin.Core.Effects;
+using WarcraftPlugin.Core.Preload;
+using WarcraftPlugin.Helpers;
 
 namespace WarcraftPlugin.CustomSkills
 {
@@ -93,7 +93,7 @@ namespace WarcraftPlugin.CustomSkills
             _target.PrintToChat(" \x07[Freeze] You are no longer slowed.");
         }
 
-        public override void OnTick() 
+        public override void OnTick()
         {
             var victimPawn = _target.PlayerPawn.Value;
             Warcraft.SpawnParticle(victimPawn.AbsOrigin.Clone().Add(z: 75), "particles/ambient_fx/snow_blizzard.vpcf", 0.4f);

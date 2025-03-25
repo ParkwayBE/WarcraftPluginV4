@@ -19,7 +19,7 @@ namespace WarcraftPlugin.CustomSkills
                 return;
 
             Console.WriteLine("Player is not null and play is valid and alive");
-            
+
             if (!Warcraft.RollDice(chancePercent, 100))
                 return;
 

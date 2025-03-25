@@ -1,6 +1,6 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using System;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Events;
-using System;
 
 namespace WarcraftPlugin.Models
 {

@@ -1,17 +1,17 @@
 ﻿using System;
-using System.Drawing;
-using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Utils;
-using WarcraftPlugin.Helpers;
-using CounterStrikeSharp.API;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
-using g3;
-using WarcraftPlugin.Models;
-using WarcraftPlugin.Core.Effects;
+using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
-using WarcraftPlugin.Summons;
+using CounterStrikeSharp.API.Modules.Utils;
+using g3;
+using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Events.ExtendedEvents;
+using WarcraftPlugin.Helpers;
+using WarcraftPlugin.Models;
+using WarcraftPlugin.Summons;
 
 namespace WarcraftPlugin.Classes
 {
@@ -222,7 +222,7 @@ namespace WarcraftPlugin.Classes
                 }
             }
 
-            public override void OnFinish(){}
+            public override void OnFinish() { }
         }
     }
 }
