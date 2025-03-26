@@ -5,15 +5,17 @@ using System.Drawing;
 using WarcraftPlugin.Models;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
-
-
+using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Modules.Utils;
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector; // ✅ Aliased Vector
+using System.Numerics;
 
 namespace WarcraftPlugin.Classes
 {
     public class CustomSkillRace : WarcraftClass
     {
         public override string DisplayName => "CustomSkillRace";
-
         public override Color DefaultColor => Color.GreenYellow;
 
         public override List<IWarcraftAbility> Abilities =>
@@ -60,19 +62,16 @@ namespace WarcraftPlugin.Classes
                 BonusHealth(Player, 8880);
                 Invisibility(Player, 20f, 100);
 
-                // Only allow these weapons:
-                //var allowedWeapons = new List<string> { "weapon_knife", "weapon_flashbang", "weapon_ssg08" };
-                //SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f); // Added description of how it works now
+                FancySpawnEffect.DrawSpawnTriangle(Player);
             });
-
-            var pawn = Player.PlayerPawn.Value;
 
             if (Player.PlayerPawn == null || !Player.PlayerPawn.IsValid)
                 return;
 
-            var NewMovementSpeed = pawn.VelocityModifier;
+            var NewMovementSpeed = Player.PlayerPawn.Value.VelocityModifier;
             Console.WriteLine($"You have {NewMovementSpeed} Speed");
         }
+
 
 
         private void Ultimate()
@@ -91,32 +90,66 @@ namespace WarcraftPlugin.Classes
             if (!attacker.IsValid || !victim.IsValid || attacker.UserId == victim.UserId)
                 return;
 
-            // Freeze effect
-            // SkillFunctions.FreezePlayer(attacker, victim, 50, 3.5f); // 50% chance to freeze for 3.5 seconds
-
-            // Slowing Effect
-            SkillFunctions.SlowTarget(attacker, victim, 50, 3.5f); // 50% chance to slow for 3.5 seconds
-
-
-            // Lifesteal effect
-            //SkillFunctions.LeechHealth(attacker, victim, 50, 50f, @event.DmgHealth);// Player - ChancePercent - healPercent - int DamageDealt
-
-            //
-
+            SkillFunctions.SlowTarget(attacker, victim, 50, 3.5f);
         }
-
-
 
         private void OnPlayerPing(EventPlayerPing ping)
         {
             SkillFunctions.HandleTeleportPing(Player, ping.X, ping.Y, ping.Z);
+        }
 
 
+        public static class FancySpawnEffect // testing custom effects using DrawLaserBetween
+        {
+            public static void DrawSpawnTriangle(CCSPlayerController player)
+            {
+                var pawn = player.PlayerPawn?.Value;
+                if (pawn == null || !pawn.IsValid) return;
 
+                var origin = pawn.AbsOrigin;
+                var angles = pawn.EyeAngles;
 
-            // Storage working particles
-            // particles/weapons/cs_weapon_fx/weapon_snowball_impact_splash.vpcf
-            //
+                // Basic forward vector calculation (no cross product math)
+                float yaw = angles.Y * (float)Math.PI / 180f;
+
+                // Get approximate forward and right vectors
+                Vector forward = new Vector((float)Math.Cos(yaw), (float)Math.Sin(yaw), 0f);
+                Vector right = new Vector(-forward.Y, forward.X, 0f); // 90 degrees rotated
+
+                // Triangle points (all in game Vector)
+                Vector pointA = origin + forward * 50f;
+                Vector pointB = origin - forward * 50f + right * 25f;
+                Vector pointC = origin - forward * 50f - right * 25f;
+
+                // Draw triangle lasers
+                DrawLaserBetween(pointA, pointB, Color.Cyan, 2f);
+                DrawLaserBetween(pointB, pointC, Color.Cyan, 2f);
+                DrawLaserBetween(pointC, pointA, Color.Cyan, 2f);
+            }
+
+            public static CBeam DrawLaserBetween(Vector startPos, Vector endPos, Color? color = null, float duration = 1f, float width = 2f)
+            {
+                var beam = Utilities.CreateEntityByName<CBeam>("beam");
+                if (beam == null) return null;
+
+                beam.Render = color ?? Color.Red;
+                beam.Width = width;
+
+                beam.Teleport(startPos, new QAngle(), new Vector());
+
+                // Use reflection hack to set EndPos
+                typeof(CBeam).GetProperty("EndPos")?.SetValue(beam, endPos);
+
+                beam.DispatchSpawn();
+
+                WarcraftPlugin.Instance.AddTimer(duration, () =>
+                {
+                    if (beam.IsValid)
+                        beam.Remove();
+                });
+
+                return beam;
+            }
         }
     }
 }

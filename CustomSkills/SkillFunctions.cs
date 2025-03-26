@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Entities;
 using WarcraftPlugin.Helpers;
 
 
@@ -78,9 +79,22 @@ namespace WarcraftPlugin.CustomSkills
             }
         }
 
+        public static void SetPlayerGravity(CCSPlayerController player, float gravityPercent, float duration)
+        {
+            new SetGravityEffect(player, gravityPercent, duration).Start();
+        }
+
+
         public static void RestrictWeapons(CCSPlayerController player, List<string> allowedWeapons, float duration = 999f)
         {
             new RestrictWeaponsEffect(player, duration, allowedWeapons).Start();
         }
+
+        public static void ExplodeOnDeathSkill(CCSPlayerController player, float radius, float damage)
+        {
+            new ExplodeOnDeathEffect(player, radius, damage).Start();
+        }
+
+
     }
 }
