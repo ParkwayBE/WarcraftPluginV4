@@ -33,6 +33,7 @@ namespace WarcraftPlugin.Classes
             - Blastoise deals double damage against Charizard and receives half damage from Charizard
         */
 
+
         public override void Register()
         {
             HookEvent<EventPlayerSpawn>(PlayerSpawn);

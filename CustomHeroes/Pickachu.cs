@@ -16,7 +16,7 @@ namespace WarcraftPlugin.Classes
     public class Pickachu : WarcraftClass
     {
         public override string DisplayName => "Pickachu";
-        public override Color DefaultColor => Color.GreenYellow;
+        public override Color DefaultColor => Color.Yellow;
 
         public override List<IWarcraftAbility> Abilities =>
         [
