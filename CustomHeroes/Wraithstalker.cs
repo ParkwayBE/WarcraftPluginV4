@@ -3,31 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using WarcraftPlugin.Models;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
-using CounterStrikeSharp.API.Modules.Memory;
 using WarcraftPlugin.Helpers;
-using WarcraftPlugin.Models;
-using System.Drawing;
 using WarcraftPlugin.Core.Effects;
-using System.Collections.Generic;
 using WarcraftPlugin.Events.ExtendedEvents;
-using System;
-using System.Reflection;
-using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
-using WarcraftPlugin.Core;
-using WarcraftPlugin.Summons;
-using CounterStrikeSharp.API.Modules.Commands.Targeting;
-using System.Linq;
-using System.Text.RegularExpressions;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using CounterStrikeSharp.API.Modules.Timers;
-using System.Reflection.Emit;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using System.Numerics;
 using WarcraftPlugin.CustomSkills;
 
 
@@ -257,7 +238,7 @@ namespace WarcraftPlugin.Classes
             var level = WarcraftPlayer.GetAbilityLevel(1);
             cloakEffect = new PhantomCloakEffect(Player, level);
             RemoveCloakEffect(); // <- this line replaces RemovePhantomCloakEffect()
-            
+
             cloakEffect.Start();
             activeCloakEffects[Player.Slot] = cloakEffect;
             var allowedWeapons = new List<string> { "weapon_knife", "weapon_ssg08" };
@@ -578,7 +559,7 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine("[PhantomCloak] Cloak disabled.");
             }
 
-            public override void OnTick() { } 
+            public override void OnTick() { }
         }
 
 

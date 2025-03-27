@@ -1,15 +1,9 @@
 using CounterStrikeSharp.API.Core;
-using System;
 using System.Collections.Generic;
 using System.Drawing;
 using WarcraftPlugin.Models;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
-using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Utils;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
-using System.Numerics;
 
 namespace WarcraftPlugin.Classes
 {

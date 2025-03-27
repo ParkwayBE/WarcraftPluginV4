@@ -699,4 +699,16 @@ namespace WarcraftPlugin.Helpers
             return RayTracer.Trace(player.EyePosition(), player.PlayerPawn.Value.EyeAngles, drawResult, true);
         }
     }
+
+    public static class ChatHelper
+    {
+        public static void SendInfo(this CCSPlayerController player, string message)
+        {
+            if (player == null || !player.IsValid) return;
+
+            // Red-colored [INFO] prefix, then default color message
+            player.PrintToChat($" \x07[INFO]\x01 {message}");
+        }
+    }
+
 }

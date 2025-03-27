@@ -6,10 +6,7 @@ using WarcraftPlugin.Models;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Utils;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
-using System.Numerics;
+using WarcraftPlugin.Helpers;
 
 namespace WarcraftPlugin.Classes
 {
@@ -79,8 +76,8 @@ namespace WarcraftPlugin.Classes
 
             if (wcTarget != null && wcTarget.HasUltimateImmunity)
             {
-                caster.PrintToCenter("⛔ Target is immune to ultimates!");
-                target.PrintToCenter("🛡️ Your Ultimate Immunity blocked Chain Lightning!");
+                caster.SendInfo("⛔ Target is immune to ultimates!");
+                target.SendInfo("🛡️ Your Ultimate Immunity blocked Chain Lightning!");
                 return;
             }
 
