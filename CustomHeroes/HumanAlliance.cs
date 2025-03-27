@@ -4,6 +4,7 @@ using System.Drawing;
 using WarcraftPlugin.Models;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
+using WarcraftPlugin.Helpers;
 
 namespace WarcraftPlugin.Classes
 {
@@ -49,10 +50,10 @@ namespace WarcraftPlugin.Classes
                 int InvisPercent = abilityLevel * 15;
                 BonusHealth(Player, DevotionAura);
                 Invisibility(Player, 999f, InvisPercent);
+                Player.SendInfo($"You gained {DevotionAura} health and became {InvisPercent / 255}% invisible.");
+
             });
         }
-
-
 
         private void Ultimate()
         {
@@ -74,6 +75,10 @@ namespace WarcraftPlugin.Classes
             int ChanceInPercent = 5 * abilityLevel;
             float duration = (6f * abilityLevel) / 10f;
             SkillFunctions.FreezePlayer(attacker, victim, ChanceInPercent, duration);
+            attacker.SendInfo($"You froze your victim for  {duration} seconds.");
+            victim.SendInfo($"You got frozen for {duration} seconds.");
+
+
         }
 
         private void OnPlayerPing(EventPlayerPing ping)

@@ -4,6 +4,7 @@ using System.Drawing;
 using WarcraftPlugin.Models;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
+using WarcraftPlugin.Helpers;
 
 namespace WarcraftPlugin.Classes
 {
@@ -45,6 +46,8 @@ namespace WarcraftPlugin.Classes
             {
                 BonusMovementSpeed(Player, speedMultiplier, duration);
                 SkillFunctions.SetPlayerGravity(Player, gravityPercent, duration);
+                Player.SendInfo($"Your gravity is now {gravityPercent} and gained {speedMultiplier} bonus movement speed!");
+
             });
         }
 
@@ -80,6 +83,7 @@ namespace WarcraftPlugin.Classes
             float damage = 100f;
 
             SkillFunctions.ExplodeOnDeathSkill(Player, radius, damage);
+            Player.SendInfo($"You dealt {damage} damage around you!");
         }
     }
 }

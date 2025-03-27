@@ -19,12 +19,12 @@ namespace WarcraftPlugin.Classes
     {
         public override string DisplayName => "Wraithstalker";
 
-        private readonly WarcraftPlugin _plugin;
+        private readonly WarcraftPlugin _plugin = WarcraftPlugin.Instance!;
         public override Color DefaultColor => Color.CadetBlue;
         private bool canUseUltimate = true;
         private bool _CanUseCloakEffect = true;
         private readonly Dictionary<int, PhantomCloakEffect> activeCloakEffects = new();
-        private PhantomCloakEffect cloakEffect;
+        private PhantomCloakEffect? cloakEffect;
         private static Dictionary<ulong, int> skullTracker = new();
         private const int MaxSkulls = 40;
 
@@ -47,7 +47,6 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerDisconnect>(PlayerDisconnect);
             HookEvent<EventPlayerConnect>(OnPlayerConnect);
-            HookEvent<EventPlayerJump>(PlayerJump);
 
             HookAbility(3, Ultimate);
         }
@@ -109,72 +108,6 @@ namespace WarcraftPlugin.Classes
 
         }
 
-        private void PlayerJump(EventPlayerJump @event)
-        {
-            int skulls = GetSkullCount(Player);
-            if (WarcraftPlayer.GetAbilityLevel(0) > 0)
-            {
-                if (Player == null || Player.PlayerPawn?.Value == null)
-                {
-                    Console.WriteLine("ERROR: Player or PlayerPawn is NULL in PlayerJump!");
-                    return;
-                }
-
-                WarcraftPlugin.Instance.AddTimer(0.05f, () =>
-                {
-                    var directionAngle = Player.PlayerPawn.Value.EyeAngles;
-                    var directionVec = new Vector();
-                    NativeAPI.AngleVectors(directionAngle.Handle, directionVec.Handle, nint.Zero, nint.Zero);
-
-                    if (directionVec.Z < 0.475f)
-                    {
-                        directionVec.Z = 0.475f;
-                    }
-                    int baseForce = 300;
-                    int perSkull = 7;
-                    int ScalingLongJump = baseForce + (perSkull * skulls);
-                    directionVec *= ScalingLongJump; // Adjust force if needed
-                    Player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
-                    Player.PlayerPawn.Value.AbsVelocity.Y = directionVec.Y;
-                    Player.PlayerPawn.Value.AbsVelocity.Z = directionVec.Z;
-                });
-                WarcraftPlugin.Instance.AddTimer(0.05f, () =>
-                {
-                    Console.WriteLine("[INFO] Applying reduced gravity after delay.");
-                    new SetGravityEffect(Player, 0.5f, 6f).Start();
-                });
-            }
-        }
-
-        internal class SetGravityEffect(CCSPlayerController owner, float gravity, float duration)
-    : WarcraftEffect(owner, duration)
-        {
-            private readonly float _gravity = gravity;
-
-            public override void OnStart()
-            {
-                if (Owner?.PlayerPawn?.Value == null)
-                {
-                    Console.WriteLine("ERROR: Owner or PlayerPawn is NULL in SetGravityEffect!");
-                    return;
-                }
-                Owner.PlayerPawn.Value.GravityScale = _gravity;
-            }
-
-            public override void OnFinish()
-            {
-                if (Owner?.PlayerPawn?.Value == null)
-                {
-                    Console.WriteLine("ERROR: Owner or PlayerPawn is NULL in SetGravityEffect OnFinish!");
-                    return;
-                }
-                Owner.PlayerPawn.Value.GravityScale = 1.0f; // Reset to default gravity
-            }
-
-            public override void OnTick() { /* */ }
-        }
-
-
         private void ResetSkullsForPlayer(CCSPlayerController player)
         {
             if (player == null)
@@ -214,22 +147,20 @@ namespace WarcraftPlugin.Classes
 
         private void ApplySkullBonuses(CCSPlayerController player)
         {
+            if (player?.PlayerPawn?.Value == null) return;
+
             int skulls = GetSkullCount(player);
             int bonusHealth = skulls * 2;
-            int currentHealth = Player.PlayerPawn.Value.Health;
+            int currentHealth = player.PlayerPawn.Value.Health;
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
             int healAmount = abilityLevel * 1;
             int newHealth = currentHealth + skulls * healAmount;
-            Player.SetHp(newHealth);
+            player.SetHp(newHealth);
 
-            var pawn = Player.PlayerPawn.Value;
-            const float SkullSpeedDivisor = 66.666f;
-            float bonusSpeed = Math.Min(0.6f, skulls / SkullSpeedDivisor);
-            pawn.VelocityModifier = 1f + bonusSpeed;
-
+            float bonusSpeed = Math.Min(0.6f, skulls / 66.666f);
+            player.PlayerPawn.Value.VelocityModifier = 1f + bonusSpeed;
 
             player.PrintToChat($"\x07[Wraithstalker] You have {skulls} skull(s). (+{bonusHealth} HP, +{skulls}% speed)");
-
         }
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
@@ -253,41 +184,36 @@ namespace WarcraftPlugin.Classes
 
         void SpawnParticles()
         {
-            // EFFECT CODE
+            if (Player?.PlayerPawn?.Value == null) return;
+
             float offset = 150.0f;
-            float Zoffset = 50f;// Adjust the offset as needed
+            float Zoffset = 50f;
             float particleDuration = 120.0f;
             float particleDuration2 = 40.0f;
             string redCircleParticle = "particles/lighting/light_gaslamp_glow.vpcf";
             string redCircleParticle2 = "particles/inferno_fx/explosion_incend_air_core.vpcf";
 
             var basePosition = Player.PlayerPawn.Value.AbsOrigin.Clone();
-            basePosition.Z += 50; // Raise all particles above the ground
+            basePosition.Z += 50;
 
-            // Spawn particle 1 (center)
             var particle1 = Warcraft.SpawnParticle(basePosition, redCircleParticle, particleDuration);
             particle1.SetParent(Player.PlayerPawn.Value);
 
-            // Spawn particle 2 (offset slightly in X)
             var particle2Position = basePosition.Clone();
             particle2Position.X += offset;
             particle2Position.Z += Zoffset;
             var particle2 = Warcraft.SpawnParticle(particle2Position, redCircleParticle, particleDuration);
             particle2.SetParent(Player.PlayerPawn.Value);
 
-            // Spawn particle 3 (offset slightly in Y)
             var particle3Position = basePosition.Clone();
             particle3Position.Y += offset;
             particle2Position.Z += Zoffset;
             var particle3 = Warcraft.SpawnParticle(particle3Position, redCircleParticle, particleDuration);
             particle3.SetParent(Player.PlayerPawn.Value);
 
-            // particle 4 
             var particle4Position = basePosition.Clone();
             var particle4 = Warcraft.SpawnParticle(particle4Position, redCircleParticle2, particleDuration2);
             particle4.SetParent(Player.PlayerPawn.Value);
-
-            // END EFFECT CODE
 
             repetitionCount++;
             if (repetitionCount < maxRepetitions)
@@ -369,23 +295,19 @@ namespace WarcraftPlugin.Classes
         bool playerFound = false;
         private void NearbyPlayers(float radius)
         {
-            bool playerFound = false;
+            if (Player?.PlayerPawn?.Value == null) return;
 
             var playerPosition = Player.PlayerPawn.Value.AbsOrigin;
             var eyeAngles = Player.PlayerPawn.Value.EyeAngles;
 
             var forwardVector = new Vector();
             NativeAPI.AngleVectors(eyeAngles.Handle, forwardVector.Handle, nint.Zero, nint.Zero);
-            forwardVector *= radius;  // This is now the *center* of the scan
+            forwardVector *= radius;
 
             var scanOrigin = playerPosition + forwardVector;
-
-            // 🔴 DEBUG Laser from eye to scan center
             Warcraft.DrawLaserBetween(Player.EyePosition(20), scanOrigin, Color.Red, 7.0f);
 
-            var players = Utilities.GetPlayers();
-
-            foreach (var otherPlayer in players)
+            foreach (var otherPlayer in Utilities.GetPlayers())
             {
                 if (!otherPlayer.IsAlive() || otherPlayer.UserId == Player.UserId)
                     continue;
@@ -393,38 +315,24 @@ namespace WarcraftPlugin.Classes
                 if (Player.TeamNum == otherPlayer.TeamNum)
                     continue;
 
-                var otherPlayerPosition = otherPlayer.PlayerPawn.Value.AbsOrigin;
-                var distanceVector = scanOrigin - otherPlayerPosition;
-                var distanceSquared = distanceVector.X * distanceVector.X + distanceVector.Y * distanceVector.Y + distanceVector.Z * distanceVector.Z;
+                if (otherPlayer.PlayerPawn?.Value == null) continue;
 
-                if (distanceSquared <= radius * radius)  // radius is still the AOE size
+                var otherPos = otherPlayer.PlayerPawn.Value.AbsOrigin;
+                var diff = scanOrigin - otherPos;
+                float distanceSq = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
+
+
+                if (distanceSq <= radius * radius)
                 {
-                    playerFound = true;
-
-                    var duration = 7.0f;
-                    var tickRate = 0.02f;
-                    new GlowEffect(otherPlayer, Color.Red, duration, tickRate).Start();
+                    new GlowEffect(otherPlayer, Color.Red, 7f, 0.02f).Start();
                     new UltimateSlowEffect(otherPlayer, 5.0f, 130f).Start();
+
                     otherPlayer.PrintToChat("You have been MARKED");
                     otherPlayer.PlayLocalSound("sounds/physics/fruit/fruit_impact_02.vsnd");
-                    WarcraftPlugin.Instance.AddTimer(0.2f, () =>
-                    {
-                        otherPlayer.PlayLocalSound("sounds/physics/fruit/fruit_impact_02.vsnd");
-                    });
-                    WarcraftPlugin.Instance.AddTimer(0.4f, () =>
-                    {
-                        otherPlayer.PlayLocalSound("sounds/physics/fruit/fruit_impact_02.vsnd");
-                    });
-                    WarcraftPlugin.Instance.AddTimer(0.6f, () =>
-                    {
-                        otherPlayer.PlayLocalSound("sounds/physics/fruit/fruit_impact_02.vsnd");
-                    });
+                    WarcraftPlugin.Instance.AddTimer(0.2f, () => otherPlayer.PlayLocalSound("sounds/physics/fruit/fruit_impact_02.vsnd"));
+                    WarcraftPlugin.Instance.AddTimer(0.4f, () => otherPlayer.PlayLocalSound("sounds/physics/fruit/fruit_impact_02.vsnd"));
+                    WarcraftPlugin.Instance.AddTimer(0.6f, () => otherPlayer.PlayLocalSound("sounds/physics/fruit/fruit_impact_02.vsnd"));
                 }
-            }
-
-            if (!playerFound)
-            {
-                Console.WriteLine("No enemies found in the scan direction and radius.");
             }
         }
 
@@ -443,41 +351,25 @@ namespace WarcraftPlugin.Classes
 
             public override void OnStart()
             {
-                if (Owner.PlayerPawn.Value == null)
-                    return;
-
-                // Store original speed
+                if (Owner.PlayerPawn?.Value == null) return;
                 _originalSpeed = Owner.PlayerPawn.Value.MovementServices.Maxspeed;
-
-                // Reduce speed (clamp to prevent negative values)
                 Owner.PlayerPawn.Value.MovementServices.Maxspeed = Math.Max(10, _originalSpeed - _slowAmount);
-
-
-                // Debug log
-                Console.WriteLine($"[DEBUG] {Owner.PlayerName} is slowed for {Duration} seconds! New speed: {Owner.PlayerPawn.Value.MovementServices.Maxspeed}");
             }
 
             public override void OnFinish()
             {
-                if (Owner.PlayerPawn.Value == null)
-                    return;
-
-                // Restore original speed
+                if (Owner.PlayerPawn?.Value == null) return;
                 Owner.PlayerPawn.Value.MovementServices.Maxspeed = _originalSpeed;
-
-                // Debug log
-                Console.WriteLine($"[DEBUG] {Owner.PlayerName} slow effect ended. Speed restored to {Owner.PlayerPawn.Value.MovementServices.Maxspeed}");
             }
 
-            public override void OnTick()
-            { }
+            public override void OnTick() { }
         }
 
 
         internal class PhantomCloakEffect : WarcraftEffect
         {
-            private Vector _previousPosition;
-            private Vector _currentPosition;
+            private Vector _previousPosition = new();
+            private Vector _currentPosition = new();
             private Timer? _positionComparisonTimer;
             private bool _isCloaked;
             private readonly int _abilityLevel;
@@ -493,17 +385,13 @@ namespace WarcraftPlugin.Classes
             {
                 Console.WriteLine("[PhantomCloak] OnStart is called");
 
-                _previousPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
-                _currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
+                _previousPosition = Owner.PlayerPawn?.Value?.AbsOrigin.Clone() ?? new Vector();
+                _currentPosition = Owner.PlayerPawn?.Value?.AbsOrigin.Clone() ?? new Vector();
 
                 _positionComparisonTimer = WarcraftPlugin.Instance.AddTimer(1.0f, () =>
                 {
                     _previousPosition = _currentPosition.Clone();
-                    _currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
-
-                    //Console.WriteLine("[PhantomCloak] Comparing positions:");
-                    //Console.WriteLine($"   Previous: {_previousPosition}");
-                    //Console.WriteLine($"   Current:  {_currentPosition}");
+                    _currentPosition = Owner.PlayerPawn?.Value?.AbsOrigin.Clone() ?? new Vector();
 
                     if (_previousPosition.X == _currentPosition.X &&
                         _previousPosition.Y == _currentPosition.Y &&
@@ -548,26 +436,21 @@ namespace WarcraftPlugin.Classes
 
             private void EnableCloak()
             {
-                int alpha = 100 + (5 - _abilityLevel) * 20; // L5 = 100, L1 = 180
+                if (Owner.PlayerPawn?.Value == null) return;
+                int alpha = 100 + (5 - _abilityLevel) * 20;
                 Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
                 Console.WriteLine($"[PhantomCloak] Cloak enabled (alpha={alpha}).");
             }
 
             private void DisableCloak()
             {
+                if (Owner.PlayerPawn?.Value == null) return;
                 Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
                 Console.WriteLine("[PhantomCloak] Cloak disabled.");
             }
 
             public override void OnTick() { }
         }
-
-
-
-
-
-
-
 
         private void Ultimate()
         {
