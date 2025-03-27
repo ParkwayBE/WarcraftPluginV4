@@ -42,12 +42,13 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerPing>(PlayerPing);
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
-
             HookAbility(3, Ultimate);
         }
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
+
+
             if (WarcraftPlayer.GetAbilityLevel(1) > 0)
             {
                 var decoy = new CDecoyGrenade(Player.GiveNamedItem("weapon_decoy"));

@@ -20,7 +20,7 @@ namespace WarcraftPlugin.Classes
 
         public override List<IWarcraftAbility> Abilities =>
         [
-            new WarcraftAbility("Flame Strike", "Calls down flames to damage enemies when hitting an enemy."),
+            new WarcraftAbility("Flame Strike", "Call down flames when hitting an enemy."),
             new WarcraftAbility("Banish", "Obscure your target's screen, Enemies close to the target take additional damage for the next 5-10 seconds."),
             new WarcraftAbility("Siphon Mana", "5-25% to siphon money from your target"),
             new WarcraftCooldownAbility("Phoenix", "If you activated your ultimate in the last 10 seconds when you die. You will respawn yourself and up to 2 teammates.! ", 8f)

@@ -23,7 +23,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Sharp End", "Chance for your attacks to deal bleed damage"),
             new WarcraftAbility("Mercy or Revenge", "Upon dying you have a 50% to either deal damage to the player that killed you or healing him but reviving yourself. Max 1 time per round"),
             new WarcraftAbility("Fan Of Knives", "Your knife attacks are throwing knife attacks."),
-            new WarcraftCooldownAbility("Eternal Darkness","Engulf all nearby players in darkness and slow them.", 1f)
+            new WarcraftCooldownAbility("Eternal Darkness","Engulf all nearby players in darkness and temperoraly steal movement speed..", 1f)
         ];
 
         public override void Register()
