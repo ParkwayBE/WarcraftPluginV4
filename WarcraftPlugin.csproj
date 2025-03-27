@@ -69,8 +69,4 @@
     <Compile Remove="CustomHeroes\CustomSkillRace.cs" />
     <Compile Remove="CustomHeroes\Wraithstalker.cs" />
   </ItemGroup>
-
-  <!-- New ItemGroup to include CustomHeroes files for IntelliSense without compiling -->
-  <ItemGroup>
-
   </Project>
