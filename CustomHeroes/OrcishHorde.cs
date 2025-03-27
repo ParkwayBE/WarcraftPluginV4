@@ -7,7 +7,6 @@ using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 
 namespace WarcraftPlugin.Classes
@@ -42,29 +41,22 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
+            Console.WriteLine("[Ultimate] Chain Lightning triggered.");
+
             var caster = Player;
             var wcCaster = caster.GetWarcraftPlayer();
 
             if (caster?.PlayerPawn?.Value == null)
+            {
+                Console.WriteLine("[Ultimate] PlayerPawn was null.");
                 return;
+            }
 
             float radius = 500f;
             int damage = 30;
             bool playerFound = false;
 
             var origin = caster.PlayerPawn.Value.AbsOrigin;
-            var eyeAngles = caster.PlayerPawn.Value.EyeAngles;
-
-            // Direction we're looking
-            var forwardVector = new Vector();
-            NativeAPI.AngleVectors(eyeAngles.Handle, forwardVector.Handle, nint.Zero, nint.Zero);
-            forwardVector *= radius;
-
-            var scanOrigin = origin + forwardVector;
-
-            // 🔴 Beam from eyes to center of scan
-            Warcraft.DrawLaserBetween(caster.EyePosition(20), scanOrigin, Color.Red, 3.0f);
-
             var potentialTargets = new List<CCSPlayerController>();
 
             foreach (var player in Utilities.GetPlayers())
@@ -79,41 +71,49 @@ namespace WarcraftPlugin.Classes
                     continue;
 
                 var otherPos = player.PlayerPawn.Value.AbsOrigin;
-                var diff = scanOrigin - otherPos;
+                var diff = origin - otherPos;
                 float distanceSquared = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
+
+                Console.WriteLine($"[Ultimate] Checking {player.PlayerName}, dist² = {distanceSquared}");
 
                 if (distanceSquared <= radius * radius)
                 {
                     playerFound = true;
                     potentialTargets.Add(player);
+                    Console.WriteLine($"[Ultimate] Valid target: {player.PlayerName}");
 
-                    // Beam to each valid player in range
-                    Warcraft.DrawLaserBetween(scanOrigin, otherPos, Color.Orange, 1.5f);
+                    // Visual laser to show connection
+                    Warcraft.DrawLaserBetween(origin, otherPos, Color.Orange, 1.5f);
                 }
             }
 
             if (!playerFound || potentialTargets.Count == 0)
             {
-                caster.PrintToCenter("⚡ No enemies nearby in your line of sight!");
+                Console.WriteLine("[Ultimate] No valid players found nearby.");
+                caster.PrintToCenter("⚡ No enemies nearby for Chain Lightning!");
                 return;
             }
 
             var target = potentialTargets[new Random().Next(potentialTargets.Count)];
             var wcTarget = target.GetWarcraftPlayer();
 
-            // ✅ Final impact beam
-            Warcraft.DrawLaserBetween(scanOrigin, target.PlayerPawn.Value.AbsOrigin, Color.Cyan, 3.0f);
+            Console.WriteLine($"[Ultimate] Selected target: {target.PlayerName}");
+
+            Warcraft.DrawLaserBetween(origin, target.PlayerPawn.Value.AbsOrigin, Color.Cyan, 3.0f);
 
             if (wcTarget != null && wcTarget.HasUltimateImmunity)
             {
                 caster.PrintToCenter("⛔ Target is immune to ultimates!");
                 target.PrintToCenter("🛡️ Your Ultimate Immunity blocked Chain Lightning!");
+                Console.WriteLine($"[Ultimate] {target.PlayerName} blocked the ult with immunity.");
                 return;
             }
 
+            Console.WriteLine($"[Ultimate] Dealing {damage} damage to {target.PlayerName}");
             SkillFunctions.DealRawDamage(caster, target, damage);
             StartCooldown(3);
         }
+
 
 
 
