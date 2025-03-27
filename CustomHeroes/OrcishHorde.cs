@@ -41,78 +41,56 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            Console.WriteLine("[Ultimate] Chain Lightning triggered.");
-
             var caster = Player;
-            var wcCaster = caster.GetWarcraftPlayer();
-
-            if (caster?.PlayerPawn?.Value == null)
-            {
-                Console.WriteLine("[Ultimate] PlayerPawn was null.");
-                return;
-            }
-
+            var wcCaster = WarcraftPlayer;
             float radius = 500f;
             int damage = 30;
-            bool playerFound = false;
 
-            var origin = caster.PlayerPawn.Value.AbsOrigin;
             var potentialTargets = new List<CCSPlayerController>();
 
             foreach (var player in Utilities.GetPlayers())
             {
-                if (player == null || !player.IsValid || !player.IsAlive() || player == caster)
+                if (player == null || !player.IsValid || player.IsBot || player == caster)
                     continue;
 
-                if (player.TeamNum == caster.TeamNum)
+                if (player.TeamNum == caster.TeamNum || player.PlayerPawn?.Value == null)
                     continue;
 
-                if (player.PlayerPawn?.Value == null)
-                    continue;
+                var diff = player.PlayerPawn.Value.AbsOrigin - caster.PlayerPawn.Value.AbsOrigin;
+                float distanceSq = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
 
-                var otherPos = player.PlayerPawn.Value.AbsOrigin;
-                var diff = origin - otherPos;
-                float distanceSquared = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
-
-                Console.WriteLine($"[Ultimate] Checking {player.PlayerName}, dist² = {distanceSquared}");
-
-                if (distanceSquared <= radius * radius)
+                if (distanceSq <= radius * radius)
                 {
-                    playerFound = true;
                     potentialTargets.Add(player);
-                    Console.WriteLine($"[Ultimate] Valid target: {player.PlayerName}");
-
-                    // Visual laser to show connection
-                    Warcraft.DrawLaserBetween(origin, otherPos, Color.Orange, 1.5f);
                 }
             }
 
-            if (!playerFound || potentialTargets.Count == 0)
+            if (potentialTargets.Count == 0)
             {
-                Console.WriteLine("[Ultimate] No valid players found nearby.");
                 caster.PrintToCenter("⚡ No enemies nearby for Chain Lightning!");
                 return;
             }
 
-            var target = potentialTargets[new Random().Next(potentialTargets.Count)];
+            var target = potentialTargets[Random.Shared.Next(potentialTargets.Count)];
             var wcTarget = target.GetWarcraftPlayer();
 
-            Console.WriteLine($"[Ultimate] Selected target: {target.PlayerName}");
-
-            Warcraft.DrawLaserBetween(origin, target.PlayerPawn.Value.AbsOrigin, Color.Cyan, 3.0f);
-
-            if (wcTarget != null && wcTarget.HasUltimateImmunity)
+            if (wcTarget.HasUltimateImmunity)
             {
                 caster.PrintToCenter("⛔ Target is immune to ultimates!");
                 target.PrintToCenter("🛡️ Your Ultimate Immunity blocked Chain Lightning!");
-                Console.WriteLine($"[Ultimate] {target.PlayerName} blocked the ult with immunity.");
                 return;
             }
 
-            Console.WriteLine($"[Ultimate] Dealing {damage} damage to {target.PlayerName}");
             SkillFunctions.DealRawDamage(caster, target, damage);
+
+            // Optional beam visualization:
+            Warcraft.DrawLaserBetween(caster.EyePosition(), target.EyePosition(), Color.LightBlue, 2f);
+
             StartCooldown(3);
         }
+
+
+
 
 
 
