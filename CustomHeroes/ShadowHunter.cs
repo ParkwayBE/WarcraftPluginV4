@@ -54,7 +54,7 @@ namespace WarcraftPlugin.Classes
             {
                 int newHp = Player.PlayerPawn.Value.Health + bonusHealth;
                 Player.SetHp(newHp);
-                Player.PrintToChat($" \x04[Healing Wave] You gained {bonusHealth} bonus HP.");
+                Player.PrintToChat($" \x04[Healing Wave] You gained {bonusHealth} bonus HP from a Shadow Hunter.");
                 Player.GiveNamedItem("weapon_flashbang");
                 Player.GiveNamedItem("weapon_flashbang");
             }

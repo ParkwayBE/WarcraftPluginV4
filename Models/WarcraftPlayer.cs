@@ -24,6 +24,9 @@ namespace WarcraftPlugin.Models
         private readonly List<int> _abilityLevels = new(new int[4]);
         internal List<float> AbilityCooldowns = new(new float[4]);
 
+        public bool HasUltimateImmunity { get; set; } = false;
+
+
         private WarcraftClass _class;
 
         internal WarcraftPlayer(CCSPlayerController player)

@@ -95,6 +95,15 @@ namespace WarcraftPlugin.CustomSkills
             new ExplodeOnDeathEffect(player, radius, damage).Start();
         }
 
+        public static void DealRawDamage(CCSPlayerController attacker, CCSPlayerController victim, int damage)
+        {
+            if (victim == null || !victim.IsValid || victim.PlayerPawn?.Value == null) return;
+
+            victim.PlayerPawn.Value.Health -= damage;
+
+            attacker.PrintToCenter($"⚡ You dealt {damage} damage to {victim.PlayerName}!");
+            victim.PrintToCenter($"⚡ You were hit by {attacker.PlayerName}'s Chain Lightning!");
+        }
 
 
 

@@ -36,11 +36,13 @@ namespace WarcraftPlugin.Models
     public class WarcraftCooldownAbility : WarcraftAbility
     {
         public float Cooldown { get; set; } = 0f;
+        public bool CanBeBlockedByImmunity { get; set; } = true; // New flag
 
-        public WarcraftCooldownAbility(string displayName, string description,
-            float cooldown) : base(displayName, description)
+        public WarcraftCooldownAbility(string displayName, string description, float cooldown, bool canBeBlockedByImmunity = true)
+            : base(displayName, description)
         {
             Cooldown = cooldown;
+            CanBeBlockedByImmunity = canBeBlockedByImmunity;
         }
     }
 
