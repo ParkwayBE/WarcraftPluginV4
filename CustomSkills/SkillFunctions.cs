@@ -82,7 +82,6 @@ namespace WarcraftPlugin.CustomSkills
 
             attacker.PrintToCenter($"⚡ You dealt {damage} damage to {victim.PlayerName}!");
             victim.PrintToCenter($"⚡ You were hit by {attacker.PlayerName}'s Chain Lightning!");
-            victim.PlayLocalSound("sounds/physics/metal/metal_solid_impact_bullet2.vsnd"); // Optional sound
         }
 
 
