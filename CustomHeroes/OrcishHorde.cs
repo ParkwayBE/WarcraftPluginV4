@@ -7,6 +7,8 @@ using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
+
 
 namespace WarcraftPlugin.Classes
 {
@@ -28,7 +30,6 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerDeath>(PlayerDeath);
-            HookAbility(3, Ultimate);
         }
 
 
@@ -43,18 +44,32 @@ namespace WarcraftPlugin.Classes
         {
             var caster = Player;
             var wcCaster = caster.GetWarcraftPlayer();
-            float radius = 500f;
-            int damage = 30;
 
             if (caster?.PlayerPawn?.Value == null)
                 return;
 
+            float radius = 500f;
+            int damage = 30;
+            bool playerFound = false;
+
             var origin = caster.PlayerPawn.Value.AbsOrigin;
+            var eyeAngles = caster.PlayerPawn.Value.EyeAngles;
+
+            // Direction we're looking
+            var forwardVector = new Vector();
+            NativeAPI.AngleVectors(eyeAngles.Handle, forwardVector.Handle, nint.Zero, nint.Zero);
+            forwardVector *= radius;
+
+            var scanOrigin = origin + forwardVector;
+
+            // 🔴 Beam from eyes to center of scan
+            Warcraft.DrawLaserBetween(caster.EyePosition(20), scanOrigin, Color.Red, 3.0f);
+
             var potentialTargets = new List<CCSPlayerController>();
 
             foreach (var player in Utilities.GetPlayers())
             {
-                if (player == null || !player.IsValid || player.IsBot || player == caster)
+                if (player == null || !player.IsValid || !player.IsAlive() || player == caster)
                     continue;
 
                 if (player.TeamNum == caster.TeamNum)
@@ -63,40 +78,43 @@ namespace WarcraftPlugin.Classes
                 if (player.PlayerPawn?.Value == null)
                     continue;
 
-                float distance = (player.PlayerPawn.Value.AbsOrigin - origin).Length();
+                var otherPos = player.PlayerPawn.Value.AbsOrigin;
+                var diff = scanOrigin - otherPos;
+                float distanceSquared = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
 
-                // Debug beam to all potential enemies
-                Warcraft.DrawLaserBetween(origin, player.PlayerPawn.Value.AbsOrigin, Color.Yellow, 1.0f);
-
-                if (distance <= radius)
+                if (distanceSquared <= radius * radius)
                 {
+                    playerFound = true;
                     potentialTargets.Add(player);
+
+                    // Beam to each valid player in range
+                    Warcraft.DrawLaserBetween(scanOrigin, otherPos, Color.Orange, 1.5f);
                 }
             }
 
-            if (potentialTargets.Count == 0)
+            if (!playerFound || potentialTargets.Count == 0)
             {
-                caster.PrintToCenter("⚡ No enemies nearby for Chain Lightning!");
+                caster.PrintToCenter("⚡ No enemies nearby in your line of sight!");
                 return;
             }
 
-            var random = new Random();
-            var target = potentialTargets[random.Next(potentialTargets.Count)];
+            var target = potentialTargets[new Random().Next(potentialTargets.Count)];
             var wcTarget = target.GetWarcraftPlayer();
 
-            // Beam to chosen target
-            Warcraft.DrawLaserBetween(origin, target.PlayerPawn.Value.AbsOrigin, Color.Cyan, 2.0f);
+            // ✅ Final impact beam
+            Warcraft.DrawLaserBetween(scanOrigin, target.PlayerPawn.Value.AbsOrigin, Color.Cyan, 3.0f);
 
             if (wcTarget != null && wcTarget.HasUltimateImmunity)
             {
-                //caster.SendInfo("⛔ Target is immune to ultimates!");
-                //target.SendInfo("🛡️ Your Ultimate Immunity blocked Chain Lightning!");
+                caster.PrintToCenter("⛔ Target is immune to ultimates!");
+                target.PrintToCenter("🛡️ Your Ultimate Immunity blocked Chain Lightning!");
                 return;
             }
 
             SkillFunctions.DealRawDamage(caster, target, damage);
-            StartCooldown(3); // Index 3 = Ultimate
+            StartCooldown(3);
         }
+
 
 
 
