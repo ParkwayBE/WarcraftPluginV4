@@ -1,5 +1,5 @@
-﻿using CounterStrikeSharp.API.Core;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Core;
 using WarcraftPlugin.Helpers;
 
@@ -23,7 +23,7 @@ namespace WarcraftPlugin.Models
 
         private readonly List<int> _abilityLevels = new(new int[4]);
         internal List<float> AbilityCooldowns = new(new float[4]);
-
+        public bool HasUltimateImmunity { get; set; } = false;
         private WarcraftClass _class;
 
         internal WarcraftPlayer(CCSPlayerController player)

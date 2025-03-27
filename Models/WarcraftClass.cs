@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Events;
 using System.Drawing;
-using WarcraftPlugin.Helpers;
-using CounterStrikeSharp.API.Modules.Utils;
-using WarcraftPlugin.Core;
 using System.Linq;
 using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Events;
+using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Localization;
+using WarcraftPlugin.Core;
+using WarcraftPlugin.Helpers;
 using WarcraftPlugin.lang;
 
 namespace WarcraftPlugin.Models
@@ -36,11 +36,13 @@ namespace WarcraftPlugin.Models
     public class WarcraftCooldownAbility : WarcraftAbility
     {
         public float Cooldown { get; set; } = 0f;
+        public bool CanBeBlockedByImmunity { get; set; } = true; // New flag
 
-        public WarcraftCooldownAbility(string displayName, string description,
-            float cooldown) : base(displayName, description)
+        public WarcraftCooldownAbility(string displayName, string description, float cooldown, bool canBeBlockedByImmunity = true)
+            : base(displayName, description)
         {
             Cooldown = cooldown;
+            CanBeBlockedByImmunity = canBeBlockedByImmunity;
         }
     }
 

@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Helpers;
 
@@ -77,6 +74,16 @@ namespace WarcraftPlugin.CustomSkills
 
             }
         }
+        public static void DealRawDamage(CCSPlayerController attacker, CCSPlayerController victim, int damage)
+        {
+            if (victim == null || !victim.IsValid || victim.PlayerPawn?.Value == null) return;
+
+            victim.PlayerPawn.Value.Health -= damage;
+
+            attacker.PrintToCenter($"⚡ You dealt {damage} damage to {victim.PlayerName}!");
+            victim.PrintToCenter($"⚡ You were hit by {attacker.PlayerName}'s Chain Lightning!");
+        }
+
 
         public static void RestrictWeapons(CCSPlayerController player, List<string> allowedWeapons, float duration = 999f)
         {
