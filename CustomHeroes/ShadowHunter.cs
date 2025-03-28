@@ -83,7 +83,8 @@ namespace WarcraftPlugin.Classes
             Utilities.GetEntityFromIndex<CDecoyProjectile>(grenade.Entityid)?.RemoveIfValid();
 
             var origin = new Vector(grenade.X, grenade.Y, grenade.Z);
-            var ward = new SerpentWardEffect(origin);
+            var ward = new SerpentWardEffect(Player, origin);
+
             ward.Start();
             activeWards.Add(ward);
 
@@ -100,25 +101,27 @@ namespace WarcraftPlugin.Classes
         internal class SerpentWardEffect : WarcraftEffect
         {
             private readonly Vector _origin;
-            private readonly float _radius = 200f;
+            private readonly float _radius = 100f;  // Smaller AoE
             private readonly float _damageInterval = 0.5f;
             private readonly int _damage = 5;
             private Timer? _damageTimer;
+            private readonly CCSPlayerController _owner;
 
-            public SerpentWardEffect(Vector origin)
-                : base(null, duration: float.MaxValue, destroyOnDeath: false, destroyOnRoundEnd: true)
+            public SerpentWardEffect(CCSPlayerController owner, Vector origin)
+                : base(owner, duration: float.MaxValue, destroyOnDeath: false, destroyOnRoundEnd: true)
             {
                 _origin = origin;
+                _owner = owner;
             }
 
             public override void OnStart()
             {
-                Console.WriteLine("[SerpentWard] Ward activated at " + _origin);
+                Console.WriteLine($"[SerpentWard] Ward activated at {_origin}");
 
                 // Beam goes up from ward
                 Vector beamEnd = _origin.Clone();
                 beamEnd.Z += 200;
-                Warcraft.DrawLaserBetween(_origin, beamEnd, Color.Red, duration: 15.0f);
+                Warcraft.DrawLaserBetween(_origin, beamEnd, Color.Red, duration: 240.0f, width: 100f);
 
                 // Damage loop
                 _damageTimer = WarcraftPlugin.Instance.AddTimer(_damageInterval, ApplyWardEffect, TimerFlags.REPEAT);
@@ -131,13 +134,17 @@ namespace WarcraftPlugin.Classes
                     if (!player.IsValid || player.PlayerPawn?.Value == null || !player.IsAlive())
                         continue;
 
+                    // ❌ Skip teammates of the ward owner
+                    if (player.TeamNum == _owner.TeamNum)
+                        continue;
+
                     var pos = player.PlayerPawn.Value.AbsOrigin;
                     var dx = pos.X - _origin.X;
                     var dy = pos.Y - _origin.Y;
                     var dz = pos.Z - _origin.Z;
 
                     float distanceSq = dx * dx + dy * dy + dz * dz;
-
+                    player.EmitSound("Weapon_M4A1.Silenced");
                     if (distanceSq <= _radius * _radius)
                     {
                         int hp = player.PlayerPawn.Value.Health;
@@ -162,6 +169,7 @@ namespace WarcraftPlugin.Classes
 
             public override void OnTick() { }
         }
+
 
 
         private void Ultimate()
