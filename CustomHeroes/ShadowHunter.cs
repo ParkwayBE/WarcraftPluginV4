@@ -178,7 +178,8 @@ namespace WarcraftPlugin.Classes
 
                     Color thisColor = (i % 2 == 0) ? beamColor : secondaryColor;
 
-                    var beam = Utilities.CreateEntityByName<CBeam>("beam");
+                    var beam = Warcraft.DrawLaserBetween(start, end, thisColor, 1.5f, width: 12f);
+                    _beams.Add(beam);
                     if (beam == null) continue;
 
                     beam.Render = thisColor;
