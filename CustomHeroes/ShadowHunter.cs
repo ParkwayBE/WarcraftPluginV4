@@ -101,7 +101,7 @@ namespace WarcraftPlugin.Classes
         internal class SerpentWardEffect : WarcraftEffect
         {
             private readonly Vector _origin;
-            private readonly float _radius = 100f;  // Smaller AoE
+            private readonly float _radius = 100f; // Area of effect
             private readonly float _damageInterval = 0.5f;
             private readonly int _damage = 5;
             private Timer? _damageTimer;
@@ -118,10 +118,17 @@ namespace WarcraftPlugin.Classes
             {
                 Console.WriteLine($"[SerpentWard] Ward activated at {_origin}");
 
-                // Beam goes up from ward
-                Vector beamEnd = _origin.Clone();
-                beamEnd.Z += 200;
-                Warcraft.DrawLaserBetween(_origin, beamEnd, Color.Red, duration: 240.0f, width: 100f);
+                // 8 rotating beam positions around the origin (radius 75)
+                Vector beamEndOffset = new Vector(0, 0, 200);
+                foreach (var (x, y) in new[] {
+            (75f, 0f), (53.03f, 53.03f), (0f, 75f), (-53.03f, 53.03f),
+            (-75f, 0f), (-53.03f, -53.03f), (0f, -75f), (53.03f, -53.03f)
+        })
+                {
+                    var beamStart = _origin + new Vector(x, y, 0);
+                    var beamEnd = beamStart + beamEndOffset;
+                    Warcraft.DrawLaserBetween(beamStart, beamEnd, Color.Red, 240.0f, width: 6.0f);
+                }
 
                 // Damage loop
                 _damageTimer = WarcraftPlugin.Instance.AddTimer(_damageInterval, ApplyWardEffect, TimerFlags.REPEAT);
@@ -139,14 +146,15 @@ namespace WarcraftPlugin.Classes
                         continue;
 
                     var pos = player.PlayerPawn.Value.AbsOrigin;
-                    var dx = pos.X - _origin.X;
-                    var dy = pos.Y - _origin.Y;
-                    var dz = pos.Z - _origin.Z;
-
+                    float dx = pos.X - _origin.X;
+                    float dy = pos.Y - _origin.Y;
+                    float dz = pos.Z - _origin.Z;
                     float distanceSq = dx * dx + dy * dy + dz * dz;
-                    player.EmitSound("Weapon_M4A1.Silenced");
+
                     if (distanceSq <= _radius * _radius)
                     {
+                        player.EmitSound("weapons/physcannon/energy_sing_explosion2.wav");
+
                         int hp = player.PlayerPawn.Value.Health;
                         if (hp <= _damage)
                         {
@@ -169,6 +177,7 @@ namespace WarcraftPlugin.Classes
 
             public override void OnTick() { }
         }
+
 
 
 
