@@ -68,7 +68,10 @@ namespace WarcraftPlugin.Classes
             void DoBounce(int bounceIndex)
             {
                 if (bounceIndex >= maxBounces)
+                {
+                    caster.PrintToCenter("⚡ Chain Lightning ended.");
                     return;
+                }
 
                 var last = bounceTargets[bounceTargets.Count - 1];
                 var lastPos = last.PlayerPawn?.Value?.AbsOrigin;
@@ -79,10 +82,13 @@ namespace WarcraftPlugin.Classes
 
                 foreach (var player in Utilities.GetPlayers())
                 {
-                    if (player == null || !player.IsValid || player.PlayerPawn?.Value == null || player == last)
+                    if (player == null || !player.IsValid || !player.IsAlive() || player.PlayerPawn?.Value == null)
                         continue;
 
-                    if (player.TeamNum == caster.TeamNum || hitPlayers.Contains(player))
+                    if (player == last || player == caster || player.TeamNum == caster.TeamNum)
+                        continue;
+
+                    if (hitPlayers.Contains(player))
                         continue;
 
                     var pos = player.PlayerPawn.Value.AbsOrigin;
@@ -98,24 +104,35 @@ namespace WarcraftPlugin.Classes
 
                 if (closest == null)
                 {
+                    caster.PrintToCenter("⚡ Chain Lightning ended.");
                     Console.WriteLine($"[OrcishHorde] No more valid targets after bounce #{bounceIndex + 1}");
+                    return;
+                }
+
+                var wcTarget = closest.GetWarcraftPlayer();
+                if (wcTarget != null && wcTarget.HasUltimateImmunity)
+                {
+                    caster.PrintToCenter("⛔ Target is immune to ultimates!");
+                    closest.PrintToCenter("🛡️ Your Ultimate Immunity blocked Chain Lightning!");
+                    Console.WriteLine($"[OrcishHorde] Target {closest.PlayerName} had immunity. Skipping.");
                     return;
                 }
 
                 hitPlayers.Add(closest);
                 bounceTargets.Add(closest);
 
-                // Deal damage immediately
+                // Deal damage
                 SkillFunctions.DealRawDamage(caster, closest, damage);
 
-                // Draw laser from last target to new one
+                // Draw beam from last target to new one
                 Warcraft.DrawLaserBetween(last.EyePosition(), closest.EyePosition(), Color.Cyan, 2.0f);
 
                 Console.WriteLine($"[OrcishHorde] Chain Lightning bounced to {closest.PlayerName} (bounce #{bounceIndex + 1})");
 
-                // Schedule next bounce
+                // Delay next bounce
                 WarcraftPlugin.Instance.AddTimer(delayBetweenBounces, () => DoBounce(bounceIndex + 1));
             }
+
 
             // Start the chain
             DoBounce(0);
