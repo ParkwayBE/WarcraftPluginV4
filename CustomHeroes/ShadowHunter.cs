@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using g3;
+using CounterStrikeSharp.API.Modules.Timers;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
@@ -57,6 +57,12 @@ namespace WarcraftPlugin.Classes
                 Player.PrintToChat($" \x04[Healing Wave] You gained {bonusHealth} bonus HP from a Shadow Hunter.");
             }
 
+            if (WarcraftPlayer.GetAbilityLevel(2) > 0)
+            {
+                var decoy = new CDecoyGrenade(Player.GiveNamedItem("weapon_decoy"));
+                decoy.AttributeManager.Item.CustomName = Localizer["ShadowHunter.ability.2"];
+            }
+
             // Heal teammates
             foreach (var teammate in Utilities.GetPlayers().Where(p => p.IsValid && p.TeamNum == Player.TeamNum && p != Player))
             {
@@ -66,11 +72,7 @@ namespace WarcraftPlugin.Classes
                 teammate.SetHp(newHp);
                 teammate.PrintToChat($" \x04[Healing Wave] {Player.PlayerName} healed you for {bonusHealth} HP!");
 
-                if (WarcraftPlayer.GetAbilityLevel(2) > 0)
-                {
-                    var decoy = new CDecoyGrenade(Player.GiveNamedItem("weapon_decoy"));
-                    decoy.AttributeManager.Item.CustomName = Localizer["ShadowHunter.ability.2"];
-                }
+
             }
         }
         private void DecoyStart(EventDecoyStarted grenade)
@@ -81,7 +83,7 @@ namespace WarcraftPlugin.Classes
             Utilities.GetEntityFromIndex<CDecoyProjectile>(grenade.Entityid)?.RemoveIfValid();
 
             var origin = new Vector(grenade.X, grenade.Y, grenade.Z);
-            var ward = new SerpentWardEffect(Player, origin);
+            var ward = new SerpentWardEffect(origin);
             ward.Start();
             activeWards.Add(ward);
 
@@ -97,51 +99,69 @@ namespace WarcraftPlugin.Classes
 
         internal class SerpentWardEffect : WarcraftEffect
         {
-            private readonly Vector origin;
-            private CBaseEntity? beamEntity;
-            private Box3d _auraZone;
+            private readonly Vector _origin;
+            private readonly float _radius = 200f;
+            private readonly float _damageInterval = 0.5f;
+            private readonly int _damage = 5;
+            private Timer? _damageTimer;
 
-            public SerpentWardEffect(CCSPlayerController owner, Vector origin)
-                : base(owner, duration: 999f, onTickInterval: 0.5f)
+            public SerpentWardEffect(Vector origin)
+                : base(null, duration: float.MaxValue, destroyOnDeath: false, destroyOnRoundEnd: true)
             {
-                this.origin = origin;
+                _origin = origin;
             }
 
             public override void OnStart()
             {
-                // Draw the vertical red beam
-                beamEntity = Warcraft.DrawLaserBetween(origin, origin.With(z: origin.Z + 400), Color.Red, Duration);
+                Console.WriteLine("[SerpentWard] Ward activated at " + _origin);
 
-                // Define a damage zone
-                _auraZone = Warcraft.CreateBoxAroundPoint(origin, 200, 200, 200);
-                //_auraZone.Show(30); // optional debug
+                // Beam goes up from ward
+                Vector beamEnd = _origin.Clone();
+                beamEnd.Z += 200;
+                Warcraft.DrawLaserBetween(_origin, beamEnd, Color.Red, duration: 15.0f);
+
+                // Damage loop
+                _damageTimer = WarcraftPlugin.Instance.AddTimer(_damageInterval, ApplyWardEffect, TimerFlags.REPEAT);
             }
 
-            public override void OnTick()
+            private void ApplyWardEffect()
             {
                 foreach (var player in Utilities.GetPlayers())
                 {
-                    if (!player.IsAlive() || player.TeamNum == Owner.TeamNum || player.PlayerPawn?.Value == null)
+                    if (!player.IsValid || player.PlayerPawn?.Value == null || !player.IsAlive())
                         continue;
 
-                    if (_auraZone.Contains(player.PlayerPawn.Value.AbsOrigin))
-                    {
-                        player.TakeDamage(3, Owner, KillFeedIcon.tripwirefire);
-                        player.PlayerPawn.Value.VelocityModifier = 0.7f;
-                        player.PlayerPawn.Value.MovementServices.Maxspeed = 180;
+                    var pos = player.PlayerPawn.Value.AbsOrigin;
+                    var dx = pos.X - _origin.X;
+                    var dy = pos.Y - _origin.Y;
+                    var dz = pos.Z - _origin.Z;
 
-                        Warcraft.SpawnParticle(player.EyePosition(), "particles/blood_impact/blood_impact_basic.vpcf");
+                    float distanceSq = dx * dx + dy * dy + dz * dz;
+
+                    if (distanceSq <= _radius * _radius)
+                    {
+                        int hp = player.PlayerPawn.Value.Health;
+                        if (hp <= _damage)
+                        {
+                            player.CommitSuicide(true, true);
+                            Console.WriteLine($"[SerpentWard] {player.PlayerName} was killed by the Ward!");
+                        }
+                        else
+                        {
+                            player.SetHp(hp - _damage);
+                            Console.WriteLine($"[SerpentWard] {player.PlayerName} took {_damage} damage from the Ward.");
+                        }
                     }
                 }
             }
 
             public override void OnFinish()
             {
-                beamEntity?.RemoveIfValid();
+                _damageTimer?.Kill();
             }
+
+            public override void OnTick() { }
         }
-
-
 
 
         private void Ultimate()
@@ -150,12 +170,12 @@ namespace WarcraftPlugin.Classes
             float duration = 0.6f + (abilityLevel * 0.5f);
 
             _godModeActive = true;
-            Player.PrintToChat($" \x07[GodMode] You are invincible for {duration} seconds!");
+            Player.PrintToChat($" \x07[Big Bad Voodoo] \x02You are invincible for {duration} seconds!");
 
             WarcraftPlugin.Instance.AddTimer(duration, () =>
             {
                 _godModeActive = false;
-                Player.PrintToChat(" \x07[GodMode] Your invincibility has ended.");
+                Player.PrintToChat(" \x07[Big Bad Voodoo] \x02Your invincibility has ended.");
             });
         }
 
