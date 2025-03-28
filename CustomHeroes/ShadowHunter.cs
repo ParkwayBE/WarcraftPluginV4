@@ -222,7 +222,7 @@ namespace WarcraftPlugin.Classes
                     float distanceSq = dx * dx + dy * dy + dz * dz;
                     if (distanceSq <= _radius * _radius)
                     {
-                        player.EmitSound("sounds/weapons/taser/taser_hit.vsnd");
+                        player.EmitSound("sounds/common/talk.vsnd");
                         int hp = player.PlayerPawn.Value.Health;
                         if (hp <= _damage)
                         {
