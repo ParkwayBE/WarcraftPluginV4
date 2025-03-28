@@ -101,9 +101,9 @@ namespace WarcraftPlugin.Classes
         internal class SerpentWardEffect : WarcraftEffect
         {
             private readonly Vector _origin;
-            private readonly float _radius = 100f;
-            private readonly float _damageInterval = 0.5f;
-            private readonly int _damage = 5;
+            private readonly float _radius = 50f;
+            private readonly float _damageInterval = 0.7f;
+            private readonly int _damage = 8;
             private Timer? _damageTimer;
             private Timer? _beamRotationTimer;
             private readonly CCSPlayerController _owner;
@@ -144,7 +144,7 @@ namespace WarcraftPlugin.Classes
                 }
 
                 // Start rotation effect
-                _beamRotationTimer = WarcraftPlugin.Instance.AddTimer(0.5f, RotateBeams, TimerFlags.REPEAT);
+                _beamRotationTimer = WarcraftPlugin.Instance.AddTimer(0.8f, RotateBeams, TimerFlags.REPEAT);
 
                 // Start damage loop
                 _damageTimer = WarcraftPlugin.Instance.AddTimer(_damageInterval, ApplyWardEffect, TimerFlags.REPEAT);
@@ -158,7 +158,7 @@ namespace WarcraftPlugin.Classes
                 _beams.Clear();
 
                 _rotationStep++;
-                float baseAngleOffset = _rotationStep * 0.1f; // Slower rotation
+                float baseAngleOffset = _rotationStep * 0.05f; // Slower rotation
                 float radiusOffset = _radius * 0.75f;
 
                 // Primary color
