@@ -4,6 +4,8 @@ using System.Drawing;
 using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using g3;
+using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
@@ -17,6 +19,8 @@ namespace WarcraftPlugin.Classes
         public override Color DefaultColor => Color.GreenYellow;
         private bool _godModeActive = false;
         private readonly List<CCSPlayerController> _slowedPlayers = new();
+        private readonly List<SerpentWardEffect> activeWards = new();
+
 
 
         public override List<IWarcraftAbility> Abilities =>
@@ -24,7 +28,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Healing Wave", "You and your teammates gain additional health on spawn."),
             new WarcraftAbility("Hex", "6-30% chance to remove all bonushealth, bonus speed and invisibility from your target."),
             new WarcraftAbility("Serpent Ward", "Place a ward that damages and slows nearby enemies."),
-            new WarcraftCooldownAbility("Big Bad Voodoo", "Become immune to all damage for the next 0.6-3 seconds", 8f)
+            new WarcraftCooldownAbility("Big Bad Voodoo", "Become immune to all damage for the next 0.6-3 seconds", 8f, false)
         ];
 
         public override void Register()
@@ -32,7 +36,8 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventRoundStart>(RoundStart);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerHurt>(PlayerHurt);
-            HookEvent<EventFlashbangDetonate>(OnWardDetonate);
+            HookEvent<EventDecoyStarted>(DecoyStart, HookMode.Post);
+            HookEvent<EventRoundEnd>(OnRoundEnd);
 
             HookAbility(3, Ultimate);
         }
@@ -42,7 +47,7 @@ namespace WarcraftPlugin.Classes
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(0); // Healing Wave
             if (abilityLevel <= 0) return;
 
-            int bonusHealth = 5 * abilityLevel;
+            int bonusHealth = 6 * abilityLevel;
 
             // Heal self
             if (Player.IsAlive())
@@ -50,8 +55,6 @@ namespace WarcraftPlugin.Classes
                 int newHp = Player.PlayerPawn.Value.Health + bonusHealth;
                 Player.SetHp(newHp);
                 Player.PrintToChat($" \x04[Healing Wave] You gained {bonusHealth} bonus HP from a Shadow Hunter.");
-                Player.GiveNamedItem("weapon_flashbang");
-                Player.GiveNamedItem("weapon_flashbang");
             }
 
             // Heal teammates
@@ -62,70 +65,89 @@ namespace WarcraftPlugin.Classes
                 int newHp = teammate.PlayerPawn.Value.Health + bonusHealth;
                 teammate.SetHp(newHp);
                 teammate.PrintToChat($" \x04[Healing Wave] {Player.PlayerName} healed you for {bonusHealth} HP!");
+
+                if (WarcraftPlayer.GetAbilityLevel(2) > 0)
+                {
+                    var decoy = new CDecoyGrenade(Player.GiveNamedItem("weapon_decoy"));
+                    decoy.AttributeManager.Item.CustomName = Localizer["ShadowHunter.ability.2"];
+                }
             }
         }
-
-        private void OnWardDetonate(EventFlashbangDetonate flashbang)
+        private void DecoyStart(EventDecoyStarted grenade)
         {
-            if (flashbang.Userid != Player || !Player.IsValid) return;
+            if (WarcraftPlayer.GetAbilityLevel(2) <= 0)
+                return;
 
-            int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
-            if (abilityLevel <= 0) return;
+            Utilities.GetEntityFromIndex<CDecoyProjectile>(grenade.Entityid)?.RemoveIfValid();
 
-            Vector origin = flashbang.Userid.PlayerPawn.Value.AbsOrigin;
-            float radius = 250f;
-            float damagePerTick = 4f + abilityLevel;
-            float slowFactor = 0.7f;
-            float duration = 5f + abilityLevel;
-            float tickRate = 1f;
+            var origin = new Vector(grenade.X, grenade.Y, grenade.Z);
+            var ward = new SerpentWardEffect(Player, origin);
+            ward.Start();
+            activeWards.Add(ward);
 
-            Player.PrintToChat($" \x07[Serpent Ward] Ward activated!");
+            Player.PrintToChat("\x04[Serpent Ward] Ward placed!");
+        }
 
-            // Visual effect: red beam
-            Vector top = origin + new Vector(0, 0, 200);
-            Warcraft.DrawLaserBetween(origin, top, Color.Red, duration, 2f);
+        private void OnRoundEnd(EventRoundEnd @event)
+        {
+            foreach (var ward in activeWards)
+                ward.Destroy();
+            activeWards.Clear();
+        }
 
-            int ticks = (int)(duration / tickRate);
+        internal class SerpentWardEffect : WarcraftEffect
+        {
+            private readonly Vector origin;
+            private CBaseEntity? beamEntity;
+            private Box3d _auraZone;
 
-            void TickWard()
+            public SerpentWardEffect(CCSPlayerController owner, Vector origin)
+                : base(owner, duration: 999f, onTickInterval: 0.5f)
             {
-                if (ticks-- <= 0)
-                {
-                    foreach (var p in _slowedPlayers)
-                    {
-                        if (p.IsValid && p.IsAlive())
-                            p.PlayerPawn.Value.VelocityModifier = 1f;
-                    }
-                    _slowedPlayers.Clear();
-                    return;
-                }
-
-                foreach (var target in Utilities.GetPlayers().Where(p => p.IsValid && p.IsAlive() && p.TeamNum != Player.TeamNum))
-                {
-                    var pos = target.PlayerPawn.Value.AbsOrigin;
-                    var diff = pos - origin;
-                    if (diff.Length() < radius)
-                    {
-                        int newHp = target.PlayerPawn.Value.Health - (int)damagePerTick;
-                        target.SetHp(newHp);
-                        target.PlayerPawn.Value.VelocityModifier = slowFactor;
-
-                        if (!_slowedPlayers.Contains(target)) _slowedPlayers.Add(target);
-
-                        target.PrintToChat(" \x07[Serpent Ward] You are being damaged and slowed!");
-                    }
-                }
-
-                WarcraftPlugin.Instance.AddTimer(tickRate, TickWard);
+                this.origin = origin;
             }
 
-            TickWard(); // Start the first tick
+            public override void OnStart()
+            {
+                // Draw the vertical red beam
+                beamEntity = Warcraft.DrawLaserBetween(origin, origin.With(z: origin.Z + 400), Color.Red, Duration);
+
+                // Define a damage zone
+                _auraZone = Warcraft.CreateBoxAroundPoint(origin, 200, 200, 200);
+                //_auraZone.Show(30); // optional debug
+            }
+
+            public override void OnTick()
+            {
+                foreach (var player in Utilities.GetPlayers())
+                {
+                    if (!player.IsAlive() || player.TeamNum == Owner.TeamNum || player.PlayerPawn?.Value == null)
+                        continue;
+
+                    if (_auraZone.Contains(player.PlayerPawn.Value.AbsOrigin))
+                    {
+                        player.TakeDamage(3, Owner, KillFeedIcon.tripwirefire);
+                        player.PlayerPawn.Value.VelocityModifier = 0.7f;
+                        player.PlayerPawn.Value.MovementServices.Maxspeed = 180;
+
+                        Warcraft.SpawnParticle(player.EyePosition(), "particles/blood_impact/blood_impact_basic.vpcf");
+                    }
+                }
+            }
+
+            public override void OnFinish()
+            {
+                beamEntity?.RemoveIfValid();
+            }
         }
+
+
+
 
         private void Ultimate()
         {
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(3);
-            float duration = abilityLevel / 2f;
+            float duration = 0.6f + (abilityLevel * 0.5f);
 
             _godModeActive = true;
             Player.PrintToChat($" \x07[GodMode] You are invincible for {duration} seconds!");
@@ -142,7 +164,7 @@ namespace WarcraftPlugin.Classes
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
             if (abilityLevel <= 0) return;
 
-            float chance = 0.05f + (abilityLevel * 0.05f); // 6% → 30%
+            float chance = 0.05f + (abilityLevel * 0.05f);
             if (Random.Shared.NextDouble() > chance) return;
 
             var target = @event.Userid;
@@ -169,3 +191,4 @@ namespace WarcraftPlugin.Classes
         }
     }
 }
+
