@@ -246,7 +246,7 @@ namespace WarcraftPlugin
                 // ✅ Auto assign class if not already set
                 if (string.IsNullOrEmpty(wcsPlayer.className))
                 {
-                    WarcraftPlugin.Instance.ChangeClass(player, "Human Alliance"); // Replace with any internal class name
+                    WarcraftPlugin.Instance.ChangeClass(player, "HumanAlliance"); // Replace with any internal class name
                 }
 
                 // ✅ Auto-level all 4 abilities for quick testing
