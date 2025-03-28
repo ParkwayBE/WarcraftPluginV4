@@ -105,6 +105,7 @@ namespace WarcraftPlugin.Classes
             private readonly float _radius = 50f;
             private readonly int beamCount = 8;
             private float _rotationAngle = 0f;
+
             private readonly float _damageInterval = 0.7f;
             private readonly int _damage = 8;
             private Timer? _damageTimer;
@@ -178,14 +179,12 @@ namespace WarcraftPlugin.Classes
 
                     Color thisColor = (i % 2 == 0) ? beamColor : secondaryColor;
 
-                    var beam = Warcraft.DrawLaserBetween(start, end, thisColor, 1.5f, width: 12f);
-                    _beams.Add(beam);
+                    var beam = Utilities.CreateEntityByName<CBeam>("beam");
                     if (beam == null) continue;
 
                     beam.Render = thisColor;
                     beam.Width = 12;
                     beam.Teleport(start, new QAngle(), new Vector());
-
                     beam.DispatchSpawn();
 
                     // Let each beam stay alive long enough to overlap with the next

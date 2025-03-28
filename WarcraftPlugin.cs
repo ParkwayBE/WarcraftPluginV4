@@ -1,23 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
-using CounterStrikeSharp.API.Modules.Utils;
-using WarcraftPlugin.Helpers;
-using CounterStrikeSharp.API.Modules.Admin;
 using WarcraftPlugin.Adverts;
-using System.Text.Json.Serialization;
-using WarcraftPlugin.Events;
-using WarcraftPlugin.Menu;
-using WarcraftPlugin.Menu.WarcraftMenu;
 using WarcraftPlugin.Core;
-using WarcraftPlugin.Models;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Core.Preload;
+using WarcraftPlugin.Events;
+using WarcraftPlugin.Helpers;
 using WarcraftPlugin.lang;
+using WarcraftPlugin.Menu;
+using WarcraftPlugin.Menu.WarcraftMenu;
+using WarcraftPlugin.Models;
 
 
 namespace WarcraftPlugin
@@ -226,6 +225,39 @@ namespace WarcraftPlugin
             _eventSystem.Initialize();
 
             _database.Initialize(ModuleDirectory);
+
+            RegisterEventHandler<EventPlayerSpawn>((@event, info) =>
+            {
+                var player = @event.Userid;
+
+                // ✅ Skip invalid players
+                if (player == null || !player.IsValid || player.PlayerPawn?.Value == null)
+                    return HookResult.Continue;
+
+                // ✅ Get WCS player wrapper
+                var wcsPlayer = player.GetWarcraftPlayer();
+                if (wcsPlayer == null)
+                    return HookResult.Continue;
+
+                // ✅ Skip humans if you only want bots (optional)
+                if (!player.IsBot)
+                    return HookResult.Continue;
+
+                // ✅ Auto assign class if not already set
+                if (string.IsNullOrEmpty(wcsPlayer.className))
+                {
+                    WarcraftPlugin.Instance.ChangeClass(player, "Human Alliance"); // Replace with any internal class name
+                }
+
+                // ✅ Auto-level all 4 abilities for quick testing
+                wcsPlayer.SetAbilityLevel(0, 5); // Skill 1
+                wcsPlayer.SetAbilityLevel(1, 5); // Skill 2
+                wcsPlayer.SetAbilityLevel(2, 5); // Skill 3
+                wcsPlayer.SetAbilityLevel(3, 1); // Ultimate
+
+                return HookResult.Continue;
+            });
+
         }
 
         private void ShowSkillsMenu(CCSPlayerController player)
