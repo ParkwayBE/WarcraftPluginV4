@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Helpers;
 
@@ -78,11 +79,18 @@ namespace WarcraftPlugin.CustomSkills
         {
             if (victim == null || !victim.IsValid || victim.PlayerPawn?.Value == null) return;
 
-            victim.PlayerPawn.Value.Health -= damage;
+            int newHealth = victim.PlayerPawn.Value.Health - damage;
+            newHealth = Math.Max(newHealth, 1); // Prevents instant death if you want to test
 
+            victim.PlayerPawn.Value.Health = newHealth;
+
+            // Optional: simulate feedback
+            Warcraft.DrawLaserBetween(attacker.EyePosition(), victim.EyePosition(), Color.LightBlue, 2f);
             attacker.PrintToCenter($"⚡ You dealt {damage} damage to {victim.PlayerName}!");
             victim.PrintToCenter($"⚡ You were hit by {attacker.PlayerName}'s Chain Lightning!");
         }
+
+
 
 
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.CustomSkills;
@@ -115,7 +116,15 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
-            var target = potentialTargets[Random.Shared.Next(potentialTargets.Count)];
+            var target = potentialTargets
+                    .OrderBy(p =>
+                    {
+                        var pos = p.PlayerPawn?.Value?.AbsOrigin ?? default;
+                        var diff = pos - casterPos;
+                        return diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
+                    })
+                    .First();
+
             var wcTarget = target.GetWarcraftPlayer();
 
             if (wcTarget == null)
