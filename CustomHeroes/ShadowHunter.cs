@@ -5,6 +5,7 @@ using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
+using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
@@ -102,6 +103,8 @@ namespace WarcraftPlugin.Classes
         {
             private readonly Vector _origin;
             private readonly float _radius = 50f;
+            private readonly int beamCount = 8;
+            private float _rotationAngle = 0f;
             private readonly float _damageInterval = 0.7f;
             private readonly int _damage = 8;
             private Timer? _damageTimer;
@@ -152,55 +155,46 @@ namespace WarcraftPlugin.Classes
 
             private void RotateBeams()
             {
-                // Remove all old beams
-                foreach (var beam in _beams)
-                    beam.RemoveIfValid();
-                _beams.Clear();
+                if (!Owner.IsValid || Owner.PlayerPawn?.Value == null)
+                    return;
 
-                _rotationStep++;
-                float baseAngleOffset = _rotationStep * 0.05f; // Slower rotation
-                float radiusOffset = _radius * 0.75f;
+                Vector origin = _origin;
+                float step = (float)(2 * Math.PI / beamCount);
+                float radius = _radius;
+                float angleOffset = _rotationAngle;
 
-                // Primary color
-                Color mainColor = _owner.TeamNum == 2 ? Color.Red : Color.Cyan;
+                Color beamColor = Owner.TeamNum == (byte)CsTeam.Terrorist ? Color.Red : Color.LightBlue;
+                Color secondaryColor = Owner.TeamNum == (byte)CsTeam.Terrorist ? Color.Orange : Color.Cyan;
 
-                // Secondary color (slightly different tone)
-                Color secondaryColor = _owner.TeamNum == 2 ? Color.Orange : Color.LightBlue;
-
-                // Primary beams (4)
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < beamCount; i++)
                 {
-                    float angle = (float)(2 * Math.PI * i / 4) + baseAngleOffset;
-                    var offset = new Vector(
-                        radiusOffset * (float)Math.Cos(angle),
-                        radiusOffset * (float)Math.Sin(angle),
-                        0f
-                    );
+                    float angle = step * i + angleOffset;
+                    float xOffset = (float)(Math.Cos(angle) * radius);
+                    float yOffset = (float)(Math.Sin(angle) * radius);
 
-                    Vector start = _origin + offset;
-                    Vector end = start.Clone(); end.Z += 200;
+                    Vector start = origin + new Vector(xOffset, yOffset, 0);
+                    Vector end = start.Clone();
+                    end.Z += 250;
 
-                    var beam = Warcraft.DrawLaserBetween(start, end, mainColor, duration: 0.25f, width: 10f);
-                    _beams.Add(beam);
+                    Color thisColor = (i % 2 == 0) ? beamColor : secondaryColor;
+
+                    var beam = Utilities.CreateEntityByName<CBeam>("beam");
+                    if (beam == null) continue;
+
+                    beam.Render = thisColor;
+                    beam.Width = 12;
+                    beam.Teleport(start, new QAngle(), new Vector());
+
+                    beam.DispatchSpawn();
+
+                    // Let each beam stay alive long enough to overlap with the next
+                    WarcraftPlugin.Instance.AddTimer(1.0f, () => beam.RemoveIfValid());
                 }
 
-                // Secondary beams (4, offset)
-                for (int i = 0; i < 4; i++)
-                {
-                    float angle = (float)(2 * Math.PI * i / 4) + baseAngleOffset + 0.4f; // Offset for spacing
-                    var offset = new Vector(
-                        radiusOffset * (float)Math.Cos(angle),
-                        radiusOffset * (float)Math.Sin(angle),
-                        0f
-                    );
-
-                    Vector start = _origin + offset;
-                    Vector end = start.Clone(); end.Z += 200;
-
-                    var beam = Warcraft.DrawLaserBetween(start, end, secondaryColor, duration: 0.25f, width: 6f);
-                    _beams.Add(beam);
-                }
+                // Rotate slowly
+                _rotationAngle += 0.2f;
             }
+
 
 
 
@@ -222,7 +216,7 @@ namespace WarcraftPlugin.Classes
                     float distanceSq = dx * dx + dy * dy + dz * dz;
                     if (distanceSq <= _radius * _radius)
                     {
-                        player.EmitSound("sounds/common/talk.vsnd");
+                        player.EmitSound("common/talk.vsnd");
                         int hp = player.PlayerPawn.Value.Health;
                         if (hp <= _damage)
                         {
