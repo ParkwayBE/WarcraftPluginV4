@@ -118,13 +118,18 @@ namespace WarcraftPlugin.Classes
             var target = potentialTargets[Random.Shared.Next(potentialTargets.Count)];
             var wcTarget = target.GetWarcraftPlayer();
 
-            if (wcTarget.HasUltimateImmunity)
+            if (wcTarget == null)
+            {
+                Console.WriteLine($"[OrcishHorde] Target {target.PlayerName} has no WarcraftPlayer data (probably a bot). Continuing...");
+            }
+            else if (wcTarget.HasUltimateImmunity)
             {
                 caster.PrintToCenter("⛔ Target is immune to ultimates!");
                 target.PrintToCenter("🛡️ Your Ultimate Immunity blocked Chain Lightning!");
                 Console.WriteLine($"[OrcishHorde] Target {target.PlayerName} had immunity.");
                 return;
             }
+
 
             SkillFunctions.DealRawDamage(caster, target, damage);
             Warcraft.DrawLaserBetween(caster.EyePosition(), target.EyePosition(), Color.LightBlue, 2f);
