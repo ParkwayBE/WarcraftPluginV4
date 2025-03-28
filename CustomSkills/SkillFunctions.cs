@@ -80,7 +80,7 @@ namespace WarcraftPlugin.CustomSkills
             if (victim == null || !victim.IsValid || victim.PlayerPawn?.Value == null) return;
 
             int newHealth = victim.PlayerPawn.Value.Health - damage;
-            newHealth = Math.Max(newHealth, 1); // Prevents instant death if you want to test
+            victim.PlayerPawn.Value.Health = newHealth;
 
             victim.PlayerPawn.Value.Health = newHealth;
 

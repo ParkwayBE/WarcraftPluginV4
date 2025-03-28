@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.CustomSkills;
@@ -54,97 +53,72 @@ namespace WarcraftPlugin.Classes
         {
             Console.WriteLine("[OrcishHorde] Ultimate activated");
 
-            var caster = Player;
-            var wcCaster = WarcraftPlayer;
-
-            if (caster?.PlayerPawn?.Value == null)
-            {
-                Console.WriteLine("[OrcishHorde] Caster has no PlayerPawn.");
-                return;
-            }
-
-            var casterPos = caster.PlayerPawn.Value.AbsOrigin;
-
-            if (casterPos.X == 0 && casterPos.Y == 0 && casterPos.Z == 0)
-            {
-                Console.WriteLine("[OrcishHorde] Caster position invalid (0,0,0).");
-                return;
-            }
-
-            float radius = 1500f;
+            int maxBounces = 3;
+            float bounceRadius = 1500f;
             int damage = 30;
-            var potentialTargets = new List<CCSPlayerController>();
+            float bounceDelay = 0.3f;
 
-            foreach (var player in Utilities.GetPlayers())
+            var caster = Player;
+            var casterPos = caster.PlayerPawn.Value.AbsOrigin;
+            var hitPlayers = new HashSet<CCSPlayerController> { caster };
+            var lastTarget = caster;
+
+            void Bounce(int bounceCount)
             {
-                if (player == null || !player.IsValid || player == caster || !player.IsAlive())
-                    continue;
+                CCSPlayerController? nextTarget = null;
+                float closestDistanceSq = float.MaxValue;
 
-                if (player.TeamNum == caster.TeamNum)
-                    continue;
-
-                if (player.PlayerPawn?.Value == null)
+                foreach (var player in Utilities.GetPlayers())
                 {
-                    Console.WriteLine($"[OrcishHorde] Skipped {player.PlayerName} — no PlayerPawn.");
-                    continue;
-                }
+                    if (player == null || !player.IsValid || player.TeamNum == caster.TeamNum || player.PlayerPawn?.Value == null || hitPlayers.Contains(player))
+                        continue;
 
-                var targetPos = player.PlayerPawn.Value.AbsOrigin;
+                    var diff = player.PlayerPawn.Value.AbsOrigin - lastTarget.PlayerPawn.Value.AbsOrigin;
+                    float distSq = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
 
-                if (targetPos.X == 0 && targetPos.Y == 0 && targetPos.Z == 0)
-                {
-                    Console.WriteLine($"[OrcishHorde] Skipped {player.PlayerName} — position is zero.");
-                    continue;
-                }
-
-                var diff = targetPos - casterPos;
-                float distanceSq = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
-
-                Console.WriteLine($"[OrcishHorde] Checking {player.PlayerName} - Dist²: {distanceSq}");
-
-                if (distanceSq <= radius * radius)
-                {
-                    potentialTargets.Add(player);
-                }
-            }
-
-            Console.WriteLine($"[OrcishHorde] Found {potentialTargets.Count} potential targets");
-
-            if (potentialTargets.Count == 0)
-            {
-                caster.PrintToCenter("⚡ No enemies nearby for Chain Lightning!");
-                return;
-            }
-
-            var target = potentialTargets
-                    .OrderBy(p =>
+                    if (distSq <= bounceRadius * bounceRadius && distSq < closestDistanceSq)
                     {
-                        var pos = p.PlayerPawn?.Value?.AbsOrigin ?? default;
-                        var diff = pos - casterPos;
-                        return diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
-                    })
-                    .First();
+                        closestDistanceSq = distSq;
+                        nextTarget = player;
+                    }
+                }
 
-            var wcTarget = target.GetWarcraftPlayer();
+                if (nextTarget == null)
+                {
+                    Console.WriteLine("[OrcishHorde] No more valid targets.");
+                    return;
+                }
 
-            if (wcTarget == null)
-            {
-                Console.WriteLine($"[OrcishHorde] Target {target.PlayerName} has no WarcraftPlayer data (probably a bot). Continuing...");
+                var wcTarget = nextTarget.GetWarcraftPlayer();
+                if (wcTarget != null && wcTarget.HasUltimateImmunity)
+                {
+                    caster.PrintToCenter("⛔ Target is immune to ultimates!");
+                    nextTarget.PrintToCenter("🛡️ Your Ultimate Immunity blocked Chain Lightning!");
+                    Console.WriteLine($"[OrcishHorde] Target {nextTarget.PlayerName} had immunity.");
+                    return;
+                }
+
+                SkillFunctions.DealRawDamage(caster, nextTarget, damage);
+                hitPlayers.Add(nextTarget);
+
+                // Visual: lightning laser + glow effect
+                Warcraft.DrawLaserBetween(lastTarget.EyePosition(), nextTarget.EyePosition(), Color.Cyan, 1.5f);
+                nextTarget.PlayerPawn.Value.SetColor(Color.FromArgb(255, 150, 255, 255));
+                WarcraftPlugin.Instance.AddTimer(0.5f, () =>
+                {
+                    nextTarget.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
+                });
+
+                Console.WriteLine($"[OrcishHorde] Chain Lightning bounced to {nextTarget.PlayerName} (bounce #{bounceCount + 1})");
+                lastTarget = nextTarget;
+
+                if (bounceCount + 1 < maxBounces)
+                {
+                    WarcraftPlugin.Instance.AddTimer(bounceDelay, () => Bounce(bounceCount + 1));
+                }
             }
-            else if (wcTarget.HasUltimateImmunity)
-            {
-                caster.PrintToCenter("⛔ Target is immune to ultimates!");
-                target.PrintToCenter("🛡️ Your Ultimate Immunity blocked Chain Lightning!");
-                Console.WriteLine($"[OrcishHorde] Target {target.PlayerName} had immunity.");
-                return;
-            }
 
-
-            SkillFunctions.DealRawDamage(caster, target, damage);
-            Warcraft.DrawLaserBetween(caster.EyePosition(), target.EyePosition(), Color.LightBlue, 2f);
-
-            Console.WriteLine($"[OrcishHorde] Dealt {damage} damage to {target.PlayerName}");
-
+            WarcraftPlugin.Instance.AddTimer(0.0f, () => Bounce(0));
             StartCooldown(3);
         }
 
