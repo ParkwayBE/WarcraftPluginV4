@@ -158,7 +158,7 @@ namespace WarcraftPlugin.Classes
                 _beams.Clear();
 
                 _rotationStep++;
-                float baseAngleOffset = _rotationStep * 0.1f; // Slower rotation
+                float baseAngleOffset = _rotationStep * 0.02f; // Slower rotation
                 float radiusOffset = _radius * 0.75f;
 
                 // Primary color
@@ -222,7 +222,7 @@ namespace WarcraftPlugin.Classes
                     float distanceSq = dx * dx + dy * dy + dz * dz;
                     if (distanceSq <= _radius * _radius)
                     {
-                        player.EmitSound("weapons/physcannon/energy_sing_explosion2.wav");
+                        player.EmitSound("sounds/weapons/taser/taser_hit.vsnd");
                         int hp = player.PlayerPawn.Value.Health;
                         if (hp <= _damage)
                         {
