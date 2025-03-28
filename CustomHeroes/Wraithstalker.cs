@@ -54,7 +54,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Assimilation", "On Kill: Gain a Skull, skulls last untill the end of the game and give various bonusstats on spawn."),
             new WarcraftAbility("Phantom Cloak", "Standing still for  2.5 - 0.5 seconds makes you invisible."),
             new WarcraftAbility("Shadowstrike", "After you exited Phantom Cloak your next hit will cause bonus damage."),
-            new WarcraftCooldownAbility("Marked for prey", "Scan the area where you are looking, highlight enemies close for x seconds and slow them down.", 5f)
+            new WarcraftCooldownAbility("Marked for prey", "Scan the area where you are looking, highlight enemies close for x seconds and slow them down.", 5f, false)
         ];
 
         public override void Register()

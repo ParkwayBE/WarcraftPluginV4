@@ -17,7 +17,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Invisibility", "Gain up to 75% invisibility"),
             new WarcraftAbility("Devotion Aura", "Gain up to 90 bonus starting health"),
             new WarcraftAbility("Bash", "5-25% to freeze your target for 1-3 seconds"),
-            new WarcraftCooldownAbility("Teleport", " Teleport where you aim at! ", 8f)
+            new WarcraftCooldownAbility("Teleport", " Teleport where you aim at! ", 8f, false)
         ];
 
         public override void Register()
