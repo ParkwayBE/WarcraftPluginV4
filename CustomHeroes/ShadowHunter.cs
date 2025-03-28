@@ -243,7 +243,7 @@ namespace WarcraftPlugin.Classes
                 _damageTimer?.Kill();
                 _beamRotationTimer?.Kill();
                 foreach (var beam in _beams)
-                    WarcraftPlugin.Instance.AddTimer(0.8f, () => beam.RemoveIfValid());
+                    WarcraftPlugin.Instance.AddTimer(1.5f, () => beam.RemoveIfValid());
             }
 
             public override void OnTick() { }
