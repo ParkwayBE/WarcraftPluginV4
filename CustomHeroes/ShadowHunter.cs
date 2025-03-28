@@ -144,7 +144,7 @@ namespace WarcraftPlugin.Classes
                 }
 
                 // Start rotation effect
-                _beamRotationTimer = WarcraftPlugin.Instance.AddTimer(0.1f, RotateBeams, TimerFlags.REPEAT);
+                _beamRotationTimer = WarcraftPlugin.Instance.AddTimer(0.5f, RotateBeams, TimerFlags.REPEAT);
 
                 // Start damage loop
                 _damageTimer = WarcraftPlugin.Instance.AddTimer(_damageInterval, ApplyWardEffect, TimerFlags.REPEAT);
@@ -158,7 +158,7 @@ namespace WarcraftPlugin.Classes
                 _beams.Clear();
 
                 _rotationStep++;
-                float baseAngleOffset = _rotationStep * 0.02f; // Slower rotation
+                float baseAngleOffset = _rotationStep * 0.1f; // Slower rotation
                 float radiusOffset = _radius * 0.75f;
 
                 // Primary color
