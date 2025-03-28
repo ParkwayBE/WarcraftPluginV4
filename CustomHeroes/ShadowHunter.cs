@@ -101,11 +101,15 @@ namespace WarcraftPlugin.Classes
         internal class SerpentWardEffect : WarcraftEffect
         {
             private readonly Vector _origin;
-            private readonly float _radius = 100f; // Area of effect
+            private readonly float _radius = 100f;
             private readonly float _damageInterval = 0.5f;
             private readonly int _damage = 5;
             private Timer? _damageTimer;
+            private Timer? _beamRotationTimer;
             private readonly CCSPlayerController _owner;
+            private readonly List<CBeam> _beams = new();
+            private int _rotationStep = 0;
+            private readonly int _beamCount = 4; // Number of beams around the ward
 
             public SerpentWardEffect(CCSPlayerController owner, Vector origin)
                 : base(owner, duration: float.MaxValue, destroyOnDeath: false, destroyOnRoundEnd: true)
@@ -118,21 +122,65 @@ namespace WarcraftPlugin.Classes
             {
                 Console.WriteLine($"[SerpentWard] Ward activated at {_origin}");
 
-                // 8 rotating beam positions around the origin (radius 75)
-                Vector beamEndOffset = new Vector(0, 0, 200);
-                foreach (var (x, y) in new[] {
-            (75f, 0f), (53.03f, 53.03f), (0f, 75f), (-53.03f, 53.03f),
-            (-75f, 0f), (-53.03f, -53.03f), (0f, -75f), (53.03f, -53.03f)
-        })
+                Color beamColor = _owner.TeamNum == 2 ? Color.Red : Color.Cyan;
+
+                // Create beams around the ward
+                float radiusOffset = _radius * 0.75f;
+                for (int i = 0; i < _beamCount; i++)
                 {
-                    var beamStart = _origin + new Vector(x, y, 0);
-                    var beamEnd = beamStart + beamEndOffset;
-                    Warcraft.DrawLaserBetween(beamStart, beamEnd, Color.Red, 240.0f, width: 6.0f);
+                    float angle = (float)(2 * Math.PI * i / _beamCount);
+                    var offset = new Vector(
+                        radiusOffset * (float)Math.Cos(angle),
+                        radiusOffset * (float)Math.Sin(angle),
+                        0f
+                    );
+
+                    Vector start = _origin + offset;
+                    Vector end = start.Clone();
+                    end.Z += 200;
+
+                    var beam = Warcraft.DrawLaserBetween(start, end, beamColor, duration: 240f, width: 10f);
+                    _beams.Add(beam);
                 }
 
-                // Damage loop
+                // Start rotation effect
+                _beamRotationTimer = WarcraftPlugin.Instance.AddTimer(0.1f, RotateBeams, TimerFlags.REPEAT);
+
+                // Start damage loop
                 _damageTimer = WarcraftPlugin.Instance.AddTimer(_damageInterval, ApplyWardEffect, TimerFlags.REPEAT);
             }
+
+            private void RotateBeams()
+            {
+                // Remove existing beams
+                foreach (var beam in _beams)
+                    beam.RemoveIfValid();
+                _beams.Clear();
+
+                // Recreate beams at new rotated positions
+                _rotationStep++;
+                float angleOffset = (float)(_rotationStep * Math.PI / 16.0);
+                float radiusOffset = _radius * 0.75f;
+                Color beamColor = _owner.TeamNum == 2 ? Color.Red : Color.Cyan;
+
+                for (int i = 0; i < _beamCount; i++)
+                {
+                    float angle = (float)(2 * Math.PI * i / _beamCount) + angleOffset;
+                    var offset = new Vector(
+                        radiusOffset * (float)Math.Cos(angle),
+                        radiusOffset * (float)Math.Sin(angle),
+                        0f
+                    );
+
+                    Vector start = _origin + offset;
+                    Vector end = start.Clone();
+                    end.Z += 200;
+
+                    var beam = Warcraft.DrawLaserBetween(start, end, beamColor, duration: 0.2f, width: 10f);
+                    _beams.Add(beam);
+                }
+            }
+
 
             private void ApplyWardEffect()
             {
@@ -141,20 +189,18 @@ namespace WarcraftPlugin.Classes
                     if (!player.IsValid || player.PlayerPawn?.Value == null || !player.IsAlive())
                         continue;
 
-                    // ❌ Skip teammates of the ward owner
                     if (player.TeamNum == _owner.TeamNum)
                         continue;
 
                     var pos = player.PlayerPawn.Value.AbsOrigin;
-                    float dx = pos.X - _origin.X;
-                    float dy = pos.Y - _origin.Y;
-                    float dz = pos.Z - _origin.Z;
-                    float distanceSq = dx * dx + dy * dy + dz * dz;
+                    var dx = pos.X - _origin.X;
+                    var dy = pos.Y - _origin.Y;
+                    var dz = pos.Z - _origin.Z;
 
+                    float distanceSq = dx * dx + dy * dy + dz * dz;
                     if (distanceSq <= _radius * _radius)
                     {
                         player.EmitSound("weapons/physcannon/energy_sing_explosion2.wav");
-
                         int hp = player.PlayerPawn.Value.Health;
                         if (hp <= _damage)
                         {
@@ -173,10 +219,16 @@ namespace WarcraftPlugin.Classes
             public override void OnFinish()
             {
                 _damageTimer?.Kill();
+                _beamRotationTimer?.Kill();
+                foreach (var beam in _beams)
+                    beam.RemoveIfValid();
             }
 
             public override void OnTick() { }
         }
+
+
+
 
 
 
