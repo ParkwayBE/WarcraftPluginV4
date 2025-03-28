@@ -55,31 +55,51 @@ namespace WarcraftPlugin.Classes
 
             var caster = Player;
             var wcCaster = WarcraftPlayer;
+
+            if (caster?.PlayerPawn?.Value == null)
+            {
+                Console.WriteLine("[OrcishHorde] Caster has no PlayerPawn.");
+                return;
+            }
+
+            var casterPos = caster.PlayerPawn.Value.AbsOrigin;
+
+            if (casterPos.X == 0 && casterPos.Y == 0 && casterPos.Z == 0)
+            {
+                Console.WriteLine("[OrcishHorde] Caster position invalid (0,0,0).");
+                return;
+            }
+
             float radius = 1500f;
             int damage = 30;
-
             var potentialTargets = new List<CCSPlayerController>();
 
             foreach (var player in Utilities.GetPlayers())
             {
-                if (player == null || !player.IsValid || player.IsBot || player == caster)
+                if (player == null || !player.IsValid || player == caster || !player.IsAlive())
                     continue;
 
-                if (player.TeamNum == caster.TeamNum || player.PlayerPawn?.Value == null)
+                if (player.TeamNum == caster.TeamNum)
                     continue;
+
+                if (player.PlayerPawn?.Value == null)
+                {
+                    Console.WriteLine($"[OrcishHorde] Skipped {player.PlayerName} — no PlayerPawn.");
+                    continue;
+                }
 
                 var targetPos = player.PlayerPawn.Value.AbsOrigin;
-                var casterPos = caster.PlayerPawn?.Value?.AbsOrigin ?? default;
 
                 if (targetPos.X == 0 && targetPos.Y == 0 && targetPos.Z == 0)
                 {
-                    Console.WriteLine($"[OrcishHorde] Skipping {player.PlayerName} — invalid AbsOrigin");
+                    Console.WriteLine($"[OrcishHorde] Skipped {player.PlayerName} — position is zero.");
                     continue;
                 }
 
                 var diff = targetPos - casterPos;
                 float distanceSq = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
 
+                Console.WriteLine($"[OrcishHorde] Checking {player.PlayerName} - Dist²: {distanceSq}");
 
                 if (distanceSq <= radius * radius)
                 {
@@ -107,14 +127,13 @@ namespace WarcraftPlugin.Classes
             }
 
             SkillFunctions.DealRawDamage(caster, target, damage);
-
-            // Optional beam
             Warcraft.DrawLaserBetween(caster.EyePosition(), target.EyePosition(), Color.LightBlue, 2f);
 
             Console.WriteLine($"[OrcishHorde] Dealt {damage} damage to {target.PlayerName}");
 
             StartCooldown(3);
         }
+
 
 
 
