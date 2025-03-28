@@ -53,74 +53,76 @@ namespace WarcraftPlugin.Classes
         {
             Console.WriteLine("[OrcishHorde] Ultimate activated");
 
+            var caster = Player;
+            var casterPos = caster.PlayerPawn?.Value?.AbsOrigin;
+            if (casterPos == null) return;
+
             int maxBounces = 3;
             float bounceRadius = 1500f;
             int damage = 30;
-            float bounceDelay = 0.3f;
+            float delayBetweenBounces = 0.3f;
 
-            var caster = Player;
-            var casterPos = caster.PlayerPawn.Value.AbsOrigin;
-            var hitPlayers = new HashSet<CCSPlayerController> { caster };
-            var lastTarget = caster;
+            var hitPlayers = new HashSet<CCSPlayerController>();
+            var bounceTargets = new List<CCSPlayerController> { caster };
 
-            void Bounce(int bounceCount)
+            void DoBounce(int bounceIndex)
             {
-                CCSPlayerController? nextTarget = null;
-                float closestDistanceSq = float.MaxValue;
+                if (bounceIndex >= maxBounces)
+                    return;
+
+                var last = bounceTargets[bounceTargets.Count - 1];
+                var lastPos = last.PlayerPawn?.Value?.AbsOrigin;
+                if (lastPos == null) return;
+
+                CCSPlayerController? closest = null;
+                float closestDistSq = float.MaxValue;
 
                 foreach (var player in Utilities.GetPlayers())
                 {
-                    if (player == null || !player.IsValid || player.TeamNum == caster.TeamNum || player.PlayerPawn?.Value == null || hitPlayers.Contains(player))
+                    if (player == null || !player.IsValid || player.PlayerPawn?.Value == null || player == last)
                         continue;
 
-                    var diff = player.PlayerPawn.Value.AbsOrigin - lastTarget.PlayerPawn.Value.AbsOrigin;
+                    if (player.TeamNum == caster.TeamNum || hitPlayers.Contains(player))
+                        continue;
+
+                    var pos = player.PlayerPawn.Value.AbsOrigin;
+                    var diff = pos - lastPos;
                     float distSq = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
 
-                    if (distSq <= bounceRadius * bounceRadius && distSq < closestDistanceSq)
+                    if (distSq <= bounceRadius * bounceRadius && distSq < closestDistSq)
                     {
-                        closestDistanceSq = distSq;
-                        nextTarget = player;
+                        closestDistSq = distSq;
+                        closest = player;
                     }
                 }
 
-                if (nextTarget == null)
+                if (closest == null)
                 {
-                    Console.WriteLine("[OrcishHorde] No more valid targets.");
+                    Console.WriteLine($"[OrcishHorde] No more valid targets after bounce #{bounceIndex + 1}");
                     return;
                 }
 
-                var wcTarget = nextTarget.GetWarcraftPlayer();
-                if (wcTarget != null && wcTarget.HasUltimateImmunity)
-                {
-                    caster.PrintToCenter("⛔ Target is immune to ultimates!");
-                    nextTarget.PrintToCenter("🛡️ Your Ultimate Immunity blocked Chain Lightning!");
-                    Console.WriteLine($"[OrcishHorde] Target {nextTarget.PlayerName} had immunity.");
-                    return;
-                }
+                hitPlayers.Add(closest);
+                bounceTargets.Add(closest);
 
-                SkillFunctions.DealRawDamage(caster, nextTarget, damage);
-                hitPlayers.Add(nextTarget);
+                // Deal damage immediately
+                SkillFunctions.DealRawDamage(caster, closest, damage);
 
-                // Visual: lightning laser + glow effect
-                Warcraft.DrawLaserBetween(lastTarget.EyePosition(), nextTarget.EyePosition(), Color.Cyan, 1.5f);
-                nextTarget.PlayerPawn.Value.SetColor(Color.FromArgb(255, 150, 255, 255));
-                WarcraftPlugin.Instance.AddTimer(0.5f, () =>
-                {
-                    nextTarget.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
-                });
+                // Draw laser from last target to new one
+                Warcraft.DrawLaserBetween(last.EyePosition(), closest.EyePosition(), Color.Cyan, 2.0f);
 
-                Console.WriteLine($"[OrcishHorde] Chain Lightning bounced to {nextTarget.PlayerName} (bounce #{bounceCount + 1})");
-                lastTarget = nextTarget;
+                Console.WriteLine($"[OrcishHorde] Chain Lightning bounced to {closest.PlayerName} (bounce #{bounceIndex + 1})");
 
-                if (bounceCount + 1 < maxBounces)
-                {
-                    WarcraftPlugin.Instance.AddTimer(bounceDelay, () => Bounce(bounceCount + 1));
-                }
+                // Schedule next bounce
+                WarcraftPlugin.Instance.AddTimer(delayBetweenBounces, () => DoBounce(bounceIndex + 1));
             }
 
-            WarcraftPlugin.Instance.AddTimer(0.0f, () => Bounce(0));
+            // Start the chain
+            DoBounce(0);
+
             StartCooldown(3);
         }
+
 
 
 
