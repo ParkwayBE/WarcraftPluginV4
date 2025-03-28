@@ -36,12 +36,21 @@ namespace WarcraftPlugin.Classes
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
             // int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
+            BonusHealth(Player, 9999);
+
         }
 
+        public static void BonusHealth(CCSPlayerController player, int amount)
+        {
+            var HealthEffect = new SetBonusHealth(player, amount);
+            HealthEffect.Start();
+        }
 
 
         private void Ultimate()
         {
+            Console.WriteLine("[OrcishHorde] Ultimate activated");
+
             var caster = Player;
             var wcCaster = WarcraftPlayer;
             float radius = 500f;
@@ -66,6 +75,8 @@ namespace WarcraftPlugin.Classes
                 }
             }
 
+            Console.WriteLine($"[OrcishHorde] Found {potentialTargets.Count} potential targets");
+
             if (potentialTargets.Count == 0)
             {
                 caster.PrintToCenter("⚡ No enemies nearby for Chain Lightning!");
@@ -79,16 +90,20 @@ namespace WarcraftPlugin.Classes
             {
                 caster.PrintToCenter("⛔ Target is immune to ultimates!");
                 target.PrintToCenter("🛡️ Your Ultimate Immunity blocked Chain Lightning!");
+                Console.WriteLine($"[OrcishHorde] Target {target.PlayerName} had immunity.");
                 return;
             }
 
             SkillFunctions.DealRawDamage(caster, target, damage);
 
-            // Optional beam visualization:
+            // Optional beam
             Warcraft.DrawLaserBetween(caster.EyePosition(), target.EyePosition(), Color.LightBlue, 2f);
+
+            Console.WriteLine($"[OrcishHorde] Dealt {damage} damage to {target.PlayerName}");
 
             StartCooldown(3);
         }
+
 
 
 
