@@ -36,8 +36,10 @@ namespace WarcraftPlugin.Classes
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
             // int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
-            BonusHealth(Player, 9999);
-
+            WarcraftPlugin.Instance.AddTimer(1.5f, () =>
+            {
+                BonusHealth(Player, 9999);
+            });
         }
 
         public static void BonusHealth(CCSPlayerController player, int amount)
@@ -53,7 +55,7 @@ namespace WarcraftPlugin.Classes
 
             var caster = Player;
             var wcCaster = WarcraftPlayer;
-            float radius = 500f;
+            float radius = 1500f;
             int damage = 30;
 
             var potentialTargets = new List<CCSPlayerController>();
@@ -66,8 +68,18 @@ namespace WarcraftPlugin.Classes
                 if (player.TeamNum == caster.TeamNum || player.PlayerPawn?.Value == null)
                     continue;
 
-                var diff = player.PlayerPawn.Value.AbsOrigin - caster.PlayerPawn.Value.AbsOrigin;
+                var targetPos = player.PlayerPawn.Value.AbsOrigin;
+                var casterPos = caster.PlayerPawn?.Value?.AbsOrigin ?? default;
+
+                if (targetPos.X == 0 && targetPos.Y == 0 && targetPos.Z == 0)
+                {
+                    Console.WriteLine($"[OrcishHorde] Skipping {player.PlayerName} — invalid AbsOrigin");
+                    continue;
+                }
+
+                var diff = targetPos - casterPos;
                 float distanceSq = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
+
 
                 if (distanceSq <= radius * radius)
                 {
