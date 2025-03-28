@@ -79,7 +79,7 @@ namespace WarcraftPlugin.CustomSkills
             if (victim == null || !victim.IsValid || victim.PlayerPawn?.Value == null) return;
 
             int newHealth = victim.PlayerPawn.Value.Health - damage;
-            victim.PlayerPawn.Value.Health = Math.Max(newHealth, 0); // Prevents going negative
+            victim.SetHp(newHealth);
 
             attacker.PrintToCenter($"⚡ You dealt {damage} damage to {victim.PlayerName}!");
             victim.PrintToCenter($"⚡ You were hit by {attacker.PlayerName}'s Chain Lightning!");
