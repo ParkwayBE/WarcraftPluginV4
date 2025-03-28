@@ -152,20 +152,25 @@ namespace WarcraftPlugin.Classes
 
             private void RotateBeams()
             {
-                // Remove existing beams
+                // Remove all old beams
                 foreach (var beam in _beams)
                     beam.RemoveIfValid();
                 _beams.Clear();
 
-                // Recreate beams at new rotated positions
                 _rotationStep++;
-                float angleOffset = (float)(_rotationStep * Math.PI / 16.0);
+                float baseAngleOffset = _rotationStep * 0.1f; // Slower rotation
                 float radiusOffset = _radius * 0.75f;
-                Color beamColor = _owner.TeamNum == 2 ? Color.Red : Color.Cyan;
 
-                for (int i = 0; i < _beamCount; i++)
+                // Primary color
+                Color mainColor = _owner.TeamNum == 2 ? Color.Red : Color.Cyan;
+
+                // Secondary color (slightly different tone)
+                Color secondaryColor = _owner.TeamNum == 2 ? Color.Orange : Color.LightBlue;
+
+                // Primary beams (4)
+                for (int i = 0; i < 4; i++)
                 {
-                    float angle = (float)(2 * Math.PI * i / _beamCount) + angleOffset;
+                    float angle = (float)(2 * Math.PI * i / 4) + baseAngleOffset;
                     var offset = new Vector(
                         radiusOffset * (float)Math.Cos(angle),
                         radiusOffset * (float)Math.Sin(angle),
@@ -173,13 +178,30 @@ namespace WarcraftPlugin.Classes
                     );
 
                     Vector start = _origin + offset;
-                    Vector end = start.Clone();
-                    end.Z += 200;
+                    Vector end = start.Clone(); end.Z += 200;
 
-                    var beam = Warcraft.DrawLaserBetween(start, end, beamColor, duration: 0.2f, width: 10f);
+                    var beam = Warcraft.DrawLaserBetween(start, end, mainColor, duration: 0.25f, width: 10f);
+                    _beams.Add(beam);
+                }
+
+                // Secondary beams (4, offset)
+                for (int i = 0; i < 4; i++)
+                {
+                    float angle = (float)(2 * Math.PI * i / 4) + baseAngleOffset + 0.4f; // Offset for spacing
+                    var offset = new Vector(
+                        radiusOffset * (float)Math.Cos(angle),
+                        radiusOffset * (float)Math.Sin(angle),
+                        0f
+                    );
+
+                    Vector start = _origin + offset;
+                    Vector end = start.Clone(); end.Z += 200;
+
+                    var beam = Warcraft.DrawLaserBetween(start, end, secondaryColor, duration: 0.25f, width: 6f);
                     _beams.Add(beam);
                 }
             }
+
 
 
             private void ApplyWardEffect()
