@@ -4,7 +4,6 @@ using System.Drawing;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
-using WarcraftPlugin.Core;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
@@ -44,7 +43,7 @@ namespace WarcraftPlugin.Classes
         {
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
-                CooldownManager.ResetCooldowns(WarcraftPlayer);
+                ResetCooldowns();
 
                 if (Player?.PlayerPawn?.Value == null) return;
 

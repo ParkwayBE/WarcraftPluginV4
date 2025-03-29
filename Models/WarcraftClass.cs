@@ -46,6 +46,7 @@ namespace WarcraftPlugin.Models
         }
     }
 
+
     public abstract class WarcraftClass
     {
         public string InternalName => DisplayName.Replace(' ', '_').ToLowerInvariant();
@@ -82,6 +83,12 @@ namespace WarcraftPlugin.Models
                 Player.PlayerPawn.Value.SetModel(model);
             }
         }
+
+        public void ResetAllCooldowns()
+        {
+            CooldownManager.ResetCooldowns(WarcraftPlayer);
+        }
+
 
         private static Color GenerateShade(Color baseColor, int shadeIndex)
         {
