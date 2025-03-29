@@ -5,6 +5,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using WarcraftPlugin.Menu;
@@ -110,23 +111,27 @@ namespace WarcraftPlugin.Core
 
         }
         [GameEventHandler]
-        public HookResult OnPlayerChat(EventPlayerChat ev)
+        //public HookResult OnPlayerChat(EventPlayerChat ev)
+        //{
+        //    Console.WriteLine("Normal chat message from to consoooooole");
+        //   var player = Utilities.GetPlayerFromUserid(ev.Userid);
+        //
+        //  if (player == null) return HookResult.Continue;
+        //
+        //   if (pendingInputs.TryGetValue(player, out var action))
+        //  {
+        //      Console.WriteLine($"Processing stored input from {player.PlayerName}: {message}");
+        //     action.Invoke(message);  // Process stored action
+        //     pendingInputs.Remove(player); // Remove from pending inputs
+        //     return HookResult.Handled; // Block message from showing in chat
+        // }
+        // Console.WriteLine($"Normal chat message from {player.PlayerName}: {message}");
+        //  return HookResult.Continue; // Allow normal chat behavior
+        //}
+        public HookResult OnAnyEvent(GameEvent ev)
         {
-            Console.WriteLine("Normal chat message from to consoooooole");
-            var player = Utilities.GetPlayerFromUserid(ev.Userid);
-            var message = ev.Text.Trim();
-
-            if (player == null) return HookResult.Continue;
-
-            if (pendingInputs.TryGetValue(player, out var action))
-            {
-                Console.WriteLine($"Processing stored input from {player.PlayerName}: {message}");
-                action.Invoke(message);  // Process stored action
-                pendingInputs.Remove(player); // Remove from pending inputs
-                return HookResult.Handled; // Block message from showing in chat
-            }
-            Console.WriteLine($"Normal chat message from {player.PlayerName}: {message}");
-            return HookResult.Continue; // Allow normal chat behavior
+            Console.WriteLine($"📢 Event received: {ev.EventName}");
+            return HookResult.Continue;
         }
         private void RequestInput(CCSPlayerController admin, CCSPlayerController target)
         {
