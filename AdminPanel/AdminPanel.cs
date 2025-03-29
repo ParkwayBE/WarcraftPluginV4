@@ -123,7 +123,7 @@ namespace WarcraftPlugin.Core
              Console.WriteLine($"Processing stored input from {player.PlayerName}: {message}");
              action.Invoke(message);  // Process stored action
              pendingInputs.Remove(player); // Remove from pending inputs
-
+                ev.Text = ""; 
              return HookResult.Stop; // Block message from showing in chat
 
             }
