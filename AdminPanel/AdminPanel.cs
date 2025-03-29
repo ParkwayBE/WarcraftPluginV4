@@ -56,9 +56,9 @@ namespace WarcraftPlugin.Core
                     <font color='grey'>select an option</font> ", 5);
                 foreach ( var p in Players )
                 {
-                    classMenu.Add(p.PlayerName, null, (p, opt) =>
+                    classMenu.Add(p.PlayerName, null, (pl, opt) =>
                     {
-                        p.PrintToChat($"{p.PlayerName} I see you");
+                        pl.PrintToChat($"{pl.PlayerName} I see you");
                     });
                 }
                 //playerP.PrintToCenterHtml("<font color='#FFFFFF'>AAAADDMIN PANEL</font>");
