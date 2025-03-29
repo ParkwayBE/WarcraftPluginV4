@@ -116,7 +116,6 @@ namespace WarcraftPlugin.Core
            var player = Utilities.GetPlayerFromUserid(ev.Userid);
            var message = ev.Text.Trim();
 
-            info.DontBroadcast = true;
         
           if (player == null) return HookResult.Continue;
         
@@ -139,12 +138,15 @@ namespace WarcraftPlugin.Core
             var message = info.GetArg(1);
             Console.WriteLine($"message is : {message}");
             if (player == null) return HookResult.Continue;
-            if (message.Contains("yes"))
+         
+            if (pendingInputs.TryGetValue(player, out var action))
             {
+                action.Invoke(message);  // Process stored action
+                pendingInputs.Remove(player);
                 return HookResult.Handled;
             }
 
-            return HookResult.Continue; // Allow other chat messages to continue
+                return HookResult.Continue; // Allow other chat messages to continue
         }
 
 
