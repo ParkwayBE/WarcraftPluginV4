@@ -46,7 +46,6 @@ namespace WarcraftPlugin.Classes
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
                 int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
-
                 int DevotionAura = abilityLevel * 18;
 
                 int minAlpha = 125;
@@ -54,11 +53,6 @@ namespace WarcraftPlugin.Classes
                 int alpha = maxAlpha - (abilityLevel * ((maxAlpha - minAlpha) / 5));
 
                 BonusHealth(Player, DevotionAura);
-                Invisibility(Player, 999f, alpha);
-
-
-                BonusHealth(Player, DevotionAura);
-
                 Invisibility(Player, 999f, alpha);
                 Console.WriteLine($"[Invisibility] Level {abilityLevel} → alpha: {alpha}");
 
