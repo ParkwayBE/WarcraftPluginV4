@@ -305,7 +305,12 @@ namespace WarcraftPlugin.Classes
 
             // Remove buffs
             target.PlayerPawn.Value.VelocityModifier = 1f;
-            if (target.PlayerPawn.Value.Health > 100) target.SetHp(100);
+            if (target.PlayerPawn.Value.Health > 100)
+            {
+                target.SetHp(99);
+                Player.PrintToChat("You set his hp to 99");
+            }
+
             target.PlayerPawn.Value.SetColor(Color.White);
 
             target.PrintToChat($" \x07[Hexed] Your buffs have been removed by {Player.PlayerName}!");
