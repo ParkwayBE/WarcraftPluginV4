@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using WarcraftPlugin.Menu;
+using WarcraftPlugin.Menu.WarcraftMenu;
 
 namespace WarcraftPlugin.Core
 {
@@ -25,7 +27,7 @@ namespace WarcraftPlugin.Core
 
         public void OpenAdminPanel(CCSPlayerController? player, CommandInfo commandInfo)
         {
-            player.PrintToChat(player.SteamID.ToString());
+            
 
             if (!admins.Contains(player.SteamID.ToString()))
             {
@@ -48,11 +50,19 @@ namespace WarcraftPlugin.Core
             {
                 playerP.PrintToChat("You are an admin, the panel will open soon ;)");
                 Console.WriteLine("admin panel test");
-
-                //playerP.PrintToCenterHtml("<font color='#FFFFFF'>AAAADDMIN PANEL</font>");
+                var Players = Utilities.GetPlayers();
                 var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>
-                    {player.SteamID.ToString()}'s Class</font><br>
-                    <font color='grey'>YAYAYA</font> ", 5);
+                    {player.SteamID.ToString()}'s Admin Menu</font><br>
+                    <font color='grey'>select an option</font> ", 5);
+                foreach ( var p in Players )
+                {
+                    classMenu.Add(p.PlayerName, null, (p, opt) =>
+                    {
+                        p.PrintToChat($"{p.PlayerName} I see you");
+                    });
+                }
+                //playerP.PrintToCenterHtml("<font color='#FFFFFF'>AAAADDMIN PANEL</font>");
+               
                 classMenu.Add("Close Menu", null, (p, opt) =>
                 {
                     MenuManager.CloseMenu(player);
