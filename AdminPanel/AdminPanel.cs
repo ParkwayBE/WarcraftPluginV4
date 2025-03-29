@@ -122,9 +122,10 @@ namespace WarcraftPlugin.Core
            {
              action.Invoke(message);  // Process stored action
              pendingInputs.Remove(player); // Remove from pending inputs
+             ev.Set("BlockMessage", true);
              info.DontBroadcast = true;
              return HookResult.Stop;
-                
+             ev.Set("BlockMessage", true);
             }
 
             return HookResult.Continue;
