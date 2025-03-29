@@ -4,7 +4,6 @@ using System.Drawing;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
-using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
 
 namespace WarcraftPlugin.Classes
@@ -45,29 +44,27 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerHurt(EventPlayerHurt @event)
         {
-            if (Player == null || !Player.IsValid || !Player.IsAlive())
-                return;
-
-            int abilityLevel = WarcraftPlayer.GetAbilityLevel(1); // Example: Dwarven Genes
-            if (abilityLevel <= 0) return;
-
-            int chancePercent = abilityLevel * 10; // Level 5 → 35% chance
-            int roll = Random.Shared.Next(1, 101);
-
-            Console.WriteLine($"[Evasion] Rolled {roll} vs {chancePercent}");
-
-            if (roll <= chancePercent)
-            {
-                int originalDamage = @event.DmgHealth;
-                int reducedDamage = (int)(originalDamage * (1f - 1.0f)); // 100% damage negation
-                reducedDamage = Math.Max(0, reducedDamage);
-
-                @event.DmgHealth = reducedDamage;
-
-                Player.PrintToChat($" \x04[Evasion] Evaded {originalDamage} damage! (Roll: {roll}/{chancePercent})");
-            }
+            // Ensure Player is not null 
+            if (Player == null) return;
+            HandleEvasion(@event);
         }
 
+        private void HandleEvasion(EventPlayerHurt @event)
+        {
+            if (Player == null) return;
+
+            int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
+            int evasionChance = abilityLevel * 7;
+
+            var roll = Random.Shared.Next(100);
+            if (roll < evasionChance)
+            {
+                Console.WriteLine($"Evasion triggered! Chance: {evasionChance}% (Roll: {roll})");
+                @event.IgnoreDamage();
+
+                Player.PrintToChat("Agility saved you! You evaded the attack.");
+            }
+        }
 
         private void Ultimate()
         {
