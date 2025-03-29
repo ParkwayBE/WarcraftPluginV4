@@ -84,6 +84,7 @@ namespace WarcraftPlugin.CustomSkills
 
             }
         }
+
         public static void DealRawDamage(CCSPlayerController attacker, CCSPlayerController victim, int damage)
         {
             if (victim == null || !victim.IsValid || victim.PlayerPawn?.Value == null) return;
@@ -107,6 +108,10 @@ namespace WarcraftPlugin.CustomSkills
 
 
 
+        public static void SetEvasion(CCSPlayerController player, int chancePercent, float reductionPercent)
+        {
+            new SetEvasion(player, chancePercent, reductionPercent).Start();
+        }
 
 
 
