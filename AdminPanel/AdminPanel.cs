@@ -114,7 +114,7 @@ namespace WarcraftPlugin.Core
         public HookResult OnPlayerChat(EventPlayerChat ev)
         {
             var player = Utilities.GetPlayerFromUserid(ev.Userid);
-            var message = ev.Text;
+            var message = ev.Text.Trim();
 
             if (player == null) return HookResult.Continue;
 
@@ -130,6 +130,11 @@ namespace WarcraftPlugin.Core
         private void RequestInput(CCSPlayerController admin, CCSPlayerController target)
         {
             admin.PrintToChat("Type the message in chat for the selected player");
+            if (pendingInputs.ContainsKey(admin))
+            {
+                pendingInputs.Remove(admin);
+            }
+
 
             pendingInputs[admin] = (message) =>
             {
