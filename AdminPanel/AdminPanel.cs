@@ -126,7 +126,7 @@ namespace WarcraftPlugin.Core
              return HookResult.Stop;
 
             }
-          return HookResult.Stop;
+            return HookResult.Handled;
         }
 
         
