@@ -226,38 +226,8 @@ namespace WarcraftPlugin
             _eventSystem.Initialize();
 
             _database.Initialize(ModuleDirectory);
-
-            RegisterEventHandler<EventPlayerConnect>((@event, info) =>
-            {
-                var player = @event.Userid;
-
-                if (player == null || !player.IsValid || player.IsBot) return HookResult.Continue;
-
-                // A human joined — now assign races to bots
-                AddTimer(2.0f, () =>
-                {
-                    foreach (var bot in Utilities.GetPlayers())
-                    {
-                        if (bot == null || !bot.IsValid || !bot.IsBot) continue;
-
-                        var wcPlayer = GetWcPlayer(bot);
-                        if (wcPlayer == null || wcPlayer.GetClass() != null) continue;
-
-                        Console.WriteLine($"[BOT INIT] Human joined, assigning Human Alliance to bot {bot.PlayerName}");
-                        ChangeClass(bot, "Human Alliance");
-                        wcPlayer.SetAbilityLevel(0, 5);
-                        wcPlayer.SetAbilityLevel(1, 5);
-                        wcPlayer.SetAbilityLevel(2, 5);
-                        wcPlayer.SetAbilityLevel(3, 1);
-                    }
-                });
-
-                return HookResult.Continue;
-            });
-
-
-
         }
+
         private void ShowSkillsMenu(CCSPlayerController player)
         {
             SkillsMenu.Show(GetWcPlayer(player));
@@ -351,6 +321,21 @@ namespace WarcraftPlugin
             WarcraftPlayers[player.Handle] = _database.LoadPlayerFromDatabase(player, XpSystem);
 
             Console.WriteLine("Player just connected: " + WarcraftPlayers[player.Handle]);
+
+            foreach (var bot in Utilities.GetPlayers().Where(p => p.IsBot && p.PlayerPawn?.Value != null))
+            {
+                var wcPlayer = GetWcPlayer(bot);
+                if (wcPlayer == null || wcPlayer.GetClass() != null)
+                    continue;
+
+                Console.WriteLine($"[BOT INIT - Fallback] Assigning 'Human Alliance' to bot {bot.PlayerName}");
+
+                ChangeClass(bot, "Human Alliance");
+                wcPlayer.SetAbilityLevel(0, 5);
+                wcPlayer.SetAbilityLevel(1, 5);
+                wcPlayer.SetAbilityLevel(2, 5);
+                wcPlayer.SetAbilityLevel(3, 1);
+            }
         }
 
 
