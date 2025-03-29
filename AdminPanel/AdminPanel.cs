@@ -54,14 +54,31 @@ namespace WarcraftPlugin.Core
                 var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>
                     {player.SteamID.ToString()}'s Admin Menu</font><br>
                     <font color='grey'>select an option</font> ", 5);
-                foreach (var targetPlayer in Players) // Changed the loop variable to 'targetPlayer'
+                //Kill option
+                classMenu.Add("Kill player menu", null, (pl, opt) =>
                 {
-                    classMenu.Add(targetPlayer.PlayerName, null, (pl, opt) => // Use 'pl' for the callback parameter
+                    var killSubMenu = MenuManager.CreateMenu("Kill a player", 5);
+                    foreach (var targetPlayer in Players)
                     {
-                        // This will now correctly print to the 'targetPlayer' chat, not the player who opened the menu
-                        targetPlayer.PrintToChat($"{targetPlayer.PlayerName} I see you");
+                        killSubMenu.Add(targetPlayer.PlayerName, null, (pl, opt) =>
+                        {
+                            player.ExecuteClientCommand($"css_slay {targetPlayer.PlayerName}");
+                        });
+                    }
+                    killSubMenu.Add("Back", null, (p, opt2) =>
+                    {
+                        MenuManager.OpenMainMenu(p, classMenu);
                     });
-                }
+                    MenuManager.OpenMainMenu(pl, killSubMenu);
+                });
+                //foreach (var targetPlayer in Players)
+                //{
+                //    classMenu.Add(targetPlayer.PlayerName, null, (pl, opt) =>
+                //    {
+                //       
+                //        targetPlayer.PrintToChat($"{targetPlayer.PlayerName} I see you");
+                //    });
+                //}
                 //playerP.PrintToCenterHtml("<font color='#FFFFFF'>AAAADDMIN PANEL</font>");
 
                 classMenu.Add("Close Menu", null, (p, opt) =>
