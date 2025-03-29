@@ -54,15 +54,16 @@ namespace WarcraftPlugin.Core
                 var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>
                     {player.SteamID.ToString()}'s Admin Menu</font><br>
                     <font color='grey'>select an option</font> ", 5);
-                foreach ( var p in Players )
+                foreach (var targetPlayer in Players) // Changed the loop variable to 'targetPlayer'
                 {
-                    classMenu.Add(p.PlayerName, null, (pl, opt) =>
+                    classMenu.Add(targetPlayer.PlayerName, null, (pl, opt) => // Use 'pl' for the callback parameter
                     {
-                        pl.PrintToChat($"{pl.PlayerName} I see you");
+                        // This will now correctly print to the 'targetPlayer' chat, not the player who opened the menu
+                        targetPlayer.PrintToChat($"{targetPlayer.PlayerName} I see you");
                     });
                 }
                 //playerP.PrintToCenterHtml("<font color='#FFFFFF'>AAAADDMIN PANEL</font>");
-               
+
                 classMenu.Add("Close Menu", null, (p, opt) =>
                 {
                     MenuManager.CloseMenu(player);
