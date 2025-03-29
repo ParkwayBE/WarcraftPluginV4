@@ -31,6 +31,7 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerHurt>(PlayerHurt);
+            HookEvent<EventGrenadeThrown>(GrenadeThrown);
             HookAbility(3, Ultimate);
         }
 
@@ -72,6 +73,15 @@ namespace WarcraftPlugin.Classes
             });
 
         }
+
+        internal void GrenadeThrown(EventGrenadeThrown @event)
+        {
+            if (activeEffects.TryGetValue(Player, out var effect))
+            {
+                effect.GiveGrenadeIfNeeded();
+            }
+        }
+
 
         internal class GrenadeSupplyEffect(CCSPlayerController owner) : WarcraftEffect(owner)
         {
