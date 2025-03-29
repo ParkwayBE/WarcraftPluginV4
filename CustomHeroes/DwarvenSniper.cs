@@ -98,6 +98,7 @@ namespace WarcraftPlugin.Classes
             {
                 var damageBonus = WarcraftPlayer.GetAbilityLevel(0) * 12;
                 @event.AddBonusDamage(damageBonus);
+                Console.WriteLine($"Dealt {damageBonus} extra damage with a scoped weapon,");
             }
         }
 
