@@ -82,24 +82,24 @@ namespace WarcraftPlugin.Core
                 });
 
                 //Say Option
-                classMenu.Add("Say menu", null, (pl, opt) =>
+                classMenu.Add("Say menu", null, (admin, opt) => // Rename `pl` to `admin`
                 {
-                    var killSubMenu = MenuManager.CreateMenu("Say to a player", 5);
+                    var saySubMenu = MenuManager.CreateMenu("Say to a player", 5);
+
                     foreach (var targetPlayer in Players)
                     {
-                        killSubMenu.Add(targetPlayer.PlayerName, null, (pl, opt) =>
+                        saySubMenu.Add(targetPlayer.PlayerName, null, (selectedAdmin, opt2) => // Rename `pl` to `selectedAdmin`
                         {
-
-                            RequestInput(pl, targetPlayer);
-  
-
+                            RequestInput(selectedAdmin, targetPlayer);
                         });
                     }
-                    killSubMenu.Add("Back", null, (p, opt2) =>
+
+                    saySubMenu.Add("Back", null, (selectedAdmin, opt3) =>
                     {
-                        MenuManager.OpenMainMenu(p, classMenu);
+                        MenuManager.OpenMainMenu(selectedAdmin, classMenu);
                     });
-                    MenuManager.OpenMainMenu(pl, killSubMenu);
+
+                    MenuManager.OpenMainMenu(admin, saySubMenu);
                 });
 
                 MenuManager.OpenMainMenu(player, classMenu);
