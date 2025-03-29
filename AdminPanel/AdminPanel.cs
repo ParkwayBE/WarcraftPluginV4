@@ -112,27 +112,27 @@ namespace WarcraftPlugin.Core
         }
         public HookResult OnPlayerChat(EventPlayerChat ev, GameEventInfo info)
         {
-            Console.WriteLine("Normal chat message from to consoooooole");
            var player = Utilities.GetPlayerFromUserid(ev.Userid);
            var message = ev.Text.Trim();
+
+
         
           if (player == null) return HookResult.Continue;
         
            if (pendingInputs.TryGetValue(player, out var action))
            {
-             Console.WriteLine($"Processing stored input from {player.PlayerName}: {message}");
              action.Invoke(message);  // Process stored action
              pendingInputs.Remove(player); // Remove from pending inputs
-             return HookResult.Handled; // Block message from showing in chat
-           }
-         Console.WriteLine($"Normal chat message from {player.PlayerName}: {message}");
-          return HookResult.Continue; // Allow normal chat behavior
+             return HookResult.Stop;
+
+            }
+            return HookResult.Handled;
         }
 
         
         private void RequestInput(CCSPlayerController admin, CCSPlayerController target)
         {
-            admin.PrintToChat("Type the message in chat for the selected player");
+            admin.PrintToChat("Type the message in chat for the selected player start with /");
             if (pendingInputs.ContainsKey(admin))
             {
                 pendingInputs.Remove(admin);
