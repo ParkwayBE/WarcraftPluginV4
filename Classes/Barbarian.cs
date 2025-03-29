@@ -1,15 +1,14 @@
-﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Utils;
+﻿using System.Collections.Generic;
+using System.Drawing;
 using CounterStrikeSharp.API;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Memory;
+using CounterStrikeSharp.API.Modules.Utils;
+using WarcraftPlugin.Core.Effects;
+using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
-using System.Drawing;
-using WarcraftPlugin.Core.Effects;
-using System.Collections.Generic;
-using WarcraftPlugin.Events.ExtendedEvents;
-using System;
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace WarcraftPlugin.Classes
 {
@@ -39,10 +38,22 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventWeaponFire>(PlayerShoot);
+            HookEvent<EventPlayerDisconnect>(PlayerDisconnect);
+            HookEvent<EventPlayerDeath>(PlayerDeath);
 
             HookAbility(3, Ultimate);
         }
 
+
+        private void PlayerDeath(EventPlayerDeath death)
+        {
+            WarcraftPlayer.HasUltimateImmunity = false;
+        }
+
+        private void PlayerDisconnect(EventPlayerDisconnect @event)
+        {
+            WarcraftPlayer.HasUltimateImmunity = false;
+        }
         private void PlayerShoot(EventWeaponFire @event)
         {
             var activeWeapon = Player.PlayerPawn.Value.WeaponServices?.ActiveWeapon.Value;
@@ -66,6 +77,7 @@ namespace WarcraftPlugin.Classes
             {
                 Player.SetHp(100 + WarcraftPlayer.GetAbilityLevel(1) * _battleHardenedHealthMultiplier);
                 Player.PlayerPawn.Value.MaxHealth = Player.PlayerPawn.Value.Health;
+                WarcraftPlayer.HasUltimateImmunity = true;
             }
         }
 

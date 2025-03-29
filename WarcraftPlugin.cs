@@ -140,7 +140,6 @@ namespace WarcraftPlugin
             _rankSystem.Initialize();
 
             _admin = new AdminPanel(this);
-            RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn, HookMode.Post);
 
 
             if (Config.ShowCommandAdverts)
@@ -325,34 +324,6 @@ namespace WarcraftPlugin
             Console.WriteLine("Player just connected: " + WarcraftPlayers[player.Handle]);
 
         }
-        public HookResult OnPlayerSpawn(EventPlayerSpawn e, GameEventInfo info)
-        {
-            var player = e.Userid;
-
-            if (player == null || !player.IsBot)
-                return HookResult.Continue;
-
-            var wcPlayer = GetWcPlayer(player);
-            if (wcPlayer == null || wcPlayer.GetClass() != null)
-                return HookResult.Continue;
-
-            Console.WriteLine($"[BOT INIT - Spawn] Assigning 'Human Alliance' to bot {player.PlayerName}");
-
-            wcPlayer = ChangeClass(player, "HumanAlliance", force: true);
-            wcPlayer.SetAbilityLevel(0, 5);
-            wcPlayer.SetAbilityLevel(1, 5);
-            wcPlayer.SetAbilityLevel(2, 5);
-            wcPlayer.SetAbilityLevel(3, 1);
-
-            return HookResult.Continue;
-        }
-
-
-
-
-
-
-
         internal WarcraftPlayer ChangeClass(CCSPlayerController player, string classInternalName, bool force = false)
         {
             _database.SavePlayerToDatabase(player);
