@@ -7,7 +7,6 @@ using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
-using static WarcraftPlugin.Classes.Naix;
 
 
 namespace WarcraftPlugin.Classes
@@ -16,7 +15,7 @@ namespace WarcraftPlugin.Classes
     {
         public override string DisplayName => "Dwarven Sniper";
         public override Color DefaultColor => Color.GreenYellow;
-        private readonly Dictionary<CCSPlayerController, SmokeSupplyEffect> activeEffects = new();
+        private readonly Dictionary<CCSPlayerController, GrenadeSupplyEffect> activeEffects = new();
 
 
         public override List<IWarcraftAbility> Abilities =>
@@ -67,7 +66,7 @@ namespace WarcraftPlugin.Classes
                 }
 
                 Player.GiveNamedItem("weapon_hegrenade");
-                var effect = new SmokeSupplyEffect(Player);
+                var effect = new GrenadeSupplyEffect(Player);
                 activeEffects[Player] = effect;
                 effect.Start();
             });
@@ -102,17 +101,15 @@ namespace WarcraftPlugin.Classes
 
                 if (maxGrenades < 1)
                 {
-                    Console.WriteLine("[INFO] Player has no Smoke Supply ability, skipping smoke grenade assignment.");
+                    Console.WriteLine("[INFO] Player has no Grenade Supply ability, skipping grenade assignment.");
                     return;
                 }
 
                 Console.WriteLine($"[INFO] Grenade Supply Effect Activated - Ability Level: {maxGrenades}");
 
-                // Remove existing smokes to prevent unintended stacking
                 RemoveGrenades("weapon_hegrenade");
 
-                //Start with 1 smoke
-                Console.WriteLine("[INFO] Granting initial smoke grenade.");
+                Console.WriteLine("[INFO] Granting initial grenade.");
                 Owner.GiveNamedItem("weapon_hegrenade");
                 maxGrenades = 1;
             }
@@ -121,11 +118,11 @@ namespace WarcraftPlugin.Classes
             {
                 if (grenadesGiven >= maxGrenades)
                 {
-                    Console.WriteLine($"[INFO] {Owner.PlayerName} has already received the max number of smokes ({maxGrenades}).");
+                    Console.WriteLine($"[INFO] {Owner.PlayerName} has already received the max number of grenades ({maxGrenades}).");
                     return;
                 }
 
-                Console.WriteLine($"[INFO] {Owner.PlayerName} has no smokes. Giving another one.");
+                Console.WriteLine($"[INFO] {Owner.PlayerName} has no grenades. Giving another one.");
                 Owner.GiveNamedItem("weapon_hegrenade");
                 grenadesGiven++;
             }
