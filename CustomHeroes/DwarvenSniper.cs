@@ -93,12 +93,12 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
-            // TODO: Eagle Eye : Increased damage with scoped weapons
-            if (@event.Weapon == "weapon_ssg08" || @event.Weapon == "weapon_awp")
+            Console.WriteLine($"Weapon used: {@event.Weapon}");
+            if (@event.Weapon == "ssg08" || @event.Weapon == "awp")
             {
                 var damageBonus = WarcraftPlayer.GetAbilityLevel(0) * 12;
                 @event.AddBonusDamage(damageBonus);
-                Console.WriteLine($"Dealt {damageBonus} extra damage with a scoped weapon,");
+                Console.WriteLine($"Dealt {damageBonus} extra damage with a scoped weapon.");
             }
         }
 
