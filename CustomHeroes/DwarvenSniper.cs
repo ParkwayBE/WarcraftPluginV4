@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Drawing;
 using CounterStrikeSharp.API.Core;
+using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
+using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
+
 
 namespace WarcraftPlugin.Classes
 {
@@ -12,6 +15,8 @@ namespace WarcraftPlugin.Classes
     {
         public override string DisplayName => "Dwarven Sniper";
         public override Color DefaultColor => Color.GreenYellow;
+        private readonly Dictionary<CCSPlayerController, GrenadeSupplyEffect> activeEffects = new();
+
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -41,7 +46,7 @@ namespace WarcraftPlugin.Classes
                 SkillFunctions.SetBonusHealth(Player, 9999); // TEMP TESTING
 
                 int awpChance = abilityLevel * 10; // Level 1 = 10%, Level 5 = 50%
-                int roll = Random.Shared.Next(100); // 0–99
+                int roll = Random.Shared.Next(100);
 
                 string weaponToGive = (roll < awpChance) ? "weapon_awp" : "weapon_ssg08";
                 Console.WriteLine($"[Dwarven Supplies] Rolled {roll} vs {awpChance} → Giving {weaponToGive}");
@@ -53,14 +58,101 @@ namespace WarcraftPlugin.Classes
                 {
                     Player.GiveNamedItem(weaponToGive);
                 }
+
+                if (activeEffects.TryGetValue(Player, out var existingEffect))
+                {
+                    existingEffect.Destroy();
+                    activeEffects.Remove(Player);
+                }
+
+                Player.GiveNamedItem("weapon_hegrenade");
+                var effect = new GrenadeSupplyEffect(Player);
+                activeEffects[Player] = effect;
+                effect.Start();
             });
+
         }
 
+        internal class GrenadeSupplyEffect(CCSPlayerController owner) : WarcraftEffect(owner)
+        {
+            private int grenadesGiven = 0;
+            private int maxGrenades = 0;
+            private WarcraftPlayer WarcraftPlayer;
 
+            public override void OnStart()
+            {
+                Console.WriteLine("[DEBUG] GrenadeSupplyEffect OnStart() triggered.");
+
+                if (Owner == null || Owner.PlayerPawn?.Value == null)
+                {
+                    Console.WriteLine("[ERROR] GrenadeSupplyEffect started but Owner is NULL! Aborting.");
+                    return;
+                }
+
+                WarcraftPlayer = Owner.GetWarcraftPlayer();
+                if (WarcraftPlayer == null)
+                {
+                    Console.WriteLine("[ERROR] Failed to retrieve WarcraftPlayer.");
+                    return;
+                }
+
+                maxGrenades = WarcraftPlayer.GetAbilityLevel(0);
+                Console.WriteLine($"[DEBUG] Retrieved ability level: {maxGrenades}");
+
+                if (maxGrenades < 1)
+                {
+                    Console.WriteLine("[INFO] Player has no Grenade Supply ability, skipping grenade assignment.");
+                    return;
+                }
+
+                Console.WriteLine($"[INFO] Grenade Supply Effect Activated - Ability Level: {maxGrenades}");
+
+                RemoveGrenades("weapon_hegrenade");
+
+                Console.WriteLine("[INFO] Granting initial grenade.");
+                Owner.GiveNamedItem("weapon_hegrenade");
+                maxGrenades = 1;
+            }
+
+            public void GiveGrenadeIfNeeded()
+            {
+                if (grenadesGiven >= maxGrenades)
+                {
+                    Console.WriteLine($"[INFO] {Owner.PlayerName} has already received the max number of grenades ({maxGrenades}).");
+                    return;
+                }
+
+                Console.WriteLine($"[INFO] {Owner.PlayerName} has no grenades. Giving another one.");
+                Owner.GiveNamedItem("weapon_hegrenade");
+                grenadesGiven++;
+            }
+
+
+            public override void OnFinish()
+            {
+                Console.WriteLine($"[INFO] No more free grenades for {Owner.PlayerName} this round.");
+            }
+
+            private void RemoveGrenades(string grenadeName)
+            {
+                var grenades = Owner.PlayerPawn.Value.WeaponServices.MyWeapons;
+
+                foreach (var grenade in grenades)
+                {
+                    if (grenade.Value.DesignerName == grenadeName)
+                    {
+                        Console.WriteLine($"[INFO] Removing existing {grenadeName} from {Owner.PlayerName}");
+                        Owner.DropWeaponByDesignerName(grenadeName);
+                    }
+                }
+            }
+
+            public override void OnTick() { }
+
+        }
 
         private void PlayerHurt(EventPlayerHurt @event)
         {
-            // Ensure Player is not null 
             if (Player == null) return;
             HandleEvasion(@event);
         }
@@ -93,10 +185,9 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
-            Console.WriteLine($"Weapon used: {@event.Weapon}");
             if (@event.Weapon == "ssg08" || @event.Weapon == "awp")
             {
-                var damageBonus = WarcraftPlayer.GetAbilityLevel(0) * 12;
+                var damageBonus = WarcraftPlayer.GetAbilityLevel(0) * 8;
                 @event.AddBonusDamage(damageBonus);
                 Console.WriteLine($"Dealt {damageBonus} extra damage with a scoped weapon.");
             }
