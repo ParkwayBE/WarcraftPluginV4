@@ -47,7 +47,7 @@ namespace WarcraftPlugin.Core
                 Console.WriteLine("admin panel test");
                
                 playerP.PrintToCenterHtml("<font color='#FFFFFF'>AAAADDMIN PANEL</font>");
-                var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>{plugin.Localizer["menu.class"]}</font><br><font color='grey' class='{FontSizes.FontSizeS}'>{_plugin.Localizer["menu.class.total.levels"]} (</font><font color='gold' class='{FontSizes.FontSizeS}'></font><font color='grey' class='{FontSizes.FontSizeS}'>)</font>", 5);
+                var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>{_plugin.Localizer["menu.class"]}</font><br><font color='grey' class='{FontSizes.FontSizeS}'>{_plugin.Localizer["menu.class.total.levels"]} (</font><font color='gold' class='{FontSizes.FontSizeS}'></font><font color='grey' class='{FontSizes.FontSizeS}'>)</font>", 5);
                 MenuManager.OpenMainMenu(player, classMenu);
             }
             if (role == 9009)
