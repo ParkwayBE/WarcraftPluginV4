@@ -24,7 +24,7 @@ namespace WarcraftPlugin.Classes
         {
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
-
+            HookEvent<EventPlayerHurt>(PlayerHurt);
             HookAbility(3, Ultimate);
         }
 
@@ -35,12 +35,16 @@ namespace WarcraftPlugin.Classes
             {
                 // int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
                 SkillFunctions.SetBonusHealth(Player, 9999);
-                SkillFunctions.SetEvasion(Player, 50, 1.0f); // 50% chance to evade 100% of the dmg
+
                 // TODO: Dwarven Genes: Increased health
                 // TODO: Supplies: Occasionally grants a grenade and chance to spawn with either scout or awp, Maybe 50/50 at level 5 going down to 10/90 in favor of the scout at level 1
             });
         }
 
+        private void PlayerHurt(EventPlayerHurt e)
+        {
+            SkillFunctions.SetEvasion(Player, e, 50, 1.0f); // 50% chance to evade 100% of the dmg
+        }
         private void Ultimate()
         {
             // TODO: Ring of power : Double evasion
