@@ -53,6 +53,10 @@ namespace WarcraftPlugin.Core
                 var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>
                     {player.SteamID.ToString()}'s Class</font><br>
                     <font color='grey'>YAYAYA</font> ", 5);
+                classMenu.Add("Close Menu", null, (p, opt) =>
+                {
+                    MenuManager.CloseMenu(player);
+                });
                 MenuManager.OpenMainMenu(player, classMenu);
             }
             if (role == 9009)
