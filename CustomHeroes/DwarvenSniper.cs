@@ -40,12 +40,11 @@ namespace WarcraftPlugin.Classes
 
                 SkillFunctions.SetBonusHealth(Player, 9999); // TEMP TESTING
 
-                // Determine weapon chance
-                int awpChance = Math.Clamp(10 + (abilityLevel - 1) * 10, 10, 50); // Level 1 = 10%, Level 5 = 50%
-                int roll = Random.Shared.Next(1, 101);
-                string weaponToGive = (roll <= awpChance) ? "weapon_awp" : "weapon_ssg08";
+                int awpChance = abilityLevel * 10; // Level 1 = 10%, Level 5 = 50%
+                int roll = Random.Shared.Next(100); // 0–99
 
-                Console.WriteLine($"[Dwarven Supplies] Rolled {roll} → Giving {weaponToGive}");
+                string weaponToGive = (roll < awpChance) ? "weapon_awp" : "weapon_ssg08";
+                Console.WriteLine($"[Dwarven Supplies] Rolled {roll} vs {awpChance} → Giving {weaponToGive}");
 
                 var pawn = Player.PlayerPawn.Value;
                 var activeWeaponName = pawn.WeaponServices?.ActiveWeapon?.Value?.DesignerName;
@@ -56,6 +55,7 @@ namespace WarcraftPlugin.Classes
                 }
             });
         }
+
 
 
         private void PlayerHurt(EventPlayerHurt @event)
