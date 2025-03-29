@@ -28,6 +28,7 @@ namespace WarcraftPlugin.Core
             admins.Add("76561198061919153");
             _plugin.AddCommand("adminPanel", "opens admin panel", OpenAdminPanel);
             _plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat, HookMode.Pre);
+            _plugin.RegisterEventHandler<EventServerCvar>(OnServerCvar, HookMode.Pre);
         }
 
         public void OpenAdminPanel(CCSPlayerController? player, CommandInfo commandInfo)
@@ -126,6 +127,18 @@ namespace WarcraftPlugin.Core
              info.DontBroadcast = true;
              return HookResult.Stop;
              ev.Set("BlockMessage", true);
+            }
+
+            return HookResult.Continue;
+        }
+        public HookResult OnServerCvar(EventServerCvar ev, GameEventInfo info)
+        {
+        
+
+            if (ev.Cvarname == "say")
+            {
+
+                return HookResult.Handled;
             }
 
             return HookResult.Continue;
