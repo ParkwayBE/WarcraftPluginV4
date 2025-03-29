@@ -302,11 +302,14 @@ namespace WarcraftPlugin.Core
 
 
 
-        public static void BonusHealth(CCSPlayerController player, int amount)
+        public static void BonusHealth(CCSPlayerController dummy, int amount)
         {
-            var HealthEffect = new SetBonusHealth(player, amount);
-            HealthEffect.Start();
+            Console.WriteLine($"[DEBUG] Giving bonus health to: {dummy.PlayerName}");
+
+            var healthEffect = new SetBonusHealth(dummy, amount);
+            healthEffect.Start();
         }
+
 
         public static void MonitorDummyHealth()
         {

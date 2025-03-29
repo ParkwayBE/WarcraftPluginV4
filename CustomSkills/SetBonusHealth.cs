@@ -1,7 +1,7 @@
-﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities;
-using WarcraftPlugin.Helpers;
+﻿using System;
+using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Core.Effects;
+using WarcraftPlugin.Helpers;
 
 
 namespace WarcraftPlugin.CustomSkills
@@ -25,7 +25,7 @@ namespace WarcraftPlugin.CustomSkills
             {
                 int newHealth = pawn.Health + _bonusHealth;
                 Owner.SetHp(newHealth);
-                Owner.PrintToChat($"[TEST] You gained {_bonusHealth} bonus health.");
+                Console.WriteLine($"[SetBonusHealth] Target: {Owner.PlayerName}, Amount: {_bonusHealth}");
             }
         }
 
