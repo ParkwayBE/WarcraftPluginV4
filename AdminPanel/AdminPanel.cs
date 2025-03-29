@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Modules.Memory;
+using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using WarcraftPlugin.Menu;
 using WarcraftPlugin.Menu.WarcraftMenu;
 
@@ -14,6 +18,7 @@ namespace WarcraftPlugin.Core
     {
         private readonly WarcraftPlugin _plugin;
         List<String> admins = new List<String>();
+        private static Dictionary<CCSPlayerController, Action<string>> pendingInputs = new Dictionary<CCSPlayerController, Action<string>>();
 
 
         public AdminPanel(WarcraftPlugin plugin)
@@ -21,7 +26,8 @@ namespace WarcraftPlugin.Core
             _plugin = plugin;
             admins.Add("76561198061919153");
             _plugin.AddCommand("adminPanel", "opens admin panel", OpenAdminPanel);
-
+           
+          
 
         }
 
@@ -63,7 +69,9 @@ namespace WarcraftPlugin.Core
                         killSubMenu.Add(targetPlayer.PlayerName, null, (pl, opt) =>
                         {
                             //player.ExecuteClientCommand($"css_slay #{targetPlayer.SteamID.ToString()}");
+                            
                             player.ExecuteClientCommandFromServer($"css_slay #{targetPlayer.SteamID.ToString()}");
+
                         });
                     }
                     killSubMenu.Add("Back", null, (p, opt2) =>
@@ -72,20 +80,28 @@ namespace WarcraftPlugin.Core
                     });
                     MenuManager.OpenMainMenu(pl, killSubMenu);
                 });
-                //foreach (var targetPlayer in Players)
-                //{
-                //    classMenu.Add(targetPlayer.PlayerName, null, (pl, opt) =>
-                //    {
-                //       
-                //        targetPlayer.PrintToChat($"{targetPlayer.PlayerName} I see you");
-                //    });
-                //}
-                //playerP.PrintToCenterHtml("<font color='#FFFFFF'>AAAADDMIN PANEL</font>");
 
-                classMenu.Add("Close Menu", null, (p, opt) =>
+                //Say Option
+                classMenu.Add("Say menu", null, (pl, opt) =>
                 {
-                    MenuManager.CloseMenu(player);
+                    var killSubMenu = MenuManager.CreateMenu("Say to a player", 5);
+                    foreach (var targetPlayer in Players)
+                    {
+                        killSubMenu.Add(targetPlayer.PlayerName, null, (pl, opt) =>
+                        {
+
+                            RequestInput(pl, targetPlayer);
+  
+
+                        });
+                    }
+                    killSubMenu.Add("Back", null, (p, opt2) =>
+                    {
+                        MenuManager.OpenMainMenu(p, classMenu);
+                    });
+                    MenuManager.OpenMainMenu(pl, killSubMenu);
                 });
+
                 MenuManager.OpenMainMenu(player, classMenu);
             }
             if (role == 9009)
@@ -94,28 +110,44 @@ namespace WarcraftPlugin.Core
             }
 
         }
+        [GameEventHandler]
+        public HookResult OnPlayerChat(EventPlayerChat ev)
+        {
+            var player = Utilities.GetPlayerFromUserid(ev.Userid);
+            var message = ev.Text;
+
+            if (player == null) return HookResult.Continue;
+
+            if (pendingInputs.TryGetValue(player, out var action))
+            {
+                action.Invoke(message);  // Process stored action
+                pendingInputs.Remove(player); // Remove from pending inputs
+                return HookResult.Handled; // Block message from showing in chat
+            }
+
+            return HookResult.Continue; // Allow normal chat behavior
+        }
+        private void RequestInput(CCSPlayerController admin, CCSPlayerController target)
+        {
+            admin.PrintToChat("Type the message in chat for the selected player");
+
+            pendingInputs[admin] = (message) =>
+            {
+                target.PrintToChat($"{message}");
+            };
+        }
 
         public void ChangeRole(CCSPlayerController player, int role)
         {
             //_db.ChangePlayerRole(player, role);
         }
-        //[GameEventHandler]
-        //public HookResult PlayerSpawnHandler(EventPlayerSpawn @event, GameEventInfo info)
-        //{
-        //  Console.WriteLine($"Player Spawned: {@event.Userid}");
+        
+        public HookResult PlayerSpawnHandler(EventPlayerSpawn @event, GameEventInfo info)
+        {
+            Console.WriteLine($"Player Spawned: {@event.Userid}");
 
-        // Send a message to all clients
-
-
-        //var player = @event.Userid;
-        //var player = Utilities.GetPlayerFromUserid(@event.Userid);
-        // var player = @event.Userid;
-        //  var message = "adminPanel";
-
-        //  player.ExecuteClientCommand($"say adminPanel");
-
-        //  return HookResult.Continue;
-        // }
+          return HookResult.Continue;
+         }
     }
 }
 namespace CounterStrikeSharp.API.Core
