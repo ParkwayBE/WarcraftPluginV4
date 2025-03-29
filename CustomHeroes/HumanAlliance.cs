@@ -47,6 +47,7 @@ namespace WarcraftPlugin.Classes
             {
                 int DevotionAura = abilityLevel * 18;
                 int InvisPercent = abilityLevel * 15;
+                int PercentTo255 = 255 - (255 / 100 * InvisPercent);
                 BonusHealth(Player, DevotionAura);
                 Invisibility(Player, 999f, InvisPercent);
                 WarcraftPlayer.HasUltimateImmunity = true;
