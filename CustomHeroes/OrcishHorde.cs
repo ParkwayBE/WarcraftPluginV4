@@ -41,14 +41,9 @@ namespace WarcraftPlugin.Classes
         {
             List<string> particlePaths = new()
     {
-        "particles/generic_fx/fx_electric_arc_spark.vpcf",
-        "particles/generic_fx/fx_electricspark_flare.vpcf",
-        "particles/generic_fx/fx_electricspark_follow.vpcf",
-        "particles/generic_fx/fx_electricspark_glow.vpcf",
-        "particles/ui/status_levels/ui_status_level7_lightning.vpcf",
-        "particles/ui/ui_exp_streak_t3.vpcf",
-        "particles/ui/ui_experience_award_electricshock.vpcf",
-        "particles/ui/ammohealthcenter/ui_hud_kill_elec_innerpoint.vpcf"
+
+        "particles/ui/status_levels/ui_status_level7_lightning.vpcf"
+
     };
 
             var caster = Player;
