@@ -32,7 +32,7 @@ namespace WarcraftPlugin.Core
             var wcPlayer = _plugin.GetWcPlayer(player);
             if (wcPlayer == null) return;
             var playerP = wcPlayer.GetPlayer();
-            if() return;
+       
             var role = 1;
             var message = "hallo mannekes";
 
