@@ -42,14 +42,19 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
+                int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
+
                 int DevotionAura = abilityLevel * 18;
-                int InvisPercent = abilityLevel * 15;
-                int PercentTo255 = 255 - (255 / 100 * InvisPercent);
+
+                float invisPercent = abilityLevel * 15f;
+                int alpha = (int)(255f * (1f - (invisPercent / 100f)));
+
                 BonusHealth(Player, DevotionAura);
-                Invisibility(Player, 999f, InvisPercent);
+                Invisibility(Player, 999f, alpha);
+
+
                 WarcraftPlayer.HasUltimateImmunity = true;
             });
 
