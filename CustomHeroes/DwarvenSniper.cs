@@ -211,20 +211,28 @@ namespace WarcraftPlugin.Classes
                 Player.PrintToChat(" \x06[Ultimate] Your evasion boost has ended.");
             });
 
-            impaleOnSight = true;
-            impaleTriggered = false;
-
-            Player.PrintToChat("Ultimate active: Impale on sight for 5 seconds!");
-
-            WarcraftPlugin.Instance.AddTimer(5.0f, () =>
-            {
-                impaleOnSight = false;
-                Player.PrintToChat("Ultimate expired.");
-            });
-
+            ActivateImpaleUltimate();
 
             StartCooldown(3); // Index 3 = Ultimate
         }
+
+        private HashSet<CCSPlayerController> impaleTriggeredPlayers = new();
+
+        private void ActivateImpaleUltimate()
+        {
+            impaleTriggeredPlayers.Clear();
+            impaleOnSight = true;  // 🔥 THIS is what was missing
+
+            Player.PrintToChat(" \x05[Ultimate] Impale activated! Anyone who sees you will be launched!");
+
+            WarcraftPlugin.Instance.AddTimer(5.0f, () =>
+            {
+                impaleOnSight = false;  // 🔒 Turn off impale mode after 5s
+                impaleTriggeredPlayers.Clear();
+                Player.PrintToChat(" \x05[Ultimate] Impale has ended.");
+            });
+        }
+
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
@@ -239,29 +247,27 @@ namespace WarcraftPlugin.Classes
         [GameEventHandler]
         public HookResult OnSpottedByEnemy(EventSpottedByEnemy e)
         {
-            if (!impaleOnSight || impaleTriggered) return HookResult.Continue;
-            if (e.UserId == null || !e.UserId.IsValid) return HookResult.Continue;
-
-            // Enemy that spotted us
-            var enemy = e.UserId;
-
-            // Only trigger if they spotted *us*
-            if (enemy == Player || enemy.TeamNum == Player.TeamNum)
+            if (!impaleOnSight || Player == null || !Player.IsValid)
                 return HookResult.Continue;
 
-            // Apply the impale effect
+            var enemy = e.UserId;
+            if (enemy == null || !enemy.IsValid || enemy == Player || enemy.TeamNum == Player.TeamNum)
+                return HookResult.Continue;
+
+            if (impaleTriggeredPlayers.Contains(enemy)) return HookResult.Continue;
+
+            // Apply impale effect
             if (enemy.PlayerPawn?.Value != null)
             {
-                var vel = enemy.PlayerPawn.Value.AbsVelocity;
                 enemy.PlayerPawn.Value.Teleport(null, null, new Vector(0, 0, 500));
-                enemy.PrintToChat("You triggered the Impale!");
-                Player.PrintToChat("An enemy was impaled!");
-                impaleTriggered = true;
-                impaleOnSight = false;
+                enemy.PrintToChat(" \x07[Impale] You looked at the wrong dwarf!");
+                Player.PrintToChat($" \x04[Impale] {enemy.PlayerName} was launched for looking at you!");
+                impaleTriggeredPlayers.Add(enemy);
             }
 
             return HookResult.Continue;
         }
+
 
 
     }
