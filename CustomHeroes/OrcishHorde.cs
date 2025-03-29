@@ -15,6 +15,7 @@ namespace WarcraftPlugin.Classes
     {
         public override string DisplayName => "Orcish Horde";
         public override Color DefaultColor => Color.GreenYellow;
+        bool hitSomething = false;
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -39,6 +40,7 @@ namespace WarcraftPlugin.Classes
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
                 BonusHealth(Player, 9999);
+                StartCooldown(3);
             });
         }
 
@@ -64,6 +66,7 @@ namespace WarcraftPlugin.Classes
 
             var hitPlayers = new HashSet<CCSPlayerController>();
             var bounceTargets = new List<CCSPlayerController> { caster };
+            bool hitSomething = false; // ✅ Track if any valid target was hit
 
             void DoBounce(int bounceIndex)
             {
@@ -118,27 +121,34 @@ namespace WarcraftPlugin.Classes
                     return;
                 }
 
+                // ✅ SUCCESS — we hit someone
+                hitSomething = true;
+
                 hitPlayers.Add(closest);
                 bounceTargets.Add(closest);
 
-                // Deal damage
                 SkillFunctions.DealRawDamage(caster, closest, damage);
-
-                // Draw beam from last target to new one
                 Warcraft.DrawLaserBetween(last.EyePosition(), closest.EyePosition(), Color.Cyan, 2.0f);
 
                 Console.WriteLine($"[OrcishHorde] Chain Lightning bounced to {closest.PlayerName} (bounce #{bounceIndex + 1})");
 
-                // Delay next bounce
                 WarcraftPlugin.Instance.AddTimer(delayBetweenBounces, () => DoBounce(bounceIndex + 1));
             }
 
-
-            // Start the chain
+            // Start chain
             DoBounce(0);
 
-            StartCooldown(3);
+            // ✅ Only start cooldown if something was hit
+            if (hitSomething)
+            {
+                StartCooldown(3);
+            }
+            else
+            {
+                caster.PrintToCenter("⚠️ No valid targets for Chain Lightning — no cooldown used.");
+            }
         }
+
 
 
 
