@@ -69,8 +69,6 @@ namespace WarcraftPlugin.Classes
                     Player.PlayerPawn.Value.MaxHealth = Player.PlayerPawn.Value.Health;
 
                 }
-
-                if (Player?.PlayerPawn?.Value == null) return;
                 ResetCooldowns();
             });
         }

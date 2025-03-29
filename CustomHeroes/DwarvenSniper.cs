@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Drawing;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
-
 
 
 
@@ -172,9 +170,27 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerHurt(EventPlayerHurt @event)
         {
-            if (Player == null) return;
+            if (Player == null || !Player.IsValid || !Player.IsAlive())
+                return;
+
             HandleEvasion(@event);
+
+            if (impaleOnSight && @event.Attacker != null && @event.Attacker.IsValid)
+            {
+                var attacker = @event.Attacker;
+
+                if (attacker != Player && attacker.TeamNum != Player.TeamNum && !impaleTriggeredPlayers.Contains(attacker))
+                {
+                    // Apply impale effect
+                    attacker.PlayerPawn.Value.Teleport(null, null, new Vector(0, 0, 500));
+                    attacker.PrintToChat(" \x07[Impale] You hurt the wrong dwarf!");
+                    Player.PrintToChat($" \x04[Impale] {attacker.PlayerName} was launched for hitting you!");
+
+                    impaleTriggeredPlayers.Add(attacker);
+                }
+            }
         }
+
 
         private void HandleEvasion(EventPlayerHurt @event)
         {
@@ -243,32 +259,5 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine($"Dealt {damageBonus} extra damage with a scoped weapon.");
             }
         }
-
-        [GameEventHandler]
-        public HookResult OnSpottedByEnemy(EventSpottedByEnemy e)
-        {
-            if (!impaleOnSight || Player == null || !Player.IsValid)
-                return HookResult.Continue;
-
-            var enemy = e.UserId;
-            if (enemy == null || !enemy.IsValid || enemy == Player || enemy.TeamNum == Player.TeamNum)
-                return HookResult.Continue;
-
-            if (impaleTriggeredPlayers.Contains(enemy)) return HookResult.Continue;
-
-            // Apply impale effect
-            if (enemy.PlayerPawn?.Value != null)
-            {
-                enemy.PlayerPawn.Value.Teleport(null, null, new Vector(0, 0, 500));
-                enemy.PrintToChat(" \x07[Impale] You looked at the wrong dwarf!");
-                Player.PrintToChat($" \x04[Impale] {enemy.PlayerName} was launched for looking at you!");
-                impaleTriggeredPlayers.Add(enemy);
-            }
-
-            return HookResult.Continue;
-        }
-
-
-
     }
 }
