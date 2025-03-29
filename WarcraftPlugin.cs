@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
@@ -322,21 +323,29 @@ namespace WarcraftPlugin
 
             Console.WriteLine("Player just connected: " + WarcraftPlayers[player.Handle]);
 
-            foreach (var bot in Utilities.GetPlayers().Where(p => p.IsBot && p.PlayerPawn?.Value != null))
-            {
-                var wcPlayer = GetWcPlayer(bot);
-                if (wcPlayer == null || wcPlayer.GetClass() != null)
-                    continue;
-
-                Console.WriteLine($"[BOT INIT - Fallback] Assigning 'Human Alliance' to bot {bot.PlayerName}");
-
-                ChangeClass(bot, "Human Alliance");
-                wcPlayer.SetAbilityLevel(0, 5);
-                wcPlayer.SetAbilityLevel(1, 5);
-                wcPlayer.SetAbilityLevel(2, 5);
-                wcPlayer.SetAbilityLevel(3, 1);
-            }
         }
+
+        [GameEventHandler(HookMode.Post)]
+        public void OnPlayerSpawn(EventPlayerSpawn e)
+        {
+            var player = e.Userid;
+
+            if (player == null || !player.IsBot)
+                return;
+
+            var wcPlayer = GetWcPlayer(player);
+            if (wcPlayer == null || wcPlayer.GetClass() != null)
+                return;
+
+            Console.WriteLine($"[BOT INIT - Spawn] Assigning 'Human Alliance' to bot {player.PlayerName}");
+
+            wcPlayer = ChangeClass(player, "Human Alliance");
+            wcPlayer.SetAbilityLevel(0, 5);
+            wcPlayer.SetAbilityLevel(1, 5);
+            wcPlayer.SetAbilityLevel(2, 5);
+            wcPlayer.SetAbilityLevel(3, 1);
+        }
+
 
 
         internal WarcraftPlayer ChangeClass(CCSPlayerController player, string classInternalName)
