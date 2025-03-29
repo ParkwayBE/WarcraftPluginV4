@@ -21,7 +21,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Critical Strike", "up to 35% to deal double damage."),
             new WarcraftAbility("Reincarnation", "Gain up to 100% chance to respawn once after dying"),
             new WarcraftAbility("Critical Grenade", "up to 100% chance to deal double damage"),
-            new WarcraftCooldownAbility("Chain Lightning", "Strike a nearby enemy with lightning.", 8f, false)
+            new WarcraftCooldownAbility("Chain Lightning", "Strike a nearby enemy with lightning.", 8f, true)
         ];
 
         public override void Register()
