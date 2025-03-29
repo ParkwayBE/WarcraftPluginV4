@@ -62,7 +62,7 @@ namespace WarcraftPlugin.Core
                     {
                         killSubMenu.Add(targetPlayer.PlayerName, null, (pl, opt) =>
                         {
-                            player.ExecuteClientCommand($"css_slay #{targetPlayer.SteamID.ToString()}");
+                            //player.ExecuteClientCommand($"css_slay #{targetPlayer.SteamID.ToString()}");
                             player.ExecuteClientCommandFromServer($"css_slay #{targetPlayer.SteamID.ToString()}");
                         });
                     }
