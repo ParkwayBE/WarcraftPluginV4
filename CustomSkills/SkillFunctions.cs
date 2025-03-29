@@ -51,6 +51,16 @@ namespace WarcraftPlugin.CustomSkills
             }
         }
 
+        public static void ExplodeOnDeathSkill(CCSPlayerController player, float radius, float damage)
+        {
+            new ExplodeOnDeathEffect(player, radius, damage).Start();
+        }
+
+        public static void SetPlayerGravity(CCSPlayerController player, float gravityPercent, float duration)
+        {
+            new SetGravityEffect(player, gravityPercent, duration).Start();
+        }
+
         public static void LeechHealth(CCSPlayerController attacker, CCSPlayerController victim, int chancePercent, float healPercent, int damageDealt)
         {
             LeechSkill.LeechHealth(attacker, victim, chancePercent, healPercent, damageDealt);

@@ -281,7 +281,6 @@ namespace WarcraftPlugin.Core
             dummy.PlayerPawn.Value.Teleport(spawnPos, new QAngle(), new Vector());
 
             // Buff and disable
-            dummy.PlayerPawn.Value.MaxHealth = 9999;
             BonusHealth(dummy, 9999);
             dummy.PlayerPawn.Value.AcceptInput("DisableThinking", dummy);
             dummy.PlayerPawn.Value.AcceptInput("DisableMotion", dummy);
