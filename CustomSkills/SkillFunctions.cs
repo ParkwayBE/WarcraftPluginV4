@@ -110,21 +110,25 @@ namespace WarcraftPlugin.CustomSkills
 
         public static void SetEvasion(CCSPlayerController player, EventPlayerHurt e, int chancePercent, float reductionPercent)
         {
-            if (!player.IsValid || !player.IsAlive()) return;
+            if (player == null || !player.IsValid || !player.IsAlive())
+                return;
 
-            int roll = Random.Shared.Next(1, 101);
-            if (roll > chancePercent) return;
+            int roll = new Random().Next(1, 101);
+            Console.WriteLine($"[Evasion] Rolled {roll} vs {chancePercent}");
 
-            int originalDamage = e.DmgHealth;
-            int reducedDamage = (int)(originalDamage * (1f - reductionPercent));
-
-            reducedDamage = Math.Max(0, reducedDamage);
-            if (reducedDamage < originalDamage)
+            if (roll <= chancePercent)
             {
+                int originalDamage = e.DmgHealth;
+                int reducedDamage = (int)(originalDamage * (1f - reductionPercent));
+                reducedDamage = Math.Max(0, reducedDamage);
+
                 e.DmgHealth = reducedDamage;
-                player.PrintToChat($" \x04[Evasion] Evaded {originalDamage - reducedDamage} damage! (Roll: {roll}/{chancePercent})");
+
+                player.PrintToChat($" \x04[Evasion] Evaded {originalDamage - reducedDamage} damage!");
+                player.EmitSound("Weapon_M4A1.Silenced");
             }
         }
+
 
 
 
