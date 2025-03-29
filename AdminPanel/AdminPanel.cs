@@ -120,11 +120,12 @@ namespace WarcraftPlugin.Core
 
             if (pendingInputs.TryGetValue(player, out var action))
             {
+                Console.WriteLine($"Processing stored input from {player.PlayerName}: {message}");
                 action.Invoke(message);  // Process stored action
                 pendingInputs.Remove(player); // Remove from pending inputs
                 return HookResult.Handled; // Block message from showing in chat
             }
-
+            Console.WriteLine($"Normal chat message from {player.PlayerName}: {message}");
             return HookResult.Continue; // Allow normal chat behavior
         }
         private void RequestInput(CCSPlayerController admin, CCSPlayerController target)
@@ -139,7 +140,9 @@ namespace WarcraftPlugin.Core
             pendingInputs[admin] = (message) =>
             {
                 target.PrintToChat($"{message}");
+                Console.WriteLine($"Stored message from {admin.PlayerName} to {target.PlayerName}: {message}");
             };
+            Console.WriteLine($"Waiting for {admin.PlayerName} to type a message...");
         }
 
         public void ChangeRole(CCSPlayerController player, int role)
