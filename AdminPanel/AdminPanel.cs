@@ -8,6 +8,7 @@ using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
+using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Menu;
 using WarcraftPlugin.Menu.WarcraftMenu;
 
@@ -70,8 +71,17 @@ namespace WarcraftPlugin.Core
                         killSubMenu.Add(targetPlayer.PlayerName, null, (pl, opt) =>
                         {
                             //player.ExecuteClientCommand($"css_slay #{targetPlayer.SteamID.ToString()}");
+                            if (!targetPlayer.IsBot)
+                            {
 
-                            player.ExecuteClientCommandFromServer($"css_slay #{targetPlayer.SteamID.ToString()}");
+                                player.ExecuteClientCommandFromServer($"css_slay #{targetPlayer.SteamID.ToString()}");
+                            }
+                            else
+                            {
+                                player.ExecuteClientCommandFromServer($"css_slay {targetPlayer.PlayerName}");
+                            }
+                        
+                            
 
                         });
                     }
