@@ -9,6 +9,7 @@ using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
 
 
+
 namespace WarcraftPlugin.Classes
 {
     public class OrcishHorde : WarcraftClass
@@ -33,6 +34,41 @@ namespace WarcraftPlugin.Classes
             HookAbility(3, Ultimate);
         }
 
+        private void TestAllLightningParticles()
+        {
+            List<string> particlePaths = new()
+    {
+        "particles/generic_fx/fx_electric_arc_spark.vpcf",
+        "particles/generic_fx/fx_electricspark_flare.vpcf",
+        "particles/generic_fx/fx_electricspark_follow.vpcf",
+        "particles/generic_fx/fx_electricspark_glow.vpcf",
+        "particles/ui/status_levels/ui_status_level7_lightning.vpcf",
+        "particles/ui/ui_exp_streak_t3.vpcf",
+        "particles/ui/ui_experience_award_electricshock.vpcf",
+        "particles/ui/ammohealthcenter/ui_hud_kill_elec_innerpoint.vpcf"
+    };
+
+            float delay = 0f;
+            foreach (var path in particlePaths)
+            {
+                WarcraftPlugin.Instance.AddTimer(delay, () =>
+                {
+                    if (Player?.IsValid != true || Player.PlayerPawn?.Value == null)
+                        return;
+
+                    var pos = Player.PlayerPawn.Value.AbsOrigin.Clone();
+                    pos.Z += 50;
+
+                    var particle = Warcraft.SpawnParticle(pos, path, 2.0f);
+                    particle.SetParent(Player.PlayerPawn.Value);
+
+                    Player.PrintToChat($" \x06[Particle Test] Playing: \x04{path}");
+                });
+
+                delay += 1.5f;
+            }
+        }
+
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
@@ -55,6 +91,9 @@ namespace WarcraftPlugin.Classes
         {
             if (WarcraftPlayer.GetAbilityLevel(3) <= 0)
                 return;
+
+            TestAllLightningParticles();
+            return;
 
             Console.WriteLine("[OrcishHorde] Ultimate activated");
 
