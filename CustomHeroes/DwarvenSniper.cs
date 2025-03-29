@@ -31,6 +31,7 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerHurt>(PlayerHurt);
+            HookEvent<EventGrenadeThrown>(GrenadeThrown);
             HookAbility(3, Ultimate);
         }
 
@@ -73,6 +74,15 @@ namespace WarcraftPlugin.Classes
 
         }
 
+        internal void GrenadeThrown(EventGrenadeThrown @event)
+        {
+            if (activeEffects.TryGetValue(Player, out var effect))
+            {
+                effect.GiveGrenadeIfNeeded();
+            }
+        }
+
+
         internal class GrenadeSupplyEffect(CCSPlayerController owner) : WarcraftEffect(owner)
         {
             private int grenadesGiven = 0;
@@ -96,7 +106,7 @@ namespace WarcraftPlugin.Classes
                     return;
                 }
 
-                maxGrenades = WarcraftPlayer.GetAbilityLevel(0);
+                maxGrenades = WarcraftPlayer.GetAbilityLevel(2);
                 Console.WriteLine($"[DEBUG] Retrieved ability level: {maxGrenades}");
 
                 if (maxGrenades < 1)
@@ -111,7 +121,7 @@ namespace WarcraftPlugin.Classes
 
                 Console.WriteLine("[INFO] Granting initial grenade.");
                 Owner.GiveNamedItem("weapon_hegrenade");
-                maxGrenades = 1;
+                maxGrenades = 4;
             }
 
             public void GiveGrenadeIfNeeded()
