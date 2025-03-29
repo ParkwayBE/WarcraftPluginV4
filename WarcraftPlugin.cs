@@ -361,12 +361,17 @@ namespace WarcraftPlugin
                 return player.GetWarcraftPlayer();
 
             player.GetWarcraftPlayer().GetClass().PlayerChangingToAnotherRace();
-            player.GetWarcraftPlayer().className = classInternalName;
+            var wcPlayer = player.GetWarcraftPlayer();
+            wcPlayer.className = classInternalName;
 
+            // Ensure the new class is saved and THEN loaded back in
+            _database.SavePlayerToDatabase(player);
             _database.SaveCurrentClass(player);
-            var warcraftClass = _database.LoadPlayerFromDatabase(player, XpSystem);
 
-            return warcraftClass;
+            wcPlayer = _database.LoadPlayerFromDatabase(player, XpSystem);
+            SetWcPlayer(player, wcPlayer); // Make sure internal cache is updated too
+
+            return wcPlayer;
         }
 
 
