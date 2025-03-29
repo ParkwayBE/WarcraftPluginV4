@@ -27,8 +27,7 @@ namespace WarcraftPlugin.Core
             _plugin = plugin;
             admins.Add("76561198061919153");
             _plugin.AddCommand("adminPanel", "opens admin panel", OpenAdminPanel);
-            _plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat, HookMode.Pre);
-
+            _plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerC, HookMode.Pre);
         }
 
         public void OpenAdminPanel(CCSPlayerController? player, CommandInfo commandInfo)
@@ -115,7 +114,7 @@ namespace WarcraftPlugin.Core
            var player = Utilities.GetPlayerFromUserid(ev.Userid);
            var message = ev.Text.Trim();
 
-
+            info.DontBroadcast = true;
         
           if (player == null) return HookResult.Continue;
         
@@ -123,10 +122,12 @@ namespace WarcraftPlugin.Core
            {
              action.Invoke(message);  // Process stored action
              pendingInputs.Remove(player); // Remove from pending inputs
+             info.DontBroadcast = true;
              return HookResult.Stop;
-
+                
             }
-            return HookResult.Handled;
+
+            return HookResult.Continue;
         }
 
         
