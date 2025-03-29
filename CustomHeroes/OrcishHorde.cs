@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
@@ -19,8 +17,6 @@ namespace WarcraftPlugin.Classes
     {
         public override string DisplayName => "Orcish Horde";
         public override Color DefaultColor => Color.GreenYellow;
-        bool hitSomething = false;
-
         public override List<IWarcraftAbility> Abilities =>
         [
             new WarcraftAbility("Critical Strike", "up to 35% to deal double damage."),
@@ -36,62 +32,6 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerDeath>(PlayerDeath);
             HookAbility(3, Ultimate);
         }
-
-        private void TestAllLightningParticles()
-        {
-            List<string> particlePaths = new()
-    {
-
-        "particles/ui/status_levels/ui_status_level7_lightning.vpcf"
-
-    };
-
-            var caster = Player;
-            if (caster == null || !caster.IsValid || caster.PlayerPawn?.Value == null)
-                return;
-
-            // Find a target for testing (first valid enemy)
-            var target = Utilities.GetPlayers().FirstOrDefault(p =>
-                p.IsValid && p.IsAlive() && p != caster && p.TeamNum != caster.TeamNum && p.PlayerPawn?.Value != null);
-
-            if (target == null)
-            {
-                caster.PrintToChat(" \x07[Chain Test] No enemy target found.");
-                return;
-            }
-
-            var pos1 = Warcraft.EyePosition(caster);
-            var pos2 = Warcraft.EyePosition(target);
-
-
-            // Spawn each particle every 5 seconds at midpoint
-            float delay = 0f;
-            foreach (var path in particlePaths)
-            {
-                WarcraftPlugin.Instance.AddTimer(delay, () =>
-                {
-                    if (caster?.IsValid != true || caster.PlayerPawn?.Value == null)
-                        return;
-
-                    // Calculate midpoint and raise for visibility
-                    var mid = new Vector(
-                        (pos1.X + pos2.X) / 2,
-                        (pos1.Y + pos2.Y) / 2,
-                        (pos1.Z + pos2.Z) / 2 + 50
-                    );
-
-                    var particle = Warcraft.SpawnParticle(mid, path, 2.0f);
-                    particle.SetParent(caster.PlayerPawn.Value); // optional
-
-                    caster.PrintToChat($" \x06[Particle Test] Playing: \x04{path}");
-                });
-
-                delay += 5.0f;
-            }
-        }
-
-
-
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
             // int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
@@ -113,9 +53,6 @@ namespace WarcraftPlugin.Classes
         {
             if (WarcraftPlayer.GetAbilityLevel(3) <= 0)
                 return;
-
-            TestAllLightningParticles();
-            return;
 
             Console.WriteLine("[OrcishHorde] Ultimate activated");
 
@@ -192,7 +129,10 @@ namespace WarcraftPlugin.Classes
                 bounceTargets.Add(closest);
 
                 SkillFunctions.DealRawDamage(caster, closest, damage);
-                Warcraft.DrawLaserBetween(last.EyePosition(), closest.EyePosition(), Color.Cyan, 2.0f);
+                // Show lightning on target
+                var lightningPos = Warcraft.EyePosition(closest);
+                var particle = Warcraft.SpawnParticle(lightningPos, "particles/ui/status_levels/ui_status_level7_lightning.vpcf", 2.0f);
+                particle.SetParent(closest.PlayerPawn.Value);
 
                 Console.WriteLine($"[OrcishHorde] Chain Lightning bounced to {closest.PlayerName} (bounce #{bounceIndex + 1})");
 
@@ -212,18 +152,6 @@ namespace WarcraftPlugin.Classes
                 caster.PrintToCenter("⚠️ No valid targets for Chain Lightning — no cooldown used.");
             }
         }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         private void PlayerDeath(EventPlayerDeath death)
