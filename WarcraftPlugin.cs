@@ -71,7 +71,7 @@ namespace WarcraftPlugin
 
         internal WarcraftPlayer GetWcPlayer(CCSPlayerController player)
         {
-            if (!player.IsValid || player.IsBot || player.ControllingBot) return null;
+            if (!player.IsValid || player.ControllingBot) return null; // removed isbot line
 
             WarcraftPlayers.TryGetValue(player.Handle, out var wcPlayer);
             if (wcPlayer == null)
