@@ -230,7 +230,7 @@ namespace WarcraftPlugin.Classes
 
                 if (roll <= chancePercent)
                 {
-                    int bonus = damageDealt + (damageDealt / 2); // +50%
+                    int bonus = damageDealt / 2;
                     int total = damageDealt + bonus;
                     @event.AddBonusDamage(total);
                     attacker.PrintToChat($"🔥 Critical grenade hit! Dealt {total} damage.");
@@ -249,7 +249,7 @@ namespace WarcraftPlugin.Classes
 
                 if (roll <= chancePercent)
                 {
-                    int bonus = damageDealt + (damageDealt / 2); // +50%
+                    int bonus = (damageDealt / 4) + (damageDealt / 2);
                     @event.AddBonusDamage(bonus);
                     attacker.PrintToChat($"⚡ Critical hit! Dealt {bonus} bonus damage.");
                 }
