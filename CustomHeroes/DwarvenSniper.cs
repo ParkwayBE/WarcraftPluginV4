@@ -16,6 +16,8 @@ namespace WarcraftPlugin.Classes
         public override string DisplayName => "Dwarven Sniper";
         public override Color DefaultColor => Color.GreenYellow;
         private readonly Dictionary<CCSPlayerController, GrenadeSupplyEffect> activeEffects = new();
+        private float evasionMultiplier = 1.0f;
+
 
 
         public override List<IWarcraftAbility> Abilities =>
@@ -174,7 +176,8 @@ namespace WarcraftPlugin.Classes
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
             if (abilityLevel == 0) return;
 
-            int evasionChance = abilityLevel * 7;
+            int baseChance = abilityLevel * 7;
+            int evasionChance = (int)(baseChance * evasionMultiplier);
 
             var roll = Random.Shared.Next(100);
             if (roll < evasionChance)
@@ -190,6 +193,17 @@ namespace WarcraftPlugin.Classes
         {
             // TODO: Ring of power : Double evasion
             // TODO: Ring of power : Attempt to code the impale skill
+            if (Player == null) return;
+            evasionMultiplier = 2.0f;
+            Player.PrintToChat(" \x06[Ultimate] Your evasion has been doubled for 5 seconds!");
+
+            WarcraftPlugin.Instance.AddTimer(5.0f, () =>
+            {
+                if (Player == null) return;
+                evasionMultiplier = 1.0f;
+                Player.PrintToChat(" \x06[Ultimate] Your evasion boost has ended.");
+            });
+
             StartCooldown(3); // Index 3 = Ultimate
         }
 
