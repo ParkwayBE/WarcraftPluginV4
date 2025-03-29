@@ -52,6 +52,7 @@ namespace WarcraftPlugin.Classes
             });
         }
 
+
         private void Ultimate()
         {
             if (WarcraftPlayer.GetAbilityLevel(3) <= 0)

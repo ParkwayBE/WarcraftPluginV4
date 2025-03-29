@@ -1,12 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using g3;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
@@ -85,6 +85,10 @@ namespace WarcraftPlugin.Classes
                 var decoy = new CDecoyGrenade(Player.GiveNamedItem("weapon_decoy"));
                 decoy.AttributeManager.Item.CustomName = Localizer["tinker.ability.2"];
             }
+
+            if (Player?.PlayerPawn?.Value == null) return;
+            ResetCooldowns();
+
         }
 
         private void ActivateDrones(int numberOfDrones)

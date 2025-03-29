@@ -61,12 +61,18 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerSpawn(EventPlayerSpawn @event)
         {
-            if (WarcraftPlayer.GetAbilityLevel(1) > 0)
+            WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
-                Player.SetHp(100 + WarcraftPlayer.GetAbilityLevel(1) * _battleHardenedHealthMultiplier);
-                Player.PlayerPawn.Value.MaxHealth = Player.PlayerPawn.Value.Health;
+                if (WarcraftPlayer.GetAbilityLevel(1) > 0)
+                {
+                    Player.SetHp(100 + WarcraftPlayer.GetAbilityLevel(1) * _battleHardenedHealthMultiplier);
+                    Player.PlayerPawn.Value.MaxHealth = Player.PlayerPawn.Value.Health;
 
-            }
+                }
+
+                if (Player?.PlayerPawn?.Value == null) return;
+                ResetCooldowns();
+            });
         }
 
         private void Ultimate()

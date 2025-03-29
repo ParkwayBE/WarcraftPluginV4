@@ -51,6 +51,9 @@ namespace WarcraftPlugin.Classes
                 Invisibility(Player, 999f, InvisPercent);
                 WarcraftPlayer.HasUltimateImmunity = true;
             });
+
+            if (Player?.PlayerPawn?.Value == null) return;
+            ResetCooldowns();
         }
 
 

@@ -1,14 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
-using WarcraftPlugin.Helpers;
-using CounterStrikeSharp.API;
-using System.Linq;
-using WarcraftPlugin.Models;
-using System.Drawing;
-using System.Collections.Generic;
-using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Core.Effects;
+using WarcraftPlugin.Events.ExtendedEvents;
+using WarcraftPlugin.Helpers;
+using WarcraftPlugin.Models;
 
 namespace WarcraftPlugin.Classes
 {
@@ -53,6 +53,9 @@ namespace WarcraftPlugin.Classes
                 Player.GiveNamedItem("item_assaultsuit");
                 Player.SetArmor(Player.PlayerPawn.Value.ArmorValue + WarcraftPlayer.GetAbilityLevel(1) * 20);
             }
+
+            if (Player?.PlayerPawn?.Value == null) return;
+            ResetCooldowns();
         }
 
         private void Ultimate()
@@ -113,7 +116,7 @@ namespace WarcraftPlugin.Classes
 
         internal class HealingAuraEffect(CCSPlayerController owner, float onTickInterval) : WarcraftEffect(owner, onTickInterval: onTickInterval)
         {
-            public override void OnStart() {}
+            public override void OnStart() { }
             public override void OnTick()
             {
                 var currentAbilityLevel = Owner.GetWarcraftPlayer().GetAbilityLevel(0);
@@ -137,7 +140,7 @@ namespace WarcraftPlugin.Classes
                     }
                 }
             }
-            public override void OnFinish(){}
+            public override void OnFinish() { }
         }
     }
 }

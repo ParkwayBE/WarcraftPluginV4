@@ -1,11 +1,11 @@
-﻿using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
-using CounterStrikeSharp.API.Modules.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
+using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
@@ -85,6 +85,9 @@ namespace WarcraftPlugin.Classes
             //Imposter syndrom
             if (WarcraftPlayer.GetAbilityLevel(2) > 0)
                 new ImposterSyndromEffect(Player, 1).Start();
+
+            if (Player?.PlayerPawn?.Value == null) return;
+            ResetCooldowns();
         }
 
         private void Disguise()

@@ -1,15 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
-using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Utils;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
+using System.Linq;
 using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
+using WarcraftPlugin.Core.Effects;
+using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
-using System.Linq;
-using WarcraftPlugin.Core.Effects;
-using System.Collections.Generic;
-using WarcraftPlugin.Events.ExtendedEvents;
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace WarcraftPlugin.Classes
 {
@@ -66,19 +65,25 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerSpawn(EventPlayerSpawn @event)
         {
-            //Mana shield
-            if (WarcraftPlayer.GetAbilityLevel(2) > 0)
+            WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
-                var regenArmorRate = 5 / WarcraftPlayer.GetAbilityLevel(2);
-                new ManaShieldEffect(Player, regenArmorRate).Start();
-            }
+                //Mana shield
+                if (WarcraftPlayer.GetAbilityLevel(2) > 0)
+                {
+                    var regenArmorRate = 5 / WarcraftPlayer.GetAbilityLevel(2);
+                    new ManaShieldEffect(Player, regenArmorRate).Start();
+                }
 
-            //Fireball
-            if (WarcraftPlayer.GetAbilityLevel(0) > 0)
-            {
-                var decoy = new CDecoyGrenade(Player.GiveNamedItem("weapon_molotov"));
-                decoy.AttributeManager.Item.CustomName = "Fireball";
-            }
+                //Fireball
+                if (WarcraftPlayer.GetAbilityLevel(0) > 0)
+                {
+                    var decoy = new CDecoyGrenade(Player.GiveNamedItem("weapon_molotov"));
+                    decoy.AttributeManager.Item.CustomName = "Fireball";
+                }
+
+                if (Player?.PlayerPawn?.Value == null) return;
+                ResetCooldowns();
+            });
         }
 
         private void Ultimate()

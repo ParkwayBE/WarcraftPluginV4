@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
+using WarcraftPlugin.Core.Effects;
+using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
-using WarcraftPlugin.Core.Effects;
-using System.Collections.Generic;
-using WarcraftPlugin.Events.ExtendedEvents;
 
 namespace WarcraftPlugin.Classes
 {
@@ -31,6 +31,13 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerHurt>(PlayerHurt);
             HookEvent<EventPlayerKilledOther>(PlayerKilledOther);
             HookEvent<EventItemEquip>(PlayerItemEquip);
+            HookEvent<EventPlayerSpawn>(PlayerSpawn);
+        }
+
+        private void PlayerSpawn(EventPlayerSpawn @event)
+        {
+            if (Player?.PlayerPawn?.Value == null) return;
+            ResetCooldowns();
         }
 
         private void PlayerHurt(EventPlayerHurt @event)

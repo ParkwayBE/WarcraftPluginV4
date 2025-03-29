@@ -30,7 +30,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Healing Wave", "You and your teammates gain additional health on spawn."),
             new WarcraftAbility("Hex", "6-30% chance to remove all bonushealth, bonus speed and invisibility from your target."),
             new WarcraftAbility("Serpent Ward", "Place a ward that damages and slows nearby enemies."),
-            new WarcraftCooldownAbility("Big Bad Voodoo", "Become immune to all damage for the next 0.6-3 seconds", 8f, false)
+            new WarcraftCooldownAbility("Big Bad Voodoo", "Become immune to all damage for the next 0.6-3 seconds", 30f, false)
         ];
 
         public override void Register()
@@ -76,6 +76,9 @@ namespace WarcraftPlugin.Classes
 
 
             }
+
+            if (Player?.PlayerPawn?.Value == null) return;
+            ResetCooldowns();
         }
         private void DecoyStart(EventDecoyStarted grenade)
         {
