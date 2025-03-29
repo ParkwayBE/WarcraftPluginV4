@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using CounterStrikeSharp.API;
@@ -65,7 +66,7 @@ namespace WarcraftPlugin.Core
             }
             else if (msg is "!dummy" or "!spawn_dummy")
             {
-                DummyBotManager.SpawnDummyBot(player);
+                DummyBotManager.SpawnOrResetDummy(player);
             }
         }
 
@@ -198,46 +199,61 @@ namespace WarcraftPlugin.Core
 
     public static class DummyBotManager
     {
-        public static void SpawnDummyBot(CCSPlayerController owner)
+        private static readonly Dictionary<int, CCSPlayerController> DummyTracking = new();
+
+        public static void SpawnOrResetDummy(CCSPlayerController owner)
         {
-            var eyePos = owner.EyePosition();
-            var forward = owner.PlayerPawn.Value.EyeAngles.ToForward();
-            var spawnPos = eyePos + forward * 100;
+            var enemyTeam = owner.TeamNum == (byte)CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
 
-            Server.ExecuteCommand("bot_add_t");
+            var dummy = Utilities.GetPlayers()
+                .FirstOrDefault(p => p.IsBot && p.IsValid && p.TeamNum == (byte)enemyTeam);
 
-            WarcraftPlugin.Instance.AddTimer(0.5f, () =>
+            if (dummy == null)
             {
-                var bot = Utilities.GetPlayers().LastOrDefault(p =>
-                    p != null &&
-                    p.IsBot &&
-                    p.IsValid &&
-                    p != owner &&
-                    p.TeamNum == (byte)CsTeam.Terrorist &&
-                    p.PlayerPawn?.Value != null);
+                owner.PrintToChat(" \x07[Dummy] No bot found on the enemy team.");
+                return;
+            }
 
-                if (bot == null)
+            // Store this dummy to track HP events later
+            DummyTracking[owner.Slot] = dummy;
+
+            // Positioning
+            var forward = owner.PlayerPawn.Value.EyeAngles.ToForward();
+            var spawnPos = owner.EyePosition() + forward * 100;
+
+            dummy.PlayerPawn.Value.Teleport(spawnPos, new QAngle(), new Vector());
+
+            // Buff and disable
+            dummy.PlayerPawn.Value.MaxHealth = 9999;
+            dummy.PlayerPawn.Value.Health = 9999;
+            dummy.PlayerPawn.Value.Speed = 0f;
+            dummy.PlayerPawn.Value.VelocityModifier = 0f;
+            dummy.PlayerPawn.Value.SetColor(Color.Gray);
+            dummy.PlayerName = "TrainingDummy";
+
+            owner.PrintToChat(" \x04[Dummy] Dummy bot has been moved in front of you and frozen.");
+        }
+
+        public static void MonitorDummyHealth()
+        {
+            foreach (var entry in DummyTracking)
+            {
+                var dummy = entry.Value;
+                if (dummy == null || !dummy.IsValid || dummy.PlayerPawn?.Value == null)
+                    continue;
+
+                var hp = dummy.PlayerPawn.Value.Health;
+                if (hp <= 1)
                 {
-                    owner.PrintToChat(" \x07[Dummy] Failed to spawn bot.");
-                    return;
+                    dummy.PlayerPawn.Value.Health = 1;
+                    dummy.PrintToChat(" \x07[Dummy] You cannot die. Testing mode active.");
+                    var tester = Utilities.GetPlayerFromSlot(entry.Key);
+                    tester?.PrintToChat(" \x06[Dummy] Your test dummy is at 1 HP.");
                 }
-
-                bot.PlayerPawn.Value.Teleport(spawnPos, new QAngle(), new Vector());
-
-                bot.PlayerPawn.Value.MaxHealth = 9999;
-                bot.PlayerPawn.Value.Health = 9999;
-
-                bot.PlayerPawn.Value.Speed = 0.0f;
-                bot.PlayerPawn.Value.VelocityModifier = 0f;
-
-                bot.PlayerPawn.Value.SetColor(Color.Gray);
-                bot.PlayerName = "TrainingDummy";
-
-                bot.PrintToChat(" \x06[Dummy] You are now a training dummy.");
-                owner.PrintToChat($" \x04[Dummy] Spawned dummy: {bot.PlayerName}");
-            });
+            }
         }
     }
+
 
     public static class AngleExtensions
     {
