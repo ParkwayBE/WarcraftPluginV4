@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
@@ -17,6 +18,12 @@ namespace WarcraftPlugin.Classes
     {
         public override string DisplayName => "Orcish Horde";
         public override Color DefaultColor => Color.GreenYellow;
+        private Vector? lastSpawnPosition = null;
+        private Vector? lastDeathPosition = null;
+        private bool hasReincarnated = false;
+        private static readonly Random _rng = new();
+
+
         public override List<IWarcraftAbility> Abilities =>
         [
             new WarcraftAbility("Critical Strike", "up to 35% to deal double damage."),
@@ -29,7 +36,7 @@ namespace WarcraftPlugin.Classes
         {
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
-            HookEvent<EventPlayerDeath>(PlayerDeath);
+            HookEvent<EventPlayerDeath>(OnDeath);
             HookAbility(3, Ultimate);
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
@@ -39,6 +46,11 @@ namespace WarcraftPlugin.Classes
             {
                 BonusHealth(Player, 9999);
                 StartCooldown(3);
+
+                if (Player?.PlayerPawn?.Value == null) return;
+
+                lastSpawnPosition = Player.PlayerPawn.Value.AbsOrigin.Clone();
+                hasReincarnated = false;
             });
         }
 
@@ -138,11 +150,9 @@ namespace WarcraftPlugin.Classes
 
                 WarcraftPlugin.Instance.AddTimer(delayBetweenBounces, () => DoBounce(bounceIndex + 1));
             }
-
-            // Start chain
             DoBounce(0);
 
-            // ✅ Only start cooldown if something was hit
+            // Only start cooldown if a player was hit
             if (hitSomething)
             {
                 StartCooldown(3);
@@ -154,15 +164,104 @@ namespace WarcraftPlugin.Classes
         }
 
 
-        private void PlayerDeath(EventPlayerDeath death)
+        private void OnDeath(EventPlayerDeath death)
         {
-            // reincarnation skill
+            if (Player?.PlayerPawn?.Value == null || hasReincarnated)
+                return;
+
+            int level = WarcraftPlayer.GetAbilityLevel(0); // Reincarnation is ability 0
+            if (level == 0) return;
+
+            lastDeathPosition = Player.PlayerPawn.Value.AbsOrigin.Clone();
+
+            float chance = level * 0.2f;
+
+            if (_rng.NextDouble() <= chance)
+            {
+                hasReincarnated = true;
+
+                WarcraftPlugin.Instance.AddTimer(2f, () =>
+                {
+                    Player.PrintToChat(" \x06[Reincarnation] You have been revived!");
+                    Player.Respawn();
+                    Player.SetHp(100); // or 1 HP if you want low-risk revival
+
+                    Vector spawnPoint;
+
+                    if (lastSpawnPosition == null && lastDeathPosition == null)
+                    {
+                        spawnPoint = Player.PlayerPawn.Value.AbsOrigin; // fallback
+                    }
+                    else
+                    {
+                        spawnPoint = _rng.Next(0, 2) == 0
+                            ? lastSpawnPosition ?? lastDeathPosition!
+                            : lastDeathPosition ?? lastSpawnPosition!;
+
+                    }
+
+                    Player.PlayerPawn.Value.Teleport(spawnPoint, new QAngle(), new Vector());
+                    Warcraft.SpawnParticle(spawnPoint, "particles/generic_fx/fx_impact_flash_1sec.vpcf", 2f);
+                    Player.PlayLocalSound("sounds/ambient/atmosphere/cs_cable_rattle02.vsnd");
+                });
+            }
         }
+
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
-            // Extra damage
-            // Extra Damage with nades
+            var attacker = @event.Attacker;
+            if (attacker == null || !attacker.IsValid || attacker.PlayerPawn?.Value == null)
+                return;
+
+            var wcPlayer = attacker.GetWarcraftPlayer();
+            if (wcPlayer == null) return;
+
+            var damageDealt = @event.DmgHealth;
+
+            if (@event.Weapon == "weapon_grenade")
+            {
+                // Ability index 2 = Grenade Crits
+                int nadeLevel = wcPlayer.GetAbilityLevel(2);
+                if (nadeLevel == 0) return;
+
+                // 20% base + (level * 16%) → capped at 100% at level 5
+                float critChance = nadeLevel == 5 ? 1.0f : 0.2f + (nadeLevel * 0.16f);
+
+                if (_rng.NextDouble() <= critChance)
+                {
+                    int bonus = damageDealt + (damageDealt / 2); // +50%
+                    int total = damageDealt + bonus;
+                    @event.AddBonusDamage(total);
+                    attacker.PrintToChat($"🔥 Critical grenade hit! Dealt {total} damage.");
+                }
+                else
+                {
+                    // No crit — base damage is already applied by the engine
+                }
+            }
+            else
+            {
+                // Ability index 1 = Normal Crits
+                int normalLevel = wcPlayer.GetAbilityLevel(1);
+                if (normalLevel == 0) return;
+
+                // 20% base + (level * 3%) → capped at 35%
+                float critChance = 0.2f + (normalLevel * 0.03f);
+                critChance = MathF.Min(critChance, 0.35f);
+
+                if (_rng.NextDouble() <= critChance)
+                {
+                    int bonus = damageDealt + (damageDealt / 2); // +50%
+                    @event.AddBonusDamage(bonus);
+                    attacker.PrintToChat($"⚡ Critical hit! Dealt {bonus} damage.");
+                }
+                else
+                {
+                    // No crit — base damage is already applied by the engine
+                }
+            }
         }
+
 
     }
 }
