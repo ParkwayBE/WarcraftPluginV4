@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
+
 
 
 
@@ -48,26 +51,50 @@ namespace WarcraftPlugin.Classes
         "particles/ui/ammohealthcenter/ui_hud_kill_elec_innerpoint.vpcf"
     };
 
+            var caster = Player;
+            if (caster == null || !caster.IsValid || caster.PlayerPawn?.Value == null)
+                return;
+
+            // Find a target for testing (first valid enemy)
+            var target = Utilities.GetPlayers().FirstOrDefault(p =>
+                p.IsValid && p.IsAlive() && p != caster && p.TeamNum != caster.TeamNum && p.PlayerPawn?.Value != null);
+
+            if (target == null)
+            {
+                caster.PrintToChat(" \x07[Chain Test] No enemy target found.");
+                return;
+            }
+
+            var pos1 = Warcraft.EyePosition(caster);
+            var pos2 = Warcraft.EyePosition(target);
+
+
+            // Spawn each particle every 5 seconds at midpoint
             float delay = 0f;
             foreach (var path in particlePaths)
             {
                 WarcraftPlugin.Instance.AddTimer(delay, () =>
                 {
-                    if (Player?.IsValid != true || Player.PlayerPawn?.Value == null)
+                    if (caster?.IsValid != true || caster.PlayerPawn?.Value == null)
                         return;
 
-                    var pos = Player.PlayerPawn.Value.AbsOrigin.Clone();
-                    pos.Z += 50;
+                    // Calculate midpoint and raise for visibility
+                    var mid = new Vector(
+                        (pos1.X + pos2.X) / 2,
+                        (pos1.Y + pos2.Y) / 2,
+                        (pos1.Z + pos2.Z) / 2 + 50
+                    );
 
-                    var particle = Warcraft.SpawnParticle(pos, path, 2.0f);
-                    particle.SetParent(Player.PlayerPawn.Value);
+                    var particle = Warcraft.SpawnParticle(mid, path, 2.0f);
+                    particle.SetParent(caster.PlayerPawn.Value); // optional
 
-                    Player.PrintToChat($" \x06[Particle Test] Playing: \x04{path}");
+                    caster.PrintToChat($" \x06[Particle Test] Playing: \x04{path}");
                 });
 
-                delay += 1.5f;
+                delay += 5.0f;
             }
         }
+
 
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
