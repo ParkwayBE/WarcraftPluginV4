@@ -31,11 +31,14 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            // int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
-            SkillFunctions.SetBonusHealth(Player, 9999);
-            SkillFunctions.SetEvasion(Player, 50, 1.0f); // 50% chance to evade 100% of the dmg
-            // TODO: Dwarven Genes: Increased health
-            // TODO: Supplies: Occasionally grants a grenade and chance to spawn with either scout or awp, Maybe 50/50 at level 5 going down to 10/90 in favor of the scout at level 1
+            WarcraftPlugin.Instance.AddTimer(1.5f, () =>
+            {
+                // int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
+                SkillFunctions.SetBonusHealth(Player, 9999);
+                SkillFunctions.SetEvasion(Player, 50, 1.0f); // 50% chance to evade 100% of the dmg
+                // TODO: Dwarven Genes: Increased health
+                // TODO: Supplies: Occasionally grants a grenade and chance to spawn with either scout or awp, Maybe 50/50 at level 5 going down to 10/90 in favor of the scout at level 1
+            });
         }
 
         private void Ultimate()
