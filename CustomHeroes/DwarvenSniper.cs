@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Drawing;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Attributes.Registration;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
+
+
 
 
 namespace WarcraftPlugin.Classes
@@ -17,6 +21,9 @@ namespace WarcraftPlugin.Classes
         public override Color DefaultColor => Color.GreenYellow;
         private readonly Dictionary<CCSPlayerController, GrenadeSupplyEffect> activeEffects = new();
         private float evasionMultiplier = 1.0f;
+        private bool impaleOnSight = false;
+        private bool impaleTriggered = false;
+
 
 
 
@@ -204,6 +211,18 @@ namespace WarcraftPlugin.Classes
                 Player.PrintToChat(" \x06[Ultimate] Your evasion boost has ended.");
             });
 
+            impaleOnSight = true;
+            impaleTriggered = false;
+
+            Player.PrintToChat("Ultimate active: Impale on sight for 5 seconds!");
+
+            WarcraftPlugin.Instance.AddTimer(5.0f, () =>
+            {
+                impaleOnSight = false;
+                Player.PrintToChat("Ultimate expired.");
+            });
+
+
             StartCooldown(3); // Index 3 = Ultimate
         }
 
@@ -216,6 +235,34 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine($"Dealt {damageBonus} extra damage with a scoped weapon.");
             }
         }
+
+        [GameEventHandler]
+        public HookResult OnSpottedByEnemy(EventSpottedByEnemy e)
+        {
+            if (!impaleOnSight || impaleTriggered) return HookResult.Continue;
+            if (e.UserId == null || !e.UserId.IsValid) return HookResult.Continue;
+
+            // Enemy that spotted us
+            var enemy = e.UserId;
+
+            // Only trigger if they spotted *us*
+            if (enemy == Player || enemy.TeamNum == Player.TeamNum)
+                return HookResult.Continue;
+
+            // Apply the impale effect
+            if (enemy.PlayerPawn?.Value != null)
+            {
+                var vel = enemy.PlayerPawn.Value.AbsVelocity;
+                enemy.PlayerPawn.Value.Teleport(null, null, new Vector(0, 0, 500));
+                enemy.PrintToChat("You triggered the Impale!");
+                Player.PrintToChat("An enemy was impaled!");
+                impaleTriggered = true;
+                impaleOnSight = false;
+            }
+
+            return HookResult.Continue;
+        }
+
 
     }
 }
