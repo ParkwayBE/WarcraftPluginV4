@@ -38,22 +38,10 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventWeaponFire>(PlayerShoot);
-            HookEvent<EventPlayerDisconnect>(PlayerDisconnect);
-            HookEvent<EventPlayerDeath>(PlayerDeath);
 
             HookAbility(3, Ultimate);
         }
 
-
-        private void PlayerDeath(EventPlayerDeath death)
-        {
-            WarcraftPlayer.HasUltimateImmunity = false;
-        }
-
-        private void PlayerDisconnect(EventPlayerDisconnect @event)
-        {
-            WarcraftPlayer.HasUltimateImmunity = false;
-        }
         private void PlayerShoot(EventWeaponFire @event)
         {
             var activeWeapon = Player.PlayerPawn.Value.WeaponServices?.ActiveWeapon.Value;
@@ -73,7 +61,6 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerSpawn(EventPlayerSpawn @event)
         {
-            WarcraftPlayer.HasUltimateImmunity = true;
             if (WarcraftPlayer.GetAbilityLevel(1) > 0)
             {
                 Player.SetHp(100 + WarcraftPlayer.GetAbilityLevel(1) * _battleHardenedHealthMultiplier);
