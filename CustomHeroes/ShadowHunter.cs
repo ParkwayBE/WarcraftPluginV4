@@ -303,6 +303,9 @@ namespace WarcraftPlugin.Classes
             var target = @event.Userid;
             if (!target.IsValid || !target.IsAlive()) return;
 
+            if (Player.TeamNum == target.TeamNum)
+                return;
+
             // Remove buffs
             target.PlayerPawn.Value.VelocityModifier = 1f;
             if (target.PlayerPawn.Value.Health > 100)
