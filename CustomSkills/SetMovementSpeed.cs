@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-// File: CustomSkills/MovementSpeed.cs
+﻿// File: CustomSkills/MovementSpeed.cs
 
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities;
 using WarcraftPlugin.Core.Effects;
 
 namespace WarcraftPlugin.CustomSkills
@@ -24,7 +17,7 @@ namespace WarcraftPlugin.CustomSkills
 
         public override void OnStart()
         {
-            Owner.PrintToChat($"[TEST] Speed set to {_speedMultiplier}x for {Duration}s");
+            Owner.PrintToChat($"[MS] Speed set to {_speedMultiplier}x for {Duration}s");
             var pawn = Owner.PlayerPawn.Value;
             pawn.VelocityModifier = 1f + 0.1f * _speedMultiplier;
         }
@@ -32,7 +25,7 @@ namespace WarcraftPlugin.CustomSkills
         public override void OnFinish()
         {
             Owner.PlayerPawn.Value.VelocityModifier = 1.0f;
-            Owner.PrintToChat("[TEST] Speed returned to normal.");
+            Owner.PrintToChat("[MS] Speed returned to normal.");
         }
 
         public override void OnTick()

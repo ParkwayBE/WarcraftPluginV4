@@ -65,7 +65,7 @@ namespace WarcraftPlugin.Classes
 
             int chance = 100;
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
-            float healPercent = 0.03f + (abilityLevel * 0.03f);
+            float healPercent = (0.03f + (abilityLevel * 0.03f)) * 100f;
             int damage = @event.DmgHealth;
 
             SkillFunctions.LeechHealth(attacker, victim, chance, healPercent, damage);
@@ -78,8 +78,8 @@ namespace WarcraftPlugin.Classes
 
             if (Player.PlayerPawn?.Value == null) return;
 
-            float radius = 250f;
-            float damage = 100f;
+            float radius = 350f;
+            float damage = 150f;
 
             SkillFunctions.ExplodeOnDeathSkill(Player, radius, damage);
             Player.PrintToChat($"You dealt {damage} damage around you!");
