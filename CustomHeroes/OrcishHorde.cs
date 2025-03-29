@@ -224,19 +224,17 @@ namespace WarcraftPlugin.Classes
                 int nadeLevel = wcPlayer.GetAbilityLevel(2);
                 if (nadeLevel == 0) return;
 
-                // 20% base + (level * 16%) → capped at 100% at level 5
-                float critChance = nadeLevel == 5 ? 1.0f : 0.2f + (nadeLevel * 0.16f);
+                int chancePercent = nadeLevel == 5 ? 100 : (int)(0.2f + nadeLevel * 0.16f * 100); // up to 100%
 
-                if (_rng.NextDouble() <= critChance)
+                int roll = new Random().Next(1, 101);
+                Console.WriteLine($"[GrenadeCrit] Rolled {roll} vs {chancePercent}");
+
+                if (roll <= chancePercent)
                 {
                     int bonus = damageDealt + (damageDealt / 2); // +50%
                     int total = damageDealt + bonus;
                     @event.AddBonusDamage(total);
                     attacker.PrintToChat($"🔥 Critical grenade hit! Dealt {total} damage.");
-                }
-                else
-                {
-                    // No crit — base damage is already applied by the engine
                 }
             }
             else
@@ -245,23 +243,18 @@ namespace WarcraftPlugin.Classes
                 int normalLevel = wcPlayer.GetAbilityLevel(1);
                 if (normalLevel == 0) return;
 
-                // 20% base + (level * 3%) → capped at 35%
-                float critChance = 0.2f + (normalLevel * 0.03f);
-                critChance = MathF.Min(critChance, 0.35f);
+                int chancePercent = Math.Min((int)(0.2f * 100 + normalLevel * 3), 35); // max 35%
+                int roll = new Random().Next(1, 101);
+                Console.WriteLine($"[Crit] Rolled {roll} vs {chancePercent}");
 
-                if (_rng.NextDouble() <= critChance)
+                if (roll <= chancePercent)
                 {
                     int bonus = damageDealt + (damageDealt / 2); // +50%
                     @event.AddBonusDamage(bonus);
-                    attacker.PrintToChat($"⚡ Critical hit! Dealt {bonus} damage.");
-                }
-                else
-                {
-                    // No crit — base damage is already applied by the engine
+                    attacker.PrintToChat($"⚡ Critical hit! Dealt {bonus} bonus damage.");
                 }
             }
         }
-
 
     }
 }
