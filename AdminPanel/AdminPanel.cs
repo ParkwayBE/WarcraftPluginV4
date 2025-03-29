@@ -28,6 +28,7 @@ namespace WarcraftPlugin.Core
             admins.Add("76561198061919153");
             _plugin.AddCommand("adminPanel", "opens admin panel", OpenAdminPanel);
             _plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat, HookMode.Pre);
+            _plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat2, HookMode.Pre);
         }
 
         public void OpenAdminPanel(CCSPlayerController? player, CommandInfo commandInfo)
@@ -122,15 +123,34 @@ namespace WarcraftPlugin.Core
            {
              action.Invoke(message);  // Process stored action
              pendingInputs.Remove(player); // Remove from pending inputs
+             ev.Set("BlockMessage", true);
              info.DontBroadcast = true;
              return HookResult.Stop;
-                
+             ev.Set("BlockMessage", true);
             }
 
             return HookResult.Continue;
         }
+        public HookResult OnPlayerChat2(EventPlayerChat ev, GameEventInfo info)
+        {
+            var player = Utilities.GetPlayerFromUserid(ev.Userid);
+            var message = ev.Text.Trim();
 
-        
+            if (player == null) return HookResult.Continue;
+
+            // Check if the message starts with "say"
+            if (message.StartsWith("say", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine($"Blocked chat message from {player.PlayerName}: {message}");
+
+                // Prevent the 'say' message from being broadcast in chat
+                return HookResult.Handled;
+            }
+
+            return HookResult.Continue; // Allow other chat messages to continue
+        }
+
+
         private void RequestInput(CCSPlayerController admin, CCSPlayerController target)
         {
             admin.PrintToChat("Type the message in chat for the selected player start with /");
