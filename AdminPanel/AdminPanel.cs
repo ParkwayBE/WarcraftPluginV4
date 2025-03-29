@@ -17,7 +17,7 @@ namespace WarcraftPlugin.Core
         public AdminPanel(WarcraftPlugin plugin)
         {
             _plugin = plugin;
-            admins.Add("STEAM_0:1:50826712");
+            admins.Add("76561198061919153");
             _plugin.AddCommand("adminPanel", "opens admin panel", OpenAdminPanel);
 
 
@@ -27,7 +27,10 @@ namespace WarcraftPlugin.Core
         {
             player.PrintToChat(player.SteamID.ToString());
 
-            //if (!admins.Contains(player.SteamID.ToString())
+            if (!admins.Contains(player.SteamID.ToString()))
+            {
+                return;
+            }
             
             var wcPlayer = _plugin.GetWcPlayer(player);
             if (wcPlayer == null) return;
@@ -45,9 +48,11 @@ namespace WarcraftPlugin.Core
             {
                 playerP.PrintToChat("You are an admin, the panel will open soon ;)");
                 Console.WriteLine("admin panel test");
-               
-                playerP.PrintToCenterHtml("<font color='#FFFFFF'>AAAADDMIN PANEL</font>");
-                var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>{_plugin.Localizer["menu.class"]}</font><br><font color='grey' class='{FontSizes.FontSizeS}'>{_plugin.Localizer["menu.class.total.levels"]} (</font><font color='gold' class='{FontSizes.FontSizeS}'></font><font color='grey' class='{FontSizes.FontSizeS}'>)</font>", 5);
+
+                //playerP.PrintToCenterHtml("<font color='#FFFFFF'>AAAADDMIN PANEL</font>");
+                var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>
+                    {player.SteamID.ToString()}'s Class</font><br>
+                    <font color='grey'>YAYAYA</font> ", 5);
                 MenuManager.OpenMainMenu(player, classMenu);
             }
             if (role == 9009)
