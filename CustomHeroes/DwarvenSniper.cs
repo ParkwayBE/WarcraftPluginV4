@@ -220,17 +220,19 @@ namespace WarcraftPlugin.Classes
 
         private void ActivateImpaleUltimate()
         {
-
             impaleTriggeredPlayers.Clear();
+            impaleOnSight = true;  // 🔥 THIS is what was missing
 
             Player.PrintToChat(" \x05[Ultimate] Impale activated! Anyone who sees you will be launched!");
 
             WarcraftPlugin.Instance.AddTimer(5.0f, () =>
             {
+                impaleOnSight = false;  // 🔒 Turn off impale mode after 5s
                 impaleTriggeredPlayers.Clear();
                 Player.PrintToChat(" \x05[Ultimate] Impale has ended.");
             });
         }
+
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
