@@ -53,39 +53,6 @@ namespace WarcraftPlugin.Core
             _waitForWcPluginTimer = null;
         }
 
-        private HookResult OnPlayerHurt(EventPlayerHurt e, GameEventInfo info)
-        {
-            if (e == null || e.Userid == null || !e.Userid.IsValid)
-                return HookResult.Continue;
-
-            var victim = e.Userid;
-
-            foreach (var dummy in DummyBotManager.GetAllTrackedDummies())
-            {
-                if (dummy.Value == victim && victim.IsValid && victim.IsAlive())
-                {
-                    var currentHp = victim.PlayerPawn.Value.Health;
-                    var newHp = Math.Max(1, currentHp - e.DmgHealth);
-
-                    // Prevent death and apply damage
-                    victim.SetHp(newHp);
-
-                    // Console log
-                    var attacker = e.Attacker;
-                    var name = attacker?.PlayerName ?? "Unknown";
-                    Console.WriteLine($"[Dummy] {name} dealt {e.DmgHealth} damage — HP: {currentHp} → {newHp}");
-
-                    // Block death and suppress event
-                    info.DontBroadcast = true;
-
-                    victim.PrintToChat(" \x07[Dummy] You're invincible during testing.");
-                    return HookResult.Stop;
-                }
-            }
-
-            return HookResult.Continue;
-        }
-
 
         private void OnChatCommand(CCSPlayerController? player, CommandInfo commandInfo)
         {
@@ -232,7 +199,42 @@ namespace WarcraftPlugin.Core
             player.PrintToChat("────────────────────────────");
         }
 
+        private HookResult OnPlayerHurt(EventPlayerHurt e, GameEventInfo info)
+        {
+            if (e == null || e.Userid == null || !e.Userid.IsValid)
+                return HookResult.Continue;
+
+            var victim = e.Userid;
+
+            foreach (var dummy in DummyBotManager.GetAllTrackedDummies())
+            {
+                if (dummy.Value == victim && victim.IsValid && victim.IsAlive())
+                {
+                    var currentHp = victim.PlayerPawn.Value.Health;
+                    var newHp = Math.Max(1, currentHp - e.DmgHealth);
+
+                    // Prevent death and apply damage
+                    victim.SetHp(newHp);
+
+                    // Console log
+                    var attacker = e.Attacker;
+                    var name = attacker?.PlayerName ?? "Unknown";
+                    Console.WriteLine($"[Dummy] {name} dealt {e.DmgHealth} damage — HP: {currentHp} → {newHp}");
+
+                    // Block death and suppress event
+                    info.DontBroadcast = true;
+
+                    victim.PrintToChat(" \x07[Dummy] You're invincible during testing.");
+                    return HookResult.Stop;
+                }
+            }
+
+            return HookResult.Continue;
+        }
+
     }
+
+
 
     public static class DummyBotManager
     {
@@ -245,10 +247,16 @@ namespace WarcraftPlugin.Core
 
         public static void SpawnOrResetDummy(CCSPlayerController owner)
         {
+            if (owner == null || !owner.IsValid || !owner.IsAlive() || owner.PlayerPawn?.Value == null)
+            {
+                Console.WriteLine("[Dummy] Command issued by invalid or dead player.");
+                return;
+            }
+
             var enemyTeam = owner.TeamNum == (byte)CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
 
             var dummy = Utilities.GetPlayers()
-                .FirstOrDefault(p => p.IsBot && p.IsValid && p.TeamNum == (byte)enemyTeam);
+                .FirstOrDefault(p => p.IsBot && p.IsValid && p.TeamNum == (byte)enemyTeam && p.PlayerPawn?.Value != null);
 
             if (dummy == null)
             {
@@ -256,7 +264,12 @@ namespace WarcraftPlugin.Core
                 return;
             }
 
-
+            if (!dummy.IsAlive())
+            {
+                DummyTracking.Remove(owner.Slot);
+                owner.PrintToChat(" \x07[Dummy] Dummy bot was dead. Searching for a new one...");
+                return;
+            }
 
             // Store this dummy to track HP events later
             DummyTracking[owner.Slot] = dummy;
@@ -280,13 +293,13 @@ namespace WarcraftPlugin.Core
             {
                 if (weapon.IsValid)
                 {
-                    weapon.Value.Remove(); // Or .Destroy()
+                    weapon.Value.Remove();
                 }
             }
 
-
             owner.PrintToChat(" \x04[Dummy] Dummy bot has been moved in front of you and frozen.");
         }
+
 
 
         public static void BonusHealth(CCSPlayerController player, int amount)
