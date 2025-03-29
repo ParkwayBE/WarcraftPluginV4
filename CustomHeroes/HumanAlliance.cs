@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
+using System.Threading.Tasks;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -53,8 +53,11 @@ namespace WarcraftPlugin.Classes
                 int alpha = (int)(255f * (1f - (invisPercent / 100f)));
 
                 BonusHealth(Player, DevotionAura);
+                /*
                 Invisibility(Player, 999f, alpha);
-                Console.WriteLine($"[Invisibility] Level {abilityLevel} → alpha: {alpha}");
+                Console.WriteLine($"[Invisibility] Level {abilityLevel} → alpha: {alpha}"); */
+                TestAlphaSequence(Player);
+
 
 
                 WarcraftPlayer.HasUltimateImmunity = true;
@@ -64,6 +67,17 @@ namespace WarcraftPlugin.Classes
             ResetCooldowns();
         }
 
+        private async void TestAlphaSequence(CCSPlayerController player)
+        {
+            int[] testAlphas = { 200, 150, 120, 100, 80, 64, 50, 30 };
+
+            foreach (var alpha in testAlphas)
+            {
+                Invisibility(player, 999f, alpha);
+                player.PrintToChat($"[Invisibility Test] Alpha: {alpha}");
+                await Task.Delay(3000); // Wait 3 seconds before applying the next alpha
+            }
+        }
 
 
         private void Ultimate()
