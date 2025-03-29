@@ -13,7 +13,7 @@ namespace WarcraftPlugin.Core
         public AdminPanel(WarcraftPlugin plugin)
         {
             _plugin = plugin;
-            _plugin.AddCommand("say", "adminPanel", OpenAdminPanel);
+            _plugin.AddCommand("adminPanel", "opens admin panel", OpenAdminPanel);
 
         }
 
@@ -40,7 +40,7 @@ namespace WarcraftPlugin.Core
                 //player.ExecuteClientCommandFromServer(command);
                 Console.WriteLine("admin panel test");
                 //Server.ExecuteCommand(command);
-                playerP.PrintToCenterHtml("<font color='#FFFFFF'>\" + message + \"</font>");
+                playerP.PrintToCenterHtml("<font color='#FFFFFF'>AAAADDMIN PANEL</font>");
 
             }
             if (role == 9009)
