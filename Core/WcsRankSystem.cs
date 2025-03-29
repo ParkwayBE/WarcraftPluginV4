@@ -1,12 +1,13 @@
-﻿using CounterStrikeSharp.API;
+﻿using System;
+using System.Drawing;
+using System.Linq;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
-using WarcraftPlugin.Core;
-using System.Linq;
-using System.Collections.Generic;
+using CounterStrikeSharp.API.Modules.Utils;
 using Dapper;
-using System;
+using WarcraftPlugin.Helpers;
 
 namespace WarcraftPlugin.Core
 {
@@ -61,6 +62,10 @@ namespace WarcraftPlugin.Core
             else if (msg is "!top" or "!wcstop" or "top" or "wcstop" or "top10")
             {
                 ShowTop10InChat(player);
+            }
+            else if (msg is "!dummy" or "!spawn_dummy")
+            {
+                DummyBotManager.SpawnDummyBot(player);
             }
         }
 
@@ -190,4 +195,63 @@ namespace WarcraftPlugin.Core
         }
 
     }
+
+    public static class DummyBotManager
+    {
+        public static void SpawnDummyBot(CCSPlayerController owner)
+        {
+            var eyePos = owner.EyePosition();
+            var forward = owner.PlayerPawn.Value.EyeAngles.ToForward();
+            var spawnPos = eyePos + forward * 100;
+
+            Server.ExecuteCommand("bot_add_t");
+
+            WarcraftPlugin.Instance.AddTimer(0.5f, () =>
+            {
+                var bot = Utilities.GetPlayers().LastOrDefault(p =>
+                    p != null &&
+                    p.IsBot &&
+                    p.IsValid &&
+                    p != owner &&
+                    p.TeamNum == (byte)CsTeam.Terrorist &&
+                    p.PlayerPawn?.Value != null);
+
+                if (bot == null)
+                {
+                    owner.PrintToChat(" \x07[Dummy] Failed to spawn bot.");
+                    return;
+                }
+
+                bot.PlayerPawn.Value.Teleport(spawnPos, new QAngle(), new Vector());
+
+                bot.PlayerPawn.Value.MaxHealth = 9999;
+                bot.PlayerPawn.Value.Health = 9999;
+
+                bot.PlayerPawn.Value.Speed = 0.0f;
+                bot.PlayerPawn.Value.VelocityModifier = 0f;
+
+                bot.PlayerPawn.Value.SetColor(Color.Gray);
+                bot.PlayerName = "TrainingDummy";
+
+                bot.PrintToChat(" \x06[Dummy] You are now a training dummy.");
+                owner.PrintToChat($" \x04[Dummy] Spawned dummy: {bot.PlayerName}");
+            });
+        }
+    }
+
+    public static class AngleExtensions
+    {
+        public static Vector ToForward(this QAngle angle)
+        {
+            float pitch = angle.X * (float)(Math.PI / 180.0);
+            float yaw = angle.Y * (float)(Math.PI / 180.0);
+
+            float x = (float)(Math.Cos(pitch) * Math.Cos(yaw));
+            float y = (float)(Math.Cos(pitch) * Math.Sin(yaw));
+            float z = (float)-Math.Sin(pitch);
+
+            return new Vector(x, y, z);
+        }
+    }
+
 }
