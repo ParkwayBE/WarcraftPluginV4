@@ -110,7 +110,7 @@ namespace WarcraftPlugin.Core
             }
 
         }
-        public HookResult OnPlayerChat(EventPlayerChat ev)
+        public HookResult OnPlayerChat(EventPlayerChat ev, GameEventInfo info)
         {
             Console.WriteLine("Normal chat message from to consoooooole");
            var player = Utilities.GetPlayerFromUserid(ev.Userid);
@@ -128,6 +128,7 @@ namespace WarcraftPlugin.Core
          Console.WriteLine($"Normal chat message from {player.PlayerName}: {message}");
           return HookResult.Continue; // Allow normal chat behavior
         }
+
         
         private void RequestInput(CCSPlayerController admin, CCSPlayerController target)
         {
