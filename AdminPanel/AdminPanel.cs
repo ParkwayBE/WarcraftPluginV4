@@ -27,23 +27,23 @@ namespace WarcraftPlugin.Core
             _plugin = plugin;
             admins.Add("76561198061919153");
             _plugin.AddCommand("adminPanel", "opens admin panel", OpenAdminPanel);
-
+            _plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat, HookMode.Pre);
 
         }
 
         public void OpenAdminPanel(CCSPlayerController? player, CommandInfo commandInfo)
         {
-            
+
 
             if (!admins.Contains(player.SteamID.ToString()))
             {
                 return;
             }
-            
+
             var wcPlayer = _plugin.GetWcPlayer(player);
             if (wcPlayer == null) return;
             var playerP = wcPlayer.GetPlayer();
-       
+
             var role = 1;
             var message = "hallo mannekes";
 
@@ -69,7 +69,7 @@ namespace WarcraftPlugin.Core
                         killSubMenu.Add(targetPlayer.PlayerName, null, (pl, opt) =>
                         {
                             //player.ExecuteClientCommand($"css_slay #{targetPlayer.SteamID.ToString()}");
-                            
+
                             player.ExecuteClientCommandFromServer($"css_slay #{targetPlayer.SteamID.ToString()}");
 
                         });
@@ -110,29 +110,25 @@ namespace WarcraftPlugin.Core
             }
 
         }
-        [GameEventHandler]
-        //public HookResult OnPlayerChat(EventPlayerChat ev)
-        //{
-        //    Console.WriteLine("Normal chat message from to consoooooole");
-        //   var player = Utilities.GetPlayerFromUserid(ev.Userid);
-        //
-        //  if (player == null) return HookResult.Continue;
-        //
-        //   if (pendingInputs.TryGetValue(player, out var action))
-        //  {
-        //      Console.WriteLine($"Processing stored input from {player.PlayerName}: {message}");
-        //     action.Invoke(message);  // Process stored action
-        //     pendingInputs.Remove(player); // Remove from pending inputs
-        //     return HookResult.Handled; // Block message from showing in chat
-        // }
-        // Console.WriteLine($"Normal chat message from {player.PlayerName}: {message}");
-        //  return HookResult.Continue; // Allow normal chat behavior
-        //}
-        public HookResult OnAnyEvent(GameEvent ev)
+        public HookResult OnPlayerChat(EventPlayerChat ev)
         {
-            Console.WriteLine($"📢 Event received: {ev.EventName}");
-            return HookResult.Continue;
+            Console.WriteLine("Normal chat message from to consoooooole");
+           var player = Utilities.GetPlayerFromUserid(ev.Userid);
+           var message = ev.Text.Trim();
+        
+          if (player == null) return HookResult.Continue;
+        
+           if (pendingInputs.TryGetValue(player, out var action))
+           {
+             Console.WriteLine($"Processing stored input from {player.PlayerName}: {message}");
+             action.Invoke(message);  // Process stored action
+             pendingInputs.Remove(player); // Remove from pending inputs
+             return HookResult.Handled; // Block message from showing in chat
+           }
+         Console.WriteLine($"Normal chat message from {player.PlayerName}: {message}");
+          return HookResult.Continue; // Allow normal chat behavior
         }
+        
         private void RequestInput(CCSPlayerController admin, CCSPlayerController target)
         {
             admin.PrintToChat("Type the message in chat for the selected player");
