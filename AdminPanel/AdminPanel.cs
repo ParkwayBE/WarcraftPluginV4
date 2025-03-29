@@ -28,7 +28,7 @@ namespace WarcraftPlugin.Core
             admins.Add("76561198061919153");
             _plugin.AddCommand("adminPanel", "opens admin panel", OpenAdminPanel);
             _plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat, HookMode.Pre);
-            _plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat2, HookMode.Pre);
+            //_plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat2, HookMode.Pre);
             _plugin.AddCommandListener("say", OnPlayerChat2);
         }
 
