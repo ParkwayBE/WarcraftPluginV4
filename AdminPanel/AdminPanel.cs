@@ -137,6 +137,7 @@ namespace WarcraftPlugin.Core
             //var player = Utilities.GetPlayerFromUserid(ev.Userid);
             //var message = ev.Text.Trim();
             var message = info.GetArg(0);
+            Console.WriteLine($"message is : {message}");
             if (player == null) return HookResult.Continue;
             if (message.Contains("yes"))
             {
