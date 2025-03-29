@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
@@ -141,6 +140,8 @@ namespace WarcraftPlugin
             _rankSystem.Initialize();
 
             _admin = new AdminPanel(this);
+            RegisterEventHandler<EventPlayerSpawn>(OnPlayerSpawn, HookMode.Post);
+
 
             if (Config.ShowCommandAdverts)
             {
@@ -324,18 +325,16 @@ namespace WarcraftPlugin
             Console.WriteLine("Player just connected: " + WarcraftPlayers[player.Handle]);
 
         }
-
-        [GameEventHandler(HookMode.Post)]
-        public void OnPlayerSpawn(EventPlayerSpawn e)
+        public HookResult OnPlayerSpawn(EventPlayerSpawn e, GameEventInfo info)
         {
             var player = e.Userid;
 
             if (player == null || !player.IsBot)
-                return;
+                return HookResult.Continue;
 
             var wcPlayer = GetWcPlayer(player);
             if (wcPlayer == null || wcPlayer.GetClass() != null)
-                return;
+                return HookResult.Continue;
 
             Console.WriteLine($"[BOT INIT - Spawn] Assigning 'Human Alliance' to bot {player.PlayerName}");
 
@@ -344,7 +343,13 @@ namespace WarcraftPlugin
             wcPlayer.SetAbilityLevel(1, 5);
             wcPlayer.SetAbilityLevel(2, 5);
             wcPlayer.SetAbilityLevel(3, 1);
+
+            return HookResult.Continue;
         }
+
+
+
+
 
 
 
