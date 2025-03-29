@@ -296,8 +296,9 @@ namespace WarcraftPlugin.Classes
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
             if (abilityLevel <= 0) return;
 
-            float chance = 0.05f + (abilityLevel * 0.05f);
-            if (Random.Shared.NextDouble() > chance) return;
+            int chancePercent = (int)(5 + (abilityLevel * 5));
+            if (!Warcraft.RollDice(chancePercent, 100))
+                return;
 
             var target = @event.Userid;
             if (!target.IsValid || !target.IsAlive()) return;
@@ -310,6 +311,7 @@ namespace WarcraftPlugin.Classes
             target.PrintToChat($" \x07[Hexed] Your buffs have been removed by {Player.PlayerName}!");
             Player.PrintToChat(" \x04[Hex] Successfully removed buffs from your target.");
         }
+
 
         private void PlayerHurt(EventPlayerHurt @event)
         {
