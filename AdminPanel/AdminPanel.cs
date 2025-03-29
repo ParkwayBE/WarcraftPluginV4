@@ -26,8 +26,7 @@ namespace WarcraftPlugin.Core
             _plugin = plugin;
             admins.Add("76561198061919153");
             _plugin.AddCommand("adminPanel", "opens admin panel", OpenAdminPanel);
-           
-          
+
 
         }
 
@@ -113,6 +112,7 @@ namespace WarcraftPlugin.Core
         [GameEventHandler]
         public HookResult OnPlayerChat(EventPlayerChat ev)
         {
+            Console.WriteLine("Normal chat message from to consoooooole");
             var player = Utilities.GetPlayerFromUserid(ev.Userid);
             var message = ev.Text.Trim();
 
