@@ -24,22 +24,29 @@ namespace WarcraftPlugin.CustomSkills
                 if (@event.Userid != Owner || !Owner.IsValid || !Owner.IsAlive())
                     return HookResult.Continue;
 
-                if (!Warcraft.RollDice(_chancePercent, 100))
+                // ✅ Roll chance
+                int roll = Random.Shared.Next(1, 101);
+                if (roll > _chancePercent)
                     return HookResult.Continue;
 
-                // Reduce damage
+                // ✅ Calculate reduction
                 int originalDamage = @event.DmgHealth;
                 int reducedDamage = (int)(originalDamage * (1f - _reductionPercent));
 
-                @event.DmgHealth = reducedDamage;
-                Console.WriteLine($"[Evasion] Rolled successful evasion. Original: {originalDamage}, Reduced: {reducedDamage}");
+                // ✅ Don't show message unless damage was actually reduced
+                if (reducedDamage < originalDamage)
+                {
+                    @event.DmgHealth = reducedDamage;
+                    Owner.PrintToChat($" \x04[Evasion] Evaded {originalDamage - reducedDamage} damage! (Roll: {roll}/{_chancePercent})");
+                    Console.WriteLine($"[Evasion] Roll: {roll}, Reduced: {originalDamage} → {reducedDamage}");
+                }
 
-                Owner.PrintToChat($" \x04[Evasion] You evaded {originalDamage - reducedDamage} damage!");
                 return HookResult.Continue;
             });
 
-            Console.WriteLine($"[SetEvasion] {Owner.PlayerName} now has {_chancePercent}% evasion with {_reductionPercent * 100}% damage reduction.");
+            Console.WriteLine($"[SetEvasion] {Owner.PlayerName} gained {_chancePercent}% evasion ({_reductionPercent * 100}% reduction).");
         }
+
 
         public override void OnTick()
         {
