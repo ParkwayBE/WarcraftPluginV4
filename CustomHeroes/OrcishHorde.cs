@@ -220,13 +220,12 @@ namespace WarcraftPlugin.Classes
 
             if (@event.Weapon == "weapon_grenade")
             {
-                // Ability index 2 = Grenade Crits
                 int nadeLevel = wcPlayer.GetAbilityLevel(2);
                 if (nadeLevel == 0) return;
 
-                int chancePercent = nadeLevel == 5 ? 100 : (int)(0.2f + nadeLevel * 0.16f * 100); // up to 100%
-
+                int chancePercent = Math.Min(nadeLevel * 20, 100); // 20% per level, 100% max
                 int roll = new Random().Next(1, 101);
+
                 Console.WriteLine($"[GrenadeCrit] Rolled {roll} vs {chancePercent}");
 
                 if (roll <= chancePercent)
@@ -237,6 +236,7 @@ namespace WarcraftPlugin.Classes
                     attacker.PrintToChat($"🔥 Critical grenade hit! Dealt {total} damage.");
                 }
             }
+
             else
             {
                 // Ability index 1 = Normal Crits
