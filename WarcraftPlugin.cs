@@ -338,7 +338,7 @@ namespace WarcraftPlugin
 
             Console.WriteLine($"[BOT INIT - Spawn] Assigning 'Human Alliance' to bot {player.PlayerName}");
 
-            wcPlayer = ChangeClass(player, "HumanAlliance");
+            wcPlayer = ChangeClass(player, "HumanAlliance", force: true);
             wcPlayer.SetAbilityLevel(0, 5);
             wcPlayer.SetAbilityLevel(1, 5);
             wcPlayer.SetAbilityLevel(2, 5);
@@ -353,12 +353,12 @@ namespace WarcraftPlugin
 
 
 
-        internal WarcraftPlayer ChangeClass(CCSPlayerController player, string classInternalName)
+        internal WarcraftPlayer ChangeClass(CCSPlayerController player, string classInternalName, bool force = false)
         {
             _database.SavePlayerToDatabase(player);
 
-            // Dont do anything if were already that race.
-            if (classInternalName == player.GetWarcraftPlayer().className) return player.GetWarcraftPlayer();
+            if (!force && classInternalName == player.GetWarcraftPlayer().className)
+                return player.GetWarcraftPlayer();
 
             player.GetWarcraftPlayer().GetClass().PlayerChangingToAnotherRace();
             player.GetWarcraftPlayer().className = classInternalName;
@@ -368,6 +368,7 @@ namespace WarcraftPlugin
 
             return warcraftClass;
         }
+
 
         private void UltimatePressed(CCSPlayerController client, CommandInfo commandinfo)
         {
