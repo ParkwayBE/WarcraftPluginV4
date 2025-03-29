@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.CustomSkills;
@@ -53,6 +54,7 @@ namespace WarcraftPlugin.Classes
 
                 BonusHealth(Player, DevotionAura);
                 Invisibility(Player, 999f, alpha);
+                Console.WriteLine($"[Invisibility] Level {abilityLevel} → alpha: {alpha}");
 
 
                 WarcraftPlayer.HasUltimateImmunity = true;
