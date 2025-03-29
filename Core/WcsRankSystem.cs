@@ -283,9 +283,12 @@ namespace WarcraftPlugin.Core
             // Buff and disable
             dummy.PlayerPawn.Value.MaxHealth = 9999;
             BonusHealth(dummy, 9999);
-            dummy.PlayerPawn.Value.Speed = 0f;
+            dummy.PlayerPawn.Value.AcceptInput("DisableThinking", dummy);
+            dummy.PlayerPawn.Value.AcceptInput("DisableMotion", dummy);
+
             dummy.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_NONE;
-            dummy.PlayerPawn.Value.VelocityModifier = 0f;
+            dummy.PlayerPawn.Value.Teleport(null, null, new Vector(0, 0, 0));
+
             dummy.PlayerPawn.Value.SetColor(Color.Gray);
             dummy.PlayerName = "TrainingDummy";
 
