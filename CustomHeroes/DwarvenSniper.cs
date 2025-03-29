@@ -43,8 +43,13 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerHurt(EventPlayerHurt e)
         {
-            SkillFunctions.SetEvasion(Player, e, 50, 1.0f); // 50% chance to evade 100% of the dmg
+            int abilityLevel = WarcraftPlayer.GetAbilityLevel(1); // Dwarven Genes
+            if (abilityLevel <= 0) return;
+
+            int chance = abilityLevel * 10;
+            SkillFunctions.SetEvasion(Player, e, chance, 1.0f);
         }
+
         private void Ultimate()
         {
             // TODO: Ring of power : Double evasion
