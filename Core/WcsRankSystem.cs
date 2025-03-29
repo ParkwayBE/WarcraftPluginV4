@@ -28,6 +28,8 @@ namespace WarcraftPlugin.Core
         {
             _plugin.AddCommand("say", "Chat command handler", OnChatCommand);
             _waitForWcPluginTimer = _plugin.AddTimer(1.0f, WaitForWarcraftPlugin, TimerFlags.REPEAT);
+            _plugin.RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt, HookMode.Pre);
+
         }
 
         private void WaitForWarcraftPlugin()
@@ -50,6 +52,40 @@ namespace WarcraftPlugin.Core
             _waitForWcPluginTimer?.Kill();
             _waitForWcPluginTimer = null;
         }
+
+        private HookResult OnPlayerHurt(EventPlayerHurt e, GameEventInfo info)
+        {
+            if (e == null || e.Userid == null || !e.Userid.IsValid)
+                return HookResult.Continue;
+
+            var victim = e.Userid;
+
+            foreach (var dummy in DummyBotManager.GetAllTrackedDummies())
+            {
+                if (dummy.Value == victim && victim.IsValid && victim.IsAlive())
+                {
+                    var currentHp = victim.PlayerPawn.Value.Health;
+                    var newHp = Math.Max(1, currentHp - e.DmgHealth);
+
+                    // Prevent death and apply damage
+                    victim.SetHp(newHp);
+
+                    // Console log
+                    var attacker = e.Attacker;
+                    var name = attacker?.PlayerName ?? "Unknown";
+                    Console.WriteLine($"[Dummy] {name} dealt {e.DmgHealth} damage — HP: {currentHp} → {newHp}");
+
+                    // Block death and suppress event
+                    info.DontBroadcast = true;
+
+                    victim.PrintToChat(" \x07[Dummy] You're invincible during testing.");
+                    return HookResult.Stop;
+                }
+            }
+
+            return HookResult.Continue;
+        }
+
 
         private void OnChatCommand(CCSPlayerController? player, CommandInfo commandInfo)
         {
@@ -202,6 +238,11 @@ namespace WarcraftPlugin.Core
     {
         private static readonly Dictionary<int, CCSPlayerController> DummyTracking = new();
 
+        public static Dictionary<int, CCSPlayerController> GetAllTrackedDummies()
+        {
+            return DummyTracking;
+        }
+
         public static void SpawnOrResetDummy(CCSPlayerController owner)
         {
             var enemyTeam = owner.TeamNum == (byte)CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
@@ -214,6 +255,8 @@ namespace WarcraftPlugin.Core
                 owner.PrintToChat(" \x07[Dummy] No bot found on the enemy team.");
                 return;
             }
+
+
 
             // Store this dummy to track HP events later
             DummyTracking[owner.Slot] = dummy;
