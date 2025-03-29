@@ -29,7 +29,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Critical Strike", "up to 35% to deal double damage."),
             new WarcraftAbility("Reincarnation", "Gain up to 100% chance to respawn once after dying"),
             new WarcraftAbility("Critical Grenade", "up to 100% chance to deal double damage"),
-            new WarcraftCooldownAbility("Chain Lightning", "Strike a nearby enemy with lightning.", 8f, true)
+            new WarcraftCooldownAbility("Chain Lightning", "Strike a nearby enemy with lightning.", 32f, true)
         ];
 
         public override void Register()
@@ -41,10 +41,8 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            // int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
-                BonusHealth(Player, 9999);
                 StartCooldown(3);
 
                 if (Player?.PlayerPawn?.Value == null) return;
@@ -53,13 +51,6 @@ namespace WarcraftPlugin.Classes
                 hasReincarnated = false;
             });
         }
-
-        public static void BonusHealth(CCSPlayerController player, int amount)
-        {
-            var HealthEffect = new SetBonusHealth(player, amount);
-            HealthEffect.Start();
-        }
-
 
         private void Ultimate()
         {
@@ -79,7 +70,7 @@ namespace WarcraftPlugin.Classes
 
             var hitPlayers = new HashSet<CCSPlayerController>();
             var bounceTargets = new List<CCSPlayerController> { caster };
-            bool hitSomething = false; // ✅ Track if any valid target was hit
+            bool hitSomething = false;
 
             void DoBounce(int bounceIndex)
             {
@@ -130,29 +121,19 @@ namespace WarcraftPlugin.Classes
                 {
                     caster.PrintToCenter("⛔ Target is immune to ultimates!");
                     closest.PrintToCenter("🛡️ Your Ultimate Immunity blocked Chain Lightning!");
-                    Console.WriteLine($"[OrcishHorde] Target {closest.PlayerName} had immunity. Skipping.");
                     return;
                 }
 
-                // ✅ SUCCESS — we hit someone
                 hitSomething = true;
-
                 hitPlayers.Add(closest);
                 bounceTargets.Add(closest);
-
                 SkillFunctions.DealRawDamage(caster, closest, damage);
-                // Show lightning on target
                 var lightningPos = Warcraft.EyePosition(closest);
                 var particle = Warcraft.SpawnParticle(lightningPos, "particles/ui/status_levels/ui_status_level7_lightning.vpcf", 2.0f);
                 particle.SetParent(closest.PlayerPawn.Value);
-
-                Console.WriteLine($"[OrcishHorde] Chain Lightning bounced to {closest.PlayerName} (bounce #{bounceIndex + 1})");
-
                 WarcraftPlugin.Instance.AddTimer(delayBetweenBounces, () => DoBounce(bounceIndex + 1));
             }
             DoBounce(0);
-
-            // Only start cooldown if a player was hit
             if (hitSomething)
             {
                 StartCooldown(3);
@@ -169,7 +150,7 @@ namespace WarcraftPlugin.Classes
             if (Player?.PlayerPawn?.Value == null || hasReincarnated)
                 return;
 
-            int level = WarcraftPlayer.GetAbilityLevel(0); // Reincarnation is ability 0
+            int level = WarcraftPlayer.GetAbilityLevel(1);
             if (level == 0) return;
 
             lastDeathPosition = Player.PlayerPawn.Value.AbsOrigin.Clone();
@@ -184,13 +165,13 @@ namespace WarcraftPlugin.Classes
                 {
                     Player.PrintToChat(" \x06[Reincarnation] You have been revived!");
                     Player.Respawn();
-                    Player.SetHp(100); // or 1 HP if you want low-risk revival
+                    Player.SetHp(100);
 
                     Vector spawnPoint;
 
                     if (lastSpawnPosition == null && lastDeathPosition == null)
                     {
-                        spawnPoint = Player.PlayerPawn.Value.AbsOrigin; // fallback
+                        spawnPoint = Player.PlayerPawn.Value.AbsOrigin;
                     }
                     else
                     {
@@ -201,7 +182,7 @@ namespace WarcraftPlugin.Classes
                     }
 
                     Player.PlayerPawn.Value.Teleport(spawnPoint, new QAngle(), new Vector());
-                    Warcraft.SpawnParticle(spawnPoint, "particles/generic_fx/fx_impact_flash_1sec.vpcf", 2f);
+                    Warcraft.SpawnParticle(spawnPoint, "particles/ui/status_levels/ui_status_level_7_energycirc.vpcf", 4f);
                     Player.PlayLocalSound("sounds/ambient/atmosphere/cs_cable_rattle02.vsnd");
                 });
             }
@@ -223,7 +204,7 @@ namespace WarcraftPlugin.Classes
                 int nadeLevel = wcPlayer.GetAbilityLevel(2);
                 if (nadeLevel == 0) return;
 
-                int chancePercent = Math.Min(nadeLevel * 20, 100); // 20% per level, 100% max
+                int chancePercent = Math.Min(nadeLevel * 20, 100);
                 int roll = new Random().Next(1, 101);
 
                 Console.WriteLine($"[GrenadeCrit] Rolled {roll} vs {chancePercent}");
@@ -239,11 +220,10 @@ namespace WarcraftPlugin.Classes
 
             else
             {
-                // Ability index 1 = Normal Crits
                 int normalLevel = wcPlayer.GetAbilityLevel(1);
                 if (normalLevel == 0) return;
 
-                int chancePercent = Math.Min(normalLevel * 7, 35); // Scaling: 7%, 14%, ..., 35%
+                int chancePercent = Math.Min(normalLevel * 7, 35);
                 int roll = new Random().Next(1, 101);
                 Console.WriteLine($"[Crit] Rolled {roll} vs {chancePercent}");
 
