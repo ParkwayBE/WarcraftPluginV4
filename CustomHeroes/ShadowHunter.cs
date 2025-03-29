@@ -21,6 +21,7 @@ namespace WarcraftPlugin.Classes
         private bool _godModeActive = false;
         private readonly List<CCSPlayerController> _slowedPlayers = new();
         private readonly List<SerpentWardEffect> activeWards = new();
+        private bool _ultimateActive = false;
 
 
 
@@ -259,18 +260,33 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            int abilityLevel = WarcraftPlayer.GetAbilityLevel(3);
-            float duration = 0.6f + (abilityLevel * 0.5f);
+            if (WarcraftPlayer.GetAbilityLevel(3) <= 0)
+                return;
+
+            if (_ultimateActive)
+            {
+                Player.PrintToChat(" \x07[Big Bad Voodoo] You're already invincible!");
+                return;
+            }
+
+            float duration = 3f;
 
             _godModeActive = true;
-            Player.PrintToChat($" \x07[Big Bad Voodoo] \x02You are invincible for {duration} seconds!");
+            _ultimateActive = true;
+
+            Player.PrintToChat($" \x07[Big Bad Voodoo] \x02You are invincible for {duration:F1} seconds!");
 
             WarcraftPlugin.Instance.AddTimer(duration, () =>
             {
                 _godModeActive = false;
+                _ultimateActive = false;
                 Player.PrintToChat(" \x07[Big Bad Voodoo] \x02Your invincibility has ended.");
             });
+
+            StartCooldown(3);
         }
+
+
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
