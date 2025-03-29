@@ -73,11 +73,12 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerSpawn(EventPlayerSpawn @event)
         {
+            WarcraftPlayer.HasUltimateImmunity = true;
             if (WarcraftPlayer.GetAbilityLevel(1) > 0)
             {
                 Player.SetHp(100 + WarcraftPlayer.GetAbilityLevel(1) * _battleHardenedHealthMultiplier);
                 Player.PlayerPawn.Value.MaxHealth = Player.PlayerPawn.Value.Health;
-                WarcraftPlayer.HasUltimateImmunity = true;
+
             }
         }
 
