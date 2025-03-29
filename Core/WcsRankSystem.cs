@@ -8,6 +8,7 @@ using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using Dapper;
+using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Helpers;
 
 namespace WarcraftPlugin.Core
@@ -225,13 +226,30 @@ namespace WarcraftPlugin.Core
 
             // Buff and disable
             dummy.PlayerPawn.Value.MaxHealth = 9999;
-            dummy.PlayerPawn.Value.Health = 9999;
+            BonusHealth(dummy, 9999);
             dummy.PlayerPawn.Value.Speed = 0f;
+            dummy.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_NONE;
             dummy.PlayerPawn.Value.VelocityModifier = 0f;
             dummy.PlayerPawn.Value.SetColor(Color.Gray);
             dummy.PlayerName = "TrainingDummy";
 
+            foreach (var weapon in dummy.PlayerPawn.Value.WeaponServices.MyWeapons)
+            {
+                if (weapon.IsValid)
+                {
+                    weapon.Value.Remove(); // Or .Destroy()
+                }
+            }
+
+
             owner.PrintToChat(" \x04[Dummy] Dummy bot has been moved in front of you and frozen.");
+        }
+
+
+        public static void BonusHealth(CCSPlayerController player, int amount)
+        {
+            var HealthEffect = new SetBonusHealth(player, amount);
+            HealthEffect.Start();
         }
 
         public static void MonitorDummyHealth()
@@ -243,12 +261,13 @@ namespace WarcraftPlugin.Core
                     continue;
 
                 var hp = dummy.PlayerPawn.Value.Health;
-                if (hp <= 1)
+                if (hp <= 100)
                 {
-                    dummy.PlayerPawn.Value.Health = 1;
+                    int newHealth = dummy.Health + 5000;
+                    dummy.SetHp(newHealth);
                     dummy.PrintToChat(" \x07[Dummy] You cannot die. Testing mode active.");
                     var tester = Utilities.GetPlayerFromSlot(entry.Key);
-                    tester?.PrintToChat(" \x06[Dummy] Your test dummy is at 1 HP.");
+                    tester?.PrintToChat(" \x06[Dummy] Your test dummy was low hp and got healed.");
                 }
             }
         }
