@@ -57,6 +57,7 @@ namespace WarcraftPlugin
         private EventSystem _eventSystem;
         internal XpSystem XpSystem;
         internal ClassManager classManager;
+        public ClassManager ClassManager => classManager;
         internal EffectManager EffectManager;
         internal CooldownManager CooldownManager;
         internal AdvertManager AdvertManager;
@@ -226,40 +227,37 @@ namespace WarcraftPlugin
 
             _database.Initialize(ModuleDirectory);
 
-            RegisterEventHandler<EventPlayerSpawn>((@event, info) =>
+            RegisterEventHandler<EventPlayerConnect>((@event, info) =>
             {
                 var player = @event.Userid;
 
-                // ✅ Skip invalid players
-                if (player == null || !player.IsValid || player.PlayerPawn?.Value == null)
-                    return HookResult.Continue;
+                if (player == null || !player.IsValid || player.IsBot) return HookResult.Continue;
 
-                // ✅ Get WCS player wrapper
-                var wcsPlayer = player.GetWarcraftPlayer();
-                if (wcsPlayer == null)
-                    return HookResult.Continue;
-
-                // ✅ Skip humans if you only want bots (optional)
-                if (!player.IsBot)
-                    return HookResult.Continue;
-
-                // ✅ Auto assign class if not already set
-                if (string.IsNullOrEmpty(wcsPlayer.className))
+                // A human joined — now assign races to bots
+                AddTimer(2.0f, () =>
                 {
-                    WarcraftPlugin.Instance.ChangeClass(player, "HumanAlliance"); // Replace with any internal class name
-                }
+                    foreach (var bot in Utilities.GetPlayers())
+                    {
+                        if (bot == null || !bot.IsValid || !bot.IsBot) continue;
 
-                // ✅ Auto-level all 4 abilities for quick testing
-                wcsPlayer.SetAbilityLevel(0, 5); // Skill 1
-                wcsPlayer.SetAbilityLevel(1, 5); // Skill 2
-                wcsPlayer.SetAbilityLevel(2, 5); // Skill 3
-                wcsPlayer.SetAbilityLevel(3, 1); // Ultimate
+                        var wcPlayer = GetWcPlayer(bot);
+                        if (wcPlayer == null || wcPlayer.GetClass() != null) continue;
+
+                        Console.WriteLine($"[BOT INIT] Human joined, assigning Human Alliance to bot {bot.PlayerName}");
+                        ChangeClass(bot, "Human Alliance");
+                        wcPlayer.SetAbilityLevel(0, 5);
+                        wcPlayer.SetAbilityLevel(1, 5);
+                        wcPlayer.SetAbilityLevel(2, 5);
+                        wcPlayer.SetAbilityLevel(3, 1);
+                    }
+                });
 
                 return HookResult.Continue;
             });
 
-        }
 
+
+        }
         private void ShowSkillsMenu(CCSPlayerController player)
         {
             SkillsMenu.Show(GetWcPlayer(player));

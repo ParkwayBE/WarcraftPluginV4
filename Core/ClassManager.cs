@@ -1,17 +1,17 @@
-﻿using CounterStrikeSharp.API.Modules.Timers;
-using Microsoft.CodeAnalysis;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using CounterStrikeSharp.API.Modules.Timers;
+using Microsoft.CodeAnalysis;
 using WarcraftPlugin.Compiler;
 using WarcraftPlugin.Models;
 
 
 namespace WarcraftPlugin.Core
 {
-    internal class ClassManager
+    public class ClassManager
     {
         private readonly Dictionary<string, Type> _classes = [];
         private readonly Dictionary<string, WarcraftClass> _classObjects = [];
