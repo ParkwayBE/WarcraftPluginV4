@@ -106,33 +106,6 @@ namespace WarcraftPlugin.CustomSkills
             victim.PrintToCenter($"⚡ You were hit by {attacker.PlayerName}'s Chain Lightning!");
         }
 
-
-
-        public static void SetEvasion(CCSPlayerController player, EventPlayerHurt e, int chancePercent, float reductionPercent)
-        {
-            if (player == null || !player.IsValid || !player.IsAlive())
-                return;
-
-            int roll = new Random().Next(1, 101);
-            Console.WriteLine($"[Evasion] Rolled {roll} vs {chancePercent}");
-
-            if (roll <= chancePercent)
-            {
-                int originalDamage = e.DmgHealth;
-                int reducedDamage = (int)(originalDamage * (1f - reductionPercent));
-                reducedDamage = Math.Max(0, reducedDamage);
-
-                e.DmgHealth = reducedDamage;
-
-                player.PrintToChat($" \x04[Evasion] Evaded {originalDamage - reducedDamage} damage!");
-                player.EmitSound("Weapon_M4A1.Silenced");
-            }
-        }
-
-
-
-
-
         public static void RestrictWeapons(CCSPlayerController player, List<string> allowedWeapons, float duration = 999f)
         {
             new RestrictWeaponsEffect(player, duration, allowedWeapons).Start();

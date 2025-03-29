@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.CustomSkills;
@@ -41,13 +42,28 @@ namespace WarcraftPlugin.Classes
             });
         }
 
-        private void PlayerHurt(EventPlayerHurt e)
+        private void PlayerHurt(EventPlayerHurt @event)
         {
-            int abilityLevel = WarcraftPlayer.GetAbilityLevel(1); // Dwarven Genes
-            if (abilityLevel <= 0) return;
+            // Ensure Player is not null 
+            if (Player == null) return;
+            HandleEvasion(@event);
+        }
 
-            int chance = abilityLevel * 10;
-            SkillFunctions.SetEvasion(Player, e, chance, 1.0f);
+        private void HandleEvasion(EventPlayerHurt @event)
+        {
+            if (Player == null) return;
+
+            int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
+            int evasionChance = abilityLevel * 7;
+
+            var roll = Random.Shared.Next(100);
+            if (roll < evasionChance)
+            {
+                Console.WriteLine($"Evasion triggered! Chance: {evasionChance}% (Roll: {roll})");
+                @event.IgnoreDamage();
+
+                Player.PrintToChat("Agility saved you! You evaded the attack.");
+            }
         }
 
         private void Ultimate()
