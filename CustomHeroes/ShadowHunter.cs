@@ -185,7 +185,15 @@ namespace WarcraftPlugin.Classes
                     beam.Render = thisColor;
                     beam.Width = 12;
                     beam.Teleport(start, new QAngle(), new Vector());
+
+                    // ✅ Set end position piece by piece
+                    beam.EndPos.X = end.X;
+                    beam.EndPos.Y = end.Y;
+                    beam.EndPos.Z = end.Z;
+
                     beam.DispatchSpawn();
+
+
 
                     // Let each beam stay alive long enough to overlap with the next
                     WarcraftPlugin.Instance.AddTimer(1.0f, () => beam.RemoveIfValid());
