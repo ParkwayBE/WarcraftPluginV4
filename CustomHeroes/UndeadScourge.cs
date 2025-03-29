@@ -78,8 +78,8 @@ namespace WarcraftPlugin.Classes
 
             if (Player.PlayerPawn?.Value == null) return;
 
-            float radius = 250f;
-            float damage = 100f;
+            float radius = 350f;
+            float damage = 150f;
 
             SkillFunctions.ExplodeOnDeathSkill(Player, radius, damage);
             Player.PrintToChat($"You dealt {damage} damage around you!");
