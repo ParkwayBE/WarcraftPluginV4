@@ -243,7 +243,7 @@ namespace WarcraftPlugin.Classes
                 int normalLevel = wcPlayer.GetAbilityLevel(1);
                 if (normalLevel == 0) return;
 
-                int chancePercent = Math.Min((int)(0.2f * 100 + normalLevel * 3), 35); // max 35%
+                int chancePercent = Math.Min(normalLevel * 7, 35); // Scaling: 7%, 14%, ..., 35%
                 int roll = new Random().Next(1, 101);
                 Console.WriteLine($"[Crit] Rolled {roll} vs {chancePercent}");
 
