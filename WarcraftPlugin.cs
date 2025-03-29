@@ -338,7 +338,7 @@ namespace WarcraftPlugin
 
             Console.WriteLine($"[BOT INIT - Spawn] Assigning 'Human Alliance' to bot {player.PlayerName}");
 
-            wcPlayer = ChangeClass(player, "Human Alliance");
+            wcPlayer = ChangeClass(player, "HumanAlliance");
             wcPlayer.SetAbilityLevel(0, 5);
             wcPlayer.SetAbilityLevel(1, 5);
             wcPlayer.SetAbilityLevel(2, 5);
