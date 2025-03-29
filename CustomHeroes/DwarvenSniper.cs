@@ -106,7 +106,7 @@ namespace WarcraftPlugin.Classes
                     return;
                 }
 
-                maxGrenades = WarcraftPlayer.GetAbilityLevel(0);
+                maxGrenades = WarcraftPlayer.GetAbilityLevel(2);
                 Console.WriteLine($"[DEBUG] Retrieved ability level: {maxGrenades}");
 
                 if (maxGrenades < 1)
@@ -121,7 +121,7 @@ namespace WarcraftPlugin.Classes
 
                 Console.WriteLine("[INFO] Granting initial grenade.");
                 Owner.GiveNamedItem("weapon_hegrenade");
-                maxGrenades = 1;
+                maxGrenades = 4;
             }
 
             public void GiveGrenadeIfNeeded()
