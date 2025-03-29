@@ -34,13 +34,29 @@ namespace WarcraftPlugin.Classes
         {
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
-                // int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
-                SkillFunctions.SetBonusHealth(Player, 9999);
+                int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
+                if (abilityLevel <= 0)
+                    return;
 
-                // TODO: Dwarven Genes: Increased health
-                // TODO: Supplies: Occasionally grants a grenade and chance to spawn with either scout or awp, Maybe 50/50 at level 5 going down to 10/90 in favor of the scout at level 1
+                SkillFunctions.SetBonusHealth(Player, 9999); // TEMP TESTING
+
+                // Determine weapon chance
+                int awpChance = Math.Clamp(10 + (abilityLevel - 1) * 10, 10, 50); // Level 1 = 10%, Level 5 = 50%
+                int roll = Random.Shared.Next(1, 101);
+                string weaponToGive = (roll <= awpChance) ? "weapon_awp" : "weapon_ssg08";
+
+                Console.WriteLine($"[Dwarven Supplies] Rolled {roll} → Giving {weaponToGive}");
+
+                var pawn = Player.PlayerPawn.Value;
+                var activeWeaponName = pawn.WeaponServices?.ActiveWeapon?.Value?.DesignerName;
+
+                if (activeWeaponName != "weapon_ssg08" && activeWeaponName != "weapon_awp")
+                {
+                    Player.GiveNamedItem(weaponToGive);
+                }
             });
         }
+
 
         private void PlayerHurt(EventPlayerHurt @event)
         {
@@ -54,6 +70,8 @@ namespace WarcraftPlugin.Classes
             if (Player == null) return;
 
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
+            if (abilityLevel == 0) return;
+
             int evasionChance = abilityLevel * 7;
 
             var roll = Random.Shared.Next(100);
@@ -62,7 +80,7 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine($"Evasion triggered! Chance: {evasionChance}% (Roll: {roll})");
                 @event.IgnoreDamage();
 
-                Player.PrintToChat("Agility saved you! You evaded the attack.");
+                Player.PrintToChat("You evaded a hit.");
             }
         }
 
@@ -76,6 +94,11 @@ namespace WarcraftPlugin.Classes
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
             // TODO: Eagle Eye : Increased damage with scoped weapons
+            if (@event.Weapon == "weapon_ssg08" || @event.Weapon == "weapon_awp")
+            {
+                var damageBonus = WarcraftPlayer.GetAbilityLevel(0) * 12;
+                @event.AddBonusDamage(damageBonus);
+            }
         }
 
     }
