@@ -49,8 +49,13 @@ namespace WarcraftPlugin.Classes
 
                 int DevotionAura = abilityLevel * 18;
 
-                float invisPercent = abilityLevel * 15f;
-                int alpha = 125; //(int)(255f * (1f - (invisPercent / 100f))); ALPHA 175 = 90% VISIBLE
+                int minAlpha = 125;
+                int maxAlpha = 175;
+                int alpha = maxAlpha - (abilityLevel * ((maxAlpha - minAlpha) / 5));
+
+                BonusHealth(Player, DevotionAura);
+                Invisibility(Player, 999f, alpha);
+
 
                 BonusHealth(Player, DevotionAura);
 
