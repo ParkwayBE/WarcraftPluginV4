@@ -129,18 +129,14 @@ namespace WarcraftPlugin.Core
                     {
                         saySubMenu.Add(targetPlayer.PlayerName, null, async (selectedAdmin, opt2) => // Rename `pl` to `selectedAdmin`
                         {
-
-                            
-                                var mess = await RequestInputAsync(selectedAdmin, targetPlayer);
-                                targetPlayer.PrintToChat($"{mess}");
+                            RequestInput(player, (mess) =>
+                            {
                                 int num = int.Parse(mess);
                                 if (num > 0)
                                 {
                                     _plugin.XpSystem.AddXp(targetPlayer, num);
                                 }
-                          
-                
-                           
+                            });
                         });
                     }
 
@@ -211,8 +207,8 @@ namespace WarcraftPlugin.Core
             pendingInputs[admin] = (message) =>
             {
                 mess = message;
+                callback(mess);
             };
-            callback(mess);
         }
         private async Task<string> RequestInputAsync(CCSPlayerController admin, CCSPlayerController target)
         {
