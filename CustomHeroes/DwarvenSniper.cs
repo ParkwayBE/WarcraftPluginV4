@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Core.Effects;
-using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
@@ -48,14 +47,13 @@ namespace WarcraftPlugin.Classes
         {
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
-                int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
+                int abilityLevel2 = WarcraftPlayer.GetAbilityLevel(2);
+
+                int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
                 if (abilityLevel <= 0)
                     return;
 
-                SkillFunctions.SetBonusHealth(Player, 9999); // TEMP TESTING
-                Warcraft.SpawnParticle(Player.PlayerPawn.Value.AbsOrigin.With(z: Player.PlayerPawn.Value.AbsOrigin.Z + 60), "particles/ui/status_levels/ui_status_level_8.vpcf");
-
-                int awpChance = abilityLevel * 10; // Level 1 = 10%, Level 5 = 50%
+                int awpChance = abilityLevel * 10;
                 int roll = Random.Shared.Next(100);
 
                 string weaponToGive = (roll < awpChance) ? "weapon_awp" : "weapon_ssg08";
@@ -63,6 +61,9 @@ namespace WarcraftPlugin.Classes
 
                 var pawn = Player.PlayerPawn.Value;
                 var activeWeaponName = pawn.WeaponServices?.ActiveWeapon?.Value?.DesignerName;
+
+                if (abilityLevel2 <= 0)
+                    return;
 
                 if (activeWeaponName != "weapon_ssg08" && activeWeaponName != "weapon_awp")
                 {
@@ -77,16 +78,11 @@ namespace WarcraftPlugin.Classes
 
                 ResetCooldowns();
 
-
-
                 Player.GiveNamedItem("weapon_hegrenade");
                 var effect = new GrenadeSupplyEffect(Player);
                 activeEffects[Player] = effect;
                 effect.Start();
             });
-
-
-
         }
 
         internal void GrenadeThrown(EventGrenadeThrown @event)
@@ -106,7 +102,6 @@ namespace WarcraftPlugin.Classes
 
             public override void OnStart()
             {
-                Console.WriteLine("[DEBUG] GrenadeSupplyEffect OnStart() triggered.");
 
                 if (Owner == null || Owner.PlayerPawn?.Value == null)
                 {
@@ -117,24 +112,17 @@ namespace WarcraftPlugin.Classes
                 WarcraftPlayer = Owner.GetWarcraftPlayer();
                 if (WarcraftPlayer == null)
                 {
-                    Console.WriteLine("[ERROR] Failed to retrieve WarcraftPlayer.");
                     return;
                 }
 
                 maxGrenades = WarcraftPlayer.GetAbilityLevel(2);
-                Console.WriteLine($"[DEBUG] Retrieved ability level: {maxGrenades}");
 
                 if (maxGrenades < 1)
                 {
-                    Console.WriteLine("[INFO] Player has no Grenade Supply ability, skipping grenade assignment.");
                     return;
                 }
 
-                Console.WriteLine($"[INFO] Grenade Supply Effect Activated - Ability Level: {maxGrenades}");
-
                 RemoveGrenades("weapon_hegrenade");
-
-                Console.WriteLine("[INFO] Granting initial grenade.");
                 Owner.GiveNamedItem("weapon_hegrenade");
                 maxGrenades = 4;
             }
@@ -143,20 +131,15 @@ namespace WarcraftPlugin.Classes
             {
                 if (grenadesGiven >= maxGrenades)
                 {
-                    Console.WriteLine($"[INFO] {Owner.PlayerName} has already received the max number of grenades ({maxGrenades}).");
                     return;
                 }
-
-                Console.WriteLine($"[INFO] {Owner.PlayerName} has no grenades. Giving another one.");
                 Owner.GiveNamedItem("weapon_hegrenade");
                 grenadesGiven++;
             }
 
 
             public override void OnFinish()
-            {
-                Console.WriteLine($"[INFO] No more free grenades for {Owner.PlayerName} this round.");
-            }
+            { /* */ }
 
             private void RemoveGrenades(string grenadeName)
             {
@@ -166,7 +149,6 @@ namespace WarcraftPlugin.Classes
                 {
                     if (grenade.Value.DesignerName == grenadeName)
                     {
-                        Console.WriteLine($"[INFO] Removing existing {grenadeName} from {Owner.PlayerName}");
                         Owner.DropWeaponByDesignerName(grenadeName);
                     }
                 }
@@ -193,7 +175,6 @@ namespace WarcraftPlugin.Classes
                     attacker.PlayerPawn.Value.Teleport(null, null, new Vector(0, 0, 500));
                     Warcraft.SpawnParticle(attacker.PlayerPawn.Value.AbsOrigin.With(z: attacker.PlayerPawn.Value.AbsOrigin.Z + 60), "particles/ui/status_levels/ui_status_level__gen_glow.vpcf");
                     attacker.PrintToChat(" \x07[Impale] You hurt the wrong dwarf!");
-                    Player.PrintToChat($" \x04[Impale] {attacker.PlayerName} was launched for hitting you!");
 
                     impaleTriggeredPlayers.Add(attacker);
                 }
@@ -214,9 +195,7 @@ namespace WarcraftPlugin.Classes
             var roll = Random.Shared.Next(100);
             if (roll < evasionChance)
             {
-                Console.WriteLine($"Evasion triggered! Chance: {evasionChance}% (Roll: {roll})");
                 @event.IgnoreDamage();
-
                 Player.PrintToChat("You evaded a hit.");
             }
         }
@@ -226,13 +205,13 @@ namespace WarcraftPlugin.Classes
             if (Player == null) return;
             evasionMultiplier = 2.0f;
             hasUsedUltimate = true;
-            Player.PrintToChat(" \x06[Ultimate] Your evasion has been doubled for 7 seconds!");
+            Player.PrintToCenter(" \x06[Ultimate] Your evasion has been doubled for 7 seconds!");
 
-            WarcraftPlugin.Instance.AddTimer(5.0f, () =>
+            WarcraftPlugin.Instance.AddTimer(7.0f, () =>
             {
                 if (Player == null) return;
                 evasionMultiplier = 1.0f;
-                Player.PrintToChat(" \x06[Ultimate] Your evasion boost has ended.");
+                Player.PrintToCenter(" \x06[Ultimate] Your evasion boost has ended.");
             });
 
             ActivateImpaleUltimate();
@@ -247,13 +226,11 @@ namespace WarcraftPlugin.Classes
             impaleTriggeredPlayers.Clear();
             impaleOnSight = true;
 
-            Player.PrintToChat(" \x05[Ultimate] Impale activated! Anyone who sees you will be launched!");
 
             WarcraftPlugin.Instance.AddTimer(7.0f, () =>
             {
                 impaleOnSight = false;
                 impaleTriggeredPlayers.Clear();
-                Player.PrintToChat(" \x05[Ultimate] Impale has ended.");
                 hasUsedUltimate = false;
             });
         }
@@ -266,7 +243,6 @@ namespace WarcraftPlugin.Classes
                 var victim = @event.Userid;
                 var damageBonus = WarcraftPlayer.GetAbilityLevel(0) * 8;
                 @event.AddBonusDamage(damageBonus);
-                Console.WriteLine($"Dealt {damageBonus} extra damage with a scoped weapon.");
                 Warcraft.SpawnParticle(victim.PlayerPawn.Value.AbsOrigin.With(z: victim.PlayerPawn.Value.AbsOrigin.Z + 60), "particles/ui/hud/ui_transitions_tests_lin_a.vpcf");
             }
         }
