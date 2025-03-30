@@ -263,9 +263,11 @@ namespace WarcraftPlugin.Classes
         {
             if (@event.Weapon == "ssg08" || @event.Weapon == "awp")
             {
+                var victim = @event.Userid;
                 var damageBonus = WarcraftPlayer.GetAbilityLevel(0) * 8;
                 @event.AddBonusDamage(damageBonus);
                 Console.WriteLine($"Dealt {damageBonus} extra damage with a scoped weapon.");
+                Warcraft.SpawnParticle(victim.PlayerPawn.Value.AbsOrigin.With(z: victim.PlayerPawn.Value.AbsOrigin.Z + 60), "particles/weapons/cs_weapon_fx/weapon_sensorgren_glowring.vpcf");
             }
         }
     }
