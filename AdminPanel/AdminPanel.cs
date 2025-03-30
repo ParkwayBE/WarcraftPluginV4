@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
@@ -100,10 +101,12 @@ namespace WarcraftPlugin.Core
 
                     foreach (var targetPlayer in Players)
                     {
-                        saySubMenu.Add(targetPlayer.PlayerName, null, (selectedAdmin, opt2) => // Rename `pl` to `selectedAdmin`
-                        {
-                            var mess = RequestInput(selectedAdmin, targetPlayer);
-                            targetPlayer.PrintToChat($"{mess}");
+                        saySubMenu.Add(targetPlayer.PlayerName, null, async (selectedAdmin, opt2) => // Rename `pl` to `selectedAdmin`
+                        { 
+                          
+                                var mess = await RequestInputAsync(selectedAdmin, targetPlayer);
+                                targetPlayer.PrintToChat($"{mess}");
+                           
                         });
                     }
 
@@ -121,14 +124,19 @@ namespace WarcraftPlugin.Core
 
                     foreach (var targetPlayer in Players)
                     {
-                        saySubMenu.Add(targetPlayer.PlayerName, null, (selectedAdmin, opt2) => // Rename `pl` to `selectedAdmin`
+                        saySubMenu.Add(targetPlayer.PlayerName, null, async (selectedAdmin, opt2) => // Rename `pl` to `selectedAdmin`
                         {
-                            var mess = RequestInput(selectedAdmin, targetPlayer);
-                            int num = int.Parse(mess);
-                            if (num > 0)
-                            {
-                                _plugin.XpSystem.AddXp(targetPlayer, num);
-                            }
+
+                            
+                                var mess = await RequestInputAsync(selectedAdmin, targetPlayer);
+                                targetPlayer.PrintToChat($"{mess}");
+                                int num = int.Parse(mess);
+                                if (num > 0)
+                                {
+                                    _plugin.XpSystem.AddXp(targetPlayer, num);
+                                }
+                          
+                
                            
                         });
                     }
@@ -188,7 +196,7 @@ namespace WarcraftPlugin.Core
         }
 
 
-        private String RequestInput(CCSPlayerController admin, CCSPlayerController target)
+        private string RequestInput(CCSPlayerController admin, CCSPlayerController target)
         {
             admin.PrintToChat("write in chat to add argument");
             if (pendingInputs.ContainsKey(admin))
@@ -201,6 +209,32 @@ namespace WarcraftPlugin.Core
             {
                 mess = message;
             };
+            return mess;
+        }
+        private async Task<string> RequestInputAsync(CCSPlayerController admin, CCSPlayerController target)
+        {
+            admin.PrintToChat("Write in chat to add argument");
+
+            if (pendingInputs.ContainsKey(admin))
+            {
+                pendingInputs.Remove(admin);
+            }
+
+            string mess = string.Empty;
+
+            // This part sets up the input collection asynchronously
+            pendingInputs[admin] = async (message) =>
+            {
+                mess = message;
+                await Task.CompletedTask; // Ensures the delegate is async
+            };
+
+            // Now, we await for the message to be set by the delegate
+            while (string.IsNullOrEmpty(mess))
+            {
+                await Task.Delay(100); // Add a small delay to prevent a tight loop
+            }
+
             return mess;
         }
 
