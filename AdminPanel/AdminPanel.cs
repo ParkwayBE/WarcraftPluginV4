@@ -105,8 +105,10 @@ namespace WarcraftPlugin.Core
                         { 
                           
                                 var mess = await RequestInputAsync(selectedAdmin, targetPlayer);
+                            System.Threading.SynchronizationContext.Current.Post(_ =>
+                            {
                                 targetPlayer.PrintToChat($"{mess}");
-                           
+                            }, null);
                         });
                     }
 
