@@ -31,7 +31,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Eagle eye", "Increased damage with scoped weapons."),
             new WarcraftAbility("Dwarven Genes", "Evasion and increased health"),
             new WarcraftAbility("Supplies", "Occasionally grants a grenade and chance to spawn with a Scout or AWP"),
-            new WarcraftCooldownAbility("Ring of power","For the next 5 seconds you double your evasion and the first player to look at you gets impaled.", 30f) // TODO: If not possible to code this skill then adapt it, but stay on the theme.
+            new WarcraftCooldownAbility("Ring of power","For the next 5 seconds you double your evasion and the first player to look at you gets impaled.", 30f, false)
         ];
 
         public override void Register()

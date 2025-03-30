@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -22,7 +24,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Impale", "Chance to impale your targets."),
             new WarcraftAbility("Spiked Carapace", "Knife attacks reflect up to 200% damage back."),
             new WarcraftAbility("Carrion Beetles", "Beetles will save you from most ultimates up to 100% succesrate."),
-            new WarcraftCooldownAbility("Locust Swarm","Steal up to 50hp from a random enemy player", 1f)
+            new WarcraftCooldownAbility("Locust Swarm","Steal up to 50hp from a random enemy player", 1f, true)
         ];
 
         public override void Register()
@@ -30,30 +32,103 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerHurt>(PlayerHurt);
+            HookEvent<EventPlayerDeath>(PlayerDeath);
+            HookEvent<EventPlayerDisconnect>(PlayerDisconnect);
 
             HookAbility(3, Ultimate);
         }
 
+        private void PlayerDisconnect(EventPlayerDisconnect @event)
+        {
+            WarcraftPlayer.HasUltimateImmunity = false;
+        }
+
+        private void PlayerDeath(EventPlayerDeath @event)
+        {
+            WarcraftPlayer.HasUltimateImmunity = false;
+        }
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            // int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
-            // TODO: Carrion Beetles: Ultimate immunity
+
+            if (WarcraftPlayer.GetAbilityLevel(2) > 0)
+            {
+                if (Player == null) return;
+
+                int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
+                if (abilityLevel == 0) return;
+
+                int UltimateImmunityChance = abilityLevel * 20;
+
+                var roll = Random.Shared.Next(100);
+                if (roll < UltimateImmunityChance)
+                {
+                    WarcraftPlayer.HasUltimateImmunity = true;
+                    Player.PrintToChat("You gained ultimate immunity for this round.");
+                }
+
+
+            }
         }
 
         private void Ultimate()
         {
-            // TODO: Locust Swarm : Steal up to 50 health from a random enemy
+            var enemies = Utilities.GetPlayers().Where(p =>
+        p != Player &&
+        p.TeamNum != Player.TeamNum &&
+        p.IsValid && p.IsAlive()).ToList();
+
+            if (enemies.Count == 0)
+            {
+                Player.PrintToCenter("⚠️ No valid enemies to target!");
+                return;
+            }
+
+            var randomEnemy = enemies[Random.Shared.Next(enemies.Count)];
+            var wcTarget = randomEnemy.GetWarcraftPlayer();
+
+            if (wcTarget != null && wcTarget.HasUltimateImmunity)
+            {
+                Player.PrintToCenter("⛔ Target is immune to ultimates!");
+                randomEnemy.PrintToCenter("🛡️ Your Ultimate Immunity blocked the effect!");
+                return;
+            }
+
+            // Deal raw damage
+            SkillFunctions.DealRawDamage(Player, randomEnemy, 50);
+
+            // Heal caster
+            var currentHealth = Player.PlayerPawn.Value.Health;
+            Player.SetHp(currentHealth + 50);
+
+            // Feedback
+            Player.PrintToCenter($"💉 You drained 50 health from {randomEnemy.PlayerName}!");
+            randomEnemy.PrintToCenter($"⚡ You were hit by {Player.PlayerName}'s ultimate!");
+
+
             StartCooldown(3); // Index 3 = Ultimate
         }
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
-            if (WarcraftPlayer.GetAbilityLevel(0) > 0)
+            if (Player == null) return;
+
+            int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
+            if (abilityLevel <= 0) return;
+            int chancePercent = abilityLevel * 3;
+            int roll = new Random().Next(1, 101);
+            Console.WriteLine($"[Impale] Rolled {roll} vs {chancePercent}");
+
+            if (roll <= chancePercent)
             {
-                SkillFunctions.ImpaleTarget(Player, @event.Userid, 600f);
+                var target = @event.Userid;
+                if (target == null || !target.IsValid || !target.IsAlive()) return;
+
+                SkillFunctions.ImpaleTarget(Player, target, 600f);
+                Player.PrintToChat("You impaled an enemy.");
             }
         }
+
 
 
         private void PlayerHurt(EventPlayerHurt @event)
@@ -87,7 +162,7 @@ namespace WarcraftPlugin.Classes
             if (length != 0)
             {
                 direction = new Vector(direction.X / length, direction.Y / length, direction.Z / length);
-                Vector pushForce = direction * 300.0f; // Adjust force strength here
+                Vector pushForce = direction * 500.0f; // Adjust force strength here
                 attacker.PlayerPawn.Value.Teleport(null, null, pushForce);
             }
 
