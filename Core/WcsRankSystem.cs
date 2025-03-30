@@ -282,10 +282,6 @@ namespace WarcraftPlugin.Core
 
             // Buff and disable
             BonusHealth(dummy, 9999);
-            dummy.PlayerPawn.Value.AcceptInput("DisableThinking", dummy);
-            dummy.PlayerPawn.Value.AcceptInput("DisableMotion", dummy);
-
-            dummy.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_NONE;
             dummy.PlayerPawn.Value.Teleport(null, null, new Vector(0, 0, 0));
 
             dummy.PlayerPawn.Value.SetColor(Color.Gray);
