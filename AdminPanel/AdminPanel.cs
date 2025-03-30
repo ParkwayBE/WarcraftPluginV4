@@ -109,11 +109,7 @@ namespace WarcraftPlugin.Core
                             {
                                 targetPlayer.PrintToChat($"{mess}");
                             });
-                           
-                            System.Threading.SynchronizationContext.Current.Post(_ =>
-                            {
-                               
-                            }, null);
+                          
                         });
                     }
 
