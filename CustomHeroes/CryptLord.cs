@@ -50,7 +50,7 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-
+            ResetCooldowns();
             if (WarcraftPlayer.GetAbilityLevel(2) > 0)
             {
                 if (Player == null) return;
@@ -99,8 +99,8 @@ namespace WarcraftPlugin.Classes
 
             var VictimLoc = randomEnemy.PlayerPawn.Value.AbsOrigin;
             var AttackerLoc = Player.PlayerPawn.Value.AbsOrigin;
-            Warcraft.SpawnParticle(VictimLoc, "particles/ui/skillgroups/ui_skillgroup_wingman_12.vpcf", 4f);
-            Warcraft.SpawnParticle(AttackerLoc, "particles/ui/skillgroups/ui_skillgroup_wingman_14.vpcf", 4f);
+            Warcraft.SpawnParticle(VictimLoc, "particles/ui/hud/ui_mvp_winner_alt_a.vpcf", 4f);
+            Warcraft.SpawnParticle(AttackerLoc, "particles/ui/ammohealthcenter/ui_hud_kill_streaks_spectator_4.vpcf", 4f);
 
             // Heal caster
             var currentHealth = Player.PlayerPawn.Value.Health;
