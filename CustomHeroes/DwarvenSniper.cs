@@ -221,6 +221,7 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
+            Console.WriteLine("[Ultimate] Activating ultimate ability.");
             if (Player == null) return;
             evasionMultiplier = 2.0f;
             hasUsedUltimate = true;
