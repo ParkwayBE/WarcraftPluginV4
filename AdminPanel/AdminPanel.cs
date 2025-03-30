@@ -78,7 +78,7 @@ namespace WarcraftPlugin.Core
                             }
                             else
                             {
-                                player.ExecuteClientCommandFromServer($"css_slay {targetPlayer.PlayerName}");
+                                player.ExecuteClientCommandFromServer($"css_slay {targetPlayer.GetRealPlayerName()}");
                             }
                         
                             
