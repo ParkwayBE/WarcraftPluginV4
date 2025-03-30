@@ -116,8 +116,6 @@ namespace WarcraftPlugin.Classes
             }
 
             UltimateToggle = !UltimateToggle;
-
-
             StartCooldown(3);
         }
 
