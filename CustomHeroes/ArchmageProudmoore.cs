@@ -90,8 +90,13 @@ namespace WarcraftPlugin.Classes
             }
 
         }
-
-
+        private static void SetMoveType(CCSPlayerPawn pawn, MoveType_t moveType)
+        {
+            if (pawn == null) return;
+            pawn.MoveType = moveType;
+            pawn.ActualMoveType = moveType;
+            Utilities.SetStateChanged(pawn, "CBaseEntity", "m_MoveType");
+        }
         private void Ultimate()
         {
             var pawn = Player.PlayerPawn.Value;
@@ -100,21 +105,22 @@ namespace WarcraftPlugin.Classes
             if (UltimateToggle)
             {
                 // Toggle off: return to normal movement
-                pawn.MoveType = MoveType_t.MOVETYPE_WALK;
-                pawn.Teleport(null, null, new Vector(0, 0, 0)); // Reset velocity safely
+                SetMoveType(pawn, MoveType_t.MOVETYPE_WALK);
+                pawn.Teleport(null, null, new Vector(0, 0, 0)); // Stop movement
                 UltimateToggle = false;
                 Player.PrintToChat("🪂 You returned to the ground.");
             }
             else
             {
-                // Toggle on: flight
-                pawn.MoveType = MoveType_t.MOVETYPE_FLY;
+                // Toggle on: enable flying
+                SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
                 UltimateToggle = true;
                 Player.PrintToChat("🕊️ You are now flying!");
             }
 
-            StartCooldown(3); // Apply cooldown after activation
+            StartCooldown(3);
         }
+
 
 
 
