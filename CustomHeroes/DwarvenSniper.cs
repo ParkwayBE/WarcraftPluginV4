@@ -267,7 +267,7 @@ namespace WarcraftPlugin.Classes
                 var damageBonus = WarcraftPlayer.GetAbilityLevel(0) * 8;
                 @event.AddBonusDamage(damageBonus);
                 Console.WriteLine($"Dealt {damageBonus} extra damage with a scoped weapon.");
-                Warcraft.SpawnParticle(victim.PlayerPawn.Value.AbsOrigin.With(z: victim.PlayerPawn.Value.AbsOrigin.Z + 60), "particles/weapons/cs_weapon_fx/weapon_sensorgren_glowring.vpcf");
+                Warcraft.SpawnParticle(victim.PlayerPawn.Value.AbsOrigin.With(z: victim.PlayerPawn.Value.AbsOrigin.Z + 60), "particles/water_impact/water_splash_01_fish.vpcf");
             }
         }
     }
