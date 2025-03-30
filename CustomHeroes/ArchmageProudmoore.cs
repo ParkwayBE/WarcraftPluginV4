@@ -8,6 +8,8 @@ using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
+
 
 namespace WarcraftPlugin.Classes
 {
@@ -92,18 +94,29 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
+            var pawn = Player.PlayerPawn.Value;
+            if (pawn == null || !Player.IsAlive()) return;
+
             if (UltimateToggle)
             {
-                Player.PlayerPawn.Value!.MoveType = MoveType_t.MOVETYPE_WALK;
+                // Toggle off: return to normal movement
+                pawn.MoveType = MoveType_t.MOVETYPE_WALK;
+                pawn.Teleport(null, null, new Vector(0, 0, 0)); // Reset velocity safely
                 UltimateToggle = false;
+                Player.PrintToChat("🪂 You returned to the ground.");
             }
             else
             {
+                // Toggle on: flight
+                pawn.MoveType = MoveType_t.MOVETYPE_FLY;
                 UltimateToggle = true;
-                Player.PlayerPawn.Value!.MoveType = MoveType_t.MOVETYPE_FLY;
+                Player.PrintToChat("🕊️ You are now flying!");
             }
-            StartCooldown(3);
+
+            StartCooldown(3); // Apply cooldown after activation
         }
+
+
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
