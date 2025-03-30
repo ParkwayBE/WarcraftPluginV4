@@ -139,7 +139,7 @@ namespace WarcraftPlugin
             _rankSystem = new WcsRankSystem(this);
             _rankSystem.Initialize();
 
-            _admin = new AdminPanel(this);
+            _admin = new AdminPanel(this, XpSystem);
 
 
             if (Config.ShowCommandAdverts)
