@@ -220,12 +220,6 @@ namespace WarcraftPlugin.Core
                     var attacker = e.Attacker;
                     var name = attacker?.PlayerName ?? "Unknown";
                     Console.WriteLine($"[Dummy] {name} dealt {e.DmgHealth} damage — HP: {currentHp} → {newHp}");
-
-                    // Block death and suppress event
-                    info.DontBroadcast = true;
-
-                    victim.PrintToChat(" \x07[Dummy] You're invincible during testing.");
-                    return HookResult.Stop;
                 }
             }
 
@@ -282,10 +276,6 @@ namespace WarcraftPlugin.Core
 
             // Buff and disable
             BonusHealth(dummy, 9999);
-            dummy.PlayerPawn.Value.AcceptInput("DisableThinking", dummy);
-            dummy.PlayerPawn.Value.AcceptInput("DisableMotion", dummy);
-
-            dummy.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_NONE;
             dummy.PlayerPawn.Value.Teleport(null, null, new Vector(0, 0, 0));
 
             dummy.PlayerPawn.Value.SetColor(Color.Gray);

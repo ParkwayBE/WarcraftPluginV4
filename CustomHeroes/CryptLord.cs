@@ -24,7 +24,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Impale", "Chance to impale your targets."),
             new WarcraftAbility("Spiked Carapace", "Knife attacks reflect up to 200% damage back."),
             new WarcraftAbility("Carrion Beetles", "Beetles will save you from most ultimates up to 100% succesrate."),
-            new WarcraftCooldownAbility("Locust Swarm","Steal up to 50hp from a random enemy player", 1f, true)
+            new WarcraftCooldownAbility("Locust Swarm","Steal up to 50hp from a random enemy player", 25f, true)
         ];
 
         public override void Register()
@@ -95,15 +95,20 @@ namespace WarcraftPlugin.Classes
             }
 
             // Deal raw damage
-            SkillFunctions.DealRawDamage(Player, randomEnemy, 50);
+            SkillFunctions.DealRawDamage(Player, randomEnemy, 40);
+
+            var VictimLoc = randomEnemy.PlayerPawn.Value.AbsOrigin;
+            var AttackerLoc = Player.PlayerPawn.Value.AbsOrigin;
+            Warcraft.SpawnParticle(VictimLoc, "particles/ui/skillgroups/ui_skillgroup_wingman_12.vpcf", 4f);
+            Warcraft.SpawnParticle(AttackerLoc, "particles/ui/skillgroups/ui_skillgroup_wingman_14.vpcf", 4f);
 
             // Heal caster
             var currentHealth = Player.PlayerPawn.Value.Health;
-            Player.SetHp(currentHealth + 50);
+            Player.SetHp(currentHealth + 40);
 
             // Feedback
-            Player.PrintToCenter($"💉 You drained 50 health from {randomEnemy.PlayerName}!");
-            randomEnemy.PrintToCenter($"⚡ You were hit by {Player.PlayerName}'s ultimate!");
+            Player.PrintToCenter($"💉 You drained 40 health from {randomEnemy.PlayerName}!");
+            randomEnemy.PrintToCenter($" You were hit by {Player.PlayerName}'s ultimate!");
 
 
             StartCooldown(3); // Index 3 = Ultimate
