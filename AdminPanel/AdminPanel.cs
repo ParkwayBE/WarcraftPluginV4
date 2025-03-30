@@ -64,6 +64,12 @@ namespace WarcraftPlugin.Core
                 var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>
                     {player.SteamID.ToString()}'s Admin Menu</font><br>
                     <font color='grey'>select an option</font> ", 5);
+                //spawn dummy
+                classMenu.Add("Spawn Dummy", null, (pl, opt) =>
+                {
+                    DummyBotManager.SpawnOrResetDummy(player);
+                });
+
                 //Freeze option
                 classMenu.Add("Freeze bots", null, (pl, opt) =>
                 {
