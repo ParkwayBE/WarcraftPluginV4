@@ -4,6 +4,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.Memory;
@@ -27,7 +28,7 @@ namespace WarcraftPlugin.Core
         {
             _plugin = plugin;
             admins.Add("76561198061919153");
-            _plugin.AddCommand("adminPanel", "opens admin panel", OpenAdminPanel);
+            _plugin.AddCommand("adm", "opens admin panel", OpenAdminPanel);
             _plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat, HookMode.Pre);
             //_plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat2, HookMode.Pre);
             _plugin.AddCommandListener("say", OnPlayerChat2);
@@ -101,7 +102,34 @@ namespace WarcraftPlugin.Core
                     {
                         saySubMenu.Add(targetPlayer.PlayerName, null, (selectedAdmin, opt2) => // Rename `pl` to `selectedAdmin`
                         {
-                            RequestInput(selectedAdmin, targetPlayer);
+                            var mess = RequestInput(selectedAdmin, targetPlayer);
+                            targetPlayer.PrintToChat($"{mess}");
+                        });
+                    }
+
+                    saySubMenu.Add("Back", null, (selectedAdmin, opt3) =>
+                    {
+                        MenuManager.OpenMainMenu(selectedAdmin, classMenu);
+                    });
+
+                    MenuManager.OpenMainMenu(admin, saySubMenu);
+                });
+                //AddXp Option
+                classMenu.Add("XP Menu", null, (admin, opt) => // Rename `pl` to `admin`
+                {
+                    var saySubMenu = MenuManager.CreateMenu("Add xp to player", 5);
+
+                    foreach (var targetPlayer in Players)
+                    {
+                        saySubMenu.Add(targetPlayer.PlayerName, null, (selectedAdmin, opt2) => // Rename `pl` to `selectedAdmin`
+                        {
+                            var mess = RequestInput(selectedAdmin, targetPlayer);
+                            int num = int.Parse(mess);
+                            if (num > 0)
+                            {
+                                _plugin.XpSystem.AddXp(targetPlayer, num);
+                            }
+                           
                         });
                     }
 
@@ -160,21 +188,20 @@ namespace WarcraftPlugin.Core
         }
 
 
-        private void RequestInput(CCSPlayerController admin, CCSPlayerController target)
+        private String RequestInput(CCSPlayerController admin, CCSPlayerController target)
         {
-            admin.PrintToChat("Type the message in chat for the selected player start with /");
+            admin.PrintToChat("write in chat to add argument");
             if (pendingInputs.ContainsKey(admin))
             {
                 pendingInputs.Remove(admin);
             }
-
+            var mess = "";
 
             pendingInputs[admin] = (message) =>
             {
-                target.PrintToChat($"{message}");
-                Console.WriteLine($"Stored message from {admin.PlayerName} to {target.PlayerName}: {message}");
+                mess = message;
             };
-            Console.WriteLine($"Waiting for {admin.PlayerName} to type a message...");
+            return mess;
         }
 
         public void ChangeRole(CCSPlayerController player, int role)
