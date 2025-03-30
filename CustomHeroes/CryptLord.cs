@@ -34,6 +34,7 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerHurt>(PlayerHurt);
             HookEvent<EventPlayerDeath>(PlayerDeath);
             HookEvent<EventPlayerDisconnect>(PlayerDisconnect);
+            HookEvent<EventRoundStart>(RoundStart);
 
             HookAbility(3, Ultimate);
         }
@@ -48,9 +49,13 @@ namespace WarcraftPlugin.Classes
             WarcraftPlayer.HasUltimateImmunity = false;
         }
 
-        private void PlayerSpawn(EventPlayerSpawn spawn)
+        private void RoundStart(EventRoundStart @event)
         {
             ResetCooldowns();
+        }
+
+        private void PlayerSpawn(EventPlayerSpawn spawn)
+        {
             if (WarcraftPlayer.GetAbilityLevel(2) > 0)
             {
                 if (Player == null) return;
