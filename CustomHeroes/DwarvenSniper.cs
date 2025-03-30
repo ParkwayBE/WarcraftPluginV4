@@ -21,6 +21,7 @@ namespace WarcraftPlugin.Classes
         private float evasionMultiplier = 1.0f;
         private bool impaleOnSight = false;
         private bool impaleTriggered = false;
+        private bool hasUsedUltimate = false;
 
 
 
@@ -30,7 +31,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Eagle eye", "Increased damage with scoped weapons."),
             new WarcraftAbility("Dwarven Genes", "Evasion and increased health"),
             new WarcraftAbility("Supplies", "Occasionally grants a grenade and chance to spawn with a Scout or AWP"),
-            new WarcraftCooldownAbility("Ring of power","For the next 5 seconds you double your evasion and the first player to look at you gets impaled.", 1f) // TODO: If not possible to code this skill then adapt it, but stay on the theme.
+            new WarcraftCooldownAbility("Ring of power","For the next 5 seconds you double your evasion and the first player to look at you gets impaled.", 30f) // TODO: If not possible to code this skill then adapt it, but stay on the theme.
         ];
 
         public override void Register()
@@ -73,11 +74,17 @@ namespace WarcraftPlugin.Classes
                     activeEffects.Remove(Player);
                 }
 
+                ResetCooldowns();
+
+
+
                 Player.GiveNamedItem("weapon_hegrenade");
                 var effect = new GrenadeSupplyEffect(Player);
                 activeEffects[Player] = effect;
                 effect.Start();
             });
+
+
 
         }
 
@@ -214,11 +221,11 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            // TODO: Ring of power : Double evasion
-            // TODO: Ring of power : Attempt to code the impale skill
+            Console.WriteLine("[Ultimate] Activating ultimate ability.");
             if (Player == null) return;
             evasionMultiplier = 2.0f;
-            Player.PrintToChat(" \x06[Ultimate] Your evasion has been doubled for 5 seconds!");
+            hasUsedUltimate = true;
+            Player.PrintToChat(" \x06[Ultimate] Your evasion has been doubled for 7 seconds!");
 
             WarcraftPlugin.Instance.AddTimer(5.0f, () =>
             {
@@ -229,7 +236,7 @@ namespace WarcraftPlugin.Classes
 
             ActivateImpaleUltimate();
 
-            StartCooldown(3); // Index 3 = Ultimate
+            StartCooldown(3);
         }
 
         private HashSet<CCSPlayerController> impaleTriggeredPlayers = new();
@@ -237,15 +244,16 @@ namespace WarcraftPlugin.Classes
         private void ActivateImpaleUltimate()
         {
             impaleTriggeredPlayers.Clear();
-            impaleOnSight = true;  // 🔥 THIS is what was missing
+            impaleOnSight = true;
 
             Player.PrintToChat(" \x05[Ultimate] Impale activated! Anyone who sees you will be launched!");
 
-            WarcraftPlugin.Instance.AddTimer(5.0f, () =>
+            WarcraftPlugin.Instance.AddTimer(7.0f, () =>
             {
-                impaleOnSight = false;  // 🔒 Turn off impale mode after 5s
+                impaleOnSight = false;
                 impaleTriggeredPlayers.Clear();
                 Player.PrintToChat(" \x05[Ultimate] Impale has ended.");
+                hasUsedUltimate = false;
             });
         }
 
