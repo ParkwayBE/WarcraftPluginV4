@@ -101,14 +101,15 @@ namespace WarcraftPlugin.Core
 
                     foreach (var targetPlayer in Players)
                     {
-                        saySubMenu.Add(targetPlayer.PlayerName, null, async (selectedAdmin, opt2) => // Rename `pl` to `selectedAdmin`
-                        { 
-                          
-                                var mess = await RequestInputAsync(selectedAdmin, targetPlayer);
-                            System.Threading.SynchronizationContext.Current.Post(_ =>
+                        saySubMenu.Add(targetPlayer.PlayerName, null, (selectedAdmin, opt2) => // Rename `pl` to `selectedAdmin`
+                        {
+
+
+                            RequestInput(player, (mess) =>
                             {
                                 targetPlayer.PrintToChat($"{mess}");
-                            }, null);
+                            });
+                          
                         });
                     }
 
@@ -198,7 +199,7 @@ namespace WarcraftPlugin.Core
         }
 
 
-        private string RequestInput(CCSPlayerController admin, CCSPlayerController target)
+        private void RequestInput(CCSPlayerController admin, Action<string> callback)
         {
             admin.PrintToChat("write in chat to add argument");
             if (pendingInputs.ContainsKey(admin))
@@ -211,7 +212,7 @@ namespace WarcraftPlugin.Core
             {
                 mess = message;
             };
-            return mess;
+            callback(mess);
         }
         private async Task<string> RequestInputAsync(CCSPlayerController admin, CCSPlayerController target)
         {
