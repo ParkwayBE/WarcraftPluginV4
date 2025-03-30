@@ -99,8 +99,8 @@ namespace WarcraftPlugin.Classes
 
             var VictimLoc = randomEnemy.PlayerPawn.Value.AbsOrigin;
             var AttackerLoc = Player.PlayerPawn.Value.AbsOrigin;
-            Warcraft.SpawnParticle(VictimLoc, "particles/ui/hud/ui_mvp_winner_alt_a.vpcf", 4f);
-            Warcraft.SpawnParticle(AttackerLoc, "particles/ui/ammohealthcenter/ui_hud_kill_streaks_spectator_4.vpcf", 4f);
+            Warcraft.SpawnParticle(VictimLoc, "particles/ui/ammohealthcenter/ui_hud_kill_streaks_circlemsk.vpcf", 4f);
+            Warcraft.SpawnParticle(AttackerLoc, "particles/ui/ammohealthcenter/ui_hud_kill_streaks_circle_flash.vpcf", 4f);
 
             // Heal caster
             var currentHealth = Player.PlayerPawn.Value.Health;
