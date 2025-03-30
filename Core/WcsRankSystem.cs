@@ -220,12 +220,6 @@ namespace WarcraftPlugin.Core
                     var attacker = e.Attacker;
                     var name = attacker?.PlayerName ?? "Unknown";
                     Console.WriteLine($"[Dummy] {name} dealt {e.DmgHealth} damage — HP: {currentHp} → {newHp}");
-
-                    // Block death and suppress event
-                    info.DontBroadcast = true;
-
-                    victim.PrintToChat(" \x07[Dummy] You're invincible during testing.");
-                    return HookResult.Stop;
                 }
             }
 
