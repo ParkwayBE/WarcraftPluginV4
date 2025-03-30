@@ -4,10 +4,12 @@ using System.Drawing;
 using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using WarcraftPlugin.Core;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 
 namespace WarcraftPlugin.Classes
@@ -101,23 +103,45 @@ namespace WarcraftPlugin.Classes
             var pawn = Player.PlayerPawn.Value;
             if (pawn == null || !Player.IsAlive()) return;
 
-            if (UltimateToggle)
+            if (!UltimateToggle)
             {
-                // Toggle off: return to normal walking
-                SetMoveType(pawn, MoveType_t.MOVETYPE_WALK);
-                UltimateToggle = false;
-                Player.PrintToChat("🪂 You returned to the ground.");
+                SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
+                StartFlightLoop(); // Start flight
+                Player.PrintToChat("🌀 Flight enabled!");
             }
             else
             {
-                // Toggle on: allow flying
-                SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
-                UltimateToggle = true;
-                Player.PrintToChat("🕊️ You are now flying!");
+                SetMoveType(pawn, MoveType_t.MOVETYPE_WALK);
+                Player.PrintToChat("🛬 Flight disabled.");
             }
+
+            UltimateToggle = !UltimateToggle;
+
 
             StartCooldown(3);
         }
+
+
+        void StartFlightLoop()
+        {
+            WarcraftPlugin.Instance.AddTimer(0.2f, () =>
+            {
+                if (!UltimateToggle || !Player.IsValid || !Player.IsAlive()) return;
+
+                var pawn = Player.PlayerPawn.Value;
+                var forward = pawn.EyeAngles.ToForward();
+                float length = MathF.Sqrt(forward.X * forward.X + forward.Y * forward.Y + forward.Z * forward.Z);
+                if (length == 0) length = 1; // prevent division by zero
+                var look = forward / length;
+
+                var boost = new Vector(look.X * 100, look.Y * 100, 0); // Adjust strength if needed
+                pawn.Teleport(null, null, boost);
+
+                // Call again to simulate repeating timer
+                StartFlightLoop();
+            });
+        }
+
 
 
 
@@ -146,6 +170,8 @@ namespace WarcraftPlugin.Classes
                 var revived = deadTeammates[Random.Shared.Next(deadTeammates.Count)];
                 revived.Respawn();
                 int bonusHp = 80 + (level * 10);
+                var deathPosition = victim.PlayerPawn.Value.AbsOrigin;
+
                 SkillFunctions.SetBonusHealth(revived, bonusHp);
                 revived.RemoveWeapons();
                 revived.GiveNamedItem("weapon_knife");
@@ -153,6 +179,16 @@ namespace WarcraftPlugin.Classes
 
                 Player.PrintToChat($"🧊 Water Elemental: You revived {revived.PlayerName} with {bonusHp} HP!");
                 revived.PrintToChat("💧 You were revived as a Water Elemental with only a knife!");
+
+                WarcraftPlugin.Instance.AddTimer(0.2f, () =>
+                {
+                    if (revived?.IsValid == true && revived.PlayerPawn?.Value != null)
+                    {
+                        revived.PlayerPawn.Value.Teleport(deathPosition, null, null);
+                        revived.PrintToCenter("💧 You were summoned at the site of death!");
+                    }
+                });
+
             }
 
         }
