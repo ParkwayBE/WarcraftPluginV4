@@ -117,7 +117,7 @@ namespace WarcraftPlugin.Core
                 //AddXp Option
                 classMenu.Add("XP Menu", null, (admin, opt) => // Rename `pl` to `admin`
                 {
-                    var saySubMenu = MenuManager.CreateMenu("Say to a player", 5);
+                    var saySubMenu = MenuManager.CreateMenu("Add xp to player", 5);
 
                     foreach (var targetPlayer in Players)
                     {
