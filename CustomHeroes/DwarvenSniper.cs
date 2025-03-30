@@ -53,6 +53,7 @@ namespace WarcraftPlugin.Classes
                     return;
 
                 SkillFunctions.SetBonusHealth(Player, 9999); // TEMP TESTING
+                Warcraft.SpawnParticle(Player.PlayerPawn.Value.AbsOrigin.With(z: Player.PlayerPawn.Value.AbsOrigin.Z + 60), "particles/ui/status_levels/ui_status_level_8.vpcf");
 
                 int awpChance = abilityLevel * 10; // Level 1 = 10%, Level 5 = 50%
                 int roll = Random.Shared.Next(100);
@@ -190,6 +191,7 @@ namespace WarcraftPlugin.Classes
                 {
                     // Apply impale effect
                     attacker.PlayerPawn.Value.Teleport(null, null, new Vector(0, 0, 500));
+                    Warcraft.SpawnParticle(attacker.PlayerPawn.Value.AbsOrigin.With(z: attacker.PlayerPawn.Value.AbsOrigin.Z + 60), "particles/ui/status_levels/ui_status_level__gen_glow.vpcf");
                     attacker.PrintToChat(" \x07[Impale] You hurt the wrong dwarf!");
                     Player.PrintToChat($" \x04[Impale] {attacker.PlayerName} was launched for hitting you!");
 
@@ -221,7 +223,6 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            Console.WriteLine("[Ultimate] Activating ultimate ability.");
             if (Player == null) return;
             evasionMultiplier = 2.0f;
             hasUsedUltimate = true;
@@ -262,9 +263,11 @@ namespace WarcraftPlugin.Classes
         {
             if (@event.Weapon == "ssg08" || @event.Weapon == "awp")
             {
+                var victim = @event.Userid;
                 var damageBonus = WarcraftPlayer.GetAbilityLevel(0) * 8;
                 @event.AddBonusDamage(damageBonus);
                 Console.WriteLine($"Dealt {damageBonus} extra damage with a scoped weapon.");
+                Warcraft.SpawnParticle(victim.PlayerPawn.Value.AbsOrigin.With(z: victim.PlayerPawn.Value.AbsOrigin.Z + 60), "particles/ui/hud/ui_transitions_tests_lin_a.vpcf");
             }
         }
     }
