@@ -190,6 +190,7 @@ namespace WarcraftPlugin.Classes
                 {
                     // Apply impale effect
                     attacker.PlayerPawn.Value.Teleport(null, null, new Vector(0, 0, 500));
+                    Warcraft.SpawnParticle(attacker.PlayerPawn.Value.AbsOrigin.With(z: attacker.PlayerPawn.Value.AbsOrigin.Z + 60), "particles/ui/status_levels/ui_status_level_8.vpcf");
                     attacker.PrintToChat(" \x07[Impale] You hurt the wrong dwarf!");
                     Player.PrintToChat($" \x04[Impale] {attacker.PlayerName} was launched for hitting you!");
 
@@ -221,7 +222,6 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            Console.WriteLine("[Ultimate] Activating ultimate ability.");
             if (Player == null) return;
             evasionMultiplier = 2.0f;
             hasUsedUltimate = true;
