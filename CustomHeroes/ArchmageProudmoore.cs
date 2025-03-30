@@ -8,7 +8,6 @@ using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 
 namespace WarcraftPlugin.Classes
@@ -77,7 +76,7 @@ namespace WarcraftPlugin.Classes
                         ally.PrintToChat("🛡️ Brilliance Aura: You received Ultimate Immunity for 120 seconds!");
                         Player.PrintToChat($"✨ Brilliance Aura: {ally.PlayerName} gained immunity!");
 
-                        WarcraftPlugin.Instance.AddTimer(120f, () =>
+                        WarcraftPlugin.Instance.AddTimer(160f, () =>
                         {
                             if (ally.IsValid)
                             {
@@ -104,15 +103,14 @@ namespace WarcraftPlugin.Classes
 
             if (UltimateToggle)
             {
-                // Toggle off: return to normal movement
+                // Toggle off: return to normal walking
                 SetMoveType(pawn, MoveType_t.MOVETYPE_WALK);
-                pawn.Teleport(null, null, new Vector(0, 0, 0)); // Stop movement
                 UltimateToggle = false;
                 Player.PrintToChat("🪂 You returned to the ground.");
             }
             else
             {
-                // Toggle on: enable flying
+                // Toggle on: allow flying
                 SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
                 UltimateToggle = true;
                 Player.PrintToChat("🕊️ You are now flying!");
@@ -120,6 +118,7 @@ namespace WarcraftPlugin.Classes
 
             StartCooldown(3);
         }
+
 
 
 
@@ -160,3 +159,45 @@ namespace WarcraftPlugin.Classes
 
     }
 }
+
+
+
+/*
+ * 
+ * 
+ * 
+ * 
+ * POTENTIAL ULT FOR VAGABOND OR RAPSCALLION WORKS PERFECT MIDAIR
+
+ 
+ private void Ultimate()
+        {
+            var pawn = Player.PlayerPawn.Value;
+            if (pawn == null || !Player.IsAlive()) return;
+
+            if (UltimateToggle)
+            {
+                // Toggle off: return to normal movement
+                SetMoveType(pawn, MoveType_t.MOVETYPE_WALK);
+                pawn.Teleport(null, null, new Vector(0, 0, 0)); // Stop movement
+                UltimateToggle = false;
+                Player.PrintToChat("🪂 You returned to the ground.");
+            }
+            else
+            {
+                // Toggle on: enable flying
+                SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
+                UltimateToggle = true;
+                Player.PrintToChat("🕊️ You are now flying!");
+            }
+
+            StartCooldown(3);
+        }
+ 
+ 
+ 
+ * 
+ * 
+ * 
+ * 
+ */
