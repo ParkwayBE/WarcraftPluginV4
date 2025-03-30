@@ -211,8 +211,8 @@ namespace WarcraftPlugin.Core
             pendingInputs[admin] = (message) =>
             {
                 mess = message;
+                callback(mess);
             };
-            callback(mess);
         }
         private async Task<string> RequestInputAsync(CCSPlayerController admin, CCSPlayerController target)
         {
