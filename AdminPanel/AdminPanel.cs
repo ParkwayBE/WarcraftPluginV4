@@ -73,8 +73,13 @@ namespace WarcraftPlugin.Core
                 //Freeze option
                 classMenu.Add("Freeze bots", null, (pl, opt) =>
                 {
-                    player.ExecuteClientCommandFromServer($"css_freeze @bot");
+                    player.ExecuteClientCommandFromServer($"css_freeze @bots");
                 });
+                classMenu.Add("unFreeze bots", null, (pl, opt) =>
+                {
+                    player.ExecuteClientCommandFromServer($"css_unfreeze @bots");
+                });
+
 
                 //Kill option
                 classMenu.Add("Kill player menu", null, (pl, opt) =>
