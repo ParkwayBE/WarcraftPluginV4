@@ -99,8 +99,8 @@ namespace WarcraftPlugin.Classes
 
             var VictimLoc = randomEnemy.PlayerPawn.Value.AbsOrigin;
             var AttackerLoc = Player.PlayerPawn.Value.AbsOrigin;
-            Warcraft.SpawnParticle(VictimLoc, "particles/ui/ammohealthcenter/ui_hud_kill_streaks_circlemsk.vpcf", 4f);
-            Warcraft.SpawnParticle(AttackerLoc, "particles/ui/ammohealthcenter/ui_hud_kill_streaks_circle_flash.vpcf", 4f);
+            Warcraft.SpawnParticle(VictimLoc, "particles/ui/hud/ui_mvp_winner_flareglow.vpcf", 4f);
+            Warcraft.SpawnParticle(AttackerLoc, "particles/inferno_fx/molotov_groundfire_climbing_debug.vpcf", 4f);
 
             // Heal caster
             var currentHealth = Player.PlayerPawn.Value.Health;
@@ -131,6 +131,9 @@ namespace WarcraftPlugin.Classes
 
                 SkillFunctions.ImpaleTarget(Player, target, 600f);
                 Player.PrintToChat("You impaled an enemy.");
+                var targetloc = target.PlayerPawn.Value.AbsOrigin;
+                Warcraft.SpawnParticle(targetloc, "particles/ui/ammohealthcenter/ui_hud_kill_streaks_circle_flash.vpcf", 4f);
+
             }
         }
 
