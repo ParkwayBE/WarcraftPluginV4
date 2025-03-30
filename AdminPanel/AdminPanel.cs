@@ -190,6 +190,7 @@ namespace WarcraftPlugin.Core
 
         private string RequestInput(CCSPlayerController admin, CCSPlayerController target)
         {
+            admin.PrintToChat("write in chat to add argument");
             if (pendingInputs.ContainsKey(admin))
             {
                 pendingInputs.Remove(admin);
