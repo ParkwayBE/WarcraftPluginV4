@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Core.Effects;
+using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
@@ -52,6 +53,9 @@ namespace WarcraftPlugin.Classes
                 int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
                 if (abilityLevel <= 0)
                     return;
+
+                var increaseHealth = abilityLevel * 15;
+                SkillFunctions.SetBonusHealth(Player, increaseHealth);
 
                 int awpChance = abilityLevel * 10;
                 int roll = Random.Shared.Next(100);

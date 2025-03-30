@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Helpers;
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
+
 
 
 namespace WarcraftPlugin.CustomSkills
@@ -105,6 +107,21 @@ namespace WarcraftPlugin.CustomSkills
             attacker.PrintToCenter($"⚡ You dealt {damage} damage to {victim.PlayerName}!");
             victim.PrintToCenter($"⚡ You were hit by {attacker.PlayerName}'s Chain Lightning!");
         }
+
+        public static void ImpaleTarget(CCSPlayerController attacker, CCSPlayerController victim, float force = 500f)
+        {
+            if (victim == null || !victim.IsValid || victim.PlayerPawn?.Value == null) return;
+
+            // Apply vertical force (upwards)
+            var launchVelocity = new Vector(0, 0, force);
+            victim.PlayerPawn.Value.Teleport(null, null, launchVelocity);
+
+            // Feedback
+            attacker.PrintToCenter($"⛏️ You impaled {victim.PlayerName}!");
+            victim.PrintToCenter($"⛏️ You were impaled by {attacker.PlayerName}!");
+            Console.WriteLine($"[Impale] {attacker.PlayerName} impaled {victim.PlayerName} with {force} force.");
+        }
+
 
         public static void RestrictWeapons(CCSPlayerController player, List<string> allowedWeapons, float duration = 999f)
         {
