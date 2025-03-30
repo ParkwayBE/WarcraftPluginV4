@@ -1,4 +1,5 @@
 ﻿using CounterStrikeSharp.API.Core;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using WarcraftPlugin.Helpers;
@@ -9,10 +10,12 @@ namespace WarcraftPlugin.Core
     internal class XpSystem
     {
         private readonly WarcraftPlugin _plugin;
+        private bool soundIsPlaying;
 
         internal XpSystem(WarcraftPlugin plugin)
         {
             _plugin = plugin;
+            soundIsPlaying = false;
         }
 
         private readonly List<int> _levelXpRequirement = new(new int[256]);
@@ -45,26 +48,32 @@ namespace WarcraftPlugin.Core
             while (wcPlayer.currentXp >= wcPlayer.amountToLevel)
             {
                 wcPlayer.currentXp = wcPlayer.currentXp - wcPlayer.amountToLevel;
-                GrantLevel(wcPlayer);
+                bool addXpFlag = true;
+                GrantLevel(wcPlayer, addXpFlag);
 
                 if (wcPlayer.GetLevel() >= WarcraftPlugin.MaxLevel) return;
             }
         }
 
-        internal void GrantLevel(WarcraftPlayer wcPlayer)
+        internal void GrantLevel(WarcraftPlayer wcPlayer, bool addXpFlag)
         {
             if (wcPlayer.GetLevel() >= WarcraftPlugin.MaxLevel) return;
 
             wcPlayer.currentLevel += 1;
 
             RecalculateXpForLevel(wcPlayer);
-            PerformLevelupEvents(wcPlayer);
+            
+            PerformLevelupEvents(wcPlayer, addXpFlag);
         }
 
-        private static void PerformLevelupEvents(WarcraftPlayer wcPlayer)
+        private static void PerformLevelupEvents(WarcraftPlayer wcPlayer, bool addXpFlag)
         {
             var player = wcPlayer.GetPlayer();
-            player.PlayLocalSound("play sounds/ui/achievement_earned.vsnd");
+
+            if (!addXpFlag)
+            {
+                player.PlayLocalSound("play sounds/ui/achievement_earned.vsnd");
+            }
             Warcraft.SpawnParticle(player.PlayerPawn.Value.AbsOrigin, "particles/ui/ammohealthcenter/ui_hud_kill_streaks_glow_5.vpcf", 1);
             WarcraftPlugin.RefreshPlayerName(player);
         }
