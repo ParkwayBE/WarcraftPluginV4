@@ -105,7 +105,7 @@ namespace WarcraftPlugin.Classes
 
             if (!UltimateToggle)
             {
-                SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
+                SetMoveType(pawn, MoveType_t.MOVETYPE_FLYGRAVITY);
                 StartFlightLoop(); // Start flight
                 Player.PrintToChat("🌀 Flight enabled!");
             }
@@ -139,11 +139,6 @@ namespace WarcraftPlugin.Classes
                 StartFlightLoop();
             });
         }
-
-
-
-
-
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
