@@ -75,7 +75,7 @@ namespace WarcraftPlugin.Core
                 // Left Menu Options
                 leftMenu.Add("→ Next", null, (pl, opt) =>
                 {
-                    MenuManagerExtra.SwitchMenu(pl, menus, true); // Move to the right menu
+                    MenuManagerExtra.SwitchMenu(pl, true); // Move to the right menu
                 });
                 leftMenu.Add("Spawn Dummy", null, (pl, opt) =>
                 {
@@ -94,11 +94,11 @@ namespace WarcraftPlugin.Core
                 });
                 middleMenu.Add("← Back", null, (pl, opt) =>
                 {
-                    MenuManagerExtra.SwitchMenu(pl, menus, false); // Move to the left menu
+                    MenuManagerExtra.SwitchMenu(pl, false); // Move to the left menu
                 });
                 middleMenu.Add("→ Next", null, (pl, opt) =>
                 {
-                    MenuManagerExtra.SwitchMenu(pl, menus, true);
+                    MenuManagerExtra.SwitchMenu(pl,  true);
                 });
                 
 
@@ -117,7 +117,7 @@ namespace WarcraftPlugin.Core
                 });
                 rightMenu.Add("← Back", null, (pl, opt) =>
                 {
-                    MenuManagerExtra.SwitchMenu(pl, menus, false); // Move to the left menu
+                    MenuManagerExtra.SwitchMenu(pl, false); // Move to the left menu
                 });
                 rightMenu.Add("XP Menu", null, (pl, opt) =>
                 {
