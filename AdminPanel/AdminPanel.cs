@@ -444,7 +444,9 @@ namespace WarcraftPlugin.Menu
             column = moveRight ? Math.Min(column + 1, menus.Count - 1) : Math.Max(column - 1, 0);
 
             PlayerMenuColumn[player.Slot] = column;
-            OpenMainMenu(player, menus);
+
+            // Use MenuAPI directly to open the selected menu
+            MenuAPI.Players[player.Slot].OpenMainMenu(menus[column]);
         }
     }
 }
