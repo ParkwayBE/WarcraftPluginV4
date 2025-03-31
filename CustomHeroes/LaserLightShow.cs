@@ -60,6 +60,7 @@ namespace WarcraftPlugin.Classes
         }
 
 
+
         private void Ultimate()
         {
             // TODO: Disintegrate: DrawLaserBetween multiple in a circle shaped pattern maybe , --->
@@ -120,9 +121,9 @@ namespace WarcraftPlugin.Classes
 
                 for (int i = -2; i <= 2; i++)
                 {
-                    if (i == 0) continue;
+                    if (i == 0) continue; // Skip center line (already drawn)
                     float xOffset = i * 12f;
-                    float yOffset = -Math.Abs(i * 6f);
+                    float yOffset = -Math.Abs(i * 6f); // inward V-shape
                     Vector beamEnd = new Vector(
                         endBase.X + xOffset,
                         endBase.Y + yOffset,
@@ -141,6 +142,7 @@ namespace WarcraftPlugin.Classes
                 attacker.PrintToChat($" {ChatColors.Green}Module B{ChatColors.Default}: {target.PlayerName} was pierced for {collateralDamage} damage!");
             }
         }
+
 
 
 
