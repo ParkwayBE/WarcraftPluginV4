@@ -233,7 +233,7 @@ namespace WarcraftPlugin.Summons
 
                 // Log the object's new position or move it in the game
 
-                balls[i].UpdateLocation(objectPosition);
+                balls[i].UpdateLocation(owner);
             }
         }
         public override void OnTick()
