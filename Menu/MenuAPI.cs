@@ -45,6 +45,7 @@ internal static class MenuAPI
 
     internal static void OnTick()
     {
+
         foreach (var player in Players.Values.Where(p => p.MainMenu != null))
         {
             if ((player.Buttons & PlayerButtons.Forward) == 0 && (player.player.Buttons & PlayerButtons.Forward) != 0)
@@ -64,14 +65,14 @@ internal static class MenuAPI
             {
                 player.Choose();
             }
-            else if ((player.Buttons & PlayerButtons.Left) == 0 && (player.player.Buttons & PlayerButtons.Left) != 0)
+            else if ((player.Buttons & PlayerButtons.Moveleft) == 0 && (player.player.Buttons & PlayerButtons.Moveleft) != 0)
             {
-                Console.WriteLine("menu left");
+                Console.WriteLine("menu left in MenuPlayer");
                 player.ScrollLeft();
             }
-            else if ((player.Buttons & PlayerButtons.Right) == 0 && (player.player.Buttons & PlayerButtons.Right) != 0)
+            else if ((player.Buttons & PlayerButtons.Moveright) == 0 && (player.player.Buttons & PlayerButtons.Moveright) != 0)
             {
-                Console.WriteLine("menu right");
+                Console.WriteLine("menu right in MenuPlayer");
                 player.ScrollRight();
             }
 
