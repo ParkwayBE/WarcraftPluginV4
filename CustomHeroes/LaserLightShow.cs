@@ -49,7 +49,7 @@ namespace WarcraftPlugin.Classes
                 SkillFunctions.SetBonusHealth(Player, bonushealth);
                 Vector spawnPoint;
                 spawnPoint = Player.PlayerPawn.Value.AbsOrigin;
-                Warcraft.SpawnParticle(spawnPoint, "particles/ui/status_levels/ui_status_level_7_energycirc.vpcf", 4f);
+                // Warcraft.SpawnParticle(spawnPoint, "particles/ui/status_levels/ui_status_level_7_energycirc.vpcf", 4f);
 
                 new RGBColorCycleEffect(Player, 999f).Start();
 
