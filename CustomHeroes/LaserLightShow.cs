@@ -82,6 +82,29 @@ namespace WarcraftPlugin.Classes
 
             Vector victimPos = victim.PlayerPawn.Value.AbsOrigin;
             Vector forward = attacker.PlayerPawn.Value.EyeAngles.ToForward();
+            // V-shaped beam effect
+            Vector beamStart = attacker.PlayerPawn.Value.AbsOrigin;
+            beamStart.Z -= 10;
+
+            Vector endBase = victim.PlayerPawn.Value.AbsOrigin;
+            endBase.Z += 35;
+
+            var rand = new Random();
+
+            for (int i = -2; i <= 2; i++)
+            {
+                if (i == 0) continue; // Skip center line (already drawn)
+                float xOffset = i * 12f;
+                float yOffset = -Math.Abs(i * 6f); // inward V-shape
+                Vector beamEnd = new Vector(
+                    endBase.X + xOffset,
+                    endBase.Y + yOffset,
+                    endBase.Z + rand.Next(-5, 5)
+                );
+
+                Color beamColor = Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256));
+                Warcraft.DrawLaserBetween(beamStart, beamEnd, beamColor, duration: 1.5f, width: 2f);
+            }
 
             foreach (var target in Utilities.GetPlayers())
             {
@@ -110,29 +133,7 @@ namespace WarcraftPlugin.Classes
                     pierceColor
                 );
 
-                // V-shaped beam effect
-                Vector beamStart = attacker.PlayerPawn.Value.AbsOrigin;
-                beamStart.Z -= 10;
 
-                Vector endBase = target.PlayerPawn.Value.AbsOrigin;
-                endBase.Z += 35;
-
-                var rand = new Random();
-
-                for (int i = -2; i <= 2; i++)
-                {
-                    if (i == 0) continue; // Skip center line (already drawn)
-                    float xOffset = i * 12f;
-                    float yOffset = -Math.Abs(i * 6f); // inward V-shape
-                    Vector beamEnd = new Vector(
-                        endBase.X + xOffset,
-                        endBase.Y + yOffset,
-                        endBase.Z + rand.Next(-5, 5)
-                    );
-
-                    Color beamColor = Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256));
-                    Warcraft.DrawLaserBetween(beamStart, beamEnd, beamColor, duration: 1.5f, width: 2f);
-                }
 
                 // Apply collateral damage
                 int collateralDamage = (int)(damage * 0.5f);
