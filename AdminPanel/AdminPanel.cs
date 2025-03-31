@@ -61,7 +61,56 @@ namespace WarcraftPlugin.Core
             {
                 playerP.PrintToChat("You are an admin, the panel will open soon ;)");
                 Console.WriteLine("admin panel test");
+                
                 var Players = Utilities.GetPlayers();
+                var classMenuLeft = MenuManager.CreateMenu("Left Side Menu", 5);
+                var classMenuRight = MenuManager.CreateMenu("Right Side Menu", 5);
+
+                // Left-side options
+                classMenuLeft.Add("Spawn Dummy", null, (pl, opt) =>
+                {
+                    DummyBotManager.SpawnOrResetDummy(player);
+                });
+                classMenuLeft.Add("Freeze bots", null, (pl, opt) =>
+                {
+                    player.ExecuteClientCommandFromServer($"css_freeze @bots");
+                });
+
+                // Right-side options
+                classMenuRight.Add("Kill Player Menu", null, (pl, opt) =>
+                {
+                    var killSubMenu = MenuManager.CreateMenu("Kill a Player", 5);
+                    foreach (var targetPlayer in Players)
+                    {
+                        killSubMenu.Add(targetPlayer.PlayerName, null, (pl, opt) =>
+                        {
+                            player.ExecuteClientCommandFromServer($"css_slay #{targetPlayer.SteamID.ToString()}");
+                        });
+                    }
+                    MenuManager.OpenMainMenu(pl, killSubMenu);
+                });
+                classMenuRight.Add("XP Menu", null, (admin, opt) =>
+                {
+                    var xpSubMenu = MenuManager.CreateMenu("Add XP to Player", 5);
+                    xpSubMenu.Add("All", null, (admin, opt2) =>
+                    {
+                        RequestInput(player, (mess) =>
+                        {
+                            int num = int.Parse(mess);
+                            foreach (var targetPlayer in Players)
+                            {
+                                _plugin.XpSystem.AddXp(targetPlayer, num);
+                            }
+                        });
+                    });
+                    MenuManager.OpenMainMenu(admin, xpSubMenu);
+                });
+
+                // Open both menus side by side
+                MenuManager.OpenMainMenu(player, classMenuLeft);
+                MenuManager.OpenMainMenu(player, classMenuRight);
+
+                /*
                 var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>
                     {player.SteamID.ToString()}'s Admin Menu</font><br>
                     <font color='grey'>select an option</font> ", 5);
@@ -185,11 +234,14 @@ namespace WarcraftPlugin.Core
 
                 MenuManager.OpenMainMenu(player, classMenu);
             }
+             */
+
+            }
             if (role == 9009)
             {
                 player.PrintToChat("Nah, no roles for u");
             }
-
+        
         }
         public HookResult OnPlayerChat(EventPlayerChat ev, GameEventInfo info)
         {
