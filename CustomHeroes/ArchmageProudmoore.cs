@@ -99,7 +99,7 @@ namespace WarcraftPlugin.Classes
         private void Ultimate()
         {
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(3);
-            float duration = abilityLevel * 2f;
+            float duration = abilityLevel * 5f;
 
             Player.PrintToChat($" \x07[Flight] You are now flying for {duration} seconds!");
 
@@ -107,12 +107,13 @@ namespace WarcraftPlugin.Classes
             Player.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_FLY;
 
             // Optional: Give a small upward push
-            var velocity = Player.PlayerPawn.Value.AbsVelocity;
-            Player.PlayerPawn.Value.GravityScale = 0f;
-            velocity.Z = 200;
+
 
             var pawn = Player.PlayerPawn.Value;
             pawn.VelocityModifier = 1f + 0.5f;
+            var velocity = pawn.AbsVelocity;
+            pawn.GravityScale = 0f;
+            velocity.Z = 5;
 
             // Reset after duration
             WarcraftPlugin.Instance.AddTimer(duration, () =>
