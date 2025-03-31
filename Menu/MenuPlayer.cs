@@ -24,7 +24,7 @@ internal class MenuPlayer
 
     internal void OpenMainMenu(Menu menu, int selectedOptionIndex = 0)
     {
-        player.DisableMovement();
+        //player.DisableMovement();
 
         if (menu == null)
         {
