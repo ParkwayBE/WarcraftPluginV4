@@ -44,17 +44,11 @@ namespace WarcraftPlugin.Classes
 
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
-                BonusMovementSpeed(Player, speedMultiplier, duration);
+                SkillFunctions.MovementSpeed(Player, speedMultiplier, 999f);
                 SkillFunctions.SetPlayerGravity(Player, gravityPercent, duration);
                 Player.PrintToChat($" Your{ChatColors.LightPurple}gravity{ChatColors.Default} is now {gravityPercent} and gained {speedMultiplier} bonus {ChatColors.LightPurple}movement speed{ChatColors.Default}!");
 
             });
-        }
-
-        public static void BonusMovementSpeed(CCSPlayerController player, float amount, float duration)
-        {
-            var SpeedEffect = new SetMovementSpeed(player, amount, duration);
-            SpeedEffect.Start();
         }
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
@@ -71,7 +65,6 @@ namespace WarcraftPlugin.Classes
 
             SkillFunctions.LeechHealth(attacker, victim, chance, healPercent, damage);
         }
-
 
         private void OnPlayerDeath(EventPlayerDeath death)
         {
