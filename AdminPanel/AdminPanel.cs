@@ -139,10 +139,11 @@ namespace WarcraftPlugin.Core
                     MenuManager.OpenMainMenu(admin, saySubMenu);
                 });
                 //AddXp Option
+                
                 classMenu.Add("XP Menu", null, (admin, opt) => // Rename `pl` to `admin`
                 {
                     var saySubMenu = MenuManager.CreateMenu("Add xp to player", 5);
-
+                    //all players
                     saySubMenu.Add("All", null, async (selectedAdmin, opt2) =>
                     {
                         RequestInput(player, (mess) =>
@@ -158,7 +159,7 @@ namespace WarcraftPlugin.Core
                         });
                         
                     });
-
+                    //each player solo
                     foreach (var targetPlayer in Players)
                     {
                         saySubMenu.Add(targetPlayer.PlayerName, null, async (selectedAdmin, opt2) => // Rename `pl` to `selectedAdmin`
