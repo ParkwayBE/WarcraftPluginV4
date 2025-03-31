@@ -144,7 +144,7 @@ namespace WarcraftPlugin.Core
                 // Open the multi-column menu for the player
                 MenuManagerExtra.OpenMainMenuExtra(player, menus); // This will open the left, middle, and right men
 
-
+          
                 /*
                 var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>
                     {player.SteamID.ToString()}'s Admin Menu</font><br>
