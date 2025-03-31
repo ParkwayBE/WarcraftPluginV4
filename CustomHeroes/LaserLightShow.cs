@@ -49,13 +49,8 @@ namespace WarcraftPlugin.Classes
 
                 SkillFunctions.MovementSpeed(Player, speedMultiplier, 999f);
                 SkillFunctions.SetBonusHealth(Player, bonushealth);
-
-                Player.PrintToChat($"[DEBUG] Sent multiplier: {abilityLevel} → Expected VelocityModifier = {1f + speedMultiplier}x");
-
                 new RGBColorCycleEffect(Player, 999f).Start();
 
-                var pawn = Player.PlayerPawn.Value;
-                Player.PrintToChat($"[DEBUG] Actual velocity: {pawn.VelocityModifier}");
             });
         }
 
