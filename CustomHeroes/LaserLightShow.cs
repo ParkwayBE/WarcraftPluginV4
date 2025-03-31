@@ -44,7 +44,7 @@ namespace WarcraftPlugin.Classes
                 int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
                 if (abilityLevel < 1) return;
                 var bonushealth = abilityLevel * 15;
-                float bonusspeed = abilityLevel * 0.08f;
+                float bonusspeed = Math.Clamp(abilityLevel * 1f, 0f, 4.5f);
                 SkillFunctions.MovementSpeed(Player, bonusspeed, 999f);
                 SkillFunctions.SetBonusHealth(Player, bonushealth);
                 Vector spawnPoint;
