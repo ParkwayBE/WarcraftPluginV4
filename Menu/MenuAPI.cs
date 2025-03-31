@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -48,6 +49,7 @@ internal static class MenuAPI
         {
             if ((player.Buttons & PlayerButtons.Forward) == 0 && (player.player.Buttons & PlayerButtons.Forward) != 0)
             {
+                Console.WriteLine("menu foward");
                 player.ScrollUp();
             }
             else if ((player.Buttons & PlayerButtons.Back) == 0 && (player.player.Buttons & PlayerButtons.Back) != 0)
@@ -61,6 +63,16 @@ internal static class MenuAPI
             else if ((player.Buttons & PlayerButtons.Use) == 0 && (player.player.Buttons & PlayerButtons.Use) != 0)
             {
                 player.Choose();
+            }
+            else if ((player.Buttons & PlayerButtons.Left) == 0 && (player.player.Buttons & PlayerButtons.Left) != 0)
+            {
+                Console.WriteLine("menu left");
+                player.ScrollLeft();
+            }
+            else if ((player.Buttons & PlayerButtons.Right) == 0 && (player.player.Buttons & PlayerButtons.Right) != 0)
+            {
+                Console.WriteLine("menu right");
+                player.ScrollRight();
             }
 
             if (((long)player.player.Buttons & 8589934592) == 8589934592)
