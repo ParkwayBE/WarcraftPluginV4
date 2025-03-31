@@ -8,7 +8,6 @@ using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace WarcraftPlugin.Classes
 {
@@ -99,48 +98,29 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
+            int abilityLevel = WarcraftPlayer.GetAbilityLevel(3);
+            float duration = abilityLevel * 2f;
+
+            Player.PrintToChat($" \x07[Flight] You are now flying for {duration} seconds!");
+
+            // Enable flight mode
+            Player.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_FLY;
+
+            // Optional: Give a small upward push
+            var velocity = Player.PlayerPawn.Value.AbsVelocity;
+            velocity.Z = 200;
+
             var pawn = Player.PlayerPawn.Value;
-            if (pawn == null || !Player.IsAlive()) return;
+            pawn.VelocityModifier = 1f + 0.5f;
 
-            if (!UltimateToggle)
+            // Reset after duration
+            WarcraftPlugin.Instance.AddTimer(duration, () =>
             {
-                SetMoveType(pawn, MoveType_t.MOVETYPE_FLYGRAVITY);
-                Player.PrintToChat("🌀 Flight enabled!");
+                if (!Player.IsValid || !Player.IsAlive()) return;
 
-                float duration = 3f;
-                float interval = 0.05f;
-                int repeatCount = (int)(duration / interval);
-                int tick = 0;
-
-                void ApplyFlightVelocity()
-                {
-                    if (!Player.IsValid || !Player.IsAlive()) return;
-                    if (tick >= repeatCount) return;
-
-                    var eyeAngles = pawn.EyeAngles;
-                    var direction = new Vector();
-                    NativeAPI.AngleVectors(eyeAngles.Handle, direction.Handle, nint.Zero, nint.Zero);
-
-                    var velocity = direction * 200f;
-
-                    // Apply flight movement using teleport with velocity
-                    pawn.Teleport(null, null, velocity);
-
-                    tick++;
-                    WarcraftPlugin.Instance.AddTimer(interval, ApplyFlightVelocity);
-                }
-
-                ApplyFlightVelocity();
-            }
-            else
-            {
-                SetMoveType(pawn, MoveType_t.MOVETYPE_WALK);
-                pawn.Teleport(null, null, new Vector(0, 0, 0)); // Stop movement
-                Player.PrintToChat("🛬 Flight disabled.");
-            }
-
-            UltimateToggle = !UltimateToggle;
-            StartCooldown(3);
+                Player.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_WALK;
+                Player.PrintToChat(" \x07[Flight] Your flight has ended.");
+            });
         }
 
 
