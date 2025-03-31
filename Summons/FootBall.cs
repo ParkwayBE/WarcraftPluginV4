@@ -127,7 +127,12 @@ namespace WarcraftPlugin.Summons
                 new Football(owner),
             };
             _owner = owner;
+            foreach (var b in footballs)
+            {
+                b.Activate(owner);
+            }
         }
+
 
         public void TurnBallsAroundPlayer(CCSPlayerController owner)
         {
