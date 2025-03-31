@@ -8,7 +8,6 @@ using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace WarcraftPlugin.Classes
 {
@@ -128,9 +127,6 @@ namespace WarcraftPlugin.Classes
                 SetMoveType(pawn, MoveType_t.MOVETYPE_WALK);
                 pawn.GravityScale = 1f;
                 pawn.VelocityModifier = 1f;
-
-                // Stop momentum
-                pawn.Teleport(null, null, new Vector(0, 0, 0));
 
                 Player.PrintToChat("🪂 [Flight] Your flight has ended.");
             }
