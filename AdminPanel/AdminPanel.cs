@@ -445,8 +445,9 @@ namespace WarcraftPlugin.Menu
 
             PlayerMenuColumn[player.Slot] = column;
 
-            // Use MenuAPI directly to open the selected menu
+            // Debugging line: print out the menu change
             Console.WriteLine($"Switching to menu at index {column} for player {player.Slot}");
+
             MenuAPI.Players[player.Slot].OpenMainMenu(menus[column]);
 
         }
