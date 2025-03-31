@@ -132,6 +132,7 @@ internal class MenuPlayer
 
     internal void ScrollLeft()
     {
+        Console.WriteLine("menu left in menuplayer");
         if (AvailableMenus.Count > 1)
         {
             MenuManagerExtra.SwitchMenu(player, moveRight: false);
@@ -140,6 +141,7 @@ internal class MenuPlayer
     }
     internal void ScrollRight()
     {
+        Console.WriteLine("menu right in menuplyaer");
         if (AvailableMenus.Count > 1)
         {
             MenuManagerExtra.SwitchMenu(player,  moveRight: true);
