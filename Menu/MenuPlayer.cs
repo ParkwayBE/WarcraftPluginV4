@@ -24,10 +24,9 @@ internal class MenuPlayer
 
     internal void OpenMainMenu(Menu menu, int selectedOptionIndex = 0)
     {
-        //player.DisableMovement();
+        player.DisableMovement();
         if (player == null)
         {
-            Console.WriteLine("Player is null, returning.");
             return;
         }
         if (menu == null)
@@ -138,13 +137,13 @@ internal class MenuPlayer
     internal void ScrollLeft()
     {
         
-            MenuManagerExtra.SwitchMenu(player, moveRight: false);  // Directly call SwitchMenu
+            MenuManagerExtra.SwitchMenu(player, moveRight: false);
         
     }
     internal void ScrollRight()
     {
         
-            MenuManagerExtra.SwitchMenu(player, moveRight: true);   // Directly call SwitchMenu
+            MenuManagerExtra.SwitchMenu(player, moveRight: true);
         
         
     }
