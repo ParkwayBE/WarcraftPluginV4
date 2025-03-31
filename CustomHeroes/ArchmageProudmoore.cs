@@ -63,14 +63,11 @@ namespace WarcraftPlugin.Classes
         {
             UltimateToggle = false;
 
-            // Cancel and remove any existing immunity timer for this player
             if (_immunityTimers.ContainsKey(Player))
             {
                 _immunityTimers[Player].Kill();
                 _immunityTimers.Remove(Player);
             }
-
-            // Reset immunity state on spawn
             WarcraftPlayer.HasUltimateImmunity = false;
 
             int level = WarcraftPlayer.GetAbilityLevel(2);
@@ -83,7 +80,7 @@ namespace WarcraftPlugin.Classes
             if (Warcraft.RollDice(chancePercent, 100))
             {
                 WarcraftPlayer.HasUltimateImmunity = true;
-                Player.PrintToChat($"{ChatColors.Green}✨ Brilliance Aura {ChatColors.Default}: You gained {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
+                Player.PrintToChat($" {ChatColors.Green}✨ Brilliance Aura{ChatColors.Default}: You gained {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
 
                 // Apply new immunity timer
                 var selfTimer = WarcraftPlugin.Instance.AddTimer(160f, () =>
