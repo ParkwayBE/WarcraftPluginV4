@@ -370,7 +370,7 @@ namespace WarcraftPlugin.Menu
     internal static class MenuManagerExtra
     {
         private static Dictionary<int, int> PlayerMenuColumn = new();
-        internal static Dictionary<int, List<Menu>> PlayerMenus = new();
+        public static Dictionary<int, List<Menu>> PlayerMenus = new();
 
         internal static void OpenMainMenu(CCSPlayerController player, List<Menu> menus, int selectedOptionIndex = 0)
         {
