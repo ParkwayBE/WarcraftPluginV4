@@ -65,12 +65,12 @@ internal static class MenuAPI
             {
                 player.Choose();
             }
-            else if ((player.Buttons & PlayerButtons.Left) == 0 && (player.player.Buttons & PlayerButtons.Left) != 0)
+            else if ((player.Buttons & PlayerButtons.Moveleft) == 0 && (player.player.Buttons & PlayerButtons.Left) != 0)
             {
                 Console.WriteLine("menu left");
                 player.ScrollLeft();
             }
-            else if ((player.Buttons & PlayerButtons.Right) == 0 && (player.player.Buttons & PlayerButtons.Right) != 0)
+            else if ((player.Buttons & PlayerButtons.Moveright) == 0 && (player.player.Buttons & PlayerButtons.Right) != 0)
             {
                 Console.WriteLine("menu right");
                 player.ScrollRight();
