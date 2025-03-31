@@ -12,7 +12,7 @@ namespace WarcraftPlugin.CustomSkills
     {
         public static void MovementSpeed(CCSPlayerController player, float amount, float duration)
         {
-            new SetMovementSpeed(player, duration, amount).Start();
+            new SetMovementSpeed(player, amount, duration).Start();
         }
         public static void SetBonusHealth(CCSPlayerController player, int amount)
         {
