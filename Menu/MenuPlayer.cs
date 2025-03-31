@@ -141,6 +141,7 @@ internal class MenuPlayer
         {
             Console.WriteLine("menu left in MenuPlayer");
             Console.WriteLine("Calling SwitchMenu for Left");
+            Console.WriteLine($"AvailableMenus for player {player.Slot}: {AvailableMenus.Count} menus available.");
             MenuManagerExtra.SwitchMenu(player, moveRight: false);  // Directly call SwitchMenu
         }
         else
@@ -154,6 +155,7 @@ internal class MenuPlayer
         {
             Console.WriteLine("menu right in MenuPlayer");
             Console.WriteLine("Calling SwitchMenu for Right");
+            Console.WriteLine($"AvailableMenus for player {player.Slot}: {AvailableMenus.Count} menus available.");
             MenuManagerExtra.SwitchMenu(player, moveRight: true);   // Directly call SwitchMenu
         }
         else
