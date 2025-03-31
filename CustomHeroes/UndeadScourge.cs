@@ -39,7 +39,7 @@ namespace WarcraftPlugin.Classes
 
             int level2 = WarcraftPlayer.GetAbilityLevel(2);
             if (level <= 0) return;
-            float speedMultiplier = level2;
+            float speedMultiplier = 1 + (0.1f * level2);
 
 
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
