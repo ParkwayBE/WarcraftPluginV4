@@ -44,6 +44,7 @@ namespace WarcraftPlugin.Classes
             }
             footballsRemaining = 10;
             footBaller = new FootBaller(Player, 20);
+            footBaller.TurnBallsAroundPlayer(Player);
             canUseUlt = true;
         }
 

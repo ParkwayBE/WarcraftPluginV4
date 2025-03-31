@@ -121,11 +121,15 @@ namespace WarcraftPlugin.Summons
 
         public FootBaller(CCSPlayerController owner, int balls)
         {
-            footballs = new List<Football>();
+            footballs = new List<Football>(){
+                new Football(owner),
+                new Football(owner),
+                new Football(owner),
+            };
             _owner = owner;
         }
 
-        void TurnBallsAroundPlayer(CCSPlayerController owner)
+        public void TurnBallsAroundPlayer(CCSPlayerController owner)
         {
             if(tAroundPlayerSys != null)
             {
