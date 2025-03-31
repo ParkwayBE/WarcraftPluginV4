@@ -74,6 +74,10 @@ internal class MenuPlayer
             UpdateCenterHtml();
             return;
         }
+        if (MenuManagerExtra.PlayerMenus.TryGetValue(player.Slot, out var menus))
+        {
+            AvailableMenus = menus;
+        }
 
         VisibleOptions = menu.Value.Parent?.ResultsBeforePaging ?? 4;
         CurrentChoice = menu;
