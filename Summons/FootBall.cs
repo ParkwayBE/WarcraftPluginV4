@@ -127,10 +127,6 @@ namespace WarcraftPlugin.Summons
                 new Football(owner),
             };
             _owner = owner;
-            foreach (var b in footballs)
-            {
-                b.Activate(owner);
-            }
         }
 
 
@@ -237,7 +233,7 @@ namespace WarcraftPlugin.Summons
 
                 // Log the object's new position or move it in the game
 
-                balls[i]._ball.Teleport(new Vector(objectPosition.X, objectPosition.Y, objectPosition.Z));
+                balls[i]._ball.Teleport(new Vector(objectPosition.X, objectPosition.Y, objectPosition.Z), owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
             }
         }
         public override void OnTick()
