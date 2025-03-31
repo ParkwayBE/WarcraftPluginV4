@@ -116,8 +116,8 @@ namespace WarcraftPlugin.Classes
                 var wcTarget = closest.GetWarcraftPlayer();
                 if (wcTarget != null && wcTarget.HasUltimateImmunity)
                 {
-                    caster.PrintToCenter($"{ChatColors.Red}⛔{ChatColors.Default} Target has {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
-                    closest.PrintToCenter($"{ChatColors.Green}🛡️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} blocked {ChatColors.LightPurple}Chain Lightning{ChatColors.Default}!");
+                    caster.PrintToCenter($" {ChatColors.Red}⛔{ChatColors.Default} Target has {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
+                    closest.PrintToCenter($" {ChatColors.Green}🛡️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} blocked {ChatColors.LightPurple}Chain Lightning{ChatColors.Default}!");
                     return;
                 }
 
@@ -137,7 +137,7 @@ namespace WarcraftPlugin.Classes
             }
             else
             {
-                caster.PrintToCenter($"{ChatColors.Default}⚠️{ChatColors.Default} No valid targets for{ChatColors.LightPurple} Chain Lightning{ChatColors.Default} — no cooldown used.");
+                caster.PrintToCenter($" {ChatColors.Default}⚠️{ChatColors.Default} No valid targets for{ChatColors.LightPurple} Chain Lightning{ChatColors.Default} — no cooldown used.");
             }
         }
 
@@ -160,7 +160,7 @@ namespace WarcraftPlugin.Classes
 
                 WarcraftPlugin.Instance.AddTimer(2f, () =>
                 {
-                    Player.PrintToChat($"{ChatColors.Green}Reincarnation{ChatColors.Default}: You have been revived!");
+                    Player.PrintToChat($" {ChatColors.Green}Reincarnation{ChatColors.Default}: You have been revived!");
                     Player.Respawn();
                     Player.SetHp(100);
 
@@ -210,7 +210,7 @@ namespace WarcraftPlugin.Classes
                     int bonus = damageDealt / 2;
                     int total = damageDealt + bonus;
                     @event.AddBonusDamage(total);
-                    attacker.PrintToChat($"{ChatColors.Green}🔥 Critical grenade{ChatColors.Default} dealt {total} damage.");
+                    attacker.PrintToChat($" {ChatColors.Green}🔥 Critical grenade{ChatColors.Default} dealt {total} damage.");
                 }
             }
 
@@ -227,7 +227,7 @@ namespace WarcraftPlugin.Classes
                 {
                     int bonus = (damageDealt / 4) + (damageDealt / 2);
                     @event.AddBonusDamage(bonus);
-                    attacker.PrintToChat($"{ChatColors.Green}⚡ Critical hit{ChatColors.Default}! Dealt {bonus} bonus damage.");
+                    attacker.PrintToChat($" {ChatColors.Green}⚡ Critical hit{ChatColors.Default}! Dealt {bonus} bonus damage.");
                 }
             }
         }

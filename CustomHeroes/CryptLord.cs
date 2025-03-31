@@ -70,7 +70,7 @@ namespace WarcraftPlugin.Classes
                 if (roll < UltimateImmunityChance)
                 {
                     WarcraftPlayer.HasUltimateImmunity = true;
-                    Player.PrintToChat("\x04 Carrion Beetles\x01: You gained \x03ultimate immunity\x01 for this round.");
+                    Player.PrintToChat($" {ChatColors.Green} Carrion Beetles{ChatColors.Default}: You gained {ChatColors.LightPurple}ultimate immunity{ChatColors.Default} for this round.");
                 }
 
 
@@ -86,7 +86,7 @@ namespace WarcraftPlugin.Classes
 
             if (enemies.Count == 0)
             {
-                Player.PrintToCenter("⚠️ No valid enemies to target!");
+                Player.PrintToCenter($" {ChatColors.Red}⚠️ No valid enemies to target!");
                 return;
             }
 
@@ -95,8 +95,8 @@ namespace WarcraftPlugin.Classes
 
             if (wcTarget != null && wcTarget.HasUltimateImmunity)
             {
-                Player.PrintToCenter("\x02⛔\x01 Target is immune to ultimates!");
-                randomEnemy.PrintToCenter("\x04🛡️\x01 Your \x03Ultimate Immunity\x01 blocked the effect!");
+                Player.PrintToCenter($" {ChatColors.Red}⛔{ChatColors.Default} Target has {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
+                randomEnemy.PrintToCenter($" {ChatColors.Green}🛡️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} blocked the effect!");
                 return;
             }
 
@@ -113,8 +113,8 @@ namespace WarcraftPlugin.Classes
             Player.SetHp(currentHealth + 40);
 
             // Feedback
-            Player.PrintToChat($"\x04Locust Swarm\x01 : You drained 40 health from {randomEnemy.PlayerName}!");
-            randomEnemy.PrintToChat($" You were hit by {Player.PlayerName}'s \x03locust swarm\x01!");
+            Player.PrintToChat($" {ChatColors.Green}Locust Swarm{ChatColors.Default} : You drained 40 health from {randomEnemy.PlayerName}!");
+            randomEnemy.PrintToChat($" You were hit by {Player.PlayerName}'s {ChatColors.LightPurple}locust swarm{ChatColors.Default}!");
 
 
             StartCooldown(3); // Index 3 = Ultimate
@@ -136,7 +136,7 @@ namespace WarcraftPlugin.Classes
                 if (target == null || !target.IsValid || !target.IsAlive()) return;
 
                 SkillFunctions.ImpaleTarget(Player, target, 600f);
-                Player.PrintToChat($"\x04Impale\x01: You impaled {target.PlayerName}.");
+                Player.PrintToChat($" {ChatColors.Green}Impale{ChatColors.Default}: You impaled {target.PlayerName}.");
                 var targetloc = target.PlayerPawn.Value.AbsOrigin;
                 Warcraft.SpawnParticle(targetloc, "particles/ui/ammohealthcenter/ui_hud_kill_streaks_circle_flash.vpcf", 4f);
 

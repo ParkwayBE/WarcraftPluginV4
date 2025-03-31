@@ -46,7 +46,7 @@ namespace WarcraftPlugin.Classes
             {
                 BonusMovementSpeed(Player, speedMultiplier, duration);
                 SkillFunctions.SetPlayerGravity(Player, gravityPercent, duration);
-                Player.PrintToChat($"Your{ChatColors.LightPurple}gravity{ChatColors.Default} is now {gravityPercent} and gained {speedMultiplier} bonus {ChatColors.LightPurple}movement speed{ChatColors.Default}!");
+                Player.PrintToChat($" Your{ChatColors.LightPurple}gravity{ChatColors.Default} is now {gravityPercent} and gained {speedMultiplier} bonus {ChatColors.LightPurple}movement speed{ChatColors.Default}!");
 
             });
         }
@@ -83,7 +83,7 @@ namespace WarcraftPlugin.Classes
             float damage = 150f;
 
             SkillFunctions.ExplodeOnDeathSkill(Player, radius, damage);
-            Player.PrintToChat($"{ChatColors.Green}Suicide Bomber{ChatColors.Default} :You dealt {damage} damage around you!");
+            Player.PrintToChat($" {ChatColors.Green}Suicide Bomber{ChatColors.Default} :You dealt {damage} damage around you!");
         }
     }
 }

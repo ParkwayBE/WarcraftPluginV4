@@ -288,7 +288,7 @@ namespace WarcraftPlugin.Classes
             int newHealth = currentHealth + healAmount;
             killer.SetHp(newHealth);
 
-            Player.PrintToCenter($"{ChatColors.Green}Consume{ChatColors.Default} : {killer.PlayerName} healed for {healAmount} {ChatColors.LightPurple}health{ChatColors.Default}.");
+            Player.PrintToCenter($" {ChatColors.Green}Consume{ChatColors.Default} : {killer.PlayerName} healed for {healAmount} {ChatColors.LightPurple}health{ChatColors.Default}.");
 
             if (victim.PlayerPawn?.Value != null)
             {
@@ -361,7 +361,7 @@ namespace WarcraftPlugin.Classes
                 RemoveGrenades("weapon_smokegrenade");
 
                 //Start with 1 smoke
-                Owner.PrintToChat($"{ChatColors.Green} Smoke Supply{ChatColors.Default}: Granting initial smoke grenade.");
+                Owner.PrintToChat($" {ChatColors.Green} Smoke Supply{ChatColors.Default}: Granting initial smoke grenade.");
                 Owner.GiveNamedItem("weapon_smokegrenade");
                 smokesGiven = 1;
             }

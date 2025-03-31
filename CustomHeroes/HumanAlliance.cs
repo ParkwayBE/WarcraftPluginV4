@@ -88,8 +88,8 @@ namespace WarcraftPlugin.Classes
             int ChanceInPercent = 5 * abilityLevel;
             float duration = (6f * abilityLevel) / 10f;
             SkillFunctions.FreezePlayer(attacker, victim, ChanceInPercent, duration);
-            attacker.PrintToChat($"{ChatColors.Green} Bash{ChatColors.Default} : You froze {victim.PlayerName} for {duration} seconds.");
-            victim.PrintToCenter($"{ChatColors.Red} Bash{ChatColors.Default} : You were frozen by {attacker.PlayerName} for {duration} seconds.");
+            attacker.PrintToChat($" {ChatColors.Green} Bash{ChatColors.Default} : You froze {victim.PlayerName} for {duration} seconds.");
+            victim.PrintToCenter($" {ChatColors.Red} Bash{ChatColors.Default} : You were frozen by {attacker.PlayerName} for {duration} seconds.");
         }
 
         private void OnPlayerPing(EventPlayerPing ping)
