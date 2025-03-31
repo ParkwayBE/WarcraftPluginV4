@@ -44,8 +44,9 @@ namespace WarcraftPlugin.Classes
                 int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
                 if (abilityLevel < 1) return;
                 var bonushealth = abilityLevel * 15;
-                float bonusspeed = Math.Clamp(abilityLevel * 0.5f, 0f, 4.5f);
-                SkillFunctions.MovementSpeed(Player, bonusspeed, 999f);
+                SkillFunctions.MovementSpeed(Player, abilityLevel, 999f);
+                Player.PrintToChat($"[DEBUG] Sent multiplier: {abilityLevel} → Expected VelocityModifier = {1f + 0.1f * abilityLevel}x");
+
                 SkillFunctions.SetBonusHealth(Player, bonushealth);
                 Vector spawnPoint;
                 spawnPoint = Player.PlayerPawn.Value.AbsOrigin;
@@ -54,7 +55,6 @@ namespace WarcraftPlugin.Classes
                 new RGBColorCycleEffect(Player, 999f).Start();
 
                 var pawn = Player.PlayerPawn.Value;
-                Player.PrintToChat($"[DEBUG] VelocityModifier: {bonusspeed}");
                 Player.PrintToChat($"[DEBUG] Actual velocity: {pawn.VelocityModifier}");
             });
         }
@@ -119,23 +119,28 @@ namespace WarcraftPlugin.Classes
                 Vector endBase = target.PlayerPawn.Value.AbsOrigin;
                 endBase.Z += 35; // Waist height of collateral target
 
+
                 int numberOfBeams = 5;
                 float spread = 30f;
                 var rand = new Random();
 
-                for (int i = 0; i < numberOfBeams; i++)
-                {
-                    float offset = ((float)i - (numberOfBeams - 1) / 2f) * spread;
+                Vector beamStart = Player.PlayerPawn.Value.AbsOrigin + new Vector(0, 0, 5); // just above ground
 
+
+                for (int i = -1; i <= 1; i++)
+                {
+                    float xOffset = i * 10f;
+                    float yOffset = -Math.Abs(i * 5f); // inward curve for V shape
                     Vector beamEnd = new Vector(
-                        endBase.X + offset,
-                        endBase.Y + offset,
-                        endBase.Z + rand.Next(-6, 6)
+                        endBase.X + xOffset,
+                        endBase.Y + yOffset,
+                        endBase.Z + rand.Next(-10, 0) // target lower body
                     );
 
-                    Color beamColor = Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256));
-                    Warcraft.DrawLaserBetween(start, beamEnd, beamColor, duration: 0.3f, width: 0.5f);
+                    Color randomColor = Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256));
+                    Warcraft.DrawLaserBetween(beamStart, beamEnd, randomColor, duration: 1.5f, width: 2f);
                 }
+
 
                 // Apply half damage
                 int collateralDamage = (int)(damage * 0.5f);

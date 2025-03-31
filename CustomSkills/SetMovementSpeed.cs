@@ -1,5 +1,6 @@
 ﻿// File: CustomSkills/MovementSpeed.cs
 
+using System;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Core.Effects;
 
@@ -18,7 +19,11 @@ namespace WarcraftPlugin.CustomSkills
         public override void OnStart()
         {
             var pawn = Owner.PlayerPawn.Value;
-            pawn.VelocityModifier = 1f + 0.1f * _speedMultiplier;
+            pawn.VelocityModifier = 1.0f;
+
+            float speed = 1f + 0.1f * _speedMultiplier;
+            pawn.VelocityModifier = Math.Clamp(speed, 1f, 2f);
+
         }
 
         public override void OnFinish()
