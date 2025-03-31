@@ -33,9 +33,21 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventRoundEnd>(OnRoundEnd);
+            HookEvent<EventPlayerDisconnect>(OnPlayerDisconnect);
 
             HookAbility(3, Ultimate);
         }
+
+
+        private void OnPlayerDisconnect(EventPlayerDisconnect evt)
+        {
+            foreach (var timer in _immunityTimers.Values)
+            {
+                timer?.Kill();
+            }
+            _immunityTimers.Clear();
+        }
+
 
         private void OnRoundEnd(EventRoundEnd evt)
         {
@@ -49,6 +61,15 @@ namespace WarcraftPlugin.Classes
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
             UltimateToggle = false;
+
+            // Cancel and remove any existing immunity timer for this player
+            if (_immunityTimers.ContainsKey(Player))
+            {
+                _immunityTimers[Player].Kill();
+                _immunityTimers.Remove(Player);
+            }
+
+            // Reset immunity state on spawn
             WarcraftPlayer.HasUltimateImmunity = false;
 
             int level = WarcraftPlayer.GetAbilityLevel(2);
@@ -57,20 +78,13 @@ namespace WarcraftPlugin.Classes
             int chancePercent = 30 + (level * 10);
             int maxAllies = 2;
 
-            // Grant to self
+            // Roll for self immunity
             if (Warcraft.RollDice(chancePercent, 100))
             {
                 WarcraftPlayer.HasUltimateImmunity = true;
-                Player.PrintToChat("🛡️ Brilliance Aura: You gained Ultimate Immunity for 120 seconds!");
+                Player.PrintToChat("🛡️ Brilliance Aura: You gained Ultimate Immunity for 160 seconds!");
 
-                // Cancel old timer if one exists
-                if (_immunityTimers.ContainsKey(Player))
-                {
-                    _immunityTimers[Player].Kill();
-                    _immunityTimers.Remove(Player);
-                }
-
-                // Set new immunity timer
+                // Apply new immunity timer
                 var selfTimer = WarcraftPlugin.Instance.AddTimer(160f, () =>
                 {
                     if (Player.IsValid)
@@ -80,61 +94,44 @@ namespace WarcraftPlugin.Classes
                     }
                 });
                 _immunityTimers[Player] = selfTimer;
-
-                {
-                    if (Player.IsValid)
-                    {
-                        WarcraftPlayer.HasUltimateImmunity = false;
-                        Player.PrintToChat("⚠️ Your Ultimate Immunity has worn off.");
-                    }
-                }
-
             }
 
-            // Grant to up to 2 random teammates
+            // Grant to up to 2 teammates
             var teammates = Utilities.GetPlayers().Where(p =>
-                p != Player && p.IsValid && p.IsAlive() && p.TeamNum == Player.TeamNum).OrderBy(_ => Guid.NewGuid()).Take(maxAllies);
+                p != Player && p.IsValid && p.IsAlive() && p.TeamNum == Player.TeamNum)
+                .OrderBy(_ => Guid.NewGuid()).Take(maxAllies);
 
             foreach (var ally in teammates)
             {
-                if (Warcraft.RollDice(chancePercent, 100))
+                if (!Warcraft.RollDice(chancePercent, 100)) continue;
+
+                var wcAlly = ally.GetWarcraftPlayer();
+                if (wcAlly == null) continue;
+
+                // Kill old timer if exists
+                if (_immunityTimers.ContainsKey(ally))
                 {
-                    var wcAlly = ally.GetWarcraftPlayer();
-                    if (wcAlly != null)
-                    {
-                        wcAlly.HasUltimateImmunity = true;
-                        ally.PrintToChat("🛡️ Brilliance Aura: You received Ultimate Immunity for 120 seconds!");
-                        Player.PrintToChat($"✨ Brilliance Aura: {ally.PlayerName} gained immunity!");
-
-                        if (_immunityTimers.ContainsKey(ally))
-                        {
-                            _immunityTimers[ally].Kill();
-                            _immunityTimers.Remove(ally);
-                        }
-
-                        var allyTimer = WarcraftPlugin.Instance.AddTimer(160f, () =>
-                        {
-                            if (ally.IsValid)
-                            {
-                                wcAlly.HasUltimateImmunity = false;
-                                ally.PrintToChat("⚠️ Your Ultimate Immunity has worn off.");
-                            }
-                        });
-                        _immunityTimers[ally] = allyTimer;
-
-                        {
-                            if (ally.IsValid)
-                            {
-                                wcAlly.HasUltimateImmunity = false;
-                                ally.PrintToChat("⚠️ Your Ultimate Immunity has worn off.");
-                            }
-                        }
-
-                    }
+                    _immunityTimers[ally].Kill();
+                    _immunityTimers.Remove(ally);
                 }
-            }
 
+                wcAlly.HasUltimateImmunity = true;
+                ally.PrintToChat("🛡️ Brilliance Aura: You received Ultimate Immunity for 160 seconds!");
+                Player.PrintToChat($"✨ Brilliance Aura: {ally.PlayerName} gained immunity!");
+
+                // Apply new immunity timer
+                var allyTimer = WarcraftPlugin.Instance.AddTimer(160f, () =>
+                {
+                    if (ally.IsValid)
+                    {
+                        wcAlly.HasUltimateImmunity = false;
+                        ally.PrintToChat("⚠️ Your Ultimate Immunity has worn off.");
+                    }
+                });
+                _immunityTimers[ally] = allyTimer;
+            }
         }
+
         private static void SetMoveType(CCSPlayerPawn pawn, MoveType_t moveType)
         {
             if (pawn == null) return;
