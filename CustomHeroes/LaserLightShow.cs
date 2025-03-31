@@ -111,6 +111,31 @@ namespace WarcraftPlugin.Classes
                     laserColor
                 );
 
+                Vector start = Player.PlayerPawn.Value.AbsOrigin;
+                start.Z -= 10; // Slightly below the player
+
+                Vector targetBase = target.PlayerPawn.Value.AbsOrigin;
+                targetBase.Z += 40; // Hit around the waist or slightly below
+
+                Random rand = new Random();
+                int numberOfBeams = 5;
+                float spread = 30f; // How wide the V-shape spreads
+
+                for (int i = 0; i < numberOfBeams; i++)
+                {
+                    // Calculate horizontal offset to make the beams spread
+                    float offset = ((float)i - (numberOfBeams - 1) / 2f) * spread;
+
+                    Vector beamEnd = new Vector(
+                        targetBase.X + offset,
+                        targetBase.Y + offset,
+                        targetBase.Z + rand.Next(-5, 5) // small vertical variance
+                    );
+
+                    Color color = Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256));
+                    Warcraft.DrawLaserBetween(start, beamEnd, color, duration: 0.3f, width: 0.5f);
+                }
+
                 // Deal half damage
                 int collateralDamage = (int)(damage * 0.5f);
                 target.SetHp(target.PlayerPawn.Value.Health - collateralDamage);
