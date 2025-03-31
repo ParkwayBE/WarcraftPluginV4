@@ -44,17 +44,18 @@ namespace WarcraftPlugin.Classes
                 int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
                 if (abilityLevel < 1) return;
                 var bonushealth = abilityLevel * 15;
-                float bonusspeed = abilityLevel * 0.08f;
+                float bonusspeed = Math.Clamp(abilityLevel * 0.5f, 0f, 4.5f);
                 SkillFunctions.MovementSpeed(Player, bonusspeed, 999f);
                 SkillFunctions.SetBonusHealth(Player, bonushealth);
                 Vector spawnPoint;
                 spawnPoint = Player.PlayerPawn.Value.AbsOrigin;
-                Warcraft.SpawnParticle(spawnPoint, "particles/ui/status_levels/ui_status_level_7_energycirc.vpcf", 4f);
+                // Warcraft.SpawnParticle(spawnPoint, "particles/ui/status_levels/ui_status_level_7_energycirc.vpcf", 4f);
 
                 new RGBColorCycleEffect(Player, 999f).Start();
 
                 var pawn = Player.PlayerPawn.Value;
-                Player.PrintToChat($"[DEBUG] VelocityModifier: {pawn.VelocityModifier}");
+                Player.PrintToChat($"[DEBUG] VelocityModifier: {bonusspeed}");
+                Player.PrintToChat($"[DEBUG] Actual velocity: {pawn.VelocityModifier}");
             });
         }
 
@@ -81,7 +82,7 @@ namespace WarcraftPlugin.Classes
             float minDot = 0.90f;
 
             Vector victimPos = victim.PlayerPawn.Value.AbsOrigin;
-            Vector forward = attacker.PlayerPawn.Value.EyeAngles.ToForward();            // Using your helper
+            Vector forward = attacker.PlayerPawn.Value.EyeAngles.ToForward(); // Using your helper
 
             foreach (var target in Utilities.GetPlayers())
             {
@@ -93,13 +94,13 @@ namespace WarcraftPlugin.Classes
 
                 if (toTarget.Length() > maxDistance) continue;
 
-                Vector toTargetNorm = toTarget / toTarget.Length(); // Manual normalize
+                Vector toTargetNorm = toTarget / toTarget.Length(); // Normalize manually
 
                 float dot = Vector3.Dot(forward.ToVector3(), toTargetNorm.ToVector3());
                 if (dot < minDot) continue;
 
-                // Draw laser from victim to collateral target
-                var laserColor = Color.FromArgb(
+                // Beam from victim to collateral target (pierce line)
+                var pierceColor = Color.FromArgb(
                     Random.Shared.Next(100, 256),
                     Random.Shared.Next(100, 256),
                     Random.Shared.Next(100, 256)
@@ -108,17 +109,43 @@ namespace WarcraftPlugin.Classes
                 Warcraft.DrawLaserBetween(
                     Warcraft.EyePosition(victim, -10),
                     Warcraft.EyePosition(target, -10),
-                    laserColor
+                    pierceColor
                 );
 
-                // Deal half damage
+                // Now the V-shape effect (starts from attacker’s feet)
+                Vector start = attacker.PlayerPawn.Value.AbsOrigin;
+                start.Z -= 10; // From beneath attacker
+
+                Vector endBase = target.PlayerPawn.Value.AbsOrigin;
+                endBase.Z += 35; // Waist height of collateral target
+
+                int numberOfBeams = 5;
+                float spread = 30f;
+                var rand = new Random();
+
+                for (int i = 0; i < numberOfBeams; i++)
+                {
+                    float offset = ((float)i - (numberOfBeams - 1) / 2f) * spread;
+
+                    Vector beamEnd = new Vector(
+                        endBase.X + offset,
+                        endBase.Y + offset,
+                        endBase.Z + rand.Next(-6, 6)
+                    );
+
+                    Color beamColor = Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256));
+                    Warcraft.DrawLaserBetween(start, beamEnd, beamColor, duration: 0.3f, width: 0.5f);
+                }
+
+                // Apply half damage
                 int collateralDamage = (int)(damage * 0.5f);
                 target.SetHp(target.PlayerPawn.Value.Health - collateralDamage);
 
                 target.PrintToChat($" {ChatColors.Red}Module B{ChatColors.Default} You were hit through {victim.PlayerName}!");
-                Player.PrintToChat($" {ChatColors.Green}Module B{ChatColors.Default} : {target.PlayerName} was hit behind your target!");
+                Player.PrintToChat($" {ChatColors.Green}Module B{ChatColors.Default}: {target.PlayerName} was pierced for {collateralDamage} damage!");
             }
         }
+
 
 
         public class RGBColorCycleEffect : WarcraftEffect
