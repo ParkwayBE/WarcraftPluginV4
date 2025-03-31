@@ -433,7 +433,10 @@ namespace WarcraftPlugin.Menu
         internal static void SwitchMenu(CCSPlayerController player, bool moveRight)
         {
             if (player == null || !PlayerMenus.ContainsKey(player.Slot) || PlayerMenus[player.Slot].Count < 2)
+            {
+                Console.WriteLine("SwitchMenu: No menus available or player not found.");
                 return;
+            }
 
             List<Menu> menus = PlayerMenus[player.Slot];
 
@@ -445,7 +448,6 @@ namespace WarcraftPlugin.Menu
 
             PlayerMenuColumn[player.Slot] = column;
 
-            // Debugging line: print out the menu change
             Console.WriteLine($"Switching to menu at index {column} for player {player.Slot}");
 
             MenuAPI.Players[player.Slot].OpenMainMenu(menus[column]);
