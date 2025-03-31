@@ -1,7 +1,6 @@
 ﻿using System.Drawing;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Core.Effects;
-using CounterStrikeSharp.API.Modules.Entities;
 using WarcraftPlugin.Helpers;
 
 namespace WarcraftPlugin.CustomSkills
@@ -18,7 +17,6 @@ namespace WarcraftPlugin.CustomSkills
 
         public override void OnStart()
         {
-            _target.PrintToChat(" \x07[Freeze] You are frozen!");
             var pawn = _target.PlayerPawn.Value;
             pawn.SetColor(Color.Cyan);
 
@@ -30,7 +28,6 @@ namespace WarcraftPlugin.CustomSkills
         public override void OnFinish()
         {
             _target.PlayerPawn.Value.SetColor(Color.White);
-            _target.PrintToChat(" \x07[Freeze] You are no longer frozen.");
             _target.EnableMovement();
         }
 

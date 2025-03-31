@@ -103,6 +103,9 @@ namespace WarcraftPlugin.Classes
             {
                 var victim = @event.Userid;
                 new FreezeEffect(Player, 1.0f, victim).Start();
+                var attacker = @event.Attacker;
+                attacker.PrintToChat("\x04Ice Beam\x01 : You slowed an enemy down.");
+                victim.PrintToChat($"\x05Ice Beam\x01 : You got slowed by {attacker.PlayerName}.");
             }
         }
 
@@ -161,7 +164,7 @@ namespace WarcraftPlugin.Classes
     {
         public override void OnStart()
         {
-            target.PrintToChat(" " + Localizer["mage.frozen"]);
+            target.PrintToCenter(" " + Localizer["mage.frozen"]);
             var targetPlayerModel = target.PlayerPawn.Value;
 
             targetPlayerModel.VelocityModifier = targetPlayerModel.VelocityModifier / 2;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Models;
@@ -55,7 +56,7 @@ namespace WarcraftPlugin.Classes
                 BonusHealth(Player, DevotionAura);
                 Invisibility(Player, 999f, alpha);
                 Console.WriteLine($"[Invisibility] Level {abilityLevel} → alpha: {alpha}");
-
+                Player.PrintToChat($"You became partially {ChatColors.LightPurple}invisible{ChatColors.Default} and gained{ChatColors.LightPurple} {DevotionAura} health{ChatColors.Default}.");
 
 
                 WarcraftPlayer.HasUltimateImmunity = true;
@@ -87,6 +88,8 @@ namespace WarcraftPlugin.Classes
             int ChanceInPercent = 5 * abilityLevel;
             float duration = (6f * abilityLevel) / 10f;
             SkillFunctions.FreezePlayer(attacker, victim, ChanceInPercent, duration);
+            attacker.PrintToChat($"{ChatColors.Green} Bash{ChatColors.Default} : You froze {victim.PlayerName} for {duration} seconds.");
+            victim.PrintToCenter($"{ChatColors.Red} Bash{ChatColors.Default} : You were frozen by {attacker.PlayerName} for {duration} seconds.");
         }
 
         private void OnPlayerPing(EventPlayerPing ping)

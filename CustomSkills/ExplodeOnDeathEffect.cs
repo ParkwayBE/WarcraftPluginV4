@@ -33,8 +33,6 @@ namespace WarcraftPlugin.CustomSkills
                 attacker: Owner,
                 killFeedIcon: KillFeedIcon.prop_exploding_barrel
             );
-
-            Owner.PrintToChat("\u2620\ufe0f You exploded!");
         }
 
         public override void OnTick() { }

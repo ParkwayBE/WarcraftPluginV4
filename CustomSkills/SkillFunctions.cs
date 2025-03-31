@@ -42,7 +42,6 @@ namespace WarcraftPlugin.CustomSkills
             if (Warcraft.RollDice(100, chancePercent)) // simple roll: 1 in `chance`
             {
                 int roll = new Random().Next(1, 101);
-                Console.WriteLine($"[Freeze] Rolled: {roll} vs Chance: {chancePercent}");
 
                 if (roll <= chancePercent)
                 {
@@ -108,18 +107,13 @@ namespace WarcraftPlugin.CustomSkills
             victim.PrintToCenter($"⚡ You were hit by {attacker.PlayerName}'s Chain Lightning!");
         }
 
-        public static void ImpaleTarget(CCSPlayerController attacker, CCSPlayerController victim, float force = 500f)
+        public static void ImpaleTarget(CCSPlayerController attacker, CCSPlayerController victim, float force = 300f)
         {
             if (victim == null || !victim.IsValid || victim.PlayerPawn?.Value == null) return;
 
-            // Apply vertical force (upwards)
             var launchVelocity = new Vector(0, 0, force);
             victim.PlayerPawn.Value.Teleport(null, null, launchVelocity);
 
-            // Feedback
-            attacker.PrintToCenter($"⛏️ You impaled {victim.PlayerName}!");
-            victim.PrintToCenter($"⛏️ You were impaled by {attacker.PlayerName}!");
-            Console.WriteLine($"[Impale] {attacker.PlayerName} impaled {victim.PlayerName} with {force} force.");
         }
 
 

@@ -18,7 +18,6 @@ namespace WarcraftPlugin.CustomSkills
 
         public override void OnStart()
         {
-            _target.PrintToChat(" \x07[Freeze] You are slowed!");
             var victimPawn = _target.PlayerPawn.Value;
 
             // Half their speed
@@ -32,7 +31,6 @@ namespace WarcraftPlugin.CustomSkills
         {
             _target.PlayerPawn.Value.SetColor(Color.White);
             _target.PlayerPawn.Value.VelocityModifier = _originalSpeed;
-            _target.PrintToChat(" \x07[Freeze] You are no longer slowed.");
         }
 
         public override void OnTick()

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Models;
@@ -29,23 +30,23 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            int level = WarcraftPlayer.GetAbilityLevel(1); // Assuming slot 0 is the gravity ability
+            int level = WarcraftPlayer.GetAbilityLevel(1);
             if (level <= 0) return;
 
-            float gravityPercent = 100f - (level * 10f); // 90% to 50%
-            float duration = 999f; // untill death/round end/disconnect
+            float gravityPercent = 100f - (level * 10f);
+            float duration = 999f;
 
 
-            int level2 = WarcraftPlayer.GetAbilityLevel(2); // Or the correct slot for this skill
+            int level2 = WarcraftPlayer.GetAbilityLevel(2);
             if (level <= 0) return;
-            float speedMultiplier = level2; // 1 = +10%, 5 = +50%
+            float speedMultiplier = level2;
 
 
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
                 BonusMovementSpeed(Player, speedMultiplier, duration);
                 SkillFunctions.SetPlayerGravity(Player, gravityPercent, duration);
-                Player.PrintToChat($"Your gravity is now {gravityPercent} and gained {speedMultiplier} bonus movement speed!");
+                Player.PrintToChat($"Your{ChatColors.LightPurple}gravity{ChatColors.Default} is now {gravityPercent} and gained {speedMultiplier} bonus {ChatColors.LightPurple}movement speed{ChatColors.Default}!");
 
             });
         }
@@ -82,7 +83,7 @@ namespace WarcraftPlugin.Classes
             float damage = 150f;
 
             SkillFunctions.ExplodeOnDeathSkill(Player, radius, damage);
-            Player.PrintToChat($"You dealt {damage} damage around you!");
+            Player.PrintToChat($"{ChatColors.Green}Suicide Bomber{ChatColors.Default} :You dealt {damage} damage around you!");
         }
     }
 }

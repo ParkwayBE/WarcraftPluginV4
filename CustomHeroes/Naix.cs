@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
-using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Core.Effects;
-using WarcraftPlugin.Models;
 using WarcraftPlugin.Events.ExtendedEvents;
+using WarcraftPlugin.Helpers;
+using WarcraftPlugin.Models;
 
 namespace WarcraftPlugin.Classes
 {
@@ -51,7 +51,8 @@ namespace WarcraftPlugin.Classes
 
             if (WarcraftPlayer.GetAbilityLevel(2) > 0)
             {
-                WarcraftPlugin.Instance.AddTimer(0.2f, () => {
+                WarcraftPlugin.Instance.AddTimer(0.2f, () =>
+                {
                     if (WarcraftPlayer.GetAbilityLevel(2) > 0)
                     {
                         var pawn = Player.PlayerPawn.Value;
@@ -120,8 +121,6 @@ namespace WarcraftPlugin.Classes
 
         private void SmokegrenadeDetonate(EventSmokegrenadeDetonate detonate)
         {
-            Console.WriteLine("[DEBUG] SmokeDetonate triggered!");
-
             if (detonate.Userid == null || !detonate.Userid.IsValid)
             {
                 Console.WriteLine("[ERROR] SmokeDetonate event triggered, but Userid is NULL or invalid!");
@@ -262,7 +261,6 @@ namespace WarcraftPlugin.Classes
 
             if (killer != Player)
             {
-                Console.WriteLine($"[INFO] {killer.PlayerName} is not Naix. Ignoring kill event.");
                 return;
             }
 
@@ -280,11 +278,8 @@ namespace WarcraftPlugin.Classes
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
             if (abilityLevel < 1)
             {
-                Console.WriteLine($"[INFO] {killer.PlayerName} does not have Consume unlocked. Aborting.");
                 return;
             }
-            Console.WriteLine($"[DEBUG] {killer.PlayerName} has Consume at Level {abilityLevel}.");
-            Console.WriteLine($"[DEBUG] Current Health: {killer.Health}");
             Console.WriteLine($"[DEBUG] Heal Amount: {abilityLevel} * 7 = {abilityLevel * 7}");
 
             int currentHealth = killer.PlayerPawn.Value.Health;
@@ -293,7 +288,7 @@ namespace WarcraftPlugin.Classes
             int newHealth = currentHealth + healAmount;
             killer.SetHp(newHealth);
 
-            Player.PrintToCenter($"[INFO] {killer.PlayerName} healed for {healAmount} HP (new total: {newHealth}).");
+            Player.PrintToCenter($"{ChatColors.Green}Consume{ChatColors.Default} : {killer.PlayerName} healed for {healAmount} {ChatColors.LightPurple}health{ChatColors.Default}.");
 
             if (victim.PlayerPawn?.Value != null)
             {
@@ -333,7 +328,6 @@ namespace WarcraftPlugin.Classes
                 }
             });
 
-            Console.WriteLine($"[SUCCESS] {killer.PlayerName} successfully used Consume on {victim.PlayerName}!");
         }
 
         internal class SmokeSupplyEffect(CCSPlayerController owner) : WarcraftEffect(owner)
@@ -344,39 +338,32 @@ namespace WarcraftPlugin.Classes
 
             public override void OnStart()
             {
-                Console.WriteLine("[DEBUG] SmokeSupplyEffect OnStart() triggered.");
 
                 if (Owner == null || Owner.PlayerPawn?.Value == null)
                 {
-                    Console.WriteLine("[ERROR] SmokeSupplyEffect started but Owner is NULL! Aborting.");
                     return;
                 }
 
                 WarcraftPlayer = Owner.GetWarcraftPlayer();
                 if (WarcraftPlayer == null)
                 {
-                    Console.WriteLine("[ERROR] Failed to retrieve WarcraftPlayer.");
                     return;
                 }
 
                 maxSmokes = WarcraftPlayer.GetAbilityLevel(0);
-                Console.WriteLine($"[DEBUG] Retrieved ability level: {maxSmokes}");
 
                 if (maxSmokes < 1)
                 {
-                    Console.WriteLine("[INFO] Player has no Smoke Supply ability, skipping smoke grenade assignment.");
                     return;
                 }
 
-                Console.WriteLine($"[INFO] Smoke Supply Effect Activated - Ability Level: {maxSmokes}");
 
-                // Remove existing smokes to prevent unintended stacking
                 RemoveGrenades("weapon_smokegrenade");
 
                 //Start with 1 smoke
-                Console.WriteLine("[INFO] Granting initial smoke grenade.");
+                Owner.PrintToChat($"{ChatColors.Green} Smoke Supply{ChatColors.Default}: Granting initial smoke grenade.");
                 Owner.GiveNamedItem("weapon_smokegrenade");
-                smokesGiven = 1; 
+                smokesGiven = 1;
             }
 
             public void GiveSmokeIfNeeded()
@@ -386,8 +373,6 @@ namespace WarcraftPlugin.Classes
                     Console.WriteLine($"[INFO] {Owner.PlayerName} has already received the max number of smokes ({maxSmokes}).");
                     return;
                 }
-
-                Console.WriteLine($"[INFO] {Owner.PlayerName} has no smokes. Giving another one.");
                 Owner.GiveNamedItem("weapon_smokegrenade");
                 smokesGiven++;
             }
@@ -420,19 +405,16 @@ namespace WarcraftPlugin.Classes
         {
             if (WarcraftPlayer.GetAbilityLevel(3) < 1 || !IsAbilityReady(3))
             {
-                Console.WriteLine("[INFO] Ultimate cannot be used (ability level too low or on cooldown).");
                 return;
             }
 
             if (!canUseUltimate)
             {
-                Console.WriteLine("[INFO] Ultimate is on cooldown!");
                 return;
             }
 
             if (!lastSmokePositions.TryGetValue(Player.SteamID, out Vector lastSmokePosition))
             {
-                Console.WriteLine("[ERROR] No stored smoke grenade position for this player! Aborting ultimate.");
                 return;
             }
 
@@ -440,13 +422,12 @@ namespace WarcraftPlugin.Classes
 
             if (explosionPosition == null)
             {
-                Console.WriteLine("[ERROR] Explosion position is NULL! Aborting.");
                 return;
             }
 
             Warcraft.SpawnExplosion(
                 pos: explosionPosition,
-                damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f), 
+                damage: 50f + (WarcraftPlayer.GetAbilityLevel(3) * 10f),
                 radius: 350f, // Tweak for explosion radius
                 attacker: Player,
                 killFeedIcon: KillFeedIcon.prop_exploding_barrel

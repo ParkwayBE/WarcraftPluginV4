@@ -1,27 +1,9 @@
-﻿using CounterStrikeSharp.API.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using WarcraftPlugin.Models;
-
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
-using CounterStrikeSharp.API.Modules.Memory;
-using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
-using System.Drawing;
-using WarcraftPlugin.Core.Effects;
-using System.Collections.Generic;
-using WarcraftPlugin.Events.ExtendedEvents;
-using System;
-using System.Reflection;
-using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
-using WarcraftPlugin.Core;
 using WarcraftPlugin.Summons;
-using static g3.RoundRectGenerator;
-using CounterStrikeSharp.API.Modules.Entities;
 
 
 namespace WarcraftPlugin.Classes
@@ -55,12 +37,11 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            if(footBaller != null)
+            if (footBaller != null)
             {
                 footBaller = null;
             }
             footballsRemaining = 10;
-            Player.PrintToChat("you have 3 footballs");
             footBaller = new FootBaller(Player, 20);
             canUseUlt = true;
         }

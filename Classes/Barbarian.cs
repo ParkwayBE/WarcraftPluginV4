@@ -65,9 +65,10 @@ namespace WarcraftPlugin.Classes
             {
                 if (WarcraftPlayer.GetAbilityLevel(1) > 0)
                 {
-                    Player.SetHp(100 + WarcraftPlayer.GetAbilityLevel(1) * _battleHardenedHealthMultiplier);
+                    var bonusHealth = WarcraftPlayer.GetAbilityLevel(1) * _battleHardenedHealthMultiplier;
+                    Player.SetHp(100 + bonusHealth);
                     Player.PlayerPawn.Value.MaxHealth = Player.PlayerPawn.Value.Health;
-
+                    Player.PrintToChat($"\x04 Battle Hardened\x01 : You gained {bonusHealth} .");
                 }
                 ResetCooldowns();
             });
@@ -92,6 +93,7 @@ namespace WarcraftPlugin.Classes
                 var victim = @event.Userid;
                 @event.AddBonusDamage(carnageLevel * 5);
                 Warcraft.SpawnParticle(victim.PlayerPawn.Value.AbsOrigin.With(z: victim.PlayerPawn.Value.AbsOrigin.Z + 60), "particles/blood_impact/blood_impact_basic.vpcf");
+                Player.PrintToChat($"\x04 Carnage\x01 : You dealt {carnageLevel * 5} additional damage with a shotgun.");
                 Player.PlayLocalSound("sounds/physics/body/body_medium_break3.vsnd");
             }
         }
@@ -187,6 +189,7 @@ namespace WarcraftPlugin.Classes
             pawn.SetColor(Color.White);
             pawn.VelocityModifier = 1f;
             pawn.SetScale(1);
+            Owner.PrintToChat("\x04 Bloodlust\x01 : Has ended.");
         }
     }
 }

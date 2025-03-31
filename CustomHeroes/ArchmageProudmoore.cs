@@ -5,6 +5,7 @@ using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
+using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
@@ -25,7 +26,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Blizzard", "Chance to slow your target and obscure his vision ."),
             new WarcraftAbility("Water Elemental", "When you kill a player you have a chance to revive a teammate as a Water Elemental."),
             new WarcraftAbility("Brilliance Aura", "You and up to two random allies have a chance to block some ultimates."),
-            new WarcraftCooldownAbility("Flight","Conjure a spell that allows you to fly.", 1f, false)
+            new WarcraftCooldownAbility("Flight","Conjure a spell that allows you to fly.", 2f, false)
         ];
 
         public override void Register()
@@ -82,7 +83,7 @@ namespace WarcraftPlugin.Classes
             if (Warcraft.RollDice(chancePercent, 100))
             {
                 WarcraftPlayer.HasUltimateImmunity = true;
-                Player.PrintToChat("\x04🛡️ Brilliance Aura\x01: You gained \x03Ultimate Immunity\x01!");
+                Player.PrintToChat($"{ChatColors.Green}✨ Brilliance Aura {ChatColors.Default}: You gained {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
 
                 // Apply new immunity timer
                 var selfTimer = WarcraftPlugin.Instance.AddTimer(160f, () =>
@@ -90,7 +91,7 @@ namespace WarcraftPlugin.Classes
                     if (Player.IsValid)
                     {
                         WarcraftPlayer.HasUltimateImmunity = false;
-                        Player.PrintToChat("\x04⚠️\x01 Your \x03Ultimate Immunity\x01 has worn off.");
+                        Player.PrintToChat($"{ChatColors.Green}⚠️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} has worn off.");
                     }
                 });
                 _immunityTimers[Player] = selfTimer;
@@ -116,8 +117,8 @@ namespace WarcraftPlugin.Classes
                 }
 
                 wcAlly.HasUltimateImmunity = true;
-                ally.PrintToChat("\x04🛡️ Brilliance Aura\x01: You received \x03Ultimate Immunity\x01!");
-                Player.PrintToChat($" \x04✨ Brilliance Aura\x01: {ally.PlayerName} gained \x03Ultimate Immunity\x01!");
+                ally.PrintToChat($"{ChatColors.Blue}🛡️ Brilliance Aura{ChatColors.Default}: You received {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
+                Player.PrintToChat($" {ChatColors.Green}✨ Brilliance Aura{ChatColors.Default}: {ally.PlayerName} gained {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
 
                 // Apply new immunity timer
                 var allyTimer = WarcraftPlugin.Instance.AddTimer(160f, () =>
@@ -125,7 +126,7 @@ namespace WarcraftPlugin.Classes
                     if (ally.IsValid)
                     {
                         wcAlly.HasUltimateImmunity = false;
-                        ally.PrintToChat("\x04⚠️ \x01Your \x03Ultimate Immunity\x01 has worn off.");
+                        ally.PrintToChat($"{ChatColors.Blue}⚠️ {ChatColors.Default}Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} has worn off.");
                     }
                 });
                 _immunityTimers[ally] = allyTimer;
@@ -199,7 +200,7 @@ namespace WarcraftPlugin.Classes
             revived.GiveNamedItem("weapon_knife");
             revived.PlayerPawn.Value.SetColor(Color.Blue);
 
-            Player.PrintToChat($"\x04🧊 Water Elemental\x01: You revived {revived.PlayerName} with {bonusHp} HP!");
+            Player.PrintToChat($"{ChatColors.Green}🧊 Water Elemental{ChatColors.Default}: You revived {revived.PlayerName} with {bonusHp} HP!");
 
             WarcraftPlugin.Instance.AddTimer(0.2f, () =>
             {
@@ -208,7 +209,7 @@ namespace WarcraftPlugin.Classes
                     revived.PlayerPawn.Value.Teleport(deathPosition, null, null);
                     var allowedWeapons = new List<string> { "weapon_knife" };
                     SkillFunctions.RestrictWeapons(revived, allowedWeapons, 30f);
-                    revived.PrintToCenter("\x04🧊 Water Elemental\x01 You were summoned at the site of death!");
+                    revived.PrintToCenter($"{ChatColors.Blue}🧊 Water Elemental{ChatColors.Default} You were summoned by {attacker.PlayerName}!");
                 }
             });
         }

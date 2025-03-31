@@ -17,7 +17,6 @@ namespace WarcraftPlugin.CustomSkills
 
         public override void OnStart()
         {
-            Owner.PrintToChat($"[MS] Speed set to {_speedMultiplier}x for {Duration}s");
             var pawn = Owner.PlayerPawn.Value;
             pawn.VelocityModifier = 1f + 0.1f * _speedMultiplier;
         }
@@ -25,7 +24,6 @@ namespace WarcraftPlugin.CustomSkills
         public override void OnFinish()
         {
             Owner.PlayerPawn.Value.VelocityModifier = 1.0f;
-            Owner.PrintToChat("[MS] Speed returned to normal.");
         }
 
         public override void OnTick()

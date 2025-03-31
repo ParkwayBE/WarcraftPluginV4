@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
@@ -69,7 +70,7 @@ namespace WarcraftPlugin.Classes
                 if (roll < UltimateImmunityChance)
                 {
                     WarcraftPlayer.HasUltimateImmunity = true;
-                    Player.PrintToChat("You gained ultimate immunity for this round.");
+                    Player.PrintToChat("\x04 Carrion Beetles\x01: You gained \x03ultimate immunity\x01 for this round.");
                 }
 
 
@@ -94,8 +95,8 @@ namespace WarcraftPlugin.Classes
 
             if (wcTarget != null && wcTarget.HasUltimateImmunity)
             {
-                Player.PrintToCenter("⛔ Target is immune to ultimates!");
-                randomEnemy.PrintToCenter("🛡️ Your Ultimate Immunity blocked the effect!");
+                Player.PrintToCenter("\x02⛔\x01 Target is immune to ultimates!");
+                randomEnemy.PrintToCenter("\x04🛡️\x01 Your \x03Ultimate Immunity\x01 blocked the effect!");
                 return;
             }
 
@@ -112,8 +113,8 @@ namespace WarcraftPlugin.Classes
             Player.SetHp(currentHealth + 40);
 
             // Feedback
-            Player.PrintToCenter($"💉 You drained 40 health from {randomEnemy.PlayerName}!");
-            randomEnemy.PrintToCenter($" You were hit by {Player.PlayerName}'s ultimate!");
+            Player.PrintToChat($"\x04Locust Swarm\x01 : You drained 40 health from {randomEnemy.PlayerName}!");
+            randomEnemy.PrintToChat($" You were hit by {Player.PlayerName}'s \x03locust swarm\x01!");
 
 
             StartCooldown(3); // Index 3 = Ultimate
@@ -135,7 +136,7 @@ namespace WarcraftPlugin.Classes
                 if (target == null || !target.IsValid || !target.IsAlive()) return;
 
                 SkillFunctions.ImpaleTarget(Player, target, 600f);
-                Player.PrintToChat("You impaled an enemy.");
+                Player.PrintToChat($"\x04Impale\x01: You impaled {target.PlayerName}.");
                 var targetloc = target.PlayerPawn.Value.AbsOrigin;
                 Warcraft.SpawnParticle(targetloc, "particles/ui/ammohealthcenter/ui_hud_kill_streaks_circle_flash.vpcf", 4f);
 
@@ -182,10 +183,8 @@ namespace WarcraftPlugin.Classes
             SkillFunctions.DealRawDamage(Player, attacker, reflectDamage);
 
 
-            attacker.PrintToCenter($"☠️ You took {reflectDamage} reflected damage from Spiked Carapace!");
-            Player.PrintToCenter($"🛡️ Spiked Carapace reflected {reflectDamage} damage to {attacker.PlayerName}.");
+            attacker.PrintToCenter($"{ChatColors.Red}☠️ Spiked Carapace{ChatColors.Default} :You took {reflectDamage} reflected damage for using your {ChatColors.Red}knife{ChatColors.Default}!");
+            Player.PrintToCenter($"{ChatColors.Green}🛡️ Spiked Carapace{ChatColors.Default} : reflected {reflectDamage} damage to {attacker.PlayerName}.");
         }
-
-
     }
 }

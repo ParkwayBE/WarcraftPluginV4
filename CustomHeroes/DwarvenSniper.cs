@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -178,7 +179,7 @@ namespace WarcraftPlugin.Classes
                     // Apply impale effect
                     attacker.PlayerPawn.Value.Teleport(null, null, new Vector(0, 0, 500));
                     Warcraft.SpawnParticle(attacker.PlayerPawn.Value.AbsOrigin.With(z: attacker.PlayerPawn.Value.AbsOrigin.Z + 60), "particles/ui/status_levels/ui_status_level__gen_glow.vpcf");
-                    attacker.PrintToChat(" \x04Ring Of Power\x01: Dwarven Sniper \x03impaled\x01 you!");
+                    attacker.PrintToChat($" {ChatColors.Red}Ring Of Power{ChatColors.Default}: Dwarven Sniper {ChatColors.LightPurple}impaled{ChatColors.Default} you!");
 
                     impaleTriggeredPlayers.Add(attacker);
                 }
@@ -200,7 +201,7 @@ namespace WarcraftPlugin.Classes
             if (roll < evasionChance)
             {
                 @event.IgnoreDamage();
-                Player.PrintToChat("You evaded a hit.");
+                Player.PrintToChat($"{ChatColors.Default}Dwarven Genes{ChatColors.Default} : You evaded a hit.");
             }
         }
 
@@ -209,13 +210,13 @@ namespace WarcraftPlugin.Classes
             if (Player == null) return;
             evasionMultiplier = 2.0f;
             hasUsedUltimate = true;
-            Player.PrintToCenter(" \x04Ring Of Power\x01: Your\x03 evasion\x01 has been doubled for 7 seconds!");
+            Player.PrintToCenter($" {ChatColors.Green}Ring Of Power{ChatColors.Default}: Your{ChatColors.LightPurple} evasion{ChatColors.Default} has been doubled for 7 seconds!");
 
             WarcraftPlugin.Instance.AddTimer(7.0f, () =>
             {
                 if (Player == null) return;
                 evasionMultiplier = 1.0f;
-                Player.PrintToCenter(" \x04Ring Of Power\x01: Your \x03 evasion\x01 boost has ended.");
+                Player.PrintToCenter($" {ChatColors.Green}Ring Of Power{ChatColors.Default}: Your {ChatColors.LightPurple} evasion{ChatColors.Default} boost has ended.");
             });
 
             ActivateImpaleUltimate();

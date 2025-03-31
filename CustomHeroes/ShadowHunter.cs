@@ -22,8 +22,7 @@ namespace WarcraftPlugin.Classes
         private readonly List<CCSPlayerController> _slowedPlayers = new();
         private readonly List<SerpentWardEffect> activeWards = new();
         private bool _ultimateActive = false;
-
-
+        private readonly Dictionary<CCSPlayerController, float> _hexCooldowns = new();
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -46,17 +45,16 @@ namespace WarcraftPlugin.Classes
 
         private void RoundStart(EventRoundStart @event)
         {
-            int abilityLevel = WarcraftPlayer.GetAbilityLevel(0); // Healing Wave
+            int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
             if (abilityLevel <= 0) return;
 
             int bonusHealth = 6 * abilityLevel;
 
-            // Heal self
             if (Player.IsAlive())
             {
                 int newHp = Player.PlayerPawn.Value.Health + bonusHealth;
                 Player.SetHp(newHp);
-                Player.PrintToChat($" \x04[Healing Wave] You gained {bonusHealth} bonus HP from a Shadow Hunter.");
+                Player.PrintToChat($" {ChatColors.Green}Healing Wave{ChatColors.Default} : You gained {bonusHealth} bonus {ChatColors.LightPurple}health{ChatColors.Default}.");
             }
 
             if (WarcraftPlayer.GetAbilityLevel(2) > 0)
@@ -65,16 +63,13 @@ namespace WarcraftPlugin.Classes
                 decoy.AttributeManager.Item.CustomName = Localizer["ShadowHunter.ability.2"];
             }
 
-            // Heal teammates
             foreach (var teammate in Utilities.GetPlayers().Where(p => p.IsValid && p.TeamNum == Player.TeamNum && p != Player))
             {
                 if (!teammate.IsAlive()) continue;
 
                 int newHp = teammate.PlayerPawn.Value.Health + bonusHealth;
                 teammate.SetHp(newHp);
-                teammate.PrintToChat($" \x04[Healing Wave] {Player.PlayerName} healed you for {bonusHealth} HP!");
-
-
+                teammate.PrintToChat($" {ChatColors.Green}Healing Wave{ChatColors.Default} : {Player.PlayerName} healed you for {bonusHealth} {ChatColors.LightPurple}health {ChatColors.Default}!");
             }
 
             if (Player?.PlayerPawn?.Value == null) return;
@@ -93,7 +88,7 @@ namespace WarcraftPlugin.Classes
             ward.Start();
             activeWards.Add(ward);
 
-            Player.PrintToChat("\x04[Serpent Ward] Ward placed!");
+            Player.PrintToChat($"{ChatColors.Green}Serpent Ward{ChatColors.Default} : Ward placed!");
         }
 
         private void OnRoundEnd(EventRoundEnd @event)
@@ -118,6 +113,7 @@ namespace WarcraftPlugin.Classes
             private readonly List<CBeam> _beams = new();
             private int _rotationStep = 0;
             private readonly int _beamCount = 4; // Number of beams around the ward
+
 
             public SerpentWardEffect(CCSPlayerController owner, Vector origin)
                 : base(owner, duration: float.MaxValue, destroyOnDeath: false, destroyOnRoundEnd: true)
@@ -197,13 +193,9 @@ namespace WarcraftPlugin.Classes
 
                     beam.DispatchSpawn();
 
-
-
-                    // Let each beam stay alive long enough to overlap with the next
                     WarcraftPlugin.Instance.AddTimer(1.0f, () => beam.RemoveIfValid());
                 }
 
-                // Rotate slowly
                 _rotationAngle += 0.2f;
             }
 
@@ -228,7 +220,7 @@ namespace WarcraftPlugin.Classes
                     float distanceSq = dx * dx + dy * dy + dz * dz;
                     if (distanceSq <= _radius * _radius)
                     {
-                        player.EmitSound("common/talk.vsnd");
+                        player.EmitSound("talk.vsnd");
                         int hp = player.PlayerPawn.Value.Health;
                         if (hp <= _damage)
                         {
@@ -255,12 +247,6 @@ namespace WarcraftPlugin.Classes
             public override void OnTick() { }
         }
 
-
-
-
-
-
-
         private void Ultimate()
         {
             if (WarcraftPlayer.GetAbilityLevel(3) <= 0)
@@ -268,7 +254,6 @@ namespace WarcraftPlugin.Classes
 
             if (_ultimateActive)
             {
-                Player.PrintToChat(" \x07[Big Bad Voodoo] You're already invincible!");
                 return;
             }
 
@@ -276,49 +261,60 @@ namespace WarcraftPlugin.Classes
 
             _godModeActive = true;
             _ultimateActive = true;
+            Player.PlayerPawn.Value.SetColor(Color.IndianRed);
 
-            Player.PrintToChat($" \x07[Big Bad Voodoo] \x02You are invincible for {duration:F1} seconds!");
+            Player.PrintToChat($" {ChatColors.Green} Big Bad Voodoo {ChatColors.Default}:You are invincible for {duration} seconds!");
 
             WarcraftPlugin.Instance.AddTimer(duration, () =>
             {
                 _godModeActive = false;
                 _ultimateActive = false;
-                Player.PrintToChat(" \x07[Big Bad Voodoo] \x02Your invincibility has ended.");
+                Player.PrintToChat($" {ChatColors.Green} Big Bad Voodoo {ChatColors.Default}: Your invincibility has ended.");
+                Player.PlayLocalSound("sounds/weapons/hkp2000/hkp2000_sliderelease.vsnd");
+                Player.PlayerPawn.Value.SetColor(Color.White);
             });
 
             StartCooldown(3);
         }
-
-
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
             if (abilityLevel <= 0) return;
 
-            int chancePercent = (int)(5 + (abilityLevel * 5));
+            int chancePercent = 5 + (abilityLevel * 5);
             if (!Warcraft.RollDice(chancePercent, 100))
                 return;
 
             var target = @event.Userid;
-            if (!target.IsValid || !target.IsAlive()) return;
-
-            if (Player.TeamNum == target.TeamNum)
+            if (!target.IsValid || !target.IsAlive() || Player.TeamNum == target.TeamNum)
                 return;
+
+            // Prevent multiple triggers on the same target
+            float cooldownDuration = 2.0f;
+            float currentTime = Server.CurrentTime;
+
+            if (_hexCooldowns.TryGetValue(target, out float lastHexTime))
+            {
+                if (currentTime - lastHexTime < cooldownDuration)
+                    return;
+            }
+
+            _hexCooldowns[target] = currentTime;
 
             // Remove buffs
             target.PlayerPawn.Value.VelocityModifier = 1f;
             if (target.PlayerPawn.Value.Health > 100)
             {
                 target.SetHp(99);
-                Player.PrintToChat("You set his hp to 99");
             }
 
             target.PlayerPawn.Value.SetColor(Color.White);
 
-            target.PrintToChat($" \x07[Hexed] Your buffs have been removed by {Player.PlayerName}!");
-            Player.PrintToChat(" \x04[Hex] Successfully removed buffs from your target.");
+            target.PrintToChat($" {ChatColors.Red}Hex{ChatColors.Default}: Your buffs have been removed by {Player.PlayerName}!");
+            Player.PrintToChat($" {ChatColors.Green}Hex{ChatColors.Default}: Successfully removed buffs from {target.PlayerName}.");
         }
+
 
 
         private void PlayerHurt(EventPlayerHurt @event)
@@ -328,7 +324,6 @@ namespace WarcraftPlugin.Classes
             if (_godModeActive)
             {
                 @event.IgnoreDamage();
-                Player.PrintToChat(" \x07[GodMode] Damage blocked!");
             }
         }
     }
