@@ -8,7 +8,7 @@ using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
-
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace WarcraftPlugin.Classes
 {
@@ -23,7 +23,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Blizzard", "Chance to slow your target and obscure his vision ."),
             new WarcraftAbility("Water Elemental", "When you kill a player you have a chance to revive a teammate as a Water Elemental."),
             new WarcraftAbility("Brilliance Aura", "You and up to two random allies have a chance to block some ultimates."),
-            new WarcraftCooldownAbility("Flight","Conjure a spell that allows you to fly.", 1f)
+            new WarcraftCooldownAbility("Flight","Conjure a spell that allows you to fly.", 1f, false)
         ];
 
         public override void Register()
@@ -96,6 +96,7 @@ namespace WarcraftPlugin.Classes
             pawn.ActualMoveType = moveType;
             Utilities.SetStateChanged(pawn, "CBaseEntity", "m_MoveType");
         }
+
         private void Ultimate()
         {
             var pawn = Player.PlayerPawn.Value;
@@ -105,16 +106,46 @@ namespace WarcraftPlugin.Classes
             {
                 SetMoveType(pawn, MoveType_t.MOVETYPE_FLYGRAVITY);
                 Player.PrintToChat("🌀 Flight enabled!");
+
+                float duration = 3f;
+                float interval = 0.05f;
+                int repeatCount = (int)(duration / interval);
+                int tick = 0;
+
+                void ApplyFlightVelocity()
+                {
+                    if (!Player.IsValid || !Player.IsAlive()) return;
+                    if (tick >= repeatCount) return;
+
+                    var eyeAngles = pawn.EyeAngles;
+                    var direction = new Vector();
+                    NativeAPI.AngleVectors(eyeAngles.Handle, direction.Handle, nint.Zero, nint.Zero);
+
+                    var velocity = direction * 200f;
+
+                    // Apply flight movement using teleport with velocity
+                    pawn.Teleport(null, null, velocity);
+
+                    tick++;
+                    WarcraftPlugin.Instance.AddTimer(interval, ApplyFlightVelocity);
+                }
+
+                ApplyFlightVelocity();
             }
             else
             {
                 SetMoveType(pawn, MoveType_t.MOVETYPE_WALK);
+                pawn.Teleport(null, null, new Vector(0, 0, 0)); // Stop movement
                 Player.PrintToChat("🛬 Flight disabled.");
             }
 
             UltimateToggle = !UltimateToggle;
             StartCooldown(3);
         }
+
+
+
+
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
