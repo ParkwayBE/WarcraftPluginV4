@@ -113,7 +113,7 @@ namespace WarcraftPlugin.Core
                             pl.ExecuteClientCommandFromServer($"css_slay #{targetPlayer.SteamID}");
                         });
                     }
-                    MenuManagerExtra.OpenMainMenu(pl, new List<Menu.Menu> { killSubMenu }); // Only single menu here
+                    MenuManagerExtra.OpenMainMenuExtra(pl, new List<Menu.Menu> { killSubMenu }); // Only single menu here
                 });
                 rightMenu.Add("← Back", null, (pl, opt) =>
                 {
@@ -136,13 +136,13 @@ namespace WarcraftPlugin.Core
                             }
                         });
                     });
-                    MenuManagerExtra.OpenMainMenu(pl, new List<Menu.Menu> { xpSubMenu });
+                    MenuManagerExtra.OpenMainMenuExtra(pl, new List<Menu.Menu> { xpSubMenu });
                 });
 
                 
 
                 // Open the multi-column menu for the player
-                MenuManagerExtra.OpenMainMenu(player, menus);
+                MenuManagerExtra.OpenMainMenuExtra(player, menus);
 
                 /*
                 var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>
