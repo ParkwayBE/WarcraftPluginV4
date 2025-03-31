@@ -370,14 +370,21 @@ namespace WarcraftPlugin.Menu
     internal static class MenuManagerExtra
     {
         private static Dictionary<int, int> PlayerMenuColumn = new();
+        private static Dictionary<int, List<Menu>> PlayerMenus = new();
 
         internal static void OpenMainMenu(CCSPlayerController player, List<Menu> menus, int selectedOptionIndex = 0)
         {
             if (player == null || menus == null || menus.Count == 0)
                 return;
 
+            if (!PlayerMenus.ContainsKey(player.Slot))
+                PlayerMenus[player.Slot] = new List<Menu>();
+
+            // Store available menus for the player
+            PlayerMenus[player.Slot] = menus;
+
             if (!PlayerMenuColumn.ContainsKey(player.Slot))
-                PlayerMenuColumn[player.Slot] = 0; 
+                PlayerMenuColumn[player.Slot] = 0;
 
             int column = PlayerMenuColumn[player.Slot];
             column = Math.Clamp(column, 0, menus.Count - 1);
@@ -423,10 +430,12 @@ namespace WarcraftPlugin.Menu
             };
         }
 
-        internal static void SwitchMenu(CCSPlayerController player, List<Menu> menus, bool moveRight)
+        internal static void SwitchMenu(CCSPlayerController player, bool moveRight)
         {
-            if (player == null || menus == null || menus.Count < 2)
+            if (player == null || !PlayerMenus.ContainsKey(player.Slot) || PlayerMenus[player.Slot].Count < 2)
                 return;
+
+            List<Menu> menus = PlayerMenus[player.Slot];
 
             if (!PlayerMenuColumn.ContainsKey(player.Slot))
                 PlayerMenuColumn[player.Slot] = 0;

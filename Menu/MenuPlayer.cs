@@ -16,6 +16,7 @@ internal class MenuPlayer
     internal Menu MainMenu = null;
     internal LinkedListNode<MenuOption> CurrentChoice = null;
     internal LinkedListNode<MenuOption> MenuStart = null;
+    internal List<Menu> AvailableMenus { get; set; } = new();
     internal string CenterHtml = "";
     internal int VisibleOptions = 5;
     internal static IStringLocalizer Localizer = WarcraftPlugin.Instance.Localizer;
@@ -127,11 +128,19 @@ internal class MenuPlayer
 
     internal void ScrollLeft()
     {
-        MenuManagerExtra.SwitchMenu(player, new List<Menu> { MainMenu }, moveRight: false);
+        if (AvailableMenus.Count > 1)
+        {
+            MenuManagerExtra.SwitchMenu(player, moveRight: false);
+        }
+        Console.WriteLine("menu left");
     }
     internal void ScrollRight()
     {
-        MenuManagerExtra.SwitchMenu(player, new List<Menu> { MainMenu }, moveRight: true);
+        if (AvailableMenus.Count > 1)
+        {
+            MenuManagerExtra.SwitchMenu(player,  moveRight: true);
+        }
+        Console.WriteLine("menu right");
     }
 
     internal void ScrollUp()
