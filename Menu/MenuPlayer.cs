@@ -125,6 +125,15 @@ internal class MenuPlayer
         UpdateCenterHtml();
     }
 
+    internal void ScrollLeft()
+    {
+        MenuManagerExtra.SwitchMenu(player, new List<Menu> { MainMenu }, moveRight: false);
+    }
+    internal void ScrollRight()
+    {
+        MenuManagerExtra.SwitchMenu(player, new List<Menu> { MainMenu }, moveRight: true);
+    }
+
     internal void ScrollUp()
     {
         if (CurrentChoice == null || MainMenu == null)

@@ -62,6 +62,15 @@ internal static class MenuAPI
             {
                 player.Choose();
             }
+            else if ((player.Buttons & PlayerButtons.Left) == 0 && (player.player.Buttons & PlayerButtons.Left) != 0)
+            {
+                player.ScrollLeft();
+            }
+            // Right button action
+            else if ((player.Buttons & PlayerButtons.Right) == 0 && (player.player.Buttons & PlayerButtons.Right) != 0)
+            {
+                player.ScrollRight(); // Implement ScrollRight() method or equivalent action
+            }
 
             if (((long)player.player.Buttons & 8589934592) == 8589934592)
             {
