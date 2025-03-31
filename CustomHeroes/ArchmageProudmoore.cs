@@ -146,46 +146,43 @@ namespace WarcraftPlugin.Classes
             var victim = @event.Userid;
             SkillFunctions.SlowTarget(attacker, victim, 25, 3.5f);
 
-            if (!victim.IsAlive())
+            if (victim.PlayerPawn?.Value?.Health > 0) return;
+
+            int level = WarcraftPlayer.GetAbilityLevel(1);
+            if (level <= 0) return;
+
+            int chancePercent = level * 10;
+            if (!Warcraft.RollDice(chancePercent, 100)) return;
+
+            // Find a dead teammate
+            var deadTeammates = Utilities.GetPlayers().Where(p =>
+                p.TeamNum == Player.TeamNum && !p.IsAlive() && p != Player).ToList();
+
+            if (deadTeammates.Count == 0) return;
+
+            var revived = deadTeammates[Random.Shared.Next(deadTeammates.Count)];
+            revived.Respawn();
+            int bonusHp = 80 + (level * 10);
+            var deathPosition = victim.PlayerPawn.Value.AbsOrigin;
+
+            SkillFunctions.SetBonusHealth(revived, bonusHp);
+            revived.RemoveWeapons();
+            revived.GiveNamedItem("weapon_knife");
+            revived.PlayerPawn.Value.SetColor(Color.Blue);
+
+            Player.PrintToChat($"🧊 Water Elemental: You revived {revived.PlayerName} with {bonusHp} HP!");
+            revived.PrintToChat("💧 You were revived as a Water Elemental with only a knife!");
+
+            WarcraftPlugin.Instance.AddTimer(0.2f, () =>
             {
-                int level = WarcraftPlayer.GetAbilityLevel(1);
-                if (level <= 0) return;
-
-                int chancePercent = level * 10;
-                if (!Warcraft.RollDice(chancePercent, 100)) return;
-
-                // Find a dead teammate
-                var deadTeammates = Utilities.GetPlayers().Where(p =>
-                    p.TeamNum == Player.TeamNum && !p.IsAlive() && p != Player).ToList();
-
-                if (deadTeammates.Count == 0) return;
-
-                var revived = deadTeammates[Random.Shared.Next(deadTeammates.Count)];
-                revived.Respawn();
-                int bonusHp = 80 + (level * 10);
-                var deathPosition = victim.PlayerPawn.Value.AbsOrigin;
-
-                SkillFunctions.SetBonusHealth(revived, bonusHp);
-                revived.RemoveWeapons();
-                revived.GiveNamedItem("weapon_knife");
-                revived.PlayerPawn.Value.SetColor(Color.Blue);
-
-                Player.PrintToChat($"🧊 Water Elemental: You revived {revived.PlayerName} with {bonusHp} HP!");
-                revived.PrintToChat("💧 You were revived as a Water Elemental with only a knife!");
-
-                WarcraftPlugin.Instance.AddTimer(0.2f, () =>
+                if (revived?.IsValid == true && revived.PlayerPawn?.Value != null)
                 {
-                    if (revived?.IsValid == true && revived.PlayerPawn?.Value != null)
-                    {
-                        revived.PlayerPawn.Value.Teleport(deathPosition, null, null);
-                        var allowedWeapons = new List<string> { "weapon_knife" };
-                        SkillFunctions.RestrictWeapons(revived, allowedWeapons, 30f);
-                        revived.PrintToCenter("💧 You were summoned at the site of death!");
-                    }
-                });
-
-            }
-
+                    revived.PlayerPawn.Value.Teleport(deathPosition, null, null);
+                    var allowedWeapons = new List<string> { "weapon_knife" };
+                    SkillFunctions.RestrictWeapons(revived, allowedWeapons, 30f);
+                    revived.PrintToCenter("💧 You were summoned at the site of death!");
+                }
+            });
         }
 
     }
