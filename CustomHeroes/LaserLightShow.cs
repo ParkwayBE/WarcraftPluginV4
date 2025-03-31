@@ -54,7 +54,8 @@ namespace WarcraftPlugin.Classes
                 new RGBColorCycleEffect(Player, 999f).Start();
 
                 var pawn = Player.PlayerPawn.Value;
-                Player.PrintToChat($"[DEBUG] VelocityModifier: {pawn.VelocityModifier}");
+                Player.PrintToChat($"[DEBUG] VelocityModifier: {bonusspeed}");
+                Player.PrintToChat($"[DEBUG] Actual velocity: {pawn.VelocityModifier}");
             });
         }
 
