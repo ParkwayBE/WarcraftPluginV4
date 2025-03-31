@@ -4,12 +4,10 @@ using System.Drawing;
 using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using WarcraftPlugin.Core;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 
 namespace WarcraftPlugin.Classes
@@ -106,7 +104,6 @@ namespace WarcraftPlugin.Classes
             if (!UltimateToggle)
             {
                 SetMoveType(pawn, MoveType_t.MOVETYPE_FLYGRAVITY);
-                StartFlightLoop(); // Start flight
                 Player.PrintToChat("🌀 Flight enabled!");
             }
             else
@@ -117,27 +114,6 @@ namespace WarcraftPlugin.Classes
 
             UltimateToggle = !UltimateToggle;
             StartCooldown(3);
-        }
-
-
-        void StartFlightLoop()
-        {
-            WarcraftPlugin.Instance.AddTimer(0.2f, () =>
-            {
-                if (!UltimateToggle || !Player.IsValid || !Player.IsAlive()) return;
-
-                var pawn = Player.PlayerPawn.Value;
-                var forward = pawn.EyeAngles.ToForward();
-                float length = MathF.Sqrt(forward.X * forward.X + forward.Y * forward.Y + forward.Z * forward.Z);
-                if (length == 0) length = 1; // prevent division by zero
-                var look = forward / length;
-
-                var boost = new Vector(look.X * 100, look.Y * 100, 0); // Adjust strength if needed
-                pawn.Teleport(null, null, boost);
-
-                // Call again to simulate repeating timer
-                StartFlightLoop();
-            });
         }
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
