@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Timers;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
@@ -16,6 +17,8 @@ namespace WarcraftPlugin.Classes
         public override string DisplayName => "Archmage Proudmoore";
         public override Color DefaultColor => Color.GreenYellow;
         private bool UltimateToggle = false;
+        private readonly Dictionary<CCSPlayerController, Timer> _immunityTimers = new();
+
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -29,14 +32,24 @@ namespace WarcraftPlugin.Classes
         {
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
+            HookEvent<EventRoundEnd>(OnRoundEnd);
 
             HookAbility(3, Ultimate);
         }
 
+        private void OnRoundEnd(EventRoundEnd evt)
+        {
+            foreach (var timer in _immunityTimers.Values)
+            {
+                timer?.Kill();
+            }
+            _immunityTimers.Clear();
+        }
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
             UltimateToggle = false;
+            WarcraftPlayer.HasUltimateImmunity = false;
 
             int level = WarcraftPlayer.GetAbilityLevel(2);
             if (level <= 0) return;
@@ -50,7 +63,15 @@ namespace WarcraftPlugin.Classes
                 WarcraftPlayer.HasUltimateImmunity = true;
                 Player.PrintToChat("🛡️ Brilliance Aura: You gained Ultimate Immunity for 120 seconds!");
 
-                WarcraftPlugin.Instance.AddTimer(120f, () =>
+                // Cancel old timer if one exists
+                if (_immunityTimers.ContainsKey(Player))
+                {
+                    _immunityTimers[Player].Kill();
+                    _immunityTimers.Remove(Player);
+                }
+
+                // Set new immunity timer
+                var selfTimer = WarcraftPlugin.Instance.AddTimer(160f, () =>
                 {
                     if (Player.IsValid)
                     {
@@ -58,6 +79,16 @@ namespace WarcraftPlugin.Classes
                         Player.PrintToChat("⚠️ Your Ultimate Immunity has worn off.");
                     }
                 });
+                _immunityTimers[Player] = selfTimer;
+
+                {
+                    if (Player.IsValid)
+                    {
+                        WarcraftPlayer.HasUltimateImmunity = false;
+                        Player.PrintToChat("⚠️ Your Ultimate Immunity has worn off.");
+                    }
+                }
+
             }
 
             // Grant to up to 2 random teammates
@@ -75,7 +106,13 @@ namespace WarcraftPlugin.Classes
                         ally.PrintToChat("🛡️ Brilliance Aura: You received Ultimate Immunity for 120 seconds!");
                         Player.PrintToChat($"✨ Brilliance Aura: {ally.PlayerName} gained immunity!");
 
-                        WarcraftPlugin.Instance.AddTimer(160f, () =>
+                        if (_immunityTimers.ContainsKey(ally))
+                        {
+                            _immunityTimers[ally].Kill();
+                            _immunityTimers.Remove(ally);
+                        }
+
+                        var allyTimer = WarcraftPlugin.Instance.AddTimer(160f, () =>
                         {
                             if (ally.IsValid)
                             {
@@ -83,6 +120,16 @@ namespace WarcraftPlugin.Classes
                                 ally.PrintToChat("⚠️ Your Ultimate Immunity has worn off.");
                             }
                         });
+                        _immunityTimers[ally] = allyTimer;
+
+                        {
+                            if (ally.IsValid)
+                            {
+                                wcAlly.HasUltimateImmunity = false;
+                                ally.PrintToChat("⚠️ Your Ultimate Immunity has worn off.");
+                            }
+                        }
+
                     }
                 }
             }
@@ -95,9 +142,6 @@ namespace WarcraftPlugin.Classes
             pawn.ActualMoveType = moveType;
             Utilities.SetStateChanged(pawn, "CBaseEntity", "m_MoveType");
         }
-
-        private bool _isFlying = false;
-
         private void Ultimate()
         {
             if (!Player.IsValid || !Player.IsAlive()) return;
@@ -113,7 +157,6 @@ namespace WarcraftPlugin.Classes
                 pawn.GravityScale = 0f;
                 pawn.VelocityModifier = 1.5f;
 
-                // Give a small upward push
                 var velocity = pawn.AbsVelocity;
                 velocity.Z = 200;
                 pawn.Teleport(null, null, velocity);
@@ -131,15 +174,8 @@ namespace WarcraftPlugin.Classes
                 Player.PrintToChat("🪂 [Flight] Your flight has ended.");
             }
 
-            StartCooldown(3); // Optional: short cooldown to prevent rapid toggle abuse
+            StartCooldown(3);
         }
-
-
-
-
-
-
-
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
             var attacker = @event.Attacker;
