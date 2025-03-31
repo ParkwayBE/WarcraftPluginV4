@@ -10,6 +10,7 @@ using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
+using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Menu;
 using WarcraftPlugin.Menu.WarcraftMenu;
@@ -50,7 +51,6 @@ namespace WarcraftPlugin.Core
             var playerP = wcPlayer.GetPlayer();
 
             var role = 1;
-            var message = "hallo mannekes";
 
             //int role = _db.GetPlayerRole(playerP);
             if (role == 0)
@@ -65,9 +65,9 @@ namespace WarcraftPlugin.Core
                 var Players = Utilities.GetPlayers();
 
                 // Create multiple columns of menus
-                var leftMenu = MenuManagerExtra.CreateMenu("Left Side Menu", 5);
-                var middleMenu = MenuManagerExtra.CreateMenu("Middle Menu", 5);
-                var rightMenu = MenuManagerExtra.CreateMenu("Right Side Menu", 5);
+                var leftMenu = MenuManagerExtra.CreateMenu("Admin Page 1 of 3", 5);
+                var middleMenu = MenuManagerExtra.CreateMenu("Admin Page 2 of 3", 5);
+                var rightMenu = MenuManagerExtra.CreateMenu("Admin Page 3 of 3", 5);
 
                 // List of menus for navigation
                 List<Menu.Menu> menus = new() { leftMenu, middleMenu, rightMenu };
@@ -76,17 +76,35 @@ namespace WarcraftPlugin.Core
                 leftMenu.Add("Spawn Dummy", null, (pl, opt) =>
                 {
                     DummyBotManager.SpawnOrResetDummy(pl);
+                    player.PrintToChat($" {ChatColors.Red}{player.PlayerName}[ADMIN] {ChatColors.Default} Has spawned a dummy");
                 });
                 leftMenu.Add("Freeze Bots", null, (pl, opt) =>
                 {
                     pl.ExecuteClientCommandFromServer($"css_freeze @bots");
+                    foreach ( var plyr in Players ) {
+                        plyr.PrintToChat($" {ChatColors.Red}{player.PlayerName}[ADMIN] {ChatColors.Default} Has frozen all bots");
+                    }
+                   
                 });
                 
 
                 // Middle Menu Options
-                middleMenu.Add("Admin Options", null, (pl, opt) =>
+                middleMenu.Add("message to a player", null, (pl, opt) =>
                 {
-                    pl.PrintToChat("Admin options selected.");
+                    var messageSubMenu = MenuManager.CreateMenu("choose a player to message", 5);
+                    foreach (var targetPlayer in Players)
+                    {
+                        messageSubMenu.Add(targetPlayer.PlayerName, null, (selectedAdmin, opt2) => 
+                        {
+                            RequestInput(player, (mess) =>
+                            {
+                                targetPlayer.PrintToChat($" {ChatColors.Default}Message from {ChatColors.Red}{player.PlayerName}[ADMIN]{ChatColors.Default} {mess}");
+                            });
+
+                        });
+                    }
+
+                    MenuManagerExtra.OpenMainMenuExtra(pl, new List<Menu.Menu> { messageSubMenu });
                 });
 
 
@@ -99,6 +117,7 @@ namespace WarcraftPlugin.Core
                         killSubMenu.Add(targetPlayer.PlayerName, null, (pl, opt) =>
                         {
                             pl.ExecuteClientCommandFromServer($"css_slay #{targetPlayer.SteamID}");
+                            targetPlayer.PrintToChat($" {ChatColors.Default}Killed by {ChatColors.Red}[ADMIN]{player.PlayerName}");
                         });
                     }
                     // Add the submenu to the existing list of menus for the player
@@ -117,6 +136,7 @@ namespace WarcraftPlugin.Core
                                 foreach (var targetPlayer in Players)
                                 {
                                     _plugin.XpSystem.AddXp(targetPlayer, num);
+                                    targetPlayer.PrintToChat($" {ChatColors.Red}{player.PlayerName}[ADMIN]{ChatColors.Default} gave you {num} Xp");
                                 }
                             }
                         });
