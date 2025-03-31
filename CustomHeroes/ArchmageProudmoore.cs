@@ -96,35 +96,38 @@ namespace WarcraftPlugin.Classes
             Utilities.SetStateChanged(pawn, "CBaseEntity", "m_MoveType");
         }
 
+        private bool _isFlying = false;
+
         private void Ultimate()
         {
-            int abilityLevel = WarcraftPlayer.GetAbilityLevel(3);
-            float duration = abilityLevel * 5f;
-
-            Player.PrintToChat($" \x07[Flight] You are now flying for {duration} seconds!");
-
-            // Enable flight mode
-            Player.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_FLY;
-
-            // Optional: Give a small upward push
-
+            if (!Player.IsValid || !Player.IsAlive()) return;
 
             var pawn = Player.PlayerPawn.Value;
-            pawn.VelocityModifier = 1f + 0.5f;
-            var velocity = pawn.AbsVelocity;
-            pawn.GravityScale = 0f;
-            velocity.Z = 5;
 
-            // Reset after duration
-            WarcraftPlugin.Instance.AddTimer(duration, () =>
+            if (!_isFlying)
             {
-                if (!Player.IsValid || !Player.IsAlive()) return;
+                // Activate flight
+                _isFlying = true;
 
-                Player.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_WALK;
-                Player.PlayerPawn.Value.GravityScale = 1.0f;
+                pawn.MoveType = MoveType_t.MOVETYPE_FLY;
+                pawn.GravityScale = 0f;
+                pawn.VelocityModifier = 1f + 0.5f;
+
+                Player.PrintToChat(" \x07[Flight] You are now flying!");
+            }
+            else
+            {
+                // Disable flight
+                _isFlying = false;
+
+                pawn.MoveType = MoveType_t.MOVETYPE_WALK;
+                pawn.GravityScale = 1.0f;
+                pawn.VelocityModifier = 1.0f;
+
                 Player.PrintToChat(" \x07[Flight] Your flight has ended.");
-            });
+            }
         }
+
 
 
 
