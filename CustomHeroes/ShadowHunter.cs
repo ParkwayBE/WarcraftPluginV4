@@ -88,7 +88,7 @@ namespace WarcraftPlugin.Classes
             ward.Start();
             activeWards.Add(ward);
 
-            Player.PrintToChat($"{ChatColors.Green}Serpent Ward{ChatColors.Default} : Ward placed!");
+            Player.PrintToChat($" {ChatColors.Green}Serpent Ward{ChatColors.Default} : Ward placed!");
         }
 
         private void OnRoundEnd(EventRoundEnd @event)
@@ -112,7 +112,7 @@ namespace WarcraftPlugin.Classes
             private readonly CCSPlayerController _owner;
             private readonly List<CBeam> _beams = new();
             private int _rotationStep = 0;
-            private readonly int _beamCount = 4; // Number of beams around the ward
+            private readonly int _beamCount = 4;
 
 
             public SerpentWardEffect(CCSPlayerController owner, Vector origin)

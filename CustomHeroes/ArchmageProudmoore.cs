@@ -88,7 +88,7 @@ namespace WarcraftPlugin.Classes
                     if (Player.IsValid)
                     {
                         WarcraftPlayer.HasUltimateImmunity = false;
-                        Player.PrintToChat($"{ChatColors.Green}⚠️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} has worn off.");
+                        Player.PrintToChat($" {ChatColors.Green}⚠️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} has worn off.");
                     }
                 });
                 _immunityTimers[Player] = selfTimer;
@@ -114,7 +114,7 @@ namespace WarcraftPlugin.Classes
                 }
 
                 wcAlly.HasUltimateImmunity = true;
-                ally.PrintToChat($"{ChatColors.Blue}🛡️ Brilliance Aura{ChatColors.Default}: You received {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
+                ally.PrintToChat($" {ChatColors.Blue}🛡️ Brilliance Aura{ChatColors.Default}: You received {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
                 Player.PrintToChat($" {ChatColors.Green}✨ Brilliance Aura{ChatColors.Default}: {ally.PlayerName} gained {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
 
                 // Apply new immunity timer
@@ -123,7 +123,7 @@ namespace WarcraftPlugin.Classes
                     if (ally.IsValid)
                     {
                         wcAlly.HasUltimateImmunity = false;
-                        ally.PrintToChat($"{ChatColors.Blue}⚠️ {ChatColors.Default}Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} has worn off.");
+                        ally.PrintToChat($" {ChatColors.Blue}⚠️ {ChatColors.Default}Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} has worn off.");
                     }
                 });
                 _immunityTimers[ally] = allyTimer;

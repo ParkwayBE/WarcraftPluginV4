@@ -62,7 +62,7 @@ namespace WarcraftPlugin.Classes
                 int roll = Random.Shared.Next(100);
 
                 string weaponToGive = (roll < awpChance) ? "weapon_awp" : "weapon_ssg08";
-                Console.WriteLine($"[Dwarven Supplies] Rolled {roll} vs {awpChance} → Giving {weaponToGive}");
+                Console.WriteLine($" {ChatColors.Green}Dwarven Supplies{ChatColors.Default} Rolled {roll} vs {awpChance} → Giving {weaponToGive}");
 
                 var pawn = Player.PlayerPawn.Value;
                 var activeWeaponName = pawn.WeaponServices?.ActiveWeapon?.Value?.DesignerName;
@@ -201,7 +201,7 @@ namespace WarcraftPlugin.Classes
             if (roll < evasionChance)
             {
                 @event.IgnoreDamage();
-                Player.PrintToChat($"{ChatColors.Default}Dwarven Genes{ChatColors.Default} : You evaded a hit.");
+                Player.PrintToChat($" {ChatColors.Default}Dwarven Genes{ChatColors.Default} : You evaded a hit.");
             }
         }
 
