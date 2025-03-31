@@ -52,6 +52,9 @@ namespace WarcraftPlugin.Classes
                 Warcraft.SpawnParticle(spawnPoint, "particles/ui/status_levels/ui_status_level_7_energycirc.vpcf", 4f);
 
                 new RGBColorCycleEffect(Player, 999f).Start();
+
+                var pawn = Player.PlayerPawn.Value;
+                Player.PrintToChat($"[DEBUG] VelocityModifier: {pawn.VelocityModifier}");
             });
         }
 
