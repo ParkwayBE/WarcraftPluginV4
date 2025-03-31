@@ -34,6 +34,7 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerHurt>(PlayerHurt);
             HookEvent<EventPlayerDeath>(PlayerDeath);
             HookEvent<EventPlayerDisconnect>(PlayerDisconnect);
+            HookEvent<EventRoundStart>(RoundStart);
 
             HookAbility(3, Ultimate);
         }
@@ -48,9 +49,13 @@ namespace WarcraftPlugin.Classes
             WarcraftPlayer.HasUltimateImmunity = false;
         }
 
-        private void PlayerSpawn(EventPlayerSpawn spawn)
+        private void RoundStart(EventRoundStart @event)
         {
             ResetCooldowns();
+        }
+
+        private void PlayerSpawn(EventPlayerSpawn spawn)
+        {
             if (WarcraftPlayer.GetAbilityLevel(2) > 0)
             {
                 if (Player == null) return;
@@ -100,7 +105,7 @@ namespace WarcraftPlugin.Classes
             var VictimLoc = randomEnemy.PlayerPawn.Value.AbsOrigin;
             var AttackerLoc = Player.PlayerPawn.Value.AbsOrigin;
             Warcraft.SpawnParticle(VictimLoc, "particles/ui/hud/ui_mvp_winner_flareglow.vpcf", 4f);
-            Warcraft.SpawnParticle(AttackerLoc, "particles/inferno_fx/molotov_groundfire_climbing_debug.vpcf", 4f);
+            Warcraft.SpawnParticle(AttackerLoc, "particles/ui/hud/ui_mvp_winner_flareglow.vpcf", 4f);
 
             // Heal caster
             var currentHealth = Player.PlayerPawn.Value.Health;
