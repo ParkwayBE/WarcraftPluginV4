@@ -110,7 +110,7 @@ namespace WarcraftPlugin.Classes
             {
                 // Enable flying
                 UltimateToggle = true;
-                SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
+                SetMoveType(pawn, MoveType_t.MOVETYPE_FLYGRAVITY);
                 pawn.GravityScale = 0f;
                 pawn.VelocityModifier = 1.5f;
 
