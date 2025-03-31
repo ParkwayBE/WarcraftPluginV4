@@ -117,7 +117,7 @@ namespace WarcraftPlugin.Classes
 
                 wcAlly.HasUltimateImmunity = true;
                 ally.PrintToChat("🛡️ Brilliance Aura: You received Ultimate Immunity for 160 seconds!");
-                Player.PrintToChat($"✨ Brilliance Aura: {ally.PlayerName} gained immunity!");
+                Player.PrintToChat($" \x04✨ Brilliance Aura\x01: {ally.PlayerName} gained \x03Immunity\x01!");
 
                 // Apply new immunity timer
                 var allyTimer = WarcraftPlugin.Instance.AddTimer(160f, () =>
