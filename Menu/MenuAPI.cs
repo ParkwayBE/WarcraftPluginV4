@@ -49,6 +49,7 @@ internal static class MenuAPI
         {
             if ((player.Buttons & PlayerButtons.Forward) == 0 && (player.player.Buttons & PlayerButtons.Forward) != 0)
             {
+                Console.WriteLine("menu foward");
                 player.ScrollUp();
             }
             else if ((player.Buttons & PlayerButtons.Back) == 0 && (player.player.Buttons & PlayerButtons.Back) != 0)
