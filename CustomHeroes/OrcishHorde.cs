@@ -77,7 +77,6 @@ namespace WarcraftPlugin.Classes
             {
                 if (bounceIndex >= maxBounces)
                 {
-                    caster.PrintToCenter("⚡ Chain Lightning ended.");
                     return;
                 }
 
@@ -112,7 +111,6 @@ namespace WarcraftPlugin.Classes
 
                 if (closest == null)
                 {
-                    caster.PrintToCenter("⚡ Chain Lightning ended.");
                     Console.WriteLine($"[OrcishHorde] No more valid targets after bounce #{bounceIndex + 1}");
                     return;
                 }
@@ -120,8 +118,8 @@ namespace WarcraftPlugin.Classes
                 var wcTarget = closest.GetWarcraftPlayer();
                 if (wcTarget != null && wcTarget.HasUltimateImmunity)
                 {
-                    caster.PrintToCenter("⛔ Target is immune to ultimates!");
-                    closest.PrintToCenter("🛡️ Your Ultimate Immunity blocked Chain Lightning!");
+                    caster.PrintToCenter("\x04⛔\x01 Target is \x03immune\x01 to ultimates!");
+                    closest.PrintToCenter("\x04🛡️\x01 Your \x03Ultimate Immunity\x01 blocked \x03Chain Lightning\x01!");
                     return;
                 }
 
@@ -141,7 +139,7 @@ namespace WarcraftPlugin.Classes
             }
             else
             {
-                caster.PrintToCenter("⚠️ No valid targets for Chain Lightning — no cooldown used.");
+                caster.PrintToCenter("\x04⚠️\x01 No valid targets for\x03 Chain Lightning\x01 — no cooldown used.");
             }
         }
 
@@ -164,7 +162,7 @@ namespace WarcraftPlugin.Classes
 
                 WarcraftPlugin.Instance.AddTimer(2f, () =>
                 {
-                    Player.PrintToChat(" \x06[Reincarnation] You have been revived!");
+                    Player.PrintToChat(" \x04Reincarnation\x01: You have been revived!");
                     Player.Respawn();
                     Player.SetHp(100);
 
@@ -208,14 +206,13 @@ namespace WarcraftPlugin.Classes
                 int chancePercent = Math.Min(nadeLevel * 20, 100);
                 int roll = new Random().Next(1, 101);
 
-                Console.WriteLine($"[GrenadeCrit] Rolled {roll} vs {chancePercent}");
 
                 if (roll <= chancePercent)
                 {
                     int bonus = damageDealt / 2;
                     int total = damageDealt + bonus;
                     @event.AddBonusDamage(total);
-                    attacker.PrintToChat($"🔥 Critical grenade hit! Dealt {total} damage.");
+                    attacker.PrintToChat($"\x04🔥 Critical grenade\x01 dealt {total} damage.");
                 }
             }
 
@@ -232,7 +229,7 @@ namespace WarcraftPlugin.Classes
                 {
                     int bonus = (damageDealt / 4) + (damageDealt / 2);
                     @event.AddBonusDamage(bonus);
-                    attacker.PrintToChat($"⚡ Critical hit! Dealt {bonus} bonus damage.");
+                    attacker.PrintToChat($"\x04⚡ Critical hit\x01! Dealt {bonus} bonus damage.");
                 }
             }
         }

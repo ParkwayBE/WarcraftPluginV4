@@ -82,7 +82,7 @@ namespace WarcraftPlugin.Classes
             if (Warcraft.RollDice(chancePercent, 100))
             {
                 WarcraftPlayer.HasUltimateImmunity = true;
-                Player.PrintToChat("\x04🛡️ Brilliance Aura\x01: You gained \x06Ultimate Immunity\x01!");
+                Player.PrintToChat("\x04🛡️ Brilliance Aura\x01: You gained \x03Ultimate Immunity\x01!");
 
                 // Apply new immunity timer
                 var selfTimer = WarcraftPlugin.Instance.AddTimer(160f, () =>
@@ -117,7 +117,7 @@ namespace WarcraftPlugin.Classes
 
                 wcAlly.HasUltimateImmunity = true;
                 ally.PrintToChat("\x04🛡️ Brilliance Aura\x01: You received \x03Ultimate Immunity\x01!");
-                Player.PrintToChat($" \x04✨ Brilliance Aura\x01: {ally.PlayerName} gained \x05Ultimate Immunity\x01!");
+                Player.PrintToChat($" \x04✨ Brilliance Aura\x01: {ally.PlayerName} gained \x03Ultimate Immunity\x01!");
 
                 // Apply new immunity timer
                 var allyTimer = WarcraftPlugin.Instance.AddTimer(160f, () =>
@@ -125,7 +125,7 @@ namespace WarcraftPlugin.Classes
                     if (ally.IsValid)
                     {
                         wcAlly.HasUltimateImmunity = false;
-                        ally.PrintToChat("⚠️ Your Ultimate Immunity has worn off.");
+                        ally.PrintToChat("\x04⚠️ \x01Your \x03Ultimate Immunity\x01 has worn off.");
                     }
                 });
                 _immunityTimers[ally] = allyTimer;
@@ -157,8 +157,6 @@ namespace WarcraftPlugin.Classes
                 var velocity = pawn.AbsVelocity;
                 velocity.Z = 200;
                 pawn.Teleport(null, null, velocity);
-
-                Player.PrintToChat("🕊️ [Flight] You are now flying!");
             }
             else
             {
@@ -167,8 +165,6 @@ namespace WarcraftPlugin.Classes
                 SetMoveType(pawn, MoveType_t.MOVETYPE_WALK);
                 pawn.GravityScale = 1f;
                 pawn.VelocityModifier = 1f;
-
-                Player.PrintToChat("🪂 [Flight] Your flight has ended.");
             }
 
             StartCooldown(3);
@@ -203,8 +199,7 @@ namespace WarcraftPlugin.Classes
             revived.GiveNamedItem("weapon_knife");
             revived.PlayerPawn.Value.SetColor(Color.Blue);
 
-            Player.PrintToChat($"🧊 Water Elemental: You revived {revived.PlayerName} with {bonusHp} HP!");
-            revived.PrintToChat("💧 You were revived as a Water Elemental with only a knife!");
+            Player.PrintToChat($"\x04🧊 Water Elemental\x01: You revived {revived.PlayerName} with {bonusHp} HP!");
 
             WarcraftPlugin.Instance.AddTimer(0.2f, () =>
             {
@@ -213,7 +208,7 @@ namespace WarcraftPlugin.Classes
                     revived.PlayerPawn.Value.Teleport(deathPosition, null, null);
                     var allowedWeapons = new List<string> { "weapon_knife" };
                     SkillFunctions.RestrictWeapons(revived, allowedWeapons, 30f);
-                    revived.PrintToCenter("💧 You were summoned at the site of death!");
+                    revived.PrintToCenter("\x04🧊 Water Elemental\x01 You were summoned at the site of death!");
                 }
             });
         }

@@ -178,7 +178,7 @@ namespace WarcraftPlugin.Classes
                     // Apply impale effect
                     attacker.PlayerPawn.Value.Teleport(null, null, new Vector(0, 0, 500));
                     Warcraft.SpawnParticle(attacker.PlayerPawn.Value.AbsOrigin.With(z: attacker.PlayerPawn.Value.AbsOrigin.Z + 60), "particles/ui/status_levels/ui_status_level__gen_glow.vpcf");
-                    attacker.PrintToChat(" \x07[Impale] You hurt the wrong dwarf!");
+                    attacker.PrintToChat(" \x04Ring Of Power\x01: Dwarven Sniper \x03impaled\x01 you!");
 
                     impaleTriggeredPlayers.Add(attacker);
                 }
@@ -209,13 +209,13 @@ namespace WarcraftPlugin.Classes
             if (Player == null) return;
             evasionMultiplier = 2.0f;
             hasUsedUltimate = true;
-            Player.PrintToCenter(" \x06[Ultimate] Your evasion has been doubled for 7 seconds!");
+            Player.PrintToCenter(" \x04Ring Of Power\x01: Your\x03 evasion\x01 has been doubled for 7 seconds!");
 
             WarcraftPlugin.Instance.AddTimer(7.0f, () =>
             {
                 if (Player == null) return;
                 evasionMultiplier = 1.0f;
-                Player.PrintToCenter(" \x06[Ultimate] Your evasion boost has ended.");
+                Player.PrintToCenter(" \x04Ring Of Power\x01: Your \x03 evasion\x01 boost has ended.");
             });
 
             ActivateImpaleUltimate();
