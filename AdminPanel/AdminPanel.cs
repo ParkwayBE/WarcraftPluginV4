@@ -73,10 +73,6 @@ namespace WarcraftPlugin.Core
                 List<Menu.Menu> menus = new() { leftMenu, middleMenu, rightMenu };
 
                 // Left Menu Options
-                leftMenu.Add("→ Next", null, (pl, opt) =>
-                {
-                    MenuManagerExtra.SwitchMenu(pl, true); // Move to the right menu
-                });
                 leftMenu.Add("Spawn Dummy", null, (pl, opt) =>
                 {
                     DummyBotManager.SpawnOrResetDummy(pl);
@@ -91,14 +87,6 @@ namespace WarcraftPlugin.Core
                 middleMenu.Add("Admin Options", null, (pl, opt) =>
                 {
                     pl.PrintToChat("Admin options selected.");
-                });
-                middleMenu.Add("← Back", null, (pl, opt) =>
-                {
-                    MenuManagerExtra.SwitchMenu(pl, false); // Move to the left menu
-                });
-                middleMenu.Add("→ Next", null, (pl, opt) =>
-                {
-                    MenuManagerExtra.SwitchMenu(pl,  true);
                 });
 
 
@@ -115,10 +103,6 @@ namespace WarcraftPlugin.Core
                     }
                     // Add the submenu to the existing list of menus for the player
                     MenuManagerExtra.OpenMainMenuExtra(pl, new List<Menu.Menu> { killSubMenu });
-                });
-                rightMenu.Add("← Back", null, (pl, opt) =>
-                {
-                    MenuManagerExtra.SwitchMenu(pl, false); // Move to the left menu
                 });
                 rightMenu.Add("XP Menu", null, (pl, opt) =>
                 {
