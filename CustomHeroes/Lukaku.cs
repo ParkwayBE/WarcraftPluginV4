@@ -20,6 +20,7 @@ namespace WarcraftPlugin.Classes
         bool canUseUlt = false;
         bool footballIsSpawned = false;
 
+
         public override List<IWarcraftAbility> Abilities =>
         [
             new WarcraftAbility("DoSomething", "Quick"),

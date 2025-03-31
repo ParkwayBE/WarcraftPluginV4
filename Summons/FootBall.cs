@@ -1,10 +1,12 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities;
+using g3;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Reflection.Metadata;
 using WarcraftPlugin.Core;
 using WarcraftPlugin.Core.Effects;
@@ -25,11 +27,13 @@ namespace WarcraftPlugin.Summons
         public FootballHitSystem hitSystem;
         public bool isActive = false;
 
+
         public Football(CCSPlayerController owner) 
         {
             _owner = owner;
             Activate(owner);
         }
+        
         public void Activate(CCSPlayerController owner)
         { 
             isActive = true;
@@ -101,6 +105,8 @@ namespace WarcraftPlugin.Summons
         }
 
 
+
+
     }
     public class FootBaller
     {
@@ -111,11 +117,26 @@ namespace WarcraftPlugin.Summons
         public List<Football> footballs;
         public List<Football> extraBalls = new List<Football>();
         private Football lastAddedBall;
+        private FootballTurnAroundPlayerSystem tAroundPlayerSys;
 
         public FootBaller(CCSPlayerController owner, int balls)
         {
             footballs = new List<Football>();
             _owner = owner;
+        }
+
+        void TurnBallsAroundPlayer(CCSPlayerController owner)
+        {
+            if(tAroundPlayerSys != null)
+            {
+                tAroundPlayerSys.Destroy();
+            }
+            if (footballs != null)
+            {
+                tAroundPlayerSys = new FootballTurnAroundPlayerSystem(owner, 0.01f, footballs);
+                tAroundPlayerSys.Start();
+            }
+
         }
         public void ActivateBall()
         {
@@ -181,6 +202,55 @@ namespace WarcraftPlugin.Summons
         {
             owner.PrintToChat("tick");
             ball.UpdateLocation(Owner);
+        }
+        public override void OnFinish() { }
+    }
+
+    public class FootballTurnAroundPlayerSystem(CCSPlayerController owner, float onTickInterval, List<Football> balls) : WarcraftEffect(owner, onTickInterval: onTickInterval)
+    {
+        public override void OnStart()
+        {
+            owner.PrintToChat("footballs turns around player system started");
+
+            float angleIncrement = MathF.PI * 2 / balls.Count;
+            for (int i = 0; i < balls.Count; i++)
+            {
+                // Calculate the angle for this object
+                float angle = i * angleIncrement;
+
+                // Calculate the position of the object in a circle
+                Vector3 objectPosition = new Vector3
+                {
+                    X = Owner.AbsOrigin.X + 50f * MathF.Cos(angle),
+                    Y = Owner.AbsOrigin.Y + 50f * MathF.Sin(angle),
+                    Z = Owner.AbsOrigin.Z // Maintain the same Z level for flat placement
+                };
+
+                // Log the object's new position or move it in the game
+
+                balls[i]._ball.Teleport(new Vector(objectPosition.X, objectPosition.Y, objectPosition.Z));
+            }
+        }
+        public override void OnTick()
+        {
+            float angleIncrement = MathF.PI * 2 / balls.Count;
+            for (int i = 0; i < balls.Count; i++)
+            {
+                // Calculate the angle for this object
+                float angle = i * angleIncrement;
+
+                // Calculate the position of the object in a circle
+                Vector3 objectPosition = new Vector3
+                {
+                    X = Owner.AbsOrigin.X + 50f * MathF.Cos(angle),
+                    Y = Owner.AbsOrigin.Y + 50f * MathF.Sin(angle),
+                    Z = Owner.AbsOrigin.Z // Maintain the same Z level for flat placement
+                };
+
+                // Log the object's new position or move it in the game
+
+                balls[i]._ball.Teleport(new Vector(objectPosition.X, objectPosition.Y, objectPosition.Z));
+            }
         }
         public override void OnFinish() { }
     }
