@@ -224,7 +224,7 @@ namespace WarcraftPlugin.Summons
                 float angle = i * angleIncrement;
 
                 // Calculate the position of the object in a circle
-                Vector3 objectPosition = new Vector3
+                Vector objectPosition = new Vector
                 {
                     X = Owner.AbsOrigin.X + 50f * MathF.Cos(angle),
                     Y = Owner.AbsOrigin.Y + 50f * MathF.Sin(angle),
@@ -233,7 +233,7 @@ namespace WarcraftPlugin.Summons
 
                 // Log the object's new position or move it in the game
 
-                balls[i]._ball.Teleport(new Vector(objectPosition.X, objectPosition.Y, objectPosition.Z), owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+                balls[i].UpdateLocation(objectPosition);
             }
         }
         public override void OnTick()
