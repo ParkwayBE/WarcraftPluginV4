@@ -233,7 +233,7 @@ namespace WarcraftPlugin.Summons
 
                 // Log the object's new position or move it in the game
                 objectPosition.X += 50f;
-                balls[i]._ballProp.Teleport(objectPosition, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+                balls[i].UpdateLocation(Owner);
 
             }
         }
