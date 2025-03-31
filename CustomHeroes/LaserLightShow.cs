@@ -80,31 +80,62 @@ namespace WarcraftPlugin.Classes
             var damage = @event.DmgHealth;
             if (damage <= 0) return;
 
-            Vector victimPos = victim.PlayerPawn.Value.AbsOrigin;
-            Vector forward = attacker.PlayerPawn.Value.EyeAngles.ToForward();
-            // V-shaped beam effect
+            // ---------------------
+            // V-Shape Laser Effect
+            // ---------------------
             Vector beamStart = attacker.PlayerPawn.Value.AbsOrigin;
-            beamStart.Z -= 10;
+            beamStart.Z -= 10; // Start at feet
 
             Vector endBase = victim.PlayerPawn.Value.AbsOrigin;
-            endBase.Z += 35;
+            float baseZ = endBase.Z; // Target’s feet
 
             var rand = new Random();
 
-            for (int i = -2; i <= 2; i++)
-            {
-                if (i == 0) continue; // Skip center line (already drawn)
-                float xOffset = i * 12f;
-                float yOffset = -Math.Abs(i * 6f); // inward V-shape
-                Vector beamEnd = new Vector(
-                    endBase.X + xOffset,
-                    endBase.Y + yOffset,
-                    endBase.Z + rand.Next(-5, 5)
-                );
+            // Tier setup: 3 levels of lasers (1, 3, 5 = 9 total)
+            int[] tierCounts = { 0, 1, 2 }; // Number of lasers left/right from center per tier
+            float zStep = 10f;
+            float xStep = 10f;
+            float yCurve = 6f;
 
-                Color beamColor = Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256));
-                Warcraft.DrawLaserBetween(beamStart, beamEnd, beamColor, duration: 1.5f, width: 2f);
+            // Grouped colors
+            List<Color> tierColors = new()
+    {
+        Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256)),
+        Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256)),
+        Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256))
+    };
+
+            for (int tier = 0; tier < tierCounts.Length; tier++)
+            {
+                int count = tierCounts[tier];
+                float tierZ = baseZ + (tier * zStep);
+
+                for (int i = -count; i <= count; i++)
+                {
+                    float xOffset = i * xStep;
+                    float yOffset = -Math.Abs(i) * yCurve;
+
+                    Vector beamEnd = new Vector(
+                        endBase.X + xOffset,
+                        endBase.Y + yOffset,
+                        tierZ + rand.Next(-2, 3) // tiny jitter
+                    );
+
+                    Warcraft.DrawLaserBetween(
+                        beamStart,
+                        beamEnd,
+                        tierColors[tier],
+                        duration: 1.5f,
+                        width: 1f
+                    );
+                }
             }
+
+            // ---------------------
+            // Chain Through Logic
+            // ---------------------
+            Vector victimPos = victim.PlayerPawn.Value.AbsOrigin;
+            Vector forward = attacker.PlayerPawn.Value.EyeAngles.ToForward();
 
             foreach (var target in Utilities.GetPlayers())
             {
@@ -120,7 +151,7 @@ namespace WarcraftPlugin.Classes
                 float dot = Vector3.Dot(forward.ToVector3(), toTargetNorm.ToVector3());
                 if (dot < 0.90f) continue;
 
-                // Draw center beam
+                // Piercing laser from victim to collateral
                 var pierceColor = Color.FromArgb(
                     Random.Shared.Next(100, 256),
                     Random.Shared.Next(100, 256),
@@ -133,8 +164,6 @@ namespace WarcraftPlugin.Classes
                     pierceColor
                 );
 
-
-
                 // Apply collateral damage
                 int collateralDamage = (int)(damage * 0.5f);
                 target.SetHp(target.PlayerPawn.Value.Health - collateralDamage);
@@ -143,6 +172,7 @@ namespace WarcraftPlugin.Classes
                 attacker.PrintToChat($" {ChatColors.Green}Module B{ChatColors.Default}: {target.PlayerName} was pierced for {collateralDamage} damage!");
             }
         }
+
 
 
 
