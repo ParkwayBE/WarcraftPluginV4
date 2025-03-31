@@ -108,6 +108,7 @@ namespace WarcraftPlugin.Classes
 
             // Optional: Give a small upward push
             var velocity = Player.PlayerPawn.Value.AbsVelocity;
+            Player.PlayerPawn.Value.GravityScale = 0f;
             velocity.Z = 200;
 
             var pawn = Player.PlayerPawn.Value;
@@ -119,6 +120,7 @@ namespace WarcraftPlugin.Classes
                 if (!Player.IsValid || !Player.IsAlive()) return;
 
                 Player.PlayerPawn.Value.MoveType = MoveType_t.MOVETYPE_WALK;
+                Player.PlayerPawn.Value.GravityScale = 1.0f;
                 Player.PrintToChat(" \x07[Flight] Your flight has ended.");
             });
         }
