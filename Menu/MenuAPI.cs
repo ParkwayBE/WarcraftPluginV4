@@ -45,8 +45,10 @@ internal static class MenuAPI
 
     internal static void OnTick()
     {
+
         foreach (var player in Players.Values.Where(p => p.MainMenu != null))
         {
+            Console.WriteLine($"Current Buttons: {player.player.Buttons}");
             if ((player.Buttons & PlayerButtons.Forward) == 0 && (player.player.Buttons & PlayerButtons.Forward) != 0)
             {
                 Console.WriteLine("menu foward");
