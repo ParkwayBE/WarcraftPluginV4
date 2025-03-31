@@ -100,7 +100,7 @@ namespace WarcraftPlugin.Core
                 {
                     MenuManagerExtra.SwitchMenu(pl,  true);
                 });
-                
+
 
                 // Right Menu Options
                 rightMenu.Add("Kill Player Menu", null, (pl, opt) =>
@@ -113,7 +113,8 @@ namespace WarcraftPlugin.Core
                             pl.ExecuteClientCommandFromServer($"css_slay #{targetPlayer.SteamID}");
                         });
                     }
-                    MenuManagerExtra.OpenMainMenuExtra(pl, new List<Menu.Menu> { killSubMenu }); // Only single menu here
+                    // Add the submenu to the existing list of menus for the player
+                    MenuManagerExtra.OpenMainMenuExtra(pl, new List<Menu.Menu> { killSubMenu });
                 });
                 rightMenu.Add("← Back", null, (pl, opt) =>
                 {
@@ -136,13 +137,13 @@ namespace WarcraftPlugin.Core
                             }
                         });
                     });
+                    // Add the submenu to the existing list of menus for the player
                     MenuManagerExtra.OpenMainMenuExtra(pl, new List<Menu.Menu> { xpSubMenu });
                 });
 
-                
-
                 // Open the multi-column menu for the player
-                MenuManagerExtra.OpenMainMenuExtra(player, menus);
+                MenuManagerExtra.OpenMainMenuExtra(player, menus); // This will open the left, middle, and right men
+
 
                 /*
                 var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>
