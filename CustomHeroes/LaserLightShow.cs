@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Numerics;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.Core;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
@@ -77,7 +78,7 @@ namespace WarcraftPlugin.Classes
             float minDot = 0.90f;
 
             Vector victimPos = victim.PlayerPawn.Value.AbsOrigin;
-            Vector forward = victim.PlayerPawn.Value.EyeAngles.ToForward(); // Using your helper
+            Vector forward = attacker.PlayerPawn.Value.EyeAngles.ToForward();            // Using your helper
 
             foreach (var target in Utilities.GetPlayers())
             {
@@ -111,8 +112,8 @@ namespace WarcraftPlugin.Classes
                 int collateralDamage = (int)(damage * 0.5f);
                 target.SetHp(target.PlayerPawn.Value.Health - collateralDamage);
 
-                target.PrintToChat($" \x06[Collateral] You were hit through {victim.PlayerName}!");
-                Player.PrintToChat($" \x04[Collateral] {target.PlayerName} was hit behind your target!");
+                target.PrintToChat($" {ChatColors.Red}Module B{ChatColors.Default} You were hit through {victim.PlayerName}!");
+                Player.PrintToChat($" {ChatColors.Green}Module B{ChatColors.Default} : {target.PlayerName} was hit behind your target!");
             }
         }
 
