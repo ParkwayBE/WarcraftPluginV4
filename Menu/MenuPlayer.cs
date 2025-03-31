@@ -132,21 +132,29 @@ internal class MenuPlayer
 
     internal void ScrollLeft()
     {
-        Console.WriteLine("menu left in menuplayer");
         if (AvailableMenus.Count > 1)
         {
-            MenuManagerExtra.SwitchMenu(player, moveRight: false);
+            Console.WriteLine("menu left in MenuPlayer");
+            Console.WriteLine("Calling SwitchMenu for Left");
+            MenuManagerExtra.SwitchMenu(player, moveRight: false);  // Directly call SwitchMenu
         }
-        Console.WriteLine("menu left");
+        else
+        {
+            Console.WriteLine("No available menus to scroll left.");
+        }
     }
     internal void ScrollRight()
     {
-        Console.WriteLine("menu right in menuplyaer");
         if (AvailableMenus.Count > 1)
         {
-            MenuManagerExtra.SwitchMenu(player,  moveRight: true);
+            Console.WriteLine("menu right in MenuPlayer");
+            Console.WriteLine("Calling SwitchMenu for Right");
+            MenuManagerExtra.SwitchMenu(player, moveRight: true);   // Directly call SwitchMenu
         }
-        Console.WriteLine("menu right");
+        else
+        {
+            Console.WriteLine("No available menus to scroll right.");
+        }
     }
 
     internal void ScrollUp()
