@@ -84,10 +84,10 @@ namespace WarcraftPlugin.Classes
             // V-Shape Laser Effect
             // ---------------------
             Vector beamStart = attacker.PlayerPawn.Value.AbsOrigin;
-            beamStart.Z -= 10; // Start at feet
+            beamStart.Z += 20; // Start at feet
 
             Vector endBase = victim.PlayerPawn.Value.AbsOrigin;
-            float baseZ = endBase.Z; // Target’s feet
+            float baseZ = endBase.Z + 30f;
 
             var rand = new Random();
 
@@ -166,7 +166,7 @@ namespace WarcraftPlugin.Classes
 
                 // Apply collateral damage
                 int collateralDamage = (int)(damage * 0.5f);
-                target.SetHp(target.PlayerPawn.Value.Health - collateralDamage);
+                @event.AddBonusDamage(collateralDamage);
 
                 target.PrintToChat($" {ChatColors.Red}Module B{ChatColors.Default} You were hit through {victim.PlayerName}!");
                 attacker.PrintToChat($" {ChatColors.Green}Module B{ChatColors.Default}: {target.PlayerName} was pierced for {collateralDamage} damage!");
