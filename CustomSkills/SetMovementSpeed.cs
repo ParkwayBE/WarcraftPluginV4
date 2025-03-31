@@ -22,7 +22,7 @@ namespace WarcraftPlugin.CustomSkills
             pawn.VelocityModifier = 1.0f;
 
             float speed = 1f + 0.1f * _speedMultiplier;
-            pawn.VelocityModifier = Math.Clamp(speed, 1f, 2f);
+            pawn.VelocityModifier = Math.Clamp(speed, 1f, 2.5f);
 
         }
 
