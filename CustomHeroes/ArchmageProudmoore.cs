@@ -183,6 +183,8 @@ namespace WarcraftPlugin.Classes
                     if (revived?.IsValid == true && revived.PlayerPawn?.Value != null)
                     {
                         revived.PlayerPawn.Value.Teleport(deathPosition, null, null);
+                        var allowedWeapons = new List<string> { "weapon_knife" };
+                        SkillFunctions.RestrictWeapons(revived, allowedWeapons, 30f);
                         revived.PrintToCenter("💧 You were summoned at the site of death!");
                     }
                 });
