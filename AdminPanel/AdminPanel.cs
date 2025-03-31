@@ -372,8 +372,9 @@ namespace WarcraftPlugin.Menu
         private static Dictionary<int, int> PlayerMenuColumn = new();
         public static Dictionary<int, List<Menu>> PlayerMenus = new();
 
-        internal static void OpenMainMenu(CCSPlayerController player, List<Menu> menus, int selectedOptionIndex = 0)
+        internal static void OpenMainMenuExtra(CCSPlayerController player, List<Menu> menus, int selectedOptionIndex = 0)
         {
+
             if (player == null || menus == null || menus.Count == 0)
                 return;
 

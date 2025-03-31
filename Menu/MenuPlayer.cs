@@ -25,9 +25,14 @@ internal class MenuPlayer
     internal void OpenMainMenu(Menu menu, int selectedOptionIndex = 0)
     {
         //player.DisableMovement();
-
+        if (player == null)
+        {
+            Console.WriteLine("Player is null, returning.");
+            return;
+        }
         if (menu == null)
         {
+
             player.EnableMovement();
             MainMenu = null;
             CurrentChoice = null;
