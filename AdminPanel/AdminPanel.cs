@@ -84,9 +84,22 @@ namespace WarcraftPlugin.Core
                 
 
                 // Middle Menu Options
-                middleMenu.Add("Admin Options", null, (pl, opt) =>
+                middleMenu.Add("message to a player", null, (pl, opt) =>
                 {
-                    pl.PrintToChat("Admin options selected.");
+                    var messageSubMenu = MenuManager.CreateMenu("choose a player to message", 5);
+                    foreach (var targetPlayer in Players)
+                    {
+                        messageSubMenu.Add(targetPlayer.PlayerName, null, (selectedAdmin, opt2) => 
+                        {
+                            RequestInput(player, (mess) =>
+                            {
+                                targetPlayer.PrintToChat($"{mess}");
+                            });
+
+                        });
+                    }
+
+                    MenuManagerExtra.OpenMainMenuExtra(pl, new List<Menu.Menu> { messageSubMenu });
                 });
 
 
