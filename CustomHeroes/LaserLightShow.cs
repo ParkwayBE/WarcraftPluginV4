@@ -44,7 +44,7 @@ namespace WarcraftPlugin.Classes
                 int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
                 if (abilityLevel < 1) return;
 
-                float speedMultiplier = 0.1f * abilityLevel;
+                float speedMultiplier = 1 + (0.1f * abilityLevel);
                 int bonushealth = abilityLevel * 15;
 
                 SkillFunctions.MovementSpeed(Player, speedMultiplier, 999f);
