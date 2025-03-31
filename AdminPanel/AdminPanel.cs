@@ -86,7 +86,16 @@ namespace WarcraftPlugin.Core
                     }
                    
                 });
-                
+                leftMenu.Add("Unfreeze Bots", null, (pl, opt) =>
+                {
+                    pl.ExecuteClientCommandFromServer($"css_unfreeze @bots");
+                    foreach (var plyr in Players)
+                    {
+                        plyr.PrintToChat($" {ChatColors.Red}{player.PlayerName}[ADMIN] {ChatColors.Default} Has unfrozen all bots");
+                    }
+
+                });
+
 
                 // Middle Menu Options
                 middleMenu.Add("message to a player", null, (pl, opt) =>

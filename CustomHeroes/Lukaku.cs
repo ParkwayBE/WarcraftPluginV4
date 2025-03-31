@@ -20,6 +20,7 @@ namespace WarcraftPlugin.Classes
         bool canUseUlt = false;
         bool footballIsSpawned = false;
 
+
         public override List<IWarcraftAbility> Abilities =>
         [
             new WarcraftAbility("DoSomething", "Quick"),
@@ -43,6 +44,7 @@ namespace WarcraftPlugin.Classes
             }
             footballsRemaining = 10;
             footBaller = new FootBaller(Player, 20);
+            footBaller.TurnBallsAroundPlayer(Player);
             canUseUlt = true;
         }
 
