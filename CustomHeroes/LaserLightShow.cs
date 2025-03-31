@@ -44,8 +44,8 @@ namespace WarcraftPlugin.Classes
                 int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
                 if (abilityLevel < 1) return;
                 var bonushealth = abilityLevel * 15;
-                float bonusspeed = Math.Clamp(abilityLevel * 0.5f, 0f, 4.5f);
-                SkillFunctions.MovementSpeed(Player, bonusspeed, 999f);
+                float speedMultiplier = abilityLevel;
+                SkillFunctions.MovementSpeed(Player, speedMultiplier, 999f);
                 SkillFunctions.SetBonusHealth(Player, bonushealth);
                 Vector spawnPoint;
                 spawnPoint = Player.PlayerPawn.Value.AbsOrigin;
@@ -54,7 +54,7 @@ namespace WarcraftPlugin.Classes
                 new RGBColorCycleEffect(Player, 999f).Start();
 
                 var pawn = Player.PlayerPawn.Value;
-                Player.PrintToChat($"[DEBUG] VelocityModifier: {bonusspeed}");
+                Player.PrintToChat($"[DEBUG] VelocityModifier: {speedMultiplier}");
                 Player.PrintToChat($"[DEBUG] Actual velocity: {pawn.VelocityModifier}");
             });
         }
@@ -134,7 +134,7 @@ namespace WarcraftPlugin.Classes
                     );
 
                     Color beamColor = Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256));
-                    Warcraft.DrawLaserBetween(start, beamEnd, beamColor, duration: 0.3f, width: 0.5f);
+                    Warcraft.DrawLaserBetween(start, beamEnd, beamColor, duration: 2f, width: 0.8f);
                 }
 
                 // Apply half damage
