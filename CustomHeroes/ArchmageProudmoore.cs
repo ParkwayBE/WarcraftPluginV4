@@ -8,6 +8,7 @@ using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace WarcraftPlugin.Classes
 {
@@ -103,30 +104,40 @@ namespace WarcraftPlugin.Classes
             if (!Player.IsValid || !Player.IsAlive()) return;
 
             var pawn = Player.PlayerPawn.Value;
+            if (pawn == null) return;
 
-            if (!_isFlying)
+            if (!UltimateToggle)
             {
-                // Activate flight
-                _isFlying = true;
-
-                pawn.MoveType = MoveType_t.MOVETYPE_FLY;
+                // Enable flying
+                UltimateToggle = true;
+                SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
                 pawn.GravityScale = 0f;
-                pawn.VelocityModifier = 1f + 0.5f;
+                pawn.VelocityModifier = 1.5f;
 
-                Player.PrintToChat(" \x07[Flight] You are now flying!");
+                // Give a small upward push
+                var velocity = pawn.AbsVelocity;
+                velocity.Z = 200;
+                pawn.Teleport(null, null, velocity);
+
+                Player.PrintToChat("🕊️ [Flight] You are now flying!");
             }
             else
             {
-                // Disable flight
-                _isFlying = false;
+                // Disable flying
+                UltimateToggle = false;
+                SetMoveType(pawn, MoveType_t.MOVETYPE_WALK);
+                pawn.GravityScale = 1f;
+                pawn.VelocityModifier = 1f;
 
-                pawn.MoveType = MoveType_t.MOVETYPE_WALK;
-                pawn.GravityScale = 1.0f;
-                pawn.VelocityModifier = 1.0f;
+                // Stop momentum
+                pawn.Teleport(null, null, new Vector(0, 0, 0));
 
-                Player.PrintToChat(" \x07[Flight] Your flight has ended.");
+                Player.PrintToChat("🪂 [Flight] Your flight has ended.");
             }
+
+            StartCooldown(3); // Optional: short cooldown to prevent rapid toggle abuse
         }
+
 
 
 
@@ -139,7 +150,7 @@ namespace WarcraftPlugin.Classes
             var victim = @event.Userid;
             SkillFunctions.SlowTarget(attacker, victim, 25, 3.5f);
 
-            if (@event.DmgHealth >= victim.PlayerPawn.Value.Health)
+            if (!victim.IsAlive())
             {
                 int level = WarcraftPlayer.GetAbilityLevel(1);
                 if (level <= 0) return;
