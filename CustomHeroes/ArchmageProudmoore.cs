@@ -82,7 +82,7 @@ namespace WarcraftPlugin.Classes
             if (Warcraft.RollDice(chancePercent, 100))
             {
                 WarcraftPlayer.HasUltimateImmunity = true;
-                Player.PrintToChat("🛡️ Brilliance Aura: You gained Ultimate Immunity for 160 seconds!");
+                Player.PrintToChat("\x04🛡️ Brilliance Aura\x01: You gained \x06Ultimate Immunity\x01!");
 
                 // Apply new immunity timer
                 var selfTimer = WarcraftPlugin.Instance.AddTimer(160f, () =>
@@ -90,7 +90,7 @@ namespace WarcraftPlugin.Classes
                     if (Player.IsValid)
                     {
                         WarcraftPlayer.HasUltimateImmunity = false;
-                        Player.PrintToChat("⚠️ Your Ultimate Immunity has worn off.");
+                        Player.PrintToChat("\x04⚠️\x01 Your \x03Ultimate Immunity\x01 has worn off.");
                     }
                 });
                 _immunityTimers[Player] = selfTimer;
@@ -116,8 +116,8 @@ namespace WarcraftPlugin.Classes
                 }
 
                 wcAlly.HasUltimateImmunity = true;
-                ally.PrintToChat("🛡️ Brilliance Aura: You received Ultimate Immunity for 160 seconds!");
-                Player.PrintToChat($" \x04✨ Brilliance Aura\x01: {ally.PlayerName} gained \x03Immunity\x01!");
+                ally.PrintToChat("\x04🛡️ Brilliance Aura\x01: You received \x03Ultimate Immunity\x01!");
+                Player.PrintToChat($" \x04✨ Brilliance Aura\x01: {ally.PlayerName} gained \x05Ultimate Immunity\x01!");
 
                 // Apply new immunity timer
                 var allyTimer = WarcraftPlugin.Instance.AddTimer(160f, () =>
