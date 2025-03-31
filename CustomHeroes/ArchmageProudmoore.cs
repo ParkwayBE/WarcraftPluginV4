@@ -80,7 +80,7 @@ namespace WarcraftPlugin.Classes
             if (Warcraft.RollDice(chancePercent, 100))
             {
                 WarcraftPlayer.HasUltimateImmunity = true;
-                Player.PrintToChat($"{ChatColors.Green} ✨ Brilliance Aura {ChatColors.Default}: You gained {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
+                Player.PrintToChat($" {ChatColors.Green}✨ Brilliance Aura{ChatColors.Default}: You gained {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
 
                 // Apply new immunity timer
                 var selfTimer = WarcraftPlugin.Instance.AddTimer(160f, () =>
