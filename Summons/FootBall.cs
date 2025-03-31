@@ -22,7 +22,7 @@ namespace WarcraftPlugin.Summons
     public class Football
     {
         public CPhysicsPropMultiplayer _ball;
-        private CDynamicProp _ballProp;
+        public CDynamicProp _ballProp;
         private CCSPlayerController _owner;
         public FootballHitSystem hitSystem;
         public bool isActive = false;
@@ -232,8 +232,9 @@ namespace WarcraftPlugin.Summons
                 };
 
                 // Log the object's new position or move it in the game
+                objectPosition.X += 50f;
+                balls[i]._ballProp.Teleport(objectPosition, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
 
-                balls[i].UpdateLocation(owner.AbsOrigin);
             }
         }
         public override void OnTick()
