@@ -61,54 +61,86 @@ namespace WarcraftPlugin.Core
             {
                 playerP.PrintToChat("You are an admin, the panel will open soon ;)");
                 Console.WriteLine("admin panel test");
-                
+
                 var Players = Utilities.GetPlayers();
-                var classMenuLeft = MenuManager.CreateMenu("Left Side Menu", 5);
-                var classMenuRight = MenuManager.CreateMenu("Right Side Menu", 5);
 
-                // Left-side options
-                classMenuLeft.Add("Spawn Dummy", null, (pl, opt) =>
+                // Create multiple columns of menus
+                var leftMenu = MenuManagerExtra.CreateMenu("Left Side Menu", 5);
+                var middleMenu = MenuManagerExtra.CreateMenu("Middle Menu", 5);
+                var rightMenu = MenuManagerExtra.CreateMenu("Right Side Menu", 5);
+
+                // List of menus for navigation
+                List<Menu.Menu> menus = new() { leftMenu, middleMenu, rightMenu };
+
+                // Left Menu Options
+                leftMenu.Add("Spawn Dummy", null, (pl, opt) =>
                 {
-                    DummyBotManager.SpawnOrResetDummy(player);
+                    DummyBotManager.SpawnOrResetDummy(pl);
                 });
-                classMenuLeft.Add("Freeze bots", null, (pl, opt) =>
+                leftMenu.Add("Freeze Bots", null, (pl, opt) =>
                 {
-                    player.ExecuteClientCommandFromServer($"css_freeze @bots");
+                    pl.ExecuteClientCommandFromServer($"css_freeze @bots");
+                });
+                leftMenu.Add("→ Next", null, (pl, opt) =>
+                {
+                    MenuManagerExtra.SwitchMenu(pl, menus, true); // Move to the right menu
                 });
 
-                // Right-side options
-                classMenuRight.Add("Kill Player Menu", null, (pl, opt) =>
+                // Middle Menu Options
+                middleMenu.Add("Admin Options", null, (pl, opt) =>
                 {
-                    var killSubMenu = MenuManager.CreateMenu("Kill a Player", 5);
+                    pl.PrintToChat("Admin options selected.");
+                });
+                middleMenu.Add("→ Next", null, (pl, opt) =>
+                {
+                    MenuManagerExtra.SwitchMenu(pl, menus, true);
+                });
+                middleMenu.Add("← Back", null, (pl, opt) =>
+                {
+                    MenuManagerExtra.SwitchMenu(pl, menus, false); // Move to the left menu
+                });
+
+                // Right Menu Options
+                rightMenu.Add("Kill Player Menu", null, (pl, opt) =>
+                {
+                    var killSubMenu = MenuManager.CreateMenu("Kill a player", 5);
                     foreach (var targetPlayer in Players)
                     {
                         killSubMenu.Add(targetPlayer.PlayerName, null, (pl, opt) =>
                         {
-                            player.ExecuteClientCommandFromServer($"css_slay #{targetPlayer.SteamID.ToString()}");
+                            pl.ExecuteClientCommandFromServer($"css_slay #{targetPlayer.SteamID}");
                         });
                     }
-                    MenuManager.OpenMainMenu(pl, killSubMenu);
+                    MenuManagerExtra.OpenMainMenu(pl, new List<Menu.Menu> { killSubMenu }); // Only single menu here
                 });
-                classMenuRight.Add("XP Menu", null, (admin, opt) =>
+
+                rightMenu.Add("XP Menu", null, (pl, opt) =>
                 {
-                    var xpSubMenu = MenuManager.CreateMenu("Add XP to Player", 5);
-                    xpSubMenu.Add("All", null, (admin, opt2) =>
+                    var xpSubMenu = MenuManager.CreateMenu("XP Menu", 5);
+                    xpSubMenu.Add("All Players", null, (pl, opt) =>
                     {
-                        RequestInput(player, (mess) =>
+                        RequestInput(pl, (mess) =>
                         {
                             int num = int.Parse(mess);
-                            foreach (var targetPlayer in Players)
+                            if (num > 0)
                             {
-                                _plugin.XpSystem.AddXp(targetPlayer, num);
+                                foreach (var targetPlayer in Players)
+                                {
+                                    _plugin.XpSystem.AddXp(targetPlayer, num);
+                                }
                             }
                         });
                     });
-                    MenuManager.OpenMainMenu(admin, xpSubMenu);
+                    MenuManagerExtra.OpenMainMenu(pl, new List<Menu.Menu> { xpSubMenu });
                 });
 
-                // Open both menus side by side
-                MenuManager.OpenMainMenu(player, classMenuLeft);
-                MenuManager.OpenMainMenu(player, classMenuRight);
+                rightMenu.Add("← Back", null, (pl, opt) =>
+                {
+                    MenuManagerExtra.SwitchMenu(pl, menus, false); // Move to the left menu
+                });
+
+                // Open the multi-column menu for the player
+                MenuManagerExtra.OpenMainMenu(player, menus);
 
                 /*
                 var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>
@@ -243,6 +275,10 @@ namespace WarcraftPlugin.Core
             }
         
         }
+        void openMenu(CCSPlayerController player)
+        {
+
+        }
         public HookResult OnPlayerChat(EventPlayerChat ev, GameEventInfo info)
         {
            var player = Utilities.GetPlayerFromUserid(ev.Userid);
@@ -326,4 +362,78 @@ namespace CounterStrikeSharp.API.Core
     }
 
 
+}
+namespace WarcraftPlugin.Menu
+{
+    internal static class MenuManagerExtra
+    {
+        private static Dictionary<int, int> PlayerMenuColumn = new();
+
+        internal static void OpenMainMenu(CCSPlayerController player, List<Menu> menus, int selectedOptionIndex = 0)
+        {
+            if (player == null || menus == null || menus.Count == 0)
+                return;
+
+            if (!PlayerMenuColumn.ContainsKey(player.Slot))
+                PlayerMenuColumn[player.Slot] = 0; 
+
+            int column = PlayerMenuColumn[player.Slot];
+            column = Math.Clamp(column, 0, menus.Count - 1);
+            PlayerMenuColumn[player.Slot] = column;
+
+            MenuAPI.Players[player.Slot].OpenMainMenu(menus[column], selectedOptionIndex);
+        }
+
+        internal static void CloseMenu(CCSPlayerController player)
+        {
+            if (player == null)
+                return;
+            MenuAPI.Players[player.Slot].OpenMainMenu(null);
+        }
+
+        internal static void CloseSubMenu(CCSPlayerController player)
+        {
+            if (player == null)
+                return;
+            MenuAPI.Players[player.Slot].CloseSubMenu();
+        }
+
+        internal static void CloseAllSubMenus(CCSPlayerController player)
+        {
+            if (player == null)
+                return;
+            MenuAPI.Players[player.Slot].CloseAllSubMenus();
+        }
+
+        internal static void OpenSubMenu(CCSPlayerController player, Menu menu)
+        {
+            if (player == null)
+                return;
+            MenuAPI.Players[player.Slot].OpenSubMenu(menu);
+        }
+
+        internal static Menu CreateMenu(string title = "", int resultsBeforePaging = 4)
+        {
+            return new Menu
+            {
+                Title = title,
+                ResultsBeforePaging = resultsBeforePaging,
+            };
+        }
+
+        internal static void SwitchMenu(CCSPlayerController player, List<Menu> menus, bool moveRight)
+        {
+            if (player == null || menus == null || menus.Count < 2)
+                return;
+
+            if (!PlayerMenuColumn.ContainsKey(player.Slot))
+                PlayerMenuColumn[player.Slot] = 0;
+
+            int column = PlayerMenuColumn[player.Slot];
+            column = moveRight ? Math.Min(column + 1, menus.Count - 1) : Math.Max(column - 1, 0);
+
+            PlayerMenuColumn[player.Slot] = column;
+            OpenMainMenu(player, menus);
+        }
+    }
 }
