@@ -42,6 +42,10 @@ internal class MenuPlayer
         VisibleOptions = menu.ResultsBeforePaging;
         MenuStart = MainMenu.Options?.First;
         CurrentChoice = MenuStart;
+        if (MenuManagerExtra.PlayerMenus.TryGetValue(player.Slot, out var menus))
+        {
+            AvailableMenus = menus; // Ensure AvailableMenus is set correctly
+        }
 
         //Set the selected option based on index
         for (int i = 0; i < selectedOptionIndex; i++)
