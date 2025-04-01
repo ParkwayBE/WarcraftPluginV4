@@ -19,6 +19,7 @@ namespace WarcraftPlugin.Classes
     {
         public override string DisplayName => "Laser Light Show";
         public override Color DefaultColor => Color.GreenYellow;
+        private bool _ultActive = false;
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -95,6 +96,11 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
+            if (_ultActive) return;
+            _ultActive = true;
+
+            // ... your code ...
+
             int abilityLevel0 = WarcraftPlayer.GetAbilityLevel(0);
             int abilityLevel1 = WarcraftPlayer.GetAbilityLevel(1);
             int abilityLevel2 = WarcraftPlayer.GetAbilityLevel(2);
@@ -151,6 +157,8 @@ namespace WarcraftPlugin.Classes
             });
 
             Player.PrintToChat($" {ChatColors.Green}Disintigrate{ChatColors.Green} Ultimate activated!");
+            WarcraftPlugin.Instance.AddTimer(3f, () => _ultActive = false);
+            StartCooldown(3);
         }
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
