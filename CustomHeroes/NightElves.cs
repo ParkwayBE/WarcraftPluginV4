@@ -70,8 +70,8 @@ namespace WarcraftPlugin.Classes
                 {
                     int reflectAmount = (int)(@event.DmgHealth * 0.25f);
                     attacker.SetHp(attacker.PlayerPawn.Value.Health - reflectAmount);
-                    attacker.PrintToCenter("🗡 You were hurt by Thorns Aura!");
-                    Player.PrintToCenter("🌿 Your Thorns Aura reflected damage!");
+                    attacker.PrintToCenter($"🗡 You were hurt by {ChatColors.LightPurple}Thorns Aura{ChatColors.Default}!");
+                    Player.PrintToCenter($"🌿 Your {ChatColors.LightPurple}Thorns Aura{ChatColors.Default} reflected damage!");
                 }
             }
         }
@@ -94,7 +94,7 @@ namespace WarcraftPlugin.Classes
             int bonusDamage = (int)(@event.DmgHealth * (level * 0.04f)); // Up to 20%
             @event.AddBonusDamage(bonusDamage);
 
-            attacker.PrintToCenter($"🎯 Trueshot Aura: +{bonusDamage} bonus damage!");
+            attacker.PrintToCenter($" {ChatColors.Green}🎯 Trueshot Aura{ChatColors.Default}: +{bonusDamage} bonus damage!");
         }
 
         private void Ultimate()
@@ -127,12 +127,12 @@ namespace WarcraftPlugin.Classes
 
             if (affected > 0)
             {
-                Player.PrintToChat($"{ChatColors.Lime}🌱 Root{ChatColors.Default}: Immobilized {affected} enemy{(affected > 1 ? " players" : "")}.");
+                Player.PrintToChat($" {ChatColors.Lime}🌱 Root{ChatColors.Default}: Immobilized {affected} enemy{(affected > 1 ? " players" : "")}.");
                 StartCooldown(3);
             }
             else
             {
-                Player.PrintToChat($"{ChatColors.LightRed}Root failed: No enemies nearby.");
+                Player.PrintToChat($" {ChatColors.LightRed}Root failed: No enemies nearby.");
             }
         }
     }
