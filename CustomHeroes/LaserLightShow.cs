@@ -51,11 +51,63 @@ namespace WarcraftPlugin.Classes
                 SkillFunctions.SetBonusHealth(Player, bonushealth);
                 new RGBColorCycleEffect(Player, 999f).Start();
 
+
+
+
+                var origin = Player.PlayerPawn.Value.AbsOrigin;
+                float radius = 50f;
+                int laserCount = 32;
+                float laserDuration = 3f;
+                float laserUpdateInterval = 0.5f;
+                int updates = (int)(laserDuration / laserUpdateInterval);
+
+                List<(Vector start, Vector end)> laserPositions = new();
+
+                for (int i = 0; i < laserCount; i++)
+                {
+                    float angle = (float)(i * (2 * Math.PI / laserCount));
+                    float x = origin.X + radius * (float)Math.Cos(angle);
+                    float y = origin.Y + radius * (float)Math.Sin(angle);
+                    float zStart = origin.Z;
+                    float zEnd = origin.Z + 200f;
+
+                    laserPositions.Add((new Vector(x, y, zStart), new Vector(x, y, zEnd)));
+                }
+
+                // Recursive function to draw and requeue the next update
+                void DrawColorCycle(int currentTick)
+                {
+                    if (currentTick >= updates)
+                        return;
+
+                    foreach (var (start, end) in laserPositions)
+                    {
+                        var color = Color.FromArgb(Random.Shared.Next(256), Random.Shared.Next(256), Random.Shared.Next(256));
+                        Warcraft.DrawLaserBetween(start, end, color, laserUpdateInterval + 0.1f, width: 1.2f);
+                    }
+
+                    WarcraftPlugin.Instance.AddTimer(laserUpdateInterval, () => DrawColorCycle(currentTick + 1));
+                }
+
+                // Kick off the cycle
+                DrawColorCycle(0);
+
+
+
+
+
+
+
+
+
+
+
+                /*
                 var origin = Player.PlayerPawn.Value.AbsOrigin;
                 float radius = 80f;
                 int laserCount = 32;
                 float laserDuration = 3f;
-
+                
                 for (int i = 0; i < laserCount; i++)
                 {
                     float angle = (float)(i * (2 * Math.PI / laserCount));
@@ -69,7 +121,7 @@ namespace WarcraftPlugin.Classes
 
                     var color = Color.FromArgb(Random.Shared.Next(256), Random.Shared.Next(256), Random.Shared.Next(256));
                     Warcraft.DrawLaserBetween(start, end, color, laserDuration, width: 1f);
-                }
+                } */
 
 
             });
