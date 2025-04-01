@@ -49,19 +49,22 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerShoot(EventWeaponFire fire)
         {
+
             if (WarcraftPlayer.GetAbilityLevel(2) <= 0) return; // Fan of Knives
             if (Player == null || !Player.IsValid || !Player.IsAlive()) return;
 
             var activeWeapon = Player.PlayerPawn.Value.WeaponServices?.ActiveWeapon.Value;
             if (activeWeapon == null || activeWeapon.DesignerName != "weapon_knife") return;
 
+            Player.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} Player is valid and holding a knife");
+
             ulong buttons = Player.PlayerPawn.Value.MovementServices.Buttons.ButtonStates[0];
             bool isRightClick = (buttons & (ulong)PlayerButtons.Attack2) != 0;
 
+            Player.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} Player is using RMB");
+
             if (!isRightClick) return;
             if (!IsAbilityReady(2)) return;
-
-            StartCooldown(2); // optional cooldown between throws
             new ThrowingKnifeEffect(Player).Start();
         }
 
@@ -79,6 +82,7 @@ namespace WarcraftPlugin.Classes
 
             public override void OnStart()
             {
+                Owner.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} ThrowingKnife Onstart effect called");
                 _position = Owner.CalculatePositionInFront(20, Owner.EyeHeight());
                 _direction = Owner.PlayerPawn.Value.EyeAngles.ToForward();
 
@@ -97,7 +101,7 @@ namespace WarcraftPlugin.Classes
             {
                 float deltaTime = 0.02f; // 50 ticks/sec
                 _travelTime += deltaTime;
-
+                Console.WriteLine($"{ChatColors.Red}DEBUG{ChatColors.Default} ThrowingKnife ON TICK effect called");
                 // Update knife position
                 _position += _direction * (_speed * deltaTime);
 
@@ -133,6 +137,7 @@ namespace WarcraftPlugin.Classes
 
             public override void OnFinish()
             {
+                Owner.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} ThrowingKnife  effect REMOVED");
                 _visualKnife?.RemoveIfValid();
             }
         }
@@ -247,6 +252,7 @@ namespace WarcraftPlugin.Classes
             }
             public override void OnStart()
             {
+                Owner.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} BLEED EFFECT called");
                 // needs to be here
             }
 
