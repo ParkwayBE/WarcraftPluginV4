@@ -102,13 +102,26 @@ namespace WarcraftPlugin.Classes
             float radius = 900f + AbilityLevelMult;
 
             var eyePos = Player.EyePosition();
-            eyePos.Z += 30f; // Raise beam origin 30 units above the eye level
-
+            eyePos.Z += 30f; // Raise slightly above eye level
             var forward = Player.PlayerPawn.Value.EyeAngles.ToForward();
             var targetPos = eyePos + forward * 1000f;
 
-            // Initial thick beam from eye to target
-            Warcraft.DrawLaserBetween(eyePos, targetPos, Color.Red, duration: 1.5f, width: 10f);
+            // New rainbow triple beam
+            Color[] beamColors = { Color.Red, Color.Green, Color.Blue };
+            Vector[] offsets = {
+                new Vector(5f, 0, 0),
+                new Vector(-5f, 0, 0),
+                new Vector(0, 5f, 0)
+            };
+
+            foreach (var offset in offsets)
+            {
+                var beamStart = eyePos + offset;
+                var jitteredEnd = targetPos + new Vector(0, 0, Random.Shared.Next(-10, 10));
+
+                Warcraft.DrawLaserBetween(beamStart, jitteredEnd, beamColors[Array.IndexOf(offsets, offset)], duration: 1.5f, width: 4f);
+            }
+
 
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
