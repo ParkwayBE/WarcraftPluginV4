@@ -58,9 +58,40 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            // TODO: Disintegrate: DrawLaserBetween multiple in a circle shaped pattern maybe , --->
-            // --->  different colors, after a brief delay create an explosion at the location of the end of the laser.
-            StartCooldown(3); // Index 3 = Ultimate
+            int abilityLevel0 = WarcraftPlayer.GetAbilityLevel(0);
+            int abilityLevel1 = WarcraftPlayer.GetAbilityLevel(1);
+            int abilityLevel2 = WarcraftPlayer.GetAbilityLevel(2);
+            int AbilityLevelMult = abilityLevel0 * abilityLevel1 * abilityLevel2;
+            float radius = 300f + AbilityLevelMult;
+            float damage = AbilityLevelMult;
+
+            var eyePos = Player.EyePosition();
+            var forward = Player.PlayerPawn.Value.EyeAngles.ToForward();
+            var targetPos = eyePos + forward * 1000f;
+
+            // Initial thick beam from eye to target
+            Warcraft.DrawLaserBetween(eyePos, targetPos, Color.Red, duration: 1.5f, width: 10f);
+
+            // Spawn explosion at target
+            Warcraft.SpawnExplosion(targetPos, damage, radius, Player, KillFeedIcon.prop_exploding_barrel);
+
+            // Radial blast lasers
+            int beamCount = 16;
+            float angleStep = 360f / beamCount;
+
+            for (int i = 0; i < beamCount; i++)
+            {
+                float angleRad = (float)(i * angleStep * Math.PI / 180f);
+                float x = (float)Math.Cos(angleRad);
+                float y = (float)Math.Sin(angleRad);
+                var dir = new Vector(x, y, 0);
+                var end = targetPos + dir * radius;
+
+                var color = Color.FromArgb(Random.Shared.Next(256), Random.Shared.Next(256), Random.Shared.Next(256));
+                Warcraft.DrawLaserBetween(targetPos, end, color, duration: 2f, width: 1.5f);
+            }
+
+            Player.PrintToChat($" {ChatColors.Green}Disintigrate{ChatColors.Green} Ultimate activated!");
         }
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
@@ -167,12 +198,6 @@ namespace WarcraftPlugin.Classes
                 attacker.PrintToChat($" {ChatColors.Green}Module B{ChatColors.Default}: {target.PlayerName} was pierced for {collateralDamage} damage!");
             }
         }
-
-
-
-
-
-
         public class RGBColorCycleEffect : WarcraftEffect
         {
             private float _hue = 0f;
