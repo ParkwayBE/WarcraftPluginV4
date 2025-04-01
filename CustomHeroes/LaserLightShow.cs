@@ -26,7 +26,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Module R", "Increased Movement speed and health on spawn."),
             new WarcraftAbility("Module G", "Your attacks have a chance to deal bonus damage."),
             new WarcraftAbility("Module B", "Your attacks can chain through enemies."),
-            new WarcraftCooldownAbility("Disintigrate","Upon activation: After a brief delay fire a beam of energy damaging all players that are too close.", 1f)
+            new WarcraftCooldownAbility("Disintigrate","Upon activation: After a brief delay fire a beam of energy damaging all players that are too close.", 30f)
         ];
 
         public override void Register()

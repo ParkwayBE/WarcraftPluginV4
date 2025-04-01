@@ -36,7 +36,7 @@ namespace WarcraftPlugin.CustomSkills
 
         public static void FreezePlayer(CCSPlayerController attacker, CCSPlayerController target, int chancePercent, float duration)
         {
-            if (!target.IsAlive() || !attacker.IsAlive())
+            if (!target.IsAlive() || !attacker.IsAlive() || attacker.TeamNum == target.TeamNum)
                 return;
 
             if (Warcraft.RollDice(100, chancePercent)) // simple roll: 1 in `chance`
@@ -64,12 +64,15 @@ namespace WarcraftPlugin.CustomSkills
 
         public static void LeechHealth(CCSPlayerController attacker, CCSPlayerController victim, int chancePercent, float healPercent, int damageDealt)
         {
+            if (!victim.IsAlive() || !attacker.IsAlive() || attacker.TeamNum == victim.TeamNum)
+                return;
+
             LeechSkill.LeechHealth(attacker, victim, chancePercent, healPercent, damageDealt);
         }
 
         public static void SlowTarget(CCSPlayerController attacker, CCSPlayerController target, int chancePercent, float duration)
         {
-            if (!target.IsAlive() || !attacker.IsAlive())
+            if (!target.IsAlive() || !attacker.IsAlive() || attacker.TeamNum == target.TeamNum)
                 return;
 
             if (Warcraft.RollDice(100, chancePercent)) // simple roll: 1 in `chance`
@@ -89,6 +92,9 @@ namespace WarcraftPlugin.CustomSkills
         public static void DealRawDamage(CCSPlayerController attacker, CCSPlayerController victim, int damage)
         {
             if (victim == null || !victim.IsValid || victim.PlayerPawn?.Value == null) return;
+
+            if (!victim.IsAlive() || !attacker.IsAlive() || attacker.TeamNum == victim.TeamNum)
+                return;
 
             int newHealth = victim.PlayerPawn.Value.Health - damage;
 
@@ -110,6 +116,9 @@ namespace WarcraftPlugin.CustomSkills
         public static void ImpaleTarget(CCSPlayerController attacker, CCSPlayerController victim, float force = 300f)
         {
             if (victim == null || !victim.IsValid || victim.PlayerPawn?.Value == null) return;
+
+            if (!victim.IsAlive() || !attacker.IsAlive() || attacker.TeamNum == victim.TeamNum)
+                return;
 
             var launchVelocity = new Vector(0, 0, force);
             victim.PlayerPawn.Value.Teleport(null, null, launchVelocity);
