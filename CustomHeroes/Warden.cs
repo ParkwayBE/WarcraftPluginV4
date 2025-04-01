@@ -34,7 +34,7 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerDeath>(PlayerDeath);
-            HookEvent<EventWeaponFire>(PlayerShoot);
+            HookEvent<EventPlayerShoot>(PlayerShoot);
             HookAbility(3, Ultimate);
         }
 
@@ -47,7 +47,7 @@ namespace WarcraftPlugin.Classes
             SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f);
         }
 
-        private void PlayerShoot(EventWeaponFire fire)
+        private void PlayerShoot(EventPlayerShoot shoot)
         {
             Player.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} Player firing his knife");
             if (WarcraftPlayer.GetAbilityLevel(2) <= 0) return; // Fan of Knives
