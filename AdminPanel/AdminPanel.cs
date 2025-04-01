@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
@@ -59,7 +60,9 @@ namespace WarcraftPlugin.Core
                 var leftMenu = MenuManagerExtra.CreateMenu("Admin Page 1 of 3", 5);
                 var middleMenu = MenuManagerExtra.CreateMenu("Admin Page 2 of 3", 5);
                 var rightMenu = MenuManagerExtra.CreateMenu("Admin Page 3 of 3", 5);
-
+                leftMenu.Category = "Admin";
+                middleMenu.Category = "Admin";
+                rightMenu.Category = "Admin";
                 // List of menus for navigation
                 List<Menu.Menu> menus = new() { leftMenu, middleMenu, rightMenu };
 
@@ -380,6 +383,7 @@ namespace WarcraftPlugin.Menu
         private static Dictionary<int, int> PlayerMenuColumn = new();
         public static Dictionary<int, List<Menu>> PlayerMenus = new();
 
+
         internal static void OpenMainMenuExtra(CCSPlayerController player, List<Menu> menus, int selectedOptionIndex = 0)
         {
 
@@ -443,37 +447,35 @@ namespace WarcraftPlugin.Menu
         {
 
 
-            if (player == null)
-            {
-
+            if (player == null || !PlayerMenus.ContainsKey(player.Slot))
                 return;
-            }
 
-            if (!PlayerMenus.ContainsKey(player.Slot))
-            {
-
+            List<Menu> allMenus = PlayerMenus[player.Slot];
+            if (allMenus.Count < 2)
                 return;
-            }
-
-            List<Menu> menus = PlayerMenus[player.Slot];
-
-            if (menus.Count < 2)
-            {
-
-                return;
-            }
 
             if (!PlayerMenuColumn.ContainsKey(player.Slot))
                 PlayerMenuColumn[player.Slot] = 0;
 
-            int column = PlayerMenuColumn[player.Slot];
-            column = moveRight ? Math.Min(column + 1, menus.Count - 1) : Math.Max(column - 1, 0);
+            int currentColumn = PlayerMenuColumn[player.Slot];
+            Menu currentMenu = MenuAPI.Players[player.Slot].MainMenu;
 
-            PlayerMenuColumn[player.Slot] = column;
+            // Filter menus: Only switch within the same category
+            List<Menu> filteredMenus = allMenus.Where(m => m.Category == currentMenu.Category).ToList();
 
+            if (filteredMenus.Count < 2)
+                return;
 
+            int index = filteredMenus.IndexOf(currentMenu);
+            if (index == -1)
+                return;
 
-            MenuAPI.Players[player.Slot].OpenMainMenu(menus[column]);
+            int newIndex = moveRight ? index + 1 : index - 1;
+            if (newIndex < 0 || newIndex >= filteredMenus.Count)
+                return;
+
+            PlayerMenuColumn[player.Slot] = newIndex;
+            MenuAPI.Players[player.Slot].OpenMainMenu(filteredMenus[newIndex]);
 
         }
     }
