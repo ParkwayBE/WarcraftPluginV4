@@ -5,7 +5,7 @@ using WarcraftPlugin.Helpers;
 
 namespace WarcraftPlugin.CustomSkills
 {
-    internal class FreezePlayerEffect : WarcraftEffect
+    public class FreezePlayerEffect : WarcraftEffect
     {
         private readonly CCSPlayerController _target;
 
