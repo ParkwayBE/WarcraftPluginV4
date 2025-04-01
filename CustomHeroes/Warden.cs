@@ -49,7 +49,7 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerShoot(EventWeaponFire fire)
         {
-
+            Player.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} Player firing his knife");
             if (WarcraftPlayer.GetAbilityLevel(2) <= 0) return; // Fan of Knives
             if (Player == null || !Player.IsValid || !Player.IsAlive()) return;
 
