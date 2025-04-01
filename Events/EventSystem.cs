@@ -23,7 +23,6 @@ namespace WarcraftPlugin.Events
         private readonly WarcraftPlugin _plugin;
         private readonly Config _config;
         private readonly List<GameAction> _gameActions = [];
-
         internal EventSystem(WarcraftPlugin plugin, Config config)
         {
             _plugin = plugin;
@@ -44,6 +43,7 @@ namespace WarcraftPlugin.Events
             _plugin.AddTimer(1, PlayerSpottedOnRadar, TimerFlags.REPEAT);
 
             //Register event handlers dynamically from classes
+
             RegisterDynamicEventHandlers();
         }
 
@@ -73,7 +73,6 @@ namespace WarcraftPlugin.Events
                 foreach (var gameAction in warcraftClass.GetEventListeners())
                 {
                     if (!CanAddGameAction(gameAction.EventType, gameAction.HookMode)) continue;
-
                     var handlerMethod = typeof(EventSystem).GetMethod(
                         gameAction.HookMode == HookMode.Pre ? nameof(HandleDynamicPreEvent) : nameof(HandleDynamicPostEvent),
                         BindingFlags.Static | BindingFlags.NonPublic
@@ -99,19 +98,18 @@ namespace WarcraftPlugin.Events
         private static HookResult HandleDynamicEvent<T>(T @event, GameEventInfo info, HookMode hookMode) where T : GameEvent
         {
             var userid = @event.GetType().GetProperty("Userid")?.GetValue(@event) as CCSPlayerController;
-            var wcPlayer = userid.GetWarcraftPlayer();
-            if (wcPlayer?.GetClass() != null)
+            if (userid != null)
             {
-                wcPlayer.GetClass().InvokeEvent(@event, hookMode);
+                // Invoke player specific events directly on the affected player
+                userid.GetWarcraftPlayer()?.GetClass()?.InvokeEvent(@event, hookMode);
             }
             else
             {
-                Console.WriteLine($"[WCS] ⚠️ HandleDynamicEvent: WarcraftPlayer or class not initialized for {userid.PlayerName} ({userid.SteamID})");
+                // Else Invoke global events on all players
+                Utilities.GetPlayers().ForEach(p => { p.GetWarcraftPlayer()?.GetClass()?.InvokeEvent(@event, hookMode); });
             }
             return HookResult.Continue;
         }
-
-
         private void PlayerSpottedOnRadar()
         {
             var players = Utilities.GetPlayers();
@@ -120,7 +118,6 @@ namespace WarcraftPlugin.Events
             foreach (var spottedPlayer in players)
             {
                 if (!spottedPlayer.IsAlive()) continue;
-
                 var spottedByMask = spottedPlayer.PlayerPawn.Value.EntitySpottedState.SpottedByMask;
 
                 for (int i = 0; i < spottedByMask.Length; i++)
@@ -151,7 +148,6 @@ namespace WarcraftPlugin.Events
                 }
             }
         }
-
         private HookResult RoundEnd(EventRoundEnd @event, GameEventInfo info)
         {
             Utilities.GetPlayers().ForEach(p =>
@@ -162,20 +158,18 @@ namespace WarcraftPlugin.Events
             return HookResult.Continue;
         }
 
+
         private HookResult RoundStart(EventRoundStart @event, GameEventInfo info)
         {
-            Utilities.GetPlayers()
-                .Where(player => !player.IsBot && !player.ControllingBot)
-                .ToList()
-                .ForEach(player =>
+            Utilities.GetPlayers().Where(x => !x.IsBot && !x.ControllingBot).ToList().ForEach(player =>
+            {
+                var warcraftPlayer = player.GetWarcraftPlayer();
+                var warcraftClass = warcraftPlayer?.GetClass();
+
+
+                if (warcraftClass != null)
                 {
-                    var warcraftPlayer = player.GetWarcraftPlayer();
-                    var warcraftClass = warcraftPlayer?.GetClass();
-
-                    if (warcraftClass == null)
-                        return;
-
-                    warcraftClass.InvokeEvent(@event, HookMode.Pre);
+                    warcraftClass?.InvokeEvent(@event, HookMode.Pre);
 
                     if (XpSystem.GetFreeSkillPoints(warcraftPlayer) > 0)
                     {
@@ -183,10 +177,8 @@ namespace WarcraftPlugin.Events
                     }
                     else
                     {
-                        var message =
-                    $"{warcraftClass.LocalizedDisplayName} ({warcraftPlayer.currentLevel})\n" +
-                    (warcraftPlayer.IsMaxLevel ? "" : $"{_plugin.Localizer["xp.current"]}: {warcraftPlayer.currentXp}/{warcraftPlayer.amountToLevel}\n");
-
+                        var message = $"{warcraftClass.LocalizedDisplayName} ({warcraftPlayer.currentLevel})\n" +
+                        (warcraftPlayer.IsMaxLevel ? "" : $"{_plugin.Localizer["xp.current"]}: {warcraftPlayer.currentXp}/{warcraftPlayer.amountToLevel}\n");
                         player.PrintToCenter(message);
                     }
 
@@ -194,11 +186,10 @@ namespace WarcraftPlugin.Events
                     {
                         warcraftClass.ResetCooldowns();
                     });
-                });
-
+                }
+            });
             return HookResult.Continue;
         }
-
 
         private HookResult PlayerHurtHandler(EventPlayerHurt @event, GameEventInfo _)
         {
@@ -226,7 +217,6 @@ namespace WarcraftPlugin.Events
 
             return HookResult.Continue;
         }
-
         private HookResult PlayerSpawnHandler(EventPlayerSpawn @event, GameEventInfo _)
         {
             var player = @event.Userid;
@@ -273,30 +263,23 @@ namespace WarcraftPlugin.Events
 
                 if (headshot)
                     xpHeadshot = Convert.ToInt32(_config.XpPerKill * _config.XpHeadshotModifier);
-
                 if (weaponName.StartsWith("knife"))
                 {
                     xpKnife = Convert.ToInt32(_config.XpPerKill * _config.XpKnifeModifier);
                 }
-
                 var xpToAdd = Convert.ToInt32(_config.XpPerKill + xpHeadshot + xpKnife);
-
                 _plugin.XpSystem.AddXp(attacker, xpToAdd);
-
                 string hsBonus = "";
                 if (xpHeadshot != 0)
                 {
                     hsBonus = $"(+{xpHeadshot} {_plugin.Localizer["xp.bonus.headshot"]})";
                 }
-
                 string knifeBonus = "";
                 if (xpKnife != 0)
                 {
                     knifeBonus = $"(+{xpKnife} {_plugin.Localizer["xp.bonus.knife"]})";
                 }
-
                 string xpString = $" {_plugin.Localizer["xp.kill", xpToAdd, victim.PlayerName, hsBonus, knifeBonus]}";
-
                 attacker.PrintToChat(xpString);
             }
 
@@ -323,5 +306,6 @@ namespace WarcraftPlugin.Events
             }
             return HookResult.Continue;
         }
+
     }
 }

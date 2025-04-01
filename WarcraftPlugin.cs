@@ -48,7 +48,6 @@ namespace WarcraftPlugin
 
         public override string ModuleName => "Warcraft";
         public override string ModuleVersion => "DEVELOPMENT";
-
         public const int MaxLevel = 16;
         public const int MaxSkillLevel = 5;
         public const int maxUltimateLevel = 1;
@@ -69,52 +68,40 @@ namespace WarcraftPlugin
 
         public Config Config { get; set; } = null!;
 
+
         internal WarcraftPlayer GetWcPlayer(CCSPlayerController player)
         {
-            if (!player.IsValid || player.ControllingBot) return null;
 
-            if (WarcraftPlayers.TryGetValue(player.Handle, out var wcPlayer))
-                return wcPlayer;
+            if (!player.IsValid || player.ControllingBot) return null; // removed isbot line
 
-            try
+
+            WarcraftPlayers.TryGetValue(player.Handle, out var wcPlayer);
+            if (wcPlayer == null)
             {
                 wcPlayer = _database.LoadPlayerFromDatabase(player, XpSystem);
-                if (wcPlayer != null)
-                {
-                    WarcraftPlayers[player.Handle] = wcPlayer;
-                    return wcPlayer;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[WCS] ❌ Failed to load player data for {player.PlayerName} ({player.SteamID}): {ex.Message}");
+                WarcraftPlayers[player.Handle] = wcPlayer;
             }
 
-            return null;
+            return wcPlayer;
         }
-
-
 
         internal void SetWcPlayer(CCSPlayerController player, WarcraftPlayer wcPlayer)
         {
             WarcraftPlayers[player.Handle] = wcPlayer;
         }
-
         public Database GetDatabase() => _database;
 
         internal static void RefreshPlayerName(CCSPlayerController player)
         {
             if (player == null || !player.IsValid) return;
             if (Instance.Config.DisableNamePrefix) return;
-
             var warcraftPlayer = Instance.GetWcPlayer(player);
-
             if (warcraftPlayer == null) return;
 
             var playerNameClean = player.GetRealPlayerName();
             var playerNameWithPrefix = $"{warcraftPlayer.GetLevel()} [{warcraftPlayer.GetClass().LocalizedDisplayName}] {playerNameClean}";
-
             player.PlayerName = playerNameWithPrefix;
+
             Utilities.SetStateChanged(player, "CBasePlayerController", "m_iszPlayerName");
 
             Instance.AddTimer(1, () =>
@@ -128,16 +115,11 @@ namespace WarcraftPlugin
         public override void Load(bool hotReload)
         {
             base.Load(hotReload);
-
             Localizer = LocalizerMiddleware.Load(Localizer, ModuleDirectory);
-
             MenuAPI.Load(this, hotReload);
-
             _instance ??= this;
-
             XpSystem = new XpSystem(this);
             XpSystem.GenerateXpCurve(110, 1.07f, MaxLevel);
-
             _database = new Database();
             classManager = new ClassManager();
             classManager.Initialize(ModuleDirectory, Config);
@@ -216,6 +198,7 @@ namespace WarcraftPlugin
                 manifest.AddResource("sounds/physics/body/body_medium_break3.vsnd");
 
                 //sounds/music/survival_review_victory.vsnd_c // cool track
+
 
                 //preload class specific resources
                 foreach (var resources in classManager.GetAllClasses().SelectMany(x => x.PreloadResources).ToList())
