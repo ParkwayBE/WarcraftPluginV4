@@ -63,7 +63,7 @@ namespace WarcraftPlugin.Classes
             int abilityLevel2 = WarcraftPlayer.GetAbilityLevel(2);
             int AbilityLevelMult = abilityLevel0 * abilityLevel1 * abilityLevel2;
             float radius = 300f + AbilityLevelMult;
-            float damage = AbilityLevelMult;
+            float damage = 100f + AbilityLevelMult;
 
             var eyePos = Player.EyePosition();
             var forward = Player.PlayerPawn.Value.EyeAngles.ToForward();
@@ -72,24 +72,32 @@ namespace WarcraftPlugin.Classes
             // Initial thick beam from eye to target
             Warcraft.DrawLaserBetween(eyePos, targetPos, Color.Red, duration: 1.5f, width: 10f);
 
-            // Spawn explosion at target
-            Warcraft.SpawnExplosion(targetPos, damage, radius, Player, KillFeedIcon.prop_exploding_barrel);
-
-            // Radial blast lasers
-            int beamCount = 16;
-            float angleStep = 360f / beamCount;
-
-            for (int i = 0; i < beamCount; i++)
+            WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
-                float angleRad = (float)(i * angleStep * Math.PI / 180f);
-                float x = (float)Math.Cos(angleRad);
-                float y = (float)Math.Sin(angleRad);
-                var dir = new Vector(x, y, 0);
-                var end = targetPos + dir * radius;
+                // Spawn explosion at target
+                Warcraft.SpawnExplosion(targetPos, damage, radius, Player, KillFeedIcon.prop_exploding_barrel);
 
-                var color = Color.FromArgb(Random.Shared.Next(256), Random.Shared.Next(256), Random.Shared.Next(256));
-                Warcraft.DrawLaserBetween(targetPos, end, color, duration: 2f, width: 1.5f);
-            }
+                // Radial blast lasers
+
+                int beamCount = 32;
+                float angleStep = 360f / beamCount;
+
+                for (int i = 0; i < beamCount; i++)
+                {
+                    // Random direction using unit sphere
+                    double theta = Random.Shared.NextDouble() * 2 * Math.PI;
+                    double phi = Math.Acos(2 * Random.Shared.NextDouble() - 1);
+                    float x = (float)(Math.Sin(phi) * Math.Cos(theta));
+                    float y = (float)(Math.Sin(phi) * Math.Sin(theta));
+                    float z = (float)Math.Cos(phi);
+
+                    var dir = new Vector(x, y, z);
+                    var end = targetPos + dir * radius;
+
+                    var color = Color.FromArgb(Random.Shared.Next(256), Random.Shared.Next(256), Random.Shared.Next(256));
+                    Warcraft.DrawLaserBetween(targetPos, end, color, duration: 2.5f, width: 2f);
+                }
+            });
 
             Player.PrintToChat($" {ChatColors.Green}Disintigrate{ChatColors.Green} Ultimate activated!");
         }
