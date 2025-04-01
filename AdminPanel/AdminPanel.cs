@@ -1,19 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Commands.Targeting;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Events;
-using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CounterStrikeSharp.API.Modules.Utils;
-using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Menu;
-using WarcraftPlugin.Menu.WarcraftMenu;
 
 namespace WarcraftPlugin.Core
 {
@@ -32,7 +23,7 @@ namespace WarcraftPlugin.Core
             admins.Add("76561198061919153");
             admins.Add("76561198024206738");
             _plugin.AddCommand("adm", "opens admin panel", OpenAdminPanel);
-            _plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat, HookMode.Pre);
+            //_plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat, HookMode.Pre);
             //_plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat2, HookMode.Pre);
             _plugin.AddCommandListener("say", OnPlayerChat2);
         }
@@ -81,10 +72,11 @@ namespace WarcraftPlugin.Core
                 leftMenu.Add("Freeze Bots", null, (pl, opt) =>
                 {
                     pl.ExecuteClientCommandFromServer($"css_freeze @bots");
-                    foreach ( var plyr in Players ) {
+                    foreach (var plyr in Players)
+                    {
                         plyr.PrintToChat($" {ChatColors.Red}{player.PlayerName}[ADMIN] {ChatColors.Default} Has frozen all bots");
                     }
-                   
+
                 });
                 leftMenu.Add("Unfreeze Bots", null, (pl, opt) =>
                 {
@@ -103,7 +95,7 @@ namespace WarcraftPlugin.Core
                     var messageSubMenu = MenuManager.CreateMenu("choose a player to message", 5);
                     foreach (var targetPlayer in Players)
                     {
-                        messageSubMenu.Add(targetPlayer.PlayerName, null, (selectedAdmin, opt2) => 
+                        messageSubMenu.Add(targetPlayer.PlayerName, null, (selectedAdmin, opt2) =>
                         {
                             RequestInput(player, (mess) =>
                             {
@@ -157,7 +149,7 @@ namespace WarcraftPlugin.Core
                 // Open the multi-column menu for the player
                 MenuManagerExtra.OpenMainMenuExtra(player, menus); // This will open the left, middle, and right men
 
-          
+
                 /*
                 var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>
                     {player.SteamID.ToString()}'s Admin Menu</font><br>
@@ -289,12 +281,14 @@ namespace WarcraftPlugin.Core
             {
                 player.PrintToChat("Nah, no roles for u");
             }
-        
+
         }
         void openMenu(CCSPlayerController player)
         {
 
         }
+
+        /*
         public HookResult OnPlayerChat(EventPlayerChat ev, GameEventInfo info)
         {
            var player = Utilities.GetPlayerFromUserid(ev.Userid);
@@ -314,7 +308,7 @@ namespace WarcraftPlugin.Core
             }
 
             return HookResult.Continue;
-        }
+        } */
         public HookResult OnPlayerChat2(CCSPlayerController? player, CommandInfo info)
         {
             //var player = Utilities.GetPlayerFromUserid(ev.Userid);
@@ -322,7 +316,7 @@ namespace WarcraftPlugin.Core
             var message = info.GetArg(1);
             Console.WriteLine($"message is : {message}");
             if (player == null) return HookResult.Continue;
-         
+
             if (pendingInputs.TryGetValue(player, out var action))
             {
                 action.Invoke(message);  // Process stored action
@@ -330,7 +324,7 @@ namespace WarcraftPlugin.Core
                 return HookResult.Handled;
             }
 
-                return HookResult.Continue; // Allow other chat messages to continue
+            return HookResult.Continue; // Allow other chat messages to continue
         }
 
 
@@ -354,13 +348,13 @@ namespace WarcraftPlugin.Core
         {
             //_db.ChangePlayerRole(player, role);
         }
-        
+
         public HookResult PlayerSpawnHandler(EventPlayerSpawn @event, GameEventInfo info)
         {
             Console.WriteLine($"Player Spawned: {@event.Userid}");
 
-          return HookResult.Continue;
-         }
+            return HookResult.Continue;
+        }
     }
 }
 namespace CounterStrikeSharp.API.Core
@@ -447,17 +441,17 @@ namespace WarcraftPlugin.Menu
 
         internal static void SwitchMenu(CCSPlayerController player, bool moveRight)
         {
-        
+
 
             if (player == null)
             {
-             
+
                 return;
             }
 
             if (!PlayerMenus.ContainsKey(player.Slot))
             {
-              
+
                 return;
             }
 
@@ -465,7 +459,7 @@ namespace WarcraftPlugin.Menu
 
             if (menus.Count < 2)
             {
-              
+
                 return;
             }
 
@@ -477,7 +471,7 @@ namespace WarcraftPlugin.Menu
 
             PlayerMenuColumn[player.Slot] = column;
 
-    
+
 
             MenuAPI.Players[player.Slot].OpenMainMenu(menus[column]);
 
