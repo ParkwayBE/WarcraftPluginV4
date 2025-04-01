@@ -19,7 +19,7 @@ namespace WarcraftPlugin.CustomSkills
         {
             var pawn = Owner.PlayerPawn.Value;
 
-            float speed = 1f * _speedMultiplier;
+            float speed = 1f + (0.1f * _speedMultiplier);
 
             pawn.VelocityModifier = speed;//Math.Clamp(speed, 1f, 2.5f);     1.5    =    
 

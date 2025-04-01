@@ -136,15 +136,17 @@ internal class MenuPlayer
 
     internal void ScrollLeft()
     {
-        
+        if (AvailableMenus.Count > 1 && MainMenu != null) // Ensure multiple menus exist
+        {
             MenuManagerExtra.SwitchMenu(player, moveRight: false);
-        
+        }
     }
     internal void ScrollRight()
     {
-        
+        if (AvailableMenus.Count > 1 && MainMenu != null) // Ensure multiple menus exist
+        {
             MenuManagerExtra.SwitchMenu(player, moveRight: true);
-        
+        }
         
     }
 
