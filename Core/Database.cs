@@ -119,55 +119,75 @@ namespace WarcraftPlugin.Core
 
         internal WarcraftPlayer LoadPlayerFromDatabase(CCSPlayerController player, XpSystem xpSystem)
         {
-            var dbPlayer = _connection.QueryFirstOrDefault<DatabasePlayer>(@"
-            SELECT * FROM `players` WHERE `steamid` = @steamid",
-                new { steamid = player.SteamID });
-
-            if (dbPlayer == null)
+            try
             {
-                AddNewPlayerToDatabase(player);
-                dbPlayer = _connection.QueryFirstOrDefault<DatabasePlayer>(@"
-                    SELECT * FROM `players` WHERE `steamid` = @steamid",
+                if (player == null || player.SteamID == null)
+                {
+                    Console.WriteLine("[WCS] Player or SteamID is null in LoadPlayerFromDatabase.");
+                    return null;
+                }
+
+                var dbPlayer = _connection.QueryFirstOrDefault<DatabasePlayer>(@"
+            SELECT * FROM `players` WHERE `steamid` = @steamid",
                     new { steamid = player.SteamID });
 
                 if (dbPlayer == null)
                 {
-                    Console.WriteLine($"[WCS] ❌ Still couldn't load DB player after insert attempt: {player.SteamID}");
+                    AddNewPlayerToDatabase(player);
+                    dbPlayer = _connection.QueryFirstOrDefault<DatabasePlayer>(@"
+                SELECT * FROM `players` WHERE `steamid` = @steamid",
+                        new { steamid = player.SteamID });
+
+                    if (dbPlayer == null)
+                    {
+                        Console.WriteLine($"[WCS] Failed to create new player record for {player.SteamID}");
+                        return null;
+                    }
+                }
+
+                var classMgr = WarcraftPlugin.Instance.classManager;
+                if (!classMgr.GetAllClasses().Any(x => x.InternalName == dbPlayer.CurrentRace))
+                {
+                    var defaultClass = classMgr.GetDefaultClass();
+                    dbPlayer.CurrentRace = defaultClass.InternalName;
+                    player.PrintToChat(" " + WarcraftPlugin.Instance.Localizer["class.disabled", defaultClass.LocalizedDisplayName]);
+                }
+
+                var raceInformationExists = _connection.ExecuteScalar<int>(@"
+            SELECT COUNT(*) FROM `raceinformation` WHERE steamid = @steamid AND racename = @racename",
+                    new { steamid = player.SteamID, racename = dbPlayer.CurrentRace }) > 0;
+
+                if (!raceInformationExists)
+                {
+                    _connection.Execute(@"
+                INSERT INTO `raceinformation` (steamid, racename)
+                VALUES (@steamid, @racename);",
+                        new { steamid = player.SteamID, racename = dbPlayer.CurrentRace });
+                }
+
+                var raceInformation = _connection.QueryFirstOrDefault<ClassInformation>(@"
+            SELECT * FROM `raceinformation` WHERE `steamid` = @steamid AND `racename` = @racename",
+                    new { steamid = player.SteamID, racename = dbPlayer.CurrentRace });
+
+                if (raceInformation == null)
+                {
+                    Console.WriteLine($"[WCS] Failed to load race information for {player.SteamID}, race: {dbPlayer.CurrentRace}");
                     return null;
                 }
-            }
 
-            // If the class no longer exists, set it to the default class
-            if (!WarcraftPlugin.Instance.classManager.GetAllClasses().Any(x => x.InternalName == dbPlayer.CurrentRace))
+                var wcPlayer = new WarcraftPlayer(player);
+                wcPlayer.LoadClassInformation(raceInformation, xpSystem);
+                WarcraftPlugin.Instance.SetWcPlayer(player, wcPlayer);
+
+                return wcPlayer;
+            }
+            catch (Exception ex)
             {
-                var defaultClass = WarcraftPlugin.Instance.classManager.GetDefaultClass();
-                dbPlayer.CurrentRace = defaultClass.InternalName;
-                player.PrintToChat(" " + WarcraftPlugin.Instance.Localizer["class.disabled", defaultClass.LocalizedDisplayName]);
+                Console.WriteLine($"[WCS] ❌ Exception in LoadPlayerFromDatabase for {player?.PlayerName} ({player?.SteamID}): {ex.Message}");
+                return null;
             }
-
-            var raceInformationExists = _connection.ExecuteScalar<int>(@"
-            select count(*) from `raceinformation` where steamid = @steamid AND racename = @racename",
-                new { steamid = player.SteamID, racename = dbPlayer.CurrentRace }
-            ) > 0;
-
-            if (!raceInformationExists)
-            {
-                _connection.Execute(@"
-                insert into `raceinformation` (steamid, racename)
-                values (@steamid, @racename);",
-                    new { steamid = player.SteamID, racename = dbPlayer.CurrentRace });
-            }
-
-            var raceInformation = _connection.QueryFirst<ClassInformation>(@"
-            SELECT * from `raceinformation` where `steamid` = @steamid AND `racename` = @racename",
-                new { steamid = player.SteamID, racename = dbPlayer.CurrentRace });
-
-            var wcPlayer = new WarcraftPlayer(player);
-            wcPlayer.LoadClassInformation(raceInformation, xpSystem);
-            WarcraftPlugin.Instance.SetWcPlayer(player, wcPlayer);
-
-            return wcPlayer;
         }
+
 
         internal List<ClassInformation> LoadClassInformationFromDatabase(CCSPlayerController player)
         {
