@@ -46,6 +46,11 @@ internal class MenuPlayer
         {
             AvailableMenus = menus; // Ensure AvailableMenus is set correctly
         }
+        Console.WriteLine($"Player {player.Slot}: Available Menus Count = {AvailableMenus?.Count ?? 0}");
+        foreach (var menu2 in AvailableMenus)
+        {
+            Console.WriteLine($"Menu: {menu2.Title}");
+        }
 
         //Set the selected option based on index
         for (int i = 0; i < selectedOptionIndex; i++)
