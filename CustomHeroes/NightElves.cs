@@ -70,8 +70,8 @@ namespace WarcraftPlugin.Classes
                 {
                     int reflectAmount = (int)(@event.DmgHealth * 0.25f);
                     attacker.SetHp(attacker.PlayerPawn.Value.Health - reflectAmount);
-                    attacker.PrintToCenter($"🗡 You were hurt by {ChatColors.LightPurple}Thorns Aura{ChatColors.Default}!");
-                    Player.PrintToCenter($"🌿 Your {ChatColors.LightPurple}Thorns Aura{ChatColors.Default} reflected damage!");
+                    attacker.PrintToChat($"🗡 You were hurt by {ChatColors.LightPurple}Thorns Aura{ChatColors.Default}!");
+                    Player.PrintToChat($"🌿 Your {ChatColors.LightPurple}Thorns Aura{ChatColors.Default} reflected damage!");
                 }
             }
         }
@@ -94,7 +94,7 @@ namespace WarcraftPlugin.Classes
             int bonusDamage = (int)(@event.DmgHealth * (level * 0.04f)); // Up to 20%
             @event.AddBonusDamage(bonusDamage);
 
-            attacker.PrintToCenter($" {ChatColors.Green}🎯 Trueshot Aura{ChatColors.Default}: +{bonusDamage} bonus damage!");
+            attacker.PrintToChat($" {ChatColors.Green}🎯 Trueshot Aura{ChatColors.Default}: +{bonusDamage} bonus damage!");
         }
 
         private void Ultimate()

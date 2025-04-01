@@ -192,7 +192,7 @@ namespace WarcraftPlugin.Classes
             int level = WarcraftPlayer.GetAbilityLevel(0);
             if (level > 0 && @event.Weapon == "knife" && Warcraft.RollDice(level * 10, 100))
             {
-                int totalTicks = 5 + level; // 5–10 ticks
+                int totalTicks = level; // 5–10 ticks
                 int damagePerTick = 2 + (level / 2); // 2–4 damage
 
                 new BleedEffect(attacker, victim, totalTicks, damagePerTick).Start();
