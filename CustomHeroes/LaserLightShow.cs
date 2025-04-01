@@ -63,7 +63,7 @@ namespace WarcraftPlugin.Classes
             int abilityLevel2 = WarcraftPlayer.GetAbilityLevel(2);
             int AbilityLevelMult = abilityLevel0 * abilityLevel1 * abilityLevel2;
             float radius = 900f + AbilityLevelMult;
-            float damage = 50f + AbilityLevelMult;
+            float damage = AbilityLevelMult;
 
             var eyePos = Player.EyePosition();
             var forward = Player.PlayerPawn.Value.EyeAngles.ToForward();
