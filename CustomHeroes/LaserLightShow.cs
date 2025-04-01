@@ -63,7 +63,6 @@ namespace WarcraftPlugin.Classes
             int abilityLevel2 = WarcraftPlayer.GetAbilityLevel(2);
             int AbilityLevelMult = abilityLevel0 * abilityLevel1 * abilityLevel2;
             float radius = 900f + AbilityLevelMult;
-            float damage = AbilityLevelMult;
 
             var eyePos = Player.EyePosition();
             var forward = Player.PlayerPawn.Value.EyeAngles.ToForward();
@@ -75,7 +74,7 @@ namespace WarcraftPlugin.Classes
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
                 // Spawn explosion at target
-                Warcraft.SpawnExplosion(targetPos, damage, radius, Player, KillFeedIcon.prop_exploding_barrel);
+                Warcraft.SpawnExplosion(targetPos, (AbilityLevelMult - 50f), radius, Player, KillFeedIcon.prop_exploding_barrel);
 
                 // Radial blast lasers
 
