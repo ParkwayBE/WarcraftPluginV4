@@ -219,6 +219,13 @@ namespace WarcraftPlugin.Classes
                 {
                     foreach (var player in playersInHurtZone)
                     {
+                        var wcPlayer = player.GetWarcraftPlayer();
+                        if (wcPlayer == null)
+                        {
+                            Console.WriteLine($"[WCS] ⚠️ WarcraftPlayer not initialized for {player.PlayerName} ({player.SteamID}). Skipping.");
+                            return;
+                        }
+
                         player.TakeDamage(Owner.GetWarcraftPlayer().GetAbilityLevel(1) * 2, Owner, KillFeedIcon.prop_exploding_barrel);
                     }
                 }

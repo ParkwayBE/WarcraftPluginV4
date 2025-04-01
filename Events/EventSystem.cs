@@ -101,16 +101,32 @@ namespace WarcraftPlugin.Events
             var userid = @event.GetType().GetProperty("Userid")?.GetValue(@event) as CCSPlayerController;
             if (userid != null)
             {
-                // Invoke player specific events directly on the affected player
-                userid.GetWarcraftPlayer()?.GetClass()?.InvokeEvent(@event, hookMode);
+                var wcPlayer = userid.GetWarcraftPlayer();
+                if (wcPlayer?.GetClass() != null)
+                {
+                    wcPlayer.GetClass().InvokeEvent(@event, hookMode);
+                }
+                else
+                {
+                    Console.WriteLine($"[WCS] ⚠️ HandleDynamicEvent: WarcraftPlayer or class not initialized for {userid.PlayerName} ({userid.SteamID})");
+                }
             }
             else
             {
-                // Else Invoke global events on all players
-                Utilities.GetPlayers().ForEach(p => { p.GetWarcraftPlayer()?.GetClass()?.InvokeEvent(@event, hookMode); });
+                // Else invoke global events on all players
+                foreach (var p in Utilities.GetPlayers())
+                {
+                    var wcPlayer = p.GetWarcraftPlayer();
+                    if (wcPlayer?.GetClass() != null)
+                    {
+                        wcPlayer.GetClass().InvokeEvent(@event, hookMode);
+                    }
+                }
             }
+
             return HookResult.Continue;
         }
+
 
         private void PlayerSpottedOnRadar()
         {
@@ -168,6 +184,8 @@ namespace WarcraftPlugin.Events
             {
                 var warcraftPlayer = player.GetWarcraftPlayer();
                 var warcraftClass = warcraftPlayer?.GetClass();
+
+                if (warcraftPlayer == null) return;
 
                 if (warcraftClass != null)
                 {
