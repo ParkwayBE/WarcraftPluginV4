@@ -10,6 +10,7 @@ internal class Menu
     internal int ResultsBeforePaging { get; set; }
     internal LinkedList<MenuOption> Options { get; set; } = new();
     internal LinkedListNode<MenuOption> Prev { get; set; } = null;
+    public string Category { get; set; }
 
     internal LinkedListNode<MenuOption> Add(string display, string subDisplay, Action<CCSPlayerController, MenuOption> onChoice, Action<CCSPlayerController, MenuOption> onSelect = null)
     {
@@ -26,4 +27,5 @@ internal class Menu
         };
         return Options.AddLast(newOption);
     }
+
 }
