@@ -19,13 +19,14 @@ namespace WarcraftPlugin.Classes
     {
         public override string DisplayName => "Laser Light Show";
         public override Color DefaultColor => Color.GreenYellow;
+        private bool _ultActive = false;
 
         public override List<IWarcraftAbility> Abilities =>
         [
             new WarcraftAbility("Module R", "Increased Movement speed and health on spawn."),
             new WarcraftAbility("Module G", "Your attacks have a chance to deal bonus damage."),
             new WarcraftAbility("Module B", "Your attacks can chain through enemies."),
-            new WarcraftCooldownAbility("Disintigrate","Upon activation: After a brief delay fire a beam of energy damaging all players that are too close.", 1f)
+            new WarcraftCooldownAbility("Disintigrate","Upon activation: After a brief delay fire a beam of energy damaging all players that are too close.", 30f)
         ];
 
         public override void Register()
@@ -39,23 +40,55 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            WarcraftPlugin.Instance.AddTimer(1.5f, () =>
+            WarcraftPlugin.Instance.AddTimer(0.8f, () =>
             {
                 int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
                 if (abilityLevel < 1) return;
 
-                float speedMultiplier = 0.1f * abilityLevel;
+                float speedMultiplier = 1 + (0.1f * abilityLevel);
                 int bonushealth = abilityLevel * 15;
 
                 SkillFunctions.MovementSpeed(Player, speedMultiplier, 999f);
                 SkillFunctions.SetBonusHealth(Player, bonushealth);
-
-                Player.PrintToChat($"[DEBUG] Sent multiplier: {abilityLevel} → Expected VelocityModifier = {1f + speedMultiplier}x");
-
                 new RGBColorCycleEffect(Player, 999f).Start();
 
-                var pawn = Player.PlayerPawn.Value;
-                Player.PrintToChat($"[DEBUG] Actual velocity: {pawn.VelocityModifier}");
+
+
+
+                var origin = Player.PlayerPawn.Value.AbsOrigin;
+                float radius = 50f;
+                int laserCount = 32;
+                float laserDuration = 3f;
+                float laserUpdateInterval = 0.5f;
+                int updates = (int)(laserDuration / laserUpdateInterval);
+
+                List<(Vector start, Vector end)> laserPositions = new();
+
+                for (int i = 0; i < laserCount; i++)
+                {
+                    float angle = (float)(i * (2 * Math.PI / laserCount));
+                    float x = origin.X + radius * (float)Math.Cos(angle);
+                    float y = origin.Y + radius * (float)Math.Sin(angle);
+                    float zStart = origin.Z;
+                    float zEnd = origin.Z + 200f;
+
+                    laserPositions.Add((new Vector(x, y, zStart), new Vector(x, y, zEnd)));
+                }
+
+                void DrawColorCycle(int currentTick)
+                {
+                    if (currentTick >= updates)
+                        return;
+
+                    foreach (var (start, end) in laserPositions)
+                    {
+                        var color = Color.FromArgb(Random.Shared.Next(256), Random.Shared.Next(256), Random.Shared.Next(256));
+                        Warcraft.DrawLaserBetween(start, end, color, laserUpdateInterval + 0.1f, width: 1.2f);
+                    }
+
+                    WarcraftPlugin.Instance.AddTimer(laserUpdateInterval, () => DrawColorCycle(currentTick + 1));
+                }
+                DrawColorCycle(0);
             });
         }
 
@@ -63,9 +96,69 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            // TODO: Disintegrate: DrawLaserBetween multiple in a circle shaped pattern maybe , --->
-            // --->  different colors, after a brief delay create an explosion at the location of the end of the laser.
-            StartCooldown(3); // Index 3 = Ultimate
+            if (_ultActive) return;
+            _ultActive = true;
+
+            // ... your code ...
+
+            int abilityLevel0 = WarcraftPlayer.GetAbilityLevel(0);
+            int abilityLevel1 = WarcraftPlayer.GetAbilityLevel(1);
+            int abilityLevel2 = WarcraftPlayer.GetAbilityLevel(2);
+            int AbilityLevelMult = abilityLevel0 * abilityLevel1 * abilityLevel2;
+            float radius = 900f + AbilityLevelMult;
+
+            var eyePos = Player.EyePosition();
+            eyePos.Z += 30f; // Raise slightly above eye level
+            var forward = Player.PlayerPawn.Value.EyeAngles.ToForward();
+            var targetPos = eyePos + forward * 1000f;
+
+            // New rainbow triple beam
+            Color[] beamColors = { Color.Red, Color.Green, Color.Blue };
+            Vector[] offsets = {
+                new Vector(5f, 0, 0),
+                new Vector(-5f, 0, 0),
+                new Vector(0, 5f, 0)
+            };
+
+            foreach (var offset in offsets)
+            {
+                var beamStart = eyePos + offset;
+                var jitteredEnd = targetPos + new Vector(0, 0, Random.Shared.Next(-10, 10));
+
+                Warcraft.DrawLaserBetween(beamStart, jitteredEnd, beamColors[Array.IndexOf(offsets, offset)], duration: 1.5f, width: 4f);
+            }
+
+
+            WarcraftPlugin.Instance.AddTimer(1.5f, () =>
+            {
+                // Spawn explosion at target
+                Warcraft.SpawnExplosion(targetPos, (AbilityLevelMult - 50f), radius, Player, KillFeedIcon.prop_exploding_barrel);
+
+                // Radial blast lasers
+
+                int beamCount = 32;
+                float angleStep = 360f / beamCount;
+
+                for (int i = 0; i < beamCount; i++)
+                {
+                    // Random direction using unit sphere
+                    double theta = Random.Shared.NextDouble() * 2 * Math.PI;
+                    double phi = Math.Acos(2 * Random.Shared.NextDouble() - 1);
+                    float x = (float)(Math.Sin(phi) * Math.Cos(theta));
+                    float y = (float)(Math.Sin(phi) * Math.Sin(theta));
+                    float z = (float)Math.Cos(phi);
+
+                    var dir = new Vector(x, y, z);
+                    var end = targetPos + dir * radius;
+
+                    var color = Color.FromArgb(Random.Shared.Next(256), Random.Shared.Next(256), Random.Shared.Next(256));
+                    Warcraft.DrawLaserBetween(targetPos, end, color, duration: 2.5f, width: 2f);
+                }
+            });
+
+            Player.PrintToChat($" {ChatColors.Green}Disintigrate{ChatColors.Green} Ultimate activated!");
+            WarcraftPlugin.Instance.AddTimer(3f, () => _ultActive = false);
+            StartCooldown(3);
         }
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
@@ -172,12 +265,6 @@ namespace WarcraftPlugin.Classes
                 attacker.PrintToChat($" {ChatColors.Green}Module B{ChatColors.Default}: {target.PlayerName} was pierced for {collateralDamage} damage!");
             }
         }
-
-
-
-
-
-
         public class RGBColorCycleEffect : WarcraftEffect
         {
             private float _hue = 0f;

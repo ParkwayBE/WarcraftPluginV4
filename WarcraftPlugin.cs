@@ -71,17 +71,29 @@ namespace WarcraftPlugin
 
         internal WarcraftPlayer GetWcPlayer(CCSPlayerController player)
         {
-            if (!player.IsValid || player.ControllingBot) return null; // removed isbot line
+            if (!player.IsValid || player.ControllingBot) return null;
 
-            WarcraftPlayers.TryGetValue(player.Handle, out var wcPlayer);
-            if (wcPlayer == null)
+            if (WarcraftPlayers.TryGetValue(player.Handle, out var wcPlayer))
+                return wcPlayer;
+
+            try
             {
                 wcPlayer = _database.LoadPlayerFromDatabase(player, XpSystem);
-                WarcraftPlayers[player.Handle] = wcPlayer;
+                if (wcPlayer != null)
+                {
+                    WarcraftPlayers[player.Handle] = wcPlayer;
+                    return wcPlayer;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[WCS] ❌ Failed to load player data for {player.PlayerName} ({player.SteamID}): {ex.Message}");
             }
 
-            return wcPlayer;
+            return null;
         }
+
+
 
         internal void SetWcPlayer(CCSPlayerController player, WarcraftPlayer wcPlayer)
         {

@@ -119,6 +119,13 @@ namespace WarcraftPlugin.Classes
             public override void OnStart() { }
             public override void OnTick()
             {
+                var wcPlayer = Owner.GetWarcraftPlayer();
+                if (wcPlayer == null)
+                {
+                    Console.WriteLine($"[WCS] ⚠️ WarcraftPlayer not initialized for {Owner.PlayerName} ({Owner.SteamID}). Skipping.");
+                    return;
+                }
+
                 var currentAbilityLevel = Owner.GetWarcraftPlayer().GetAbilityLevel(0);
                 var auraSize = currentAbilityLevel * 100;
                 var healingZone = Warcraft.CreateBoxAroundPoint(Owner.PlayerPawn.Value.AbsOrigin, auraSize, auraSize, auraSize);
