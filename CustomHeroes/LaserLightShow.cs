@@ -51,6 +51,27 @@ namespace WarcraftPlugin.Classes
                 SkillFunctions.SetBonusHealth(Player, bonushealth);
                 new RGBColorCycleEffect(Player, 999f).Start();
 
+                var origin = Player.PlayerPawn.Value.AbsOrigin;
+                float radius = 80f;
+                int laserCount = 32;
+                float laserDuration = 3f;
+
+                for (int i = 0; i < laserCount; i++)
+                {
+                    float angle = (float)(i * (2 * Math.PI / laserCount));
+                    float x = origin.X + radius * (float)Math.Cos(angle);
+                    float y = origin.Y + radius * (float)Math.Sin(angle);
+                    float zStart = origin.Z;
+                    float zEnd = origin.Z + 200f;
+
+                    var start = new Vector(x, y, zStart);
+                    var end = new Vector(x, y, zEnd);
+
+                    var color = Color.FromArgb(Random.Shared.Next(256), Random.Shared.Next(256), Random.Shared.Next(256));
+                    Warcraft.DrawLaserBetween(start, end, color, laserDuration, width: 1f);
+                }
+
+
             });
         }
 
