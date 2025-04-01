@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Utils;
 using Dapper;
 using Microsoft.Data.Sqlite;
 using WarcraftPlugin.Models;
@@ -130,6 +129,12 @@ namespace WarcraftPlugin.Core
                 dbPlayer = _connection.QueryFirstOrDefault<DatabasePlayer>(@"
                     SELECT * FROM `players` WHERE `steamid` = @steamid",
                     new { steamid = player.SteamID });
+
+                if (dbPlayer == null)
+                {
+                    Console.WriteLine($"[WCS] ❌ Still couldn't load DB player after insert attempt: {player.SteamID}");
+                    return null;
+                }
             }
 
             // If the class no longer exists, set it to the default class
@@ -137,7 +142,7 @@ namespace WarcraftPlugin.Core
             {
                 var defaultClass = WarcraftPlugin.Instance.classManager.GetDefaultClass();
                 dbPlayer.CurrentRace = defaultClass.InternalName;
-                player.PrintToChat(" "+ WarcraftPlugin.Instance.Localizer["class.disabled", defaultClass.LocalizedDisplayName]);
+                player.PrintToChat(" " + WarcraftPlugin.Instance.Localizer["class.disabled", defaultClass.LocalizedDisplayName]);
             }
 
             var raceInformationExists = _connection.ExecuteScalar<int>(@"
