@@ -20,6 +20,9 @@ namespace WarcraftPlugin.Classes
 
         public override string DisplayName => "Warden";
         public override Color DefaultColor => Color.GreenYellow;
+        private float _lastThrowTime = 0f;
+        private const float ThrowCooldown = 1.5f; // seconds between throws
+
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -34,9 +37,53 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerDeath>(PlayerDeath);
-            HookEvent<EventPlayerShoot>(PlayerShoot);
+            // HookEvent<EventPlayerShoot>(PlayerShoot);
             HookAbility(3, Ultimate);
+
+            WarcraftPlugin.Instance.AddTimer(0.05f, () => CheckThrowingKnifeLoop());
+
         }
+
+        private float TimeSinceMapStart()
+        {
+            return (float)Server.EngineTime;
+        }
+
+
+        private void CheckThrowingKnifeLoop()
+        {
+            CheckThrowingKnife();
+            WarcraftPlugin.Instance.AddTimer(0.05f, () => CheckThrowingKnifeLoop()); // Re-loop every 50ms
+        }
+
+
+        private void CheckThrowingKnife()
+        {
+            if (Player == null || !Player.IsValid || !Player.IsAlive()) return;
+
+            var weapon = Player.PlayerPawn.Value.WeaponServices?.ActiveWeapon.Value;
+            if (weapon == null || weapon.DesignerName != "weapon_knife") return;
+
+            // Detect right-click
+            ulong buttons = Player.PlayerPawn.Value.MovementServices.Buttons.ButtonStates[0];
+            bool isRightClick = (buttons & (ulong)PlayerButtons.Attack2) != 0;
+
+            if (!isRightClick) return;
+
+            // Use server tick time (approx fallback)
+            float now = TimeSinceMapStart();
+
+            if (now - _lastThrowTime < ThrowCooldown) return;
+
+            _lastThrowTime = now;
+
+            if (WarcraftPlayer.GetAbilityLevel(2) > 0 && IsAbilityReady(2))
+            {
+                Player.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} Fan of Knives THROW triggered!");
+                new ThrowingKnifeEffect(Player).Start();
+            }
+        }
+
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
@@ -47,6 +94,8 @@ namespace WarcraftPlugin.Classes
             SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f);
         }
 
+
+        /*
         private void PlayerShoot(EventPlayerShoot shoot)
         {
             Player.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} Player firing his knife");
@@ -66,7 +115,7 @@ namespace WarcraftPlugin.Classes
             if (!isRightClick) return;
             if (!IsAbilityReady(2)) return;
             new ThrowingKnifeEffect(Player).Start();
-        }
+        } */
 
 
         internal class ThrowingKnifeEffect : WarcraftEffect
