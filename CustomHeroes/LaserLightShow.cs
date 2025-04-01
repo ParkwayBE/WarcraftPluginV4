@@ -39,7 +39,7 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
-            WarcraftPlugin.Instance.AddTimer(1.5f, () =>
+            WarcraftPlugin.Instance.AddTimer(0.8f, () =>
             {
                 int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
                 if (abilityLevel < 1) return;
@@ -74,7 +74,6 @@ namespace WarcraftPlugin.Classes
                     laserPositions.Add((new Vector(x, y, zStart), new Vector(x, y, zEnd)));
                 }
 
-                // Recursive function to draw and requeue the next update
                 void DrawColorCycle(int currentTick)
                 {
                     if (currentTick >= updates)
@@ -88,42 +87,7 @@ namespace WarcraftPlugin.Classes
 
                     WarcraftPlugin.Instance.AddTimer(laserUpdateInterval, () => DrawColorCycle(currentTick + 1));
                 }
-
-                // Kick off the cycle
                 DrawColorCycle(0);
-
-
-
-
-
-
-
-
-
-
-
-                /*
-                var origin = Player.PlayerPawn.Value.AbsOrigin;
-                float radius = 80f;
-                int laserCount = 32;
-                float laserDuration = 3f;
-                
-                for (int i = 0; i < laserCount; i++)
-                {
-                    float angle = (float)(i * (2 * Math.PI / laserCount));
-                    float x = origin.X + radius * (float)Math.Cos(angle);
-                    float y = origin.Y + radius * (float)Math.Sin(angle);
-                    float zStart = origin.Z;
-                    float zEnd = origin.Z + 200f;
-
-                    var start = new Vector(x, y, zStart);
-                    var end = new Vector(x, y, zEnd);
-
-                    var color = Color.FromArgb(Random.Shared.Next(256), Random.Shared.Next(256), Random.Shared.Next(256));
-                    Warcraft.DrawLaserBetween(start, end, color, laserDuration, width: 1f);
-                } */
-
-
             });
         }
 
@@ -138,6 +102,8 @@ namespace WarcraftPlugin.Classes
             float radius = 900f + AbilityLevelMult;
 
             var eyePos = Player.EyePosition();
+            eyePos.Z += 30f; // Raise beam origin 30 units above the eye level
+
             var forward = Player.PlayerPawn.Value.EyeAngles.ToForward();
             var targetPos = eyePos + forward * 1000f;
 
