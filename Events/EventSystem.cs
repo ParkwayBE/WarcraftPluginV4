@@ -99,31 +99,15 @@ namespace WarcraftPlugin.Events
         private static HookResult HandleDynamicEvent<T>(T @event, GameEventInfo info, HookMode hookMode) where T : GameEvent
         {
             var userid = @event.GetType().GetProperty("Userid")?.GetValue(@event) as CCSPlayerController;
-            if (userid != null)
+            var wcPlayer = userid.GetWarcraftPlayer();
+            if (wcPlayer?.GetClass() != null)
             {
-                var wcPlayer = userid.GetWarcraftPlayer();
-                if (wcPlayer?.GetClass() != null)
-                {
-                    wcPlayer.GetClass().InvokeEvent(@event, hookMode);
-                }
-                else
-                {
-                    Console.WriteLine($"[WCS] ⚠️ HandleDynamicEvent: WarcraftPlayer or class not initialized for {userid.PlayerName} ({userid.SteamID})");
-                }
+                wcPlayer.GetClass().InvokeEvent(@event, hookMode);
             }
             else
             {
-                // Else invoke global events on all players
-                foreach (var p in Utilities.GetPlayers())
-                {
-                    var wcPlayer = p.GetWarcraftPlayer();
-                    if (wcPlayer?.GetClass() != null)
-                    {
-                        wcPlayer.GetClass().InvokeEvent(@event, hookMode);
-                    }
-                }
+                Console.WriteLine($"[WCS] ⚠️ HandleDynamicEvent: WarcraftPlayer or class not initialized for {userid.PlayerName} ({userid.SteamID})");
             }
-
             return HookResult.Continue;
         }
 
@@ -180,16 +164,18 @@ namespace WarcraftPlugin.Events
 
         private HookResult RoundStart(EventRoundStart @event, GameEventInfo info)
         {
-            Utilities.GetPlayers().Where(x => !x.IsBot && !x.ControllingBot).ToList().ForEach(player =>
-            {
-                var warcraftPlayer = player.GetWarcraftPlayer();
-                var warcraftClass = warcraftPlayer?.GetClass();
-
-                if (warcraftPlayer == null) return;
-
-                if (warcraftClass != null)
+            Utilities.GetPlayers()
+                .Where(player => !player.IsBot && !player.ControllingBot)
+                .ToList()
+                .ForEach(player =>
                 {
-                    warcraftClass?.InvokeEvent(@event, HookMode.Pre);
+                    var warcraftPlayer = player.GetWarcraftPlayer();
+                    var warcraftClass = warcraftPlayer?.GetClass();
+
+                    if (warcraftClass == null)
+                        return;
+
+                    warcraftClass.InvokeEvent(@event, HookMode.Pre);
 
                     if (XpSystem.GetFreeSkillPoints(warcraftPlayer) > 0)
                     {
@@ -197,8 +183,9 @@ namespace WarcraftPlugin.Events
                     }
                     else
                     {
-                        var message = $"{warcraftClass.LocalizedDisplayName} ({warcraftPlayer.currentLevel})\n" +
-                        (warcraftPlayer.IsMaxLevel ? "" : $"{_plugin.Localizer["xp.current"]}: {warcraftPlayer.currentXp}/{warcraftPlayer.amountToLevel}\n");
+                        var message =
+                    $"{warcraftClass.LocalizedDisplayName} ({warcraftPlayer.currentLevel})\n" +
+                    (warcraftPlayer.IsMaxLevel ? "" : $"{_plugin.Localizer["xp.current"]}: {warcraftPlayer.currentXp}/{warcraftPlayer.amountToLevel}\n");
 
                         player.PrintToCenter(message);
                     }
@@ -207,10 +194,11 @@ namespace WarcraftPlugin.Events
                     {
                         warcraftClass.ResetCooldowns();
                     });
-                }
-            });
+                });
+
             return HookResult.Continue;
         }
+
 
         private HookResult PlayerHurtHandler(EventPlayerHurt @event, GameEventInfo _)
         {
