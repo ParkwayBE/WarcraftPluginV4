@@ -6,13 +6,11 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using g3;
-using WarcraftPlugin.Core;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
-using static g3.RoundRectGenerator;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 
@@ -30,7 +28,7 @@ namespace WarcraftPlugin.Classes
         private const float ThrowCooldown = 1.5f; // seconds between throws
         public CPhysicsPropMultiplayer _ball;
         public CDynamicProp _ballProp;
-        private ThrowingKnifeEffect throwingKnifeEffect; 
+        private ThrowingKnifeEffect throwingKnifeEffect;
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -63,7 +61,7 @@ namespace WarcraftPlugin.Classes
 
         private void WeaponFire(EventWeaponFire @event)
         {
-            var shooter = @event.Userid;
+            var shooter = @event.Userid; // Uselmess comment
 
             if (shooter == null || !shooter.IsValid)
             {
@@ -135,7 +133,8 @@ namespace WarcraftPlugin.Classes
         "models/props_gameplay/football.vmdl"
     };
 
-            public ThrowingKnifeEffect(CCSPlayerController owner, CPhysicsPropMultiplayer knife) : base(owner, onTickInterval: 0.01f) { 
+            public ThrowingKnifeEffect(CCSPlayerController owner, CPhysicsPropMultiplayer knife) : base(owner, onTickInterval: 0.01f)
+            {
                 _owner = owner;
                 _knife = knife;
             }
@@ -156,7 +155,7 @@ namespace WarcraftPlugin.Classes
 
             public override void OnTick()
             {
-                
+
 
                 // Update hitbox each tick to match prop's current position
                 /*
