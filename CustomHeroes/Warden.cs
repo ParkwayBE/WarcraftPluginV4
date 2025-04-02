@@ -12,6 +12,7 @@ using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
+using static g3.RoundRectGenerator;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 
@@ -27,7 +28,9 @@ namespace WarcraftPlugin.Classes
         public override Color DefaultColor => Color.GreenYellow;
         private float _lastThrowTime = 0f;
         private const float ThrowCooldown = 1.5f; // seconds between throws
-
+        public CPhysicsPropMultiplayer _ball;
+        public CDynamicProp _ballProp;
+        private ThrowingKnifeEffect throwingKnifeEffect; 
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -88,6 +91,28 @@ namespace WarcraftPlugin.Classes
             Console.WriteLine("[WCS] Launching ThrowingKnifeEffect...");
             new ThrowingKnifeEffect(shooter).Start();
         }
+        private void SpawnBall(CCSPlayerController owner)
+        {
+            _ball = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
+            _ball.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
+            _ball.DispatchSpawn();
+
+            _ballProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
+            _ballProp.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
+            _ballProp.DispatchSpawn();
+
+            var distance = 60;
+            var height = 30;
+
+            Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
+
+            _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            _ballProp.SetParent(_ball);
+
+
+            throwingKnifeEffect = new ThrowingKnifeEffect(owner, _ball);
+        }
 
 
 
@@ -102,69 +127,39 @@ namespace WarcraftPlugin.Classes
             private float _tickInterval = 0.02f;
             private readonly float _damage = 25f;
             private Box3d _hitbox;
+            private CCSPlayerController _owner;
+            private CPhysicsPropMultiplayer _knife;
 
             public List<string> PreloadResources => new()
     {
         "models/props_gameplay/football.vmdl"
     };
 
-            public ThrowingKnifeEffect(CCSPlayerController owner) : base(owner, duration: 5f, onTickInterval: 0.01f) { }
+            public ThrowingKnifeEffect(CCSPlayerController owner, CPhysicsPropMultiplayer knife) : base(owner, onTickInterval: 0.01f) { 
+                _owner = owner;
+                _knife = knife;
+            }
+
+            public void UpdateLocation()
+            {
+                var distance = 60;
+                var height = 30;
+                Vector posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
+                _owner.PrintToChat($"Updating Ball Position: {posInfrontOfPlayer}");
+                _knife.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            }
 
             public override void OnStart()
             {
-                Owner.PrintToChat("[WCS] OnStart Throwing knife effect triggered...");
-
-                _direction = Owner.PlayerPawn.Value.EyeAngles.ToForward();
-                _direction = _direction / _direction.Length();
-
-                if (_prop == null)
-                {
-                    Owner.PrintToChat($"{ChatColors.Red}[WCS] Failed to spawn knife.");
-                    Destroy();
-                    return;
-                }
-                _prop = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
-                _prop.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
-                _prop.DispatchSpawn();
-
-
-                _ballprop = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-                _ballprop.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
-                _ballprop.DispatchSpawn();
-
-                var distance = 60;
-                var height = 30;
-                _travelled = 0;
-                Vector posInfrontOfPlayer = Owner.CalculatePositionInFront(distance, height);
-
-                _prop.Teleport(posInfrontOfPlayer, new QAngle(0, Owner.PlayerPawn.Value.EyeAngles.Y, 0), new Vector(nint.Zero));
-                _ballprop.Teleport(posInfrontOfPlayer, new QAngle(0, Owner.PlayerPawn.Value.EyeAngles.Y, 0), new Vector(nint.Zero));
-                _ballprop.SetParent(_prop);
-
-
-
-                Owner.PrintToChat($"Updating Ball Position: {posInfrontOfPlayer}");
-                _ballprop.Teleport(posInfrontOfPlayer, Owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+                UpdateLocation();
             }
 
             public override void OnTick()
             {
-                if (_prop == null || !_prop.IsValid)
-                {
-                    Destroy();
-                    return;
-                }
-
-                float distanceThisTick = _speed * _tickInterval;
-                _travelled += distanceThisTick;
-
-                if (_travelled > _maxDistance)
-                {
-                    Destroy();
-                    return;
-                }
+                
 
                 // Update hitbox each tick to match prop's current position
+                /*
                 var center = _prop.AbsOrigin;
                 _hitbox = Warcraft.CreateBoxAroundPoint(center, 50, 50, 50);  // Width, depth, height
 
@@ -183,6 +178,7 @@ namespace WarcraftPlugin.Classes
                         return;
                     }
                 }
+                */
             }
 
             public override void OnFinish()
