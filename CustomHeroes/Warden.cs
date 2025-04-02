@@ -31,6 +31,11 @@ namespace WarcraftPlugin.Classes
         public CDynamicProp _ballProp;
         private ThrowingKnifeEffect throwingKnifeEffect;
 
+        public List<string> PreloadResources => new()
+        {
+            "models/props_gameplay/football.vmdl"
+        };
+
         public override List<IWarcraftAbility> Abilities =>
         [
             new WarcraftAbility("Sharp End", "Chance for your attacks to deal bleed damage"),
