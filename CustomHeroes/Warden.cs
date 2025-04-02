@@ -148,7 +148,7 @@ namespace WarcraftPlugin.Classes
 
                 // Update hitbox each tick to match prop's current position
                 var center = _prop.AbsOrigin;
-                _hitbox = Warcraft.CreateBoxAroundPoint(center, 20, 20, 20);  // Width, depth, height
+                _hitbox = Warcraft.CreateBoxAroundPoint(center, 50, 50, 50);  // Width, depth, height
 
                 // Check for collision
                 foreach (var player in Utilities.GetPlayers())
@@ -173,11 +173,6 @@ namespace WarcraftPlugin.Classes
                 _prop?.RemoveIfValid();
             }
         }
-
-
-
-
-
 
         private void PlayerDeath(EventPlayerDeath death)
         {
