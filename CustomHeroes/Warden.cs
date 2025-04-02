@@ -75,12 +75,13 @@ namespace WarcraftPlugin.Classes
 
             var weaponName = @event.Weapon?.ToLower() ?? "unknown";
             Console.WriteLine($"[WCS] Weapon used: {weaponName}");
-
-            if (!weaponName.Contains("bayonet"))
+            /*
+            if (!weaponName.Contains("knife"))
             {
                 Console.WriteLine("[WCS] WeaponFire: Weapon is not a knife.");
                 return;
             }
+            */
 
             if (shooter != Player)
             {
@@ -89,7 +90,7 @@ namespace WarcraftPlugin.Classes
             }
 
             Console.WriteLine("[WCS] Launching ThrowingKnifeEffect...");
-            new ThrowingKnifeEffect(shooter).Start();
+            SpawnBall(Player);
         }
         private void SpawnBall(CCSPlayerController owner)
         {
