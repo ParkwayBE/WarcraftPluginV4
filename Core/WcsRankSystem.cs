@@ -214,7 +214,6 @@ namespace WarcraftPlugin.Core
                     var newHp = Math.Max(1, currentHp - e.DmgHealth);
 
                     // Prevent death and apply damage
-                    victim.SetHp(newHp);
 
                     // Console log
                     var attacker = e.Attacker;
