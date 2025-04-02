@@ -213,8 +213,6 @@ namespace WarcraftPlugin.Core
                     var currentHp = victim.PlayerPawn.Value.Health;
                     var newHp = Math.Max(1, currentHp - e.DmgHealth);
 
-                    // Prevent death and apply damage
-
                     // Console log
                     var attacker = e.Attacker;
                     var name = attacker?.PlayerName ?? "Unknown";
