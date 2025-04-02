@@ -122,55 +122,48 @@ namespace WarcraftPlugin.Classes
         {
             private Vector _position;
             private Vector _direction;
-            private float _speed = 1200f;
+            private float _speed = 3000f;
             private float _travelTime;
             private float _maxDistance = 1500f;
             private CDynamicProp _visualKnife;
+            private float _lastTickTime;
 
             public ThrowingKnifeEffect(CCSPlayerController owner)
-                : base(owner, 10f) // Keep alive for testing; we'll control duration manually
+                : base(owner, 10f) // Keep alive for long enough to travel full range
             {
             }
 
             public override void OnStart()
             {
-                // Calculate spawn position & direction
                 _position = Owner.CalculatePositionInFront(60, Owner.EyeHeight());
                 _direction = Owner.PlayerPawn.Value.EyeAngles.ToForward();
 
-                // Create the visual knife
                 _visualKnife = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-                _visualKnife.SetModel("models/weapons/w_knife_gg.vmdl");
-                _visualKnife.SetScale(1.0f); // Make it visible
-
+                _visualKnife.SetModel("models/weapons/w_knife_gg.vmdl"); // Change if needed
+                _visualKnife.SetScale(1.0f);
                 _visualKnife.Teleport(_position, new QAngle(), new Vector());
                 _visualKnife.DispatchSpawn();
 
-                // Optional: future visual boost (particles, light aura)
-                Owner.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} ThrowingKnife OnStart effect called");
+                _lastTickTime = (float)Server.EngineTime;
             }
-
 
             public override void OnTick()
             {
-                float deltaTime = 0.02f; // assuming ~50 ticks/sec
+                float now = (float)Server.EngineTime;
+                float deltaTime = now - _lastTickTime;
+                _lastTickTime = now;
+
                 _travelTime += deltaTime;
 
-                // Move knife forward
                 _position += _direction * (_speed * deltaTime);
                 _visualKnife?.Teleport(_position, new QAngle(z: _travelTime * 720), new Vector());
 
-                // DEBUG: Show movement visually
-                Owner.PrintToChat($"DEBUG Knife Pos: {_position.X:F0}, {_position.Y:F0}, {_position.Z:F0}");
+                // Particle trail for visual feedback
+                Warcraft.SpawnParticle(_position, "particles/tracer/tracer_flyby.vpcf", 0.1f);
 
-                // Optional: particle trail
-                Warcraft.SpawnParticle(_position, "particles/tracer/tracer_flyby.vpcf", 0.2f);
-
-                // Stop effect if we hit max range
                 float traveled = (_position - Owner.PlayerPawn.Value.AbsOrigin).Length();
                 if (traveled >= _maxDistance)
                 {
-                    Owner.PrintToChat("DEBUG Knife reached max distance");
                     this.Destroy();
                 }
             }
@@ -178,9 +171,9 @@ namespace WarcraftPlugin.Classes
             public override void OnFinish()
             {
                 _visualKnife?.RemoveIfValid();
-                Owner.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} ThrowingKnife effect removed.");
             }
         }
+
 
 
 

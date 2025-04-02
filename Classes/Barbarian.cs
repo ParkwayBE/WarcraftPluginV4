@@ -21,7 +21,6 @@ namespace WarcraftPlugin.Classes
             CTModel = "characters/models/ctm_heavy/ctm_heavy.vmdl"
         };
         public override Color DefaultColor => Color.Brown;
-        public override List<string> PreloadResources => ["models/weapons/v_axe.vmdl_c"];
         public override List<IWarcraftAbility> Abilities =>
         [
             new WarcraftAbility("Carnage", "Increase damage dealt with shotguns."),
