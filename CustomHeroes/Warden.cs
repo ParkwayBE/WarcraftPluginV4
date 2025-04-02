@@ -159,16 +159,13 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerDeath(EventPlayerDeath death)
         {
-            var killer = death.Attacker;
-
-            if (killer == null || !killer.IsValid || killer == Player)
-                return;
+            var attacker = death.Attacker;
 
             if (_hasUsedRevive || WarcraftPlayer.GetAbilityLevel(1) <= 0)
                 return;
 
 
-            if (killer == null || !killer.IsValid || killer.TeamNum == Player.TeamNum) return;
+            if (attacker == null || !attacker.IsValid || attacker.TeamNum == Player.TeamNum) return;
 
             var roll = Random.Shared.Next(2); // 0 or 1
             var level = WarcraftPlayer.GetAbilityLevel(1);
@@ -178,13 +175,13 @@ namespace WarcraftPlugin.Classes
             {
                 // Revenge: damage killer
                 int damage = 20 + (level * 6);
-                SkillFunctions.DealRawDamage(Player, killer, damage);
+                SkillFunctions.DealRawDamage(Player, attacker, damage);
                 Player.PrintToChat($"{ChatColors.Red}☠️ Mercy Denied{ChatColors.Default}: You damaged your killer for {damage} HP!");
             }
             else
             {
                 // Mercy: heal killer, revive self
-                killer.SetHp(killer.PlayerPawn.Value.Health + 70);
+                attacker.SetHp(attacker.PlayerPawn.Value.Health + 70);
                 var teammates = Utilities.GetPlayers().Where(p => p.TeamNum == Player.TeamNum && p != Player && p.IsAlive()).ToList();
                 var revivePosition = teammates.Count > 0
                     ? teammates[Random.Shared.Next(teammates.Count)].PlayerPawn.Value.AbsOrigin
