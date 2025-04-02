@@ -158,6 +158,10 @@ namespace WarcraftPlugin.Classes
 
                 float now = (float)Server.EngineTime;
                 float deltaTime = now - _lastTickTime;
+
+                if (deltaTime <= 0f)
+                    return;
+
                 _lastTickTime = now;
 
                 _travelTime += deltaTime;
