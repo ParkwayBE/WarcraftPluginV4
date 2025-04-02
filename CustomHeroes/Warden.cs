@@ -118,7 +118,7 @@ namespace WarcraftPlugin.Classes
             private CPhysicsPropMultiplayer? _prop;
             private CDynamicProp _ballprop;
             private Vector _direction;
-            private float _speed = 200f;
+            private float _speed = 2500f;
             private float _travelled = 0f;
             private float _maxDistance = 2500f;
             private float _tickInterval = 0.02f;
