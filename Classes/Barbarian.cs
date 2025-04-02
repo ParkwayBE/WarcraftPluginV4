@@ -21,7 +21,7 @@ namespace WarcraftPlugin.Classes
             CTModel = "characters/models/ctm_heavy/ctm_heavy.vmdl"
         };
         public override Color DefaultColor => Color.Brown;
-
+        public override List<string> PreloadResources => ["models/weapons/v_axe.vmdl"];
         public override List<IWarcraftAbility> Abilities =>
         [
             new WarcraftAbility("Carnage", "Increase damage dealt with shotguns."),
@@ -41,6 +41,8 @@ namespace WarcraftPlugin.Classes
 
             HookAbility(3, Ultimate);
         }
+
+
 
         private void PlayerShoot(EventWeaponFire @event)
         {
@@ -113,6 +115,7 @@ namespace WarcraftPlugin.Classes
 
             _throwingAxe.Teleport(Owner.CalculatePositionInFront(10, 60), rotation, velocity);
             _throwingAxe.DispatchSpawn();
+
             _throwingAxe.SetModel("models/weapons/v_axe.vmdl");
             Schema.SetSchemaValue(_throwingAxe.Handle, "CBaseGrenade", "m_hThrower", Owner.PlayerPawn.Raw); //Fixes killfeed
 
