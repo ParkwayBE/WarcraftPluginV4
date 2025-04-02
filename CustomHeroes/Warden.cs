@@ -73,7 +73,7 @@ namespace WarcraftPlugin.Classes
             var weaponName = @event.Weapon?.ToLower() ?? "unknown";
             Console.WriteLine($"[WCS] Weapon used: {weaponName}");
 
-            if (!weaponName.Contains("knife"))
+            if (!weaponName.Contains("bayonet"))
             {
                 Console.WriteLine("[WCS] WeaponFire: Weapon is not a knife.");
                 return;
