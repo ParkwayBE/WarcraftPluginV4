@@ -56,16 +56,35 @@ namespace WarcraftPlugin.Classes
 
         private void WeaponFire(EventWeaponFire @event)
         {
-            if (Player == null || !Player.IsValid)
-                return;
+            var shooter = @event.Userid;
 
-            var weaponName = @event.Weapon?.ToLower() ?? "";
+            if (shooter == null || !shooter.IsValid)
+            {
+                Console.WriteLine("[WCS] WeaponFire: shooter was null or invalid.");
+                return;
+            }
+
+            Console.WriteLine($"[WCS] WeaponFire triggered by: {shooter.PlayerName} ({shooter.SteamID})");
+
+            var weaponName = @event.Weapon?.ToLower() ?? "unknown";
+            Console.WriteLine($"[WCS] Weapon used: {weaponName}");
+
             if (!weaponName.Contains("knife"))
+            {
+                Console.WriteLine("[WCS] WeaponFire: Weapon is not a knife.");
                 return;
+            }
 
-            // ✅ Launch your throwing knife here!
-            new ThrowingKnifeEffect(Player).Start();
+            if (shooter != Player)
+            {
+                Console.WriteLine("[WCS] WeaponFire: Shooter is not our class's player, skipping.");
+                return;
+            }
+
+            Console.WriteLine("[WCS] Launching ThrowingKnifeEffect...");
+            new ThrowingKnifeEffect(shooter).Start();
         }
+
 
 
         private class ThrowingKnifeEffect : WarcraftEffect
@@ -88,6 +107,8 @@ namespace WarcraftPlugin.Classes
 
             public override void OnStart()
             {
+                Owner.PrintToChat("[WCS] OnStart Throwing knife effect triggered...");
+
                 _direction = Owner.PlayerPawn.Value.EyeAngles.ToForward();
                 _direction = _direction / _direction.Length();
                 Vector spawnPosition = Owner.CalculatePositionInFront(35, 60);
@@ -148,6 +169,7 @@ namespace WarcraftPlugin.Classes
 
             public override void OnFinish()
             {
+                Owner.PrintToChat("[WCS] OnFinish Throwing knife effect triggered...");
                 _prop?.RemoveIfValid();
             }
         }
