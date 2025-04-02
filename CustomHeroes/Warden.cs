@@ -122,14 +122,16 @@ namespace WarcraftPlugin.Classes
         {
             private Vector _position;
             private Vector _direction;
-            private float _speed = 3000f;
+            private float _speed = 2000f;
             private float _travelTime;
             private float _maxDistance = 1500f;
             private CDynamicProp _visualKnife;
             private float _lastTickTime;
+            private bool _hasHit = false;
+            private int _damage = 40;
 
             public ThrowingKnifeEffect(CCSPlayerController owner)
-                : base(owner, 10f) // Keep alive for long enough to travel full range
+                : base(owner, 10f)
             {
             }
 
@@ -139,7 +141,7 @@ namespace WarcraftPlugin.Classes
                 _direction = Owner.PlayerPawn.Value.EyeAngles.ToForward();
 
                 _visualKnife = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-                _visualKnife.SetModel("models/weapons/w_knife_gg.vmdl"); // Change if needed
+                _visualKnife.SetModel("models/weapons/w_eq_fraggrenade_d.mdl"); // Use a safe fallback if needed
                 _visualKnife.SetScale(1.0f);
                 _visualKnife.Teleport(_position, new QAngle(), new Vector());
                 _visualKnife.DispatchSpawn();
@@ -149,6 +151,8 @@ namespace WarcraftPlugin.Classes
 
             public override void OnTick()
             {
+                if (_hasHit) return;
+
                 float now = (float)Server.EngineTime;
                 float deltaTime = now - _lastTickTime;
                 _lastTickTime = now;
@@ -158,8 +162,30 @@ namespace WarcraftPlugin.Classes
                 _position += _direction * (_speed * deltaTime);
                 _visualKnife?.Teleport(_position, new QAngle(z: _travelTime * 720), new Vector());
 
-                // Particle trail for visual feedback
+                // Visual trail
                 Warcraft.SpawnParticle(_position, "particles/tracer/tracer_flyby.vpcf", 0.1f);
+
+                // Hit detection
+                foreach (var target in Utilities.GetPlayers())
+                {
+                    if (!target.IsAlive() || target.TeamNum == Owner.TeamNum || target == Owner)
+                        continue;
+
+                    if (target.PlayerPawn.Value.CollisionBox().Contains(_position))
+                    {
+                        _hasHit = true;
+
+                        target.TakeDamage(_damage, Owner);
+
+                        // Optional blood effect
+                        Warcraft.SpawnParticle(target.PlayerPawn.Value.AbsOrigin.WithZ(70), "particles/blood_impact/blood_impact_blade.vpcf", 0.3f);
+
+                        Owner.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} Throwing knife hit {target.PlayerName}");
+
+                        this.Destroy();
+                        return;
+                    }
+                }
 
                 float traveled = (_position - Owner.PlayerPawn.Value.AbsOrigin).Length();
                 if (traveled >= _maxDistance)
@@ -173,6 +199,7 @@ namespace WarcraftPlugin.Classes
                 _visualKnife?.RemoveIfValid();
             }
         }
+
 
 
 
