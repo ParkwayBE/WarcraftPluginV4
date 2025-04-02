@@ -100,12 +100,16 @@ namespace WarcraftPlugin.Classes
 
             var distance = 60;
             var height = 30;
+            var SpeedInSpawnBall = 2500f;
 
             Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
 
             _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
             _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
             _ballProp.SetParent(_ball);
+
+            Vector velocity = owner.CalculateVelocityAwayFromPlayer((int)SpeedInSpawnBall);
+            _ball.Teleport(null, null, velocity);
 
 
             throwingKnifeEffect = new ThrowingKnifeEffect(owner, _ball);
