@@ -20,12 +20,19 @@ namespace WarcraftPlugin.Classes
             TModel = "characters/models/tm_phoenix_heavy/tm_phoenix_heavy.vmdl",
             CTModel = "characters/models/ctm_heavy/ctm_heavy.vmdl"
         };
+
+        public override List<string> PreloadResources =>
+        [
+            "models/cs_italy/props/barrel/italy_barrel_wood_1.vmdl"
+        ];
+
         public override Color DefaultColor => Color.Brown;
+
         public override List<IWarcraftAbility> Abilities =>
         [
             new WarcraftAbility("Carnage", "Increase damage dealt with shotguns."),
             new WarcraftAbility("Battle-Hardened", "Increase your health by 20/40/60/80/100."),
-            new WarcraftAbility("Throwing Axe", "Chance to hurl an exploding throwing axe when firing."),
+            new WarcraftAbility("Throwing Axe", "Chance to throw an exploding barrel when firing."),
             new WarcraftCooldownAbility("Bloodlust", "Grants infinite ammo, movement speed & health regeneration.", 50f)
         ];
 
@@ -40,8 +47,6 @@ namespace WarcraftPlugin.Classes
 
             HookAbility(3, Ultimate);
         }
-
-
 
         private void PlayerShoot(EventWeaponFire @event)
         {
@@ -62,17 +67,11 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerSpawn(EventPlayerSpawn @event)
         {
-            WarcraftPlugin.Instance.AddTimer(1.5f, () =>
+            if (WarcraftPlayer.GetAbilityLevel(1) > 0)
             {
-                if (WarcraftPlayer.GetAbilityLevel(1) > 0)
-                {
-                    var bonusHealth = WarcraftPlayer.GetAbilityLevel(1) * _battleHardenedHealthMultiplier;
-                    Player.SetHp(100 + bonusHealth);
-                    Player.PlayerPawn.Value.MaxHealth = Player.PlayerPawn.Value.Health;
-                    Player.PrintToChat($"\x04 Battle Hardened\x01 : You gained {bonusHealth} .");
-                }
-                ResetCooldowns();
-            });
+                Player.SetHp(100 + WarcraftPlayer.GetAbilityLevel(1) * _battleHardenedHealthMultiplier);
+                Player.PlayerPawn.Value.MaxHealth = Player.PlayerPawn.Value.Health;
+            }
         }
 
         private void Ultimate()
@@ -94,7 +93,6 @@ namespace WarcraftPlugin.Classes
                 var victim = @event.Userid;
                 @event.AddBonusDamage(carnageLevel * 5);
                 Warcraft.SpawnParticle(victim.PlayerPawn.Value.AbsOrigin.With(z: victim.PlayerPawn.Value.AbsOrigin.Z + 60), "particles/blood_impact/blood_impact_basic.vpcf");
-                Player.PrintToChat($"\x04 Carnage\x01 : You dealt {carnageLevel * 5} additional damage with a shotgun.");
                 Player.PlayLocalSound("sounds/physics/body/body_medium_break3.vsnd");
             }
         }
@@ -114,8 +112,7 @@ namespace WarcraftPlugin.Classes
 
             _throwingAxe.Teleport(Owner.CalculatePositionInFront(10, 60), rotation, velocity);
             _throwingAxe.DispatchSpawn();
-
-            _throwingAxe.SetModel("models/weapons/v_axe.vmdl");
+            _throwingAxe.SetModel("models/cs_italy/props/barrel/italy_barrel_wood_1.vmdl");
             Schema.SetSchemaValue(_throwingAxe.Handle, "CBaseGrenade", "m_hThrower", Owner.PlayerPawn.Raw); //Fixes killfeed
 
             _throwingAxe.AcceptInput("InitializeSpawnFromWorld");
@@ -191,7 +188,6 @@ namespace WarcraftPlugin.Classes
             pawn.SetColor(Color.White);
             pawn.VelocityModifier = 1f;
             pawn.SetScale(1);
-            Owner.PrintToChat("\x04 Bloodlust\x01 : Has ended.");
         }
     }
 }
