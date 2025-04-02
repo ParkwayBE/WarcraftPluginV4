@@ -38,6 +38,7 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerDeath>(PlayerDeath);
             HookEvent<EventPlayerShoot>(PlayerShoot);
             HookEvent<EventWeaponFire>(WeaponFire);
+            Console.WriteLine("Warden register triggered");
             HookAbility(3, Ultimate);
 
         }
@@ -53,6 +54,7 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerShoot(EventPlayerShoot shoot)
         {
+            Console.WriteLine("[WCS][Warden] PlayerShoot event triggered");
             var player = shoot.Userid;
             if (player == null || !player.IsValid)
                 return;
@@ -62,12 +64,16 @@ namespace WarcraftPlugin.Classes
 
         private void WeaponFire(EventWeaponFire @event)
         {
-            if (Player == null || !Player.IsValid)
+            Console.WriteLine("[WCS][Warden] WeaponFire event triggered");
+
+            var player = @event.Userid ?? Player;
+            if (player == null || !player.IsValid)
                 return;
 
             var weaponName = @event.Weapon?.ToLower() ?? "unknown";
-            Player.PrintToChat($"{ChatColors.Red}DEBUG:{ChatColors.Default} WeaponFire triggered with: {weaponName}");
+            player.PrintToChat($"{ChatColors.Red}DEBUG:{ChatColors.Default} WeaponFire triggered with: {weaponName}");
         }
+
 
 
 
