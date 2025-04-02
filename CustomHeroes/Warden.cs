@@ -12,6 +12,10 @@ using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
+
+
+
 
 namespace WarcraftPlugin.Classes
 {
@@ -90,6 +94,7 @@ namespace WarcraftPlugin.Classes
         private class ThrowingKnifeEffect : WarcraftEffect
         {
             private CPhysicsPropMultiplayer? _prop;
+            private CDynamicProp _ballprop;
             private Vector _direction;
             private float _speed = 1600f;
             private float _travelled = 0f;
@@ -113,18 +118,22 @@ namespace WarcraftPlugin.Classes
                 _direction = _direction / _direction.Length();
                 Vector spawnPosition = Owner.CalculatePositionInFront(35, 60);
 
-                _prop = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
                 if (_prop == null)
                 {
                     Owner.PrintToChat($"{ChatColors.Red}[WCS] Failed to spawn knife.");
                     Destroy();
                     return;
                 }
-
+                _prop = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
                 _prop.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
-                _prop.SetScale(0.6f);
                 _prop.DispatchSpawn();
-                _prop.Teleport(spawnPosition, new QAngle(0, Owner.PlayerPawn.Value.EyeAngles.Y, 0), Owner.CalculateVelocityAwayFromPlayer((int)_speed));
+
+                _ballprop = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
+                _ballprop.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
+                _ballprop.DispatchSpawn();
+                _prop.Teleport(spawnPosition, new QAngle(0, Owner.PlayerPawn.Value.EyeAngles.Y, 0), new Vector(nint.Zero));
+                _ballprop.Teleport(spawnPosition, new QAngle(0, Owner.PlayerPawn.Value.EyeAngles.Y, 0), new Vector(nint.Zero));
+                _ballprop.SetParent(_prop);
 
                 _travelled = 0;
             }
