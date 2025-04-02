@@ -122,7 +122,7 @@ namespace WarcraftPlugin.Classes
         {
             private Vector _position;
             private Vector _direction;
-            private float _speed = 1500f;
+            private float _speed = 400f;
             private float _travelTime;
             private float _maxDistance = 3000f;
             private CDynamicProp _visualKnife;
