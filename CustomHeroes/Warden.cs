@@ -91,11 +91,11 @@ namespace WarcraftPlugin.Classes
         private void SpawnBall(CCSPlayerController owner)
         {
             _ball = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
-            _ball.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
+            _ball.SetModel("models/props/de_aztec/hr_aztec/aztec_archaeology/aztec_archaeology_tools_shovel_01.vmdl");
             _ball.DispatchSpawn();
 
             _ballProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-            _ballProp.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
+            _ballProp.SetModel("models/props/de_aztec/hr_aztec/aztec_archaeology/aztec_archaeology_tools_shovel_01.vmdl");
             _ballProp.DispatchSpawn();
 
             var distance = 60;
