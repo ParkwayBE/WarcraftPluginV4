@@ -6,6 +6,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using g3;
+using WarcraftPlugin.Core;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -29,6 +30,11 @@ namespace WarcraftPlugin.Classes
         public CPhysicsPropMultiplayer _ball;
         public CDynamicProp _ballProp;
         private ThrowingKnifeEffect throwingKnifeEffect;
+
+        public override List<string> PreloadResources =>
+        [
+            "models/generic/street_trashcan_03/street_trashcan_03_lid_a.vmdl"
+        ];
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -86,11 +92,11 @@ namespace WarcraftPlugin.Classes
         private void SpawnBall(CCSPlayerController owner)
         {
             _ball = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
-            _ball.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
+            _ball.SetModel("models/generic/street_trashcan_03/street_trashcan_03_lid_a.vmdl");
             _ball.DispatchSpawn();
 
             _ballProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-            _ballProp.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
+            _ballProp.SetModel("models/generic/street_trashcan_03/street_trashcan_03_lid_a.vmdl");
             _ballProp.DispatchSpawn();
 
             var distance = 60;
@@ -113,7 +119,7 @@ namespace WarcraftPlugin.Classes
             private CPhysicsPropMultiplayer? _prop;
             private CDynamicProp _ballprop;
             private Vector _direction;
-            private float _speed = 1600f;
+            private float _speed = 200f;
             private float _travelled = 0f;
             private float _maxDistance = 2500f;
             private float _tickInterval = 0.02f;
@@ -121,11 +127,6 @@ namespace WarcraftPlugin.Classes
             private Box3d _hitbox;
             private CCSPlayerController _owner;
             private CPhysicsPropMultiplayer _knife;
-
-            public List<string> PreloadResources => new()
-    {
-        "models/props_gameplay/football.vmdl"
-    };
 
             public ThrowingKnifeEffect(CCSPlayerController owner, CPhysicsPropMultiplayer knife) : base(owner, onTickInterval: 0.01f)
             {
@@ -137,10 +138,24 @@ namespace WarcraftPlugin.Classes
             {
                 var distance = 60;
                 var height = 30;
+
+                var eyeAngle = _owner.PlayerPawn.Value.EyeAngles;
+                var forward = Normalize(eyeAngle.ToForward());
+                var velocity = forward * _speed;
+
+
                 Vector posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
                 _owner.PrintToChat($"Updating Ball Position: {posInfrontOfPlayer}");
-                _knife.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+                _knife.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, velocity);
             }
+
+            Vector Normalize(Vector v)
+            {
+                var length = MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
+                if (length == 0) return new Vector(0, 0, 0);
+                return new Vector(v.X / length, v.Y / length, v.Z / length);
+            }
+
 
             public override void OnStart()
             {
