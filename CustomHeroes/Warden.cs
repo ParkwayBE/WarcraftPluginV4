@@ -120,6 +120,90 @@ namespace WarcraftPlugin.Classes
 
         private class ThrowingKnifeEffect : WarcraftEffect
         {
+            private CDynamicProp? _knifeProp;
+            private Vector _direction;
+            private float _speed = 1200f;
+            private float _travelTime;
+            private float _maxDistance = 1500f;
+            private Vector _position;
+            private float _lastTickTime;
+
+            public ThrowingKnifeEffect(CCSPlayerController owner)
+                : base(owner, 10f) // Let it live for up to 10 seconds
+            {
+            }
+
+            public override void OnStart()
+            {
+                // Spawn the butterfly knife model as a dynamic prop
+                _knifeProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
+
+                if (_knifeProp == null)
+                {
+                    Owner.PrintToChat($"{ChatColors.Red}Failed to create butterfly knife prop.");
+                    return;
+                }
+
+                var spawnPos = Owner.CalculatePositionInFront(60, Owner.EyeHeight());
+                _direction = Owner.PlayerPawn.Value.EyeAngles.ToForward();
+                _position = spawnPos;
+
+                _knifeProp.SetModel("weapons/models/knife/knife_butterfly/weapon_knife_butterfly.vmdl");
+                _knifeProp.SetScale(1.0f);
+                _knifeProp.Teleport(_position, new QAngle(), new Vector());
+                _knifeProp.DispatchSpawn();
+
+                _lastTickTime = (float)Server.EngineTime;
+            }
+
+            public override void OnTick()
+            {
+                if (_knifeProp == null || !_knifeProp.IsValid)
+                {
+                    Destroy();
+                    return;
+                }
+
+                float now = (float)Server.EngineTime;
+                float deltaTime = now - _lastTickTime;
+
+                if (deltaTime <= 0f)
+                    return;
+
+                _lastTickTime = now;
+                _travelTime += deltaTime;
+
+                // Move the knife forward
+                _position += _direction * (_speed * deltaTime);
+
+                _knifeProp.Teleport(
+                    _position,
+                    new QAngle(_travelTime * 800f, _travelTime * 300f, 0),
+                    new Vector()
+                );
+
+                // Optional: visual trail
+                Warcraft.SpawnParticle(_position, "particles/tracer/tracer_flyby.vpcf", 0.1f);
+
+                float distanceTravelled = (_position - Owner.PlayerPawn.Value.AbsOrigin).Length();
+                if (distanceTravelled >= _maxDistance)
+                {
+                    Destroy();
+                }
+            }
+
+            public override void OnFinish()
+            {
+                _knifeProp?.RemoveIfValid();
+            }
+        }
+
+
+
+
+        /*
+        private class ThrowingKnifeEffect : WarcraftEffect
+        {
             private Vector _position;
             private Vector _direction;
             private float _speed = 400f;
@@ -213,7 +297,7 @@ namespace WarcraftPlugin.Classes
             {
                 _visualKnife?.RemoveIfValid();
             }
-        }
+        } */
 
 
 
