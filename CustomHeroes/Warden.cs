@@ -141,7 +141,7 @@ namespace WarcraftPlugin.Classes
                 _direction = Owner.PlayerPawn.Value.EyeAngles.ToForward();
 
                 _visualKnife = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-                _visualKnife.SetModel("models/weapons/w_eq_fraggrenade_d.mdl"); // Use a safe fallback if needed
+                _visualKnife.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl"); // Use a safe fallback if needed
                 _visualKnife.SetScale(1.0f);
                 _visualKnife.Teleport(_position, new QAngle(), new Vector());
                 _visualKnife.DispatchSpawn();
