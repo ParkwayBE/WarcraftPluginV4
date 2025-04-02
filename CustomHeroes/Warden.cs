@@ -5,6 +5,8 @@ using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
+using g3;
+using WarcraftPlugin.Core;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -36,9 +38,8 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerDeath>(PlayerDeath);
-            HookEvent<EventPlayerShoot>(PlayerShoot);
             HookEvent<EventWeaponFire>(WeaponFire);
-            Console.WriteLine("Warden register triggered");
+
             HookAbility(3, Ultimate);
 
         }
@@ -52,27 +53,103 @@ namespace WarcraftPlugin.Classes
             // SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f);
         }
 
-        private void PlayerShoot(EventPlayerShoot @event)
-        {
-            Console.WriteLine("[WCS][Warden] PlayerShoot event triggered");
-            var player = @event.Userid;
-            if (player == null || !player.IsValid)
-                return;
-
-            player.PrintToChat($"{ChatColors.Red}DEBUG:{ChatColors.Default} PlayerShoot event has triggered.");
-        }
 
         private void WeaponFire(EventWeaponFire @event)
         {
-            Console.WriteLine("[WCS][Warden] WeaponFire event triggered");
-
-            var player = @event.Userid ?? Player;
-            if (player == null || !player.IsValid)
+            if (Player == null || !Player.IsValid)
                 return;
 
-            player.PrintToChat($"{ChatColors.Red}DEBUG:{ChatColors.Default} WeaponFire triggered");
-            Player.PrintToChat($"{ChatColors.Red}DEBUG:{ChatColors.Default} WeaponFire triggered Capital P");
+            var weaponName = @event.Weapon?.ToLower() ?? "";
+            if (!weaponName.Contains("knife"))
+                return;
 
+            // ✅ Launch your throwing knife here!
+            new ThrowingKnifeEffect(Player).Start();
+        }
+
+
+        private class ThrowingKnifeEffect : WarcraftEffect
+        {
+            private CPhysicsPropMultiplayer? _prop;
+            private Vector _direction;
+            private float _speed = 1600f;
+            private float _travelled = 0f;
+            private float _maxDistance = 2500f;
+            private float _tickInterval = 0.02f;
+            private readonly float _damage = 25f;
+            private Box3d _hitbox;
+
+            public List<string> PreloadResources => new()
+    {
+        "models/props_gameplay/football.vmdl"
+    };
+
+            public ThrowingKnifeEffect(CCSPlayerController owner) : base(owner, duration: 5f, onTickInterval: 0.01f) { }
+
+            public override void OnStart()
+            {
+                _direction = Owner.PlayerPawn.Value.EyeAngles.ToForward();
+                _direction = _direction / _direction.Length();
+                Vector spawnPosition = Owner.CalculatePositionInFront(35, 60);
+
+                _prop = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
+                if (_prop == null)
+                {
+                    Owner.PrintToChat($"{ChatColors.Red}[WCS] Failed to spawn knife.");
+                    Destroy();
+                    return;
+                }
+
+                _prop.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
+                _prop.SetScale(0.6f);
+                _prop.DispatchSpawn();
+                _prop.Teleport(spawnPosition, new QAngle(0, Owner.PlayerPawn.Value.EyeAngles.Y, 0), Owner.CalculateVelocityAwayFromPlayer((int)_speed));
+
+                _travelled = 0;
+            }
+
+            public override void OnTick()
+            {
+                if (_prop == null || !_prop.IsValid)
+                {
+                    Destroy();
+                    return;
+                }
+
+                float distanceThisTick = _speed * _tickInterval;
+                _travelled += distanceThisTick;
+
+                if (_travelled > _maxDistance)
+                {
+                    Destroy();
+                    return;
+                }
+
+                // Update hitbox each tick to match prop's current position
+                var center = _prop.AbsOrigin;
+                _hitbox = Warcraft.CreateBoxAroundPoint(center, 20, 20, 20);  // Width, depth, height
+
+                // Check for collision
+                foreach (var player in Utilities.GetPlayers())
+                {
+                    if (!player.IsValid || !player.PawnIsAlive || player.TeamNum == Owner.TeamNum || player == Owner)
+                        continue;
+
+                    var targetPos = player.PlayerPawn.Value.AbsOrigin.Clone().Add(z: 40);  // Mid-chest height
+                    if (_hitbox.Contains(targetPos))
+                    {
+                        SkillFunctions.DealRawDamage(Owner, player, (int)_damage);
+                        Owner.PrintToChat($"{ChatColors.Lime}🔪 You hit {player.PlayerName} with a throwing knife!");
+                        Destroy();
+                        return;
+                    }
+                }
+            }
+
+            public override void OnFinish()
+            {
+                _prop?.RemoveIfValid();
+            }
         }
 
 
