@@ -143,7 +143,9 @@ namespace WarcraftPlugin.Classes
 
                 Vector posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
                 _owner.PrintToChat($"Updating Ball Position: {posInfrontOfPlayer}");
-                _knife.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, velocity);
+                _knife.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+                _knife.Teleport(null, null, velocity);
+
             }
 
             Vector Normalize(Vector v)
