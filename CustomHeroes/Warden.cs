@@ -218,10 +218,15 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerDeath(EventPlayerDeath death)
         {
+            var killer = death.Attacker;
+
+            if (killer == null || !killer.IsValid || killer == Player)
+                return;
+
             if (_hasUsedRevive || WarcraftPlayer.GetAbilityLevel(1) <= 0)
                 return;
 
-            var killer = death.Attacker;
+
             if (killer == null || !killer.IsValid || killer.TeamNum == Player.TeamNum) return;
 
             var roll = Random.Shared.Next(2); // 0 or 1
