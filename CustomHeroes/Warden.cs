@@ -178,7 +178,7 @@ namespace WarcraftPlugin.Classes
                         target.TakeDamage(_damage, Owner);
 
                         // Optional blood effect
-                        Warcraft.SpawnParticle(target.PlayerPawn.Value.AbsOrigin.WithZ(70), "particles/blood_impact/blood_impact_blade.vpcf", 0.3f);
+                        Warcraft.SpawnParticle(target.PlayerPawn.Value.AbsOrigin, "particles/blood_impact/blood_impact_blade.vpcf", 0.3f);
 
                         Owner.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} Throwing knife hit {target.PlayerName}");
 
