@@ -141,13 +141,13 @@ namespace WarcraftPlugin.Classes
                 _direction = Owner.PlayerPawn.Value.EyeAngles.ToForward();
 
                 _visualKnife = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-                _visualKnife.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl_c");
+                _visualKnife.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
                 _visualKnife.SetScale(0.6f);
                 _visualKnife.Teleport(_position, new QAngle(), new Vector());
                 _visualKnife.DispatchSpawn();
 
                 // Optional throw sound
-                Owner.PlayLocalSound("weapons/knife/knife_hitwall1.vsnd");
+                //Owner.PlayLocalSound("weapons/knife/knife_hitwall1.vsnd");
 
                 _lastTickTime = (float)Server.EngineTime;
             }
