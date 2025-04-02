@@ -122,16 +122,16 @@ namespace WarcraftPlugin.Classes
         {
             private Vector _position;
             private Vector _direction;
-            private float _speed = 2000f;
+            private float _speed = 1500f;
             private float _travelTime;
-            private float _maxDistance = 1500f;
+            private float _maxDistance = 3000f;
             private CDynamicProp _visualKnife;
             private float _lastTickTime;
             private bool _hasHit = false;
             private int _damage = 40;
 
             public ThrowingKnifeEffect(CCSPlayerController owner)
-                : base(owner, 10f)
+                : base(owner, 10f) // Lasts max 10 seconds if no hit
             {
             }
 
@@ -141,10 +141,13 @@ namespace WarcraftPlugin.Classes
                 _direction = Owner.PlayerPawn.Value.EyeAngles.ToForward();
 
                 _visualKnife = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-                _visualKnife.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl"); // Use a safe fallback if needed
-                _visualKnife.SetScale(1.0f);
+                _visualKnife.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl_c");
+                _visualKnife.SetScale(0.6f);
                 _visualKnife.Teleport(_position, new QAngle(), new Vector());
                 _visualKnife.DispatchSpawn();
+
+                // Optional throw sound
+                Owner.PlayLocalSound("weapons/knife/knife_hitwall1.vsnd");
 
                 _lastTickTime = (float)Server.EngineTime;
             }
@@ -160,12 +163,18 @@ namespace WarcraftPlugin.Classes
                 _travelTime += deltaTime;
 
                 _position += _direction * (_speed * deltaTime);
-                _visualKnife?.Teleport(_position, new QAngle(z: _travelTime * 720), new Vector());
 
-                // Visual trail
-                Warcraft.SpawnParticle(_position, "particles/tracer/tracer_flyby.vpcf", 0.1f);
+                // Smooth spinning soccer ball
+                _visualKnife?.Teleport(
+                    _position,
+                    new QAngle(_travelTime * 1000, _travelTime * 500, 0),
+                    new Vector()
+                );
 
-                // Hit detection
+                // Crisp, short particle trail
+                Warcraft.SpawnParticle(_position, "particles/tracer/tracer_flyby.vpcf", 0.08f);
+
+                // Hit detection (basic bounding box check)
                 foreach (var target in Utilities.GetPlayers())
                 {
                     if (!target.IsAlive() || target.TeamNum == Owner.TeamNum || target == Owner)
@@ -176,10 +185,7 @@ namespace WarcraftPlugin.Classes
                         _hasHit = true;
 
                         target.TakeDamage(_damage, Owner);
-
-                        // Optional blood effect
                         Warcraft.SpawnParticle(target.PlayerPawn.Value.AbsOrigin, "particles/blood_impact/blood_impact_blade.vpcf", 0.3f);
-
                         Owner.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} Throwing knife hit {target.PlayerName}");
 
                         this.Destroy();
@@ -199,6 +205,7 @@ namespace WarcraftPlugin.Classes
                 _visualKnife?.RemoveIfValid();
             }
         }
+
 
 
 
