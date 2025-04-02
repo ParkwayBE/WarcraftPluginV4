@@ -6,7 +6,6 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using g3;
-using WarcraftPlugin.Core;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -139,9 +138,7 @@ namespace WarcraftPlugin.Classes
                 var distance = 60;
                 var height = 30;
 
-                var eyeAngle = _owner.PlayerPawn.Value.EyeAngles;
-                var forward = Normalize(eyeAngle.ToForward());
-                var velocity = forward * _speed;
+                Vector velocity = _owner.CalculateVelocityAwayFromPlayer((int)_speed);
 
 
                 Vector posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
