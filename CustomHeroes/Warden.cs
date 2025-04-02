@@ -62,13 +62,13 @@ namespace WarcraftPlugin.Classes
 
         private void WeaponFire(EventWeaponFire @event)
         {
-            var player = @event.Userid;
-            if (player == null || !player.IsValid)
+            if (Player == null || !Player.IsValid)
                 return;
 
-            var weaponName = @event.Weapon.ToLower();
-            player.PrintToChat($"{ChatColors.Red}DEBUG:{ChatColors.Default} WeaponFire event has triggered with weapon: {weaponName}");
+            var weaponName = @event.Weapon?.ToLower() ?? "unknown";
+            Player.PrintToChat($"{ChatColors.Red}DEBUG:{ChatColors.Default} WeaponFire triggered with: {weaponName}");
         }
+
 
 
 
