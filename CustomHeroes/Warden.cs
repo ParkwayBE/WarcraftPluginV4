@@ -136,6 +136,11 @@ namespace WarcraftPlugin.Classes
                 _ballprop.SetParent(_prop);
 
                 _travelled = 0;
+                var distance = 60;
+                var height = 30;
+                Vector posInfrontOfPlayer = Owner.CalculatePositionInFront(distance, height);
+                Owner.PrintToChat($"Updating Ball Position: {posInfrontOfPlayer}");
+                _ballprop.Teleport(posInfrontOfPlayer, Owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
             }
 
             public override void OnTick()
