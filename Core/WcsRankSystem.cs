@@ -272,6 +272,12 @@ namespace WarcraftPlugin.Core
             var forward = owner.PlayerPawn.Value.EyeAngles.ToForward();
             var spawnPos = owner.EyePosition() + forward * 100;
 
+            if (dummy.PlayerPawn?.Value == null)
+            {
+                owner.PrintToChat(" \x07[Dummy] Bot is not fully initialized. Try again in a second.");
+                return;
+            }
+
             dummy.PlayerPawn.Value.Teleport(spawnPos, new QAngle(), new Vector());
 
             // Buff and disable
