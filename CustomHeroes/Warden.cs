@@ -52,10 +52,10 @@ namespace WarcraftPlugin.Classes
             // SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f);
         }
 
-        private void PlayerShoot(EventPlayerShoot shoot)
+        private void PlayerShoot(EventPlayerShoot @event)
         {
             Console.WriteLine("[WCS][Warden] PlayerShoot event triggered");
-            var player = shoot.Userid;
+            var player = @event.Userid;
             if (player == null || !player.IsValid)
                 return;
 
@@ -70,9 +70,11 @@ namespace WarcraftPlugin.Classes
             if (player == null || !player.IsValid)
                 return;
 
-            var weaponName = @event.Weapon?.ToLower() ?? "unknown";
-            player.PrintToChat($"{ChatColors.Red}DEBUG:{ChatColors.Default} WeaponFire triggered with: {weaponName}");
+            player.PrintToChat($"{ChatColors.Red}DEBUG:{ChatColors.Default} WeaponFire triggered");
+            Player.PrintToChat($"{ChatColors.Red}DEBUG:{ChatColors.Default} WeaponFire triggered Capital P");
+
         }
+
 
 
 
