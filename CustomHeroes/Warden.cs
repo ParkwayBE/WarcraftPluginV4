@@ -184,17 +184,22 @@ namespace WarcraftPlugin.Classes
                     if (!target.IsAlive() || target.TeamNum == Owner.TeamNum || target == Owner)
                         continue;
 
-                    if (target.PlayerPawn.Value.CollisionBox().Contains(_position))
+                    var hitRadius = 35f;
+                    var targetPosition = target.PlayerPawn.Value.AbsOrigin;
+
+                    if ((_position - targetPosition).Length() <= hitRadius)
                     {
                         _hasHit = true;
 
                         target.TakeDamage(_damage, Owner);
-                        Warcraft.SpawnParticle(target.PlayerPawn.Value.AbsOrigin, "particles/blood_impact/blood_impact_blade.vpcf", 0.3f);
+                        Warcraft.SpawnParticle(targetPosition, "particles/blood_impact/blood_impact_blade.vpcf", 0.3f);
+
                         Owner.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} Throwing knife hit {target.PlayerName}");
 
                         this.Destroy();
                         return;
                     }
+
                 }
 
                 float traveled = (_position - Owner.PlayerPawn.Value.AbsOrigin).Length();
