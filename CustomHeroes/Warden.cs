@@ -31,7 +31,7 @@ namespace WarcraftPlugin.Classes
         public CDynamicProp _ballProp;
         private ThrowingKnifeEffect throwingKnifeEffect;
 
-        public List<string> PreloadResources => new()
+        public override List<string> PreloadResources => new()
         {
             "models/props_gameplay/football.vmdl"
         };
@@ -92,11 +92,11 @@ namespace WarcraftPlugin.Classes
         private void SpawnBall(CCSPlayerController owner)
         {
             _ball = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
-            _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
+            _ball.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
             _ball.DispatchSpawn();
 
             _ballProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-            _ballProp.SetModel("models/tools/bullet_hit_marker.vmdl");
+            _ballProp.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
             _ballProp.DispatchSpawn();
 
             var distance = 60;
