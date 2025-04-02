@@ -116,7 +116,6 @@ namespace WarcraftPlugin.Classes
 
                 _direction = Owner.PlayerPawn.Value.EyeAngles.ToForward();
                 _direction = _direction / _direction.Length();
-                Vector spawnPosition = Owner.CalculatePositionInFront(35, 60);
 
                 if (_prop == null)
                 {
@@ -128,17 +127,22 @@ namespace WarcraftPlugin.Classes
                 _prop.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
                 _prop.DispatchSpawn();
 
+
                 _ballprop = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
                 _ballprop.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
                 _ballprop.DispatchSpawn();
-                _prop.Teleport(spawnPosition, new QAngle(0, Owner.PlayerPawn.Value.EyeAngles.Y, 0), new Vector(nint.Zero));
-                _ballprop.Teleport(spawnPosition, new QAngle(0, Owner.PlayerPawn.Value.EyeAngles.Y, 0), new Vector(nint.Zero));
-                _ballprop.SetParent(_prop);
 
-                _travelled = 0;
                 var distance = 60;
                 var height = 30;
+                _travelled = 0;
                 Vector posInfrontOfPlayer = Owner.CalculatePositionInFront(distance, height);
+
+                _prop.Teleport(posInfrontOfPlayer, new QAngle(0, Owner.PlayerPawn.Value.EyeAngles.Y, 0), new Vector(nint.Zero));
+                _ballprop.Teleport(posInfrontOfPlayer, new QAngle(0, Owner.PlayerPawn.Value.EyeAngles.Y, 0), new Vector(nint.Zero));
+                _ballprop.SetParent(_prop);
+
+
+
                 Owner.PrintToChat($"Updating Ball Position: {posInfrontOfPlayer}");
                 _ballprop.Teleport(posInfrontOfPlayer, Owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
             }
