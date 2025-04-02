@@ -32,7 +32,8 @@ namespace WarcraftPlugin.Classes
 
         public override List<string> PreloadResources => new()
         {
-            "models/props_gameplay/football.vmdl"
+            "models/props_gameplay/football.vmdl",
+            "models/props/de_aztec/hr_aztec/aztec_archaeology/aztec_archaeology_tools_shovel_01.vmdl"
         };
 
         public override List<IWarcraftAbility> Abilities =>
