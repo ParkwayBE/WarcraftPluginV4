@@ -5,7 +5,6 @@ using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
-using WarcraftPlugin.Core;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -37,53 +36,11 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerDeath>(PlayerDeath);
-            // HookEvent<EventPlayerShoot>(PlayerShoot);
+            HookEvent<EventPlayerShoot>(PlayerShoot);
+            HookEvent<EventWeaponFire>(WeaponFire);
             HookAbility(3, Ultimate);
 
-            WarcraftPlugin.Instance.AddTimer(0.05f, () => CheckThrowingKnifeLoop());
-
         }
-
-        private float TimeSinceMapStart()
-        {
-            return (float)Server.EngineTime;
-        }
-
-
-        private void CheckThrowingKnifeLoop()
-        {
-            CheckThrowingKnife();
-            WarcraftPlugin.Instance.AddTimer(0.05f, () => CheckThrowingKnifeLoop()); // Re-loop every 50ms
-        }
-
-
-        private void CheckThrowingKnife()
-        {
-            if (Player == null || !Player.IsValid || !Player.IsAlive()) return;
-
-            var weapon = Player.PlayerPawn.Value.WeaponServices?.ActiveWeapon.Value;
-            if (weapon == null || weapon.DesignerName != "weapon_knife") return;
-
-            // Detect right-click
-            ulong buttons = Player.PlayerPawn.Value.MovementServices.Buttons.ButtonStates[0];
-            bool isRightClick = (buttons & (ulong)PlayerButtons.Attack2) != 0;
-
-            if (!isRightClick) return;
-
-            // Use server tick time (approx fallback)
-            float now = TimeSinceMapStart();
-
-            if (now - _lastThrowTime < ThrowCooldown) return;
-
-            _lastThrowTime = now;
-
-            if (WarcraftPlayer.GetAbilityLevel(2) > 0 && IsAbilityReady(2))
-            {
-                Player.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} Fan of Knives THROW triggered!");
-                new ThrowingKnifeEffect(Player).Start();
-            }
-        }
-
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
@@ -91,212 +48,17 @@ namespace WarcraftPlugin.Classes
 
             // Restrict to knife only
             var allowedWeapons = new List<string> { "weapon_knife" };
-            SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f);
+            // SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f);
         }
 
-
-        /*
         private void PlayerShoot(EventPlayerShoot shoot)
         {
-            Player.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} Player firing his knife");
-            if (WarcraftPlayer.GetAbilityLevel(2) <= 0) return; // Fan of Knives
-            if (Player == null || !Player.IsValid || !Player.IsAlive()) return;
-
-            var activeWeapon = Player.PlayerPawn.Value.WeaponServices?.ActiveWeapon.Value;
-            if (activeWeapon == null || activeWeapon.DesignerName != "weapon_knife") return;
-
-            Player.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} Player is valid and holding a knife");
-
-            ulong buttons = Player.PlayerPawn.Value.MovementServices.Buttons.ButtonStates[0];
-            bool isRightClick = (buttons & (ulong)PlayerButtons.Attack2) != 0;
-
-            Player.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} Player is using RMB");
-
-            if (!isRightClick) return;
-            if (!IsAbilityReady(2)) return;
-            new ThrowingKnifeEffect(Player).Start();
-        } */
-
-
-        private class ThrowingKnifeEffect : WarcraftEffect
-        {
-            private CPhysicsProp? _knifeProp;
-            private Vector _direction;
-            private float _speed = 1200f;
-            private float _travelTime;
-            private float _maxDistance = 1500f;
-            private Vector _position;
-            private float _lastTickTime;
-
-            public ThrowingKnifeEffect(CCSPlayerController owner)
-                : base(owner, 10f)
-            {
-            }
-
-            public override void OnStart()
-            {
-                _knifeProp = Utilities.CreateEntityByName<CPhysicsProp>("prop_physics");
-
-                if (_knifeProp == null)
-                {
-                    Owner.PrintToChat($"{ChatColors.Red}Failed to create butterfly knife prop.");
-                    Destroy();
-                    return;
-                }
-
-                _position = Owner.CalculatePositionInFront(60, Owner.EyeHeight());
-                _direction = Owner.PlayerPawn.Value.EyeAngles.ToForward();
-
-                _knifeProp.SetModel("weapons/models/knife/knife_butterfly/weapon_knife_butterfly.vmdl");
-                _knifeProp.SetScale(1.0f);
-                _knifeProp.Teleport(_position, new QAngle(), new Vector());
-                _knifeProp.DispatchSpawn();
-
-                // ✅ Use explosion to push forward
-                var normalizedDirection = _direction / _direction.Length(); // Normalize manually
-                var explosionPoint = _position - (normalizedDirection * 10f); // Slightly behind knife
-                Warcraft.SpawnExplosion(explosionPoint, 100f, 0, Owner);
-
-                _lastTickTime = (float)Server.EngineTime;
-            }
-
-            public override void OnTick()
-            {
-                if (_knifeProp == null || !_knifeProp.IsValid)
-                {
-                    Destroy();
-                    return;
-                }
-
-                float now = (float)Server.EngineTime;
-                float deltaTime = now - _lastTickTime;
-                if (deltaTime <= 0f)
-                    return;
-
-                _lastTickTime = now;
-                _travelTime += deltaTime;
-
-                float distanceTravelled = (_knifeProp.AbsOrigin - Owner.PlayerPawn.Value.AbsOrigin).Length();
-                if (distanceTravelled >= _maxDistance)
-                {
-                    Destroy();
-                }
-            }
-
-            public override void OnFinish()
-            {
-                _knifeProp?.RemoveIfValid();
-            }
+            Player.PrintToChat("PlayerShoot event has triggered.");
         }
-
-
-
-
-
-
-
-        /*
-        private class ThrowingKnifeEffect : WarcraftEffect
+        private void WeaponFire(EventWeaponFire @event)
         {
-            private Vector _position;
-            private Vector _direction;
-            private float _speed = 400f;
-            private float _travelTime;
-            private float _maxDistance = 3000f;
-            private CDynamicProp _visualKnife;
-            private float _lastTickTime;
-            private bool _hasHit = false;
-            private int _damage = 40;
-
-            public ThrowingKnifeEffect(CCSPlayerController owner)
-                : base(owner, 10f) // Lasts max 10 seconds if no hit
-            {
-            }
-
-            public override void OnStart()
-            {
-                _position = Owner.CalculatePositionInFront(60, Owner.EyeHeight());
-                _direction = Owner.PlayerPawn.Value.EyeAngles.ToForward();
-
-                _visualKnife = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-                _visualKnife.SetModel("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
-                _visualKnife.SetScale(0.6f);
-                _visualKnife.Teleport(_position, new QAngle(), new Vector());
-                _visualKnife.DispatchSpawn();
-
-                // Optional throw sound
-                //Owner.PlayLocalSound("weapons/knife/knife_hitwall1.vsnd");
-
-                _lastTickTime = (float)Server.EngineTime;
-            }
-
-            public override void OnTick()
-            {
-                if (_hasHit) return;
-
-                float now = (float)Server.EngineTime;
-                float deltaTime = now - _lastTickTime;
-
-                if (deltaTime <= 0f)
-                    return;
-
-                _lastTickTime = now;
-
-                _travelTime += deltaTime;
-
-                _position += _direction * (_speed * deltaTime);
-
-                // Smooth spinning soccer ball
-                _visualKnife?.Teleport(
-                    _position,
-                    new QAngle(_travelTime * 1000, _travelTime * 500, 0),
-                    new Vector()
-                );
-
-                // Crisp, short particle trail
-                Warcraft.SpawnParticle(_position, "particles/tracer/tracer_flyby.vpcf", 0.08f);
-
-                // Hit detection (basic bounding box check)
-                foreach (var target in Utilities.GetPlayers())
-                {
-                    if (!target.IsAlive() || target.TeamNum == Owner.TeamNum || target == Owner)
-                        continue;
-
-                    var hitRadius = 35f;
-                    var targetPosition = target.PlayerPawn.Value.AbsOrigin;
-
-                    if ((_position - targetPosition).Length() <= hitRadius)
-                    {
-                        _hasHit = true;
-
-                        target.TakeDamage(_damage, Owner);
-                        Warcraft.SpawnParticle(targetPosition, "particles/blood_impact/blood_impact_blade.vpcf", 0.3f);
-
-                        Owner.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} Throwing knife hit {target.PlayerName}");
-
-                        this.Destroy();
-                        return;
-                    }
-
-                }
-
-                float traveled = (_position - Owner.PlayerPawn.Value.AbsOrigin).Length();
-                if (traveled >= _maxDistance)
-                {
-                    this.Destroy();
-                }
-            }
-
-            public override void OnFinish()
-            {
-                _visualKnife?.RemoveIfValid();
-            }
-        } */
-
-
-
-
-
+            Player.PrintToChat("WeaponFire event has triggered.");
+        }
 
 
         private void PlayerDeath(EventPlayerDeath death)
