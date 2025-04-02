@@ -31,11 +31,6 @@ namespace WarcraftPlugin.Classes
         public CDynamicProp _ballProp;
         private ThrowingKnifeEffect throwingKnifeEffect;
 
-        public override List<string> PreloadResources =>
-        [
-            "models/generic/street_trashcan_03/street_trashcan_03_lid_a.vmdl"
-        ];
-
         public override List<IWarcraftAbility> Abilities =>
         [
             new WarcraftAbility("Sharp End", "Chance for your attacks to deal bleed damage"),
@@ -92,11 +87,11 @@ namespace WarcraftPlugin.Classes
         private void SpawnBall(CCSPlayerController owner)
         {
             _ball = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
-            _ball.SetModel("models/generic/street_trashcan_03/street_trashcan_03_lid_a.vmdl");
+            _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
             _ball.DispatchSpawn();
 
             _ballProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-            _ballProp.SetModel("models/generic/street_trashcan_03/street_trashcan_03_lid_a.vmdl");
+            _ballProp.SetModel("models/tools/bullet_hit_marker.vmdl");
             _ballProp.DispatchSpawn();
 
             var distance = 60;
