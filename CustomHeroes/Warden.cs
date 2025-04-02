@@ -99,7 +99,7 @@ namespace WarcraftPlugin.Classes
             _ballProp.DispatchSpawn();
 
             var distance = 60;
-            var height = 150;
+            var height = 75;
             var SpeedInSpawnBall = 3500f;
 
             Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
