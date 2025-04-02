@@ -70,6 +70,11 @@ namespace WarcraftPlugin.Classes
             int damage = @event.DmgHealth;
 
             SkillFunctions.LeechHealth(attacker, victim, chance, healPercent, damage);
+            attacker.SendInfo($"You drained {healPercent} health from your victim");
+            victim.SendInfo($"Your health got drained for {healPercent}.");
+
+
+
         }
 
 

@@ -8,8 +8,10 @@ using WarcraftPlugin.Events.ExtendedEvents;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector; // ✅ Aliased Vector
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 using System.Numerics;
+using WarcraftPlugin.Helpers;
+
 
 namespace WarcraftPlugin.Classes
 {
@@ -125,6 +127,59 @@ namespace WarcraftPlugin.Classes
                 DrawLaserBetween(pointA, pointB, Color.Cyan, 2f);
                 DrawLaserBetween(pointB, pointC, Color.Cyan, 2f);
                 DrawLaserBetween(pointC, pointA, Color.Cyan, 2f);
+            }
+
+
+            public static class HydroPumpEffect
+            {
+                public static void DrawHydroPumpBeam(Vector start, Vector end, Color color, float duration, float offset = 30f)
+                {
+
+                    // TODO: TEST THIS HYDRO PUMP EFFECT
+                    int segments = 3;
+                    Vector direction = (end - start).Normalized();
+                    float totalLength = (end - start).Length();
+                    float segmentLength = totalLength / segments;
+
+                    // Create perpendicular basis vectors
+                    Vector up = new Vector(0, 0, 1);
+                    Vector right = direction.Cross(up).Normalized();
+                    Vector forward = direction.Cross(right).Normalized();
+
+                    List<Vector[]> ringPoints = new();
+
+                    // Generate ring points per segment
+                    for (int i = 0; i <= segments; i++)
+                    {
+                        Vector segmentCenter = start + direction * (segmentLength * i);
+
+                        Vector top = segmentCenter + up * offset;
+                        Vector bottom = segmentCenter - up * offset;
+                        Vector left = segmentCenter - right * offset;
+                        Vector rightP = segmentCenter + right * offset;
+
+                        ringPoints.Add(new[] { left, top, rightP, bottom });
+                    }
+
+                    // Connect vortex diagonals between rings
+                    for (int i = 0; i < ringPoints.Count - 1; i++)
+                    {
+                        var ring1 = ringPoints[i];
+                        var ring2 = ringPoints[i + 1];
+
+                        // Connect ring1[left] -> ring2[top], etc
+                        DrawLaserBetween(ring1[0], ring2[1], color, duration); // left → top
+                        DrawLaserBetween(ring1[1], ring2[2], color, duration); // top → right
+                        DrawLaserBetween(ring1[2], ring2[3], color, duration); // right → bottom
+                        DrawLaserBetween(ring1[3], ring2[0], color, duration); // bottom → left
+                    }
+                }
+
+                public static void DrawLaserBetween(Vector a, Vector b, Color color, float duration)
+                {
+                    // Hook into your own Warcraft.DrawLaserBetween or draw implementation here
+                    Warcraft.DrawLaserBetween(a, b, color, duration);
+                }
             }
 
             public static CBeam DrawLaserBetween(Vector startPos, Vector endPos, Color? color = null, float duration = 1f, float width = 2f)

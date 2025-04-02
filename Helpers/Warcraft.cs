@@ -711,4 +711,23 @@ namespace WarcraftPlugin.Helpers
         }
     }
 
+    public static class VectorExtensions
+    {
+        public static Vector Normalized(this Vector v)
+        {
+            float length = MathF.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
+            return length == 0 ? new Vector(0, 0, 0) : new Vector(v.X / length, v.Y / length, v.Z / length);
+        }
+
+        public static Vector Cross(this Vector a, Vector b)
+        {
+            return new Vector
+            {
+                X = a.Y * b.Z - a.Z * b.Y,
+                Y = a.Z * b.X - a.X * b.Z,
+                Z = a.X * b.Y - a.Y * b.X
+            };
+        }
+    }
+
 }

@@ -10,6 +10,10 @@ using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 using System.Numerics;
+using System.Linq;
+using WarcraftPlugin.Core;
+using WarcraftPlugin.Core.Effects;
+using WarcraftPlugin.Helpers;
 
 namespace WarcraftPlugin.Classes
 {
@@ -57,12 +61,52 @@ namespace WarcraftPlugin.Classes
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
             // TODO:  Water Pulse  : chance to confuse enemies 
+            var attacker = @event.Attacker;
+            var victim = @event.Userid;
+            if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive()) return;
+            var victimName = Warcraft.GetRealPlayerName(victim);
+
+            if (victimName.Contains("Charizard"))
+            {
+                var damageDealt = @event.DmgHealth;
+                int bonusDamage = damageDealt / 5;
+                SkillFunctions.DealRawDamage(attacker, victim, bonusDamage);
+            }
         }
 
         private void PlayerHurt(EventPlayerHurt @event)
         {
             // TODO: Rain Dance: Chance to get hit by rogue wave
-            // TODO: Shell armor: block up to 80% of the damage dealt from behind
+            // TODO: Shell armor: block up to 80% of the damage dealt from behind 
+            var victim = @event.Userid;
+            var attacker = @event.Attacker;
+
+            if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive()) return;
+
+            var attackerName = Warcraft.GetRealPlayerName(attacker);
+
+            if (attackerName.Contains("Charizard"))
+            {
+                var dmgTaken = @event.DmgHealth;
+                int DmgNegate = dmgTaken / 5;
+                SkillFunctions.SetBonusHealth(victim, DmgNegate);
+            }
+
+            if (WarcraftPlayer.GetAbilityLevel(1) > 0) Backstab(@event);
+
+        }
+
+        private void Backstab(EventPlayerHurt eventPlayerHurtOther)
+        {
+            var attackerAngle = eventPlayerHurtOther.Attacker.PlayerPawn.Value.EyeAngles.Y;
+            var victimAngle = eventPlayerHurtOther.Userid.PlayerPawn.Value.EyeAngles.Y;
+
+            if (Math.Abs(attackerAngle - victimAngle) <= 50)
+            {
+                var BackstabDmgNegation = WarcraftPlayer.GetAbilityLevel(0) * 10;
+                SkillFunctions.SetBonusHealth(eventPlayerHurtOther.Userid, BackstabDmgNegation);
+                Warcraft.SpawnParticle(eventPlayerHurtOther.Userid.PlayerPawn.Value.AbsOrigin.Clone().Add(z: 85), "particles/overhead_icon_fx/radio_voice_flash.vpcf", 1);
+            }
         }
 
     }
