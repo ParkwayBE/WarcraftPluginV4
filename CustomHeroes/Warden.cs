@@ -93,26 +93,25 @@ namespace WarcraftPlugin.Classes
             var _ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
             if (!_ball.IsValid) return;
 
-
+            // ✅ Set model before applying transforms
             _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
-
 
             var SpeedInSpawnBall = 2000;
             Vector velocity = Player.CalculateVelocityAwayFromPlayer(SpeedInSpawnBall);
-            var angle = new QAngle(-90f, owner.PlayerPawn.Value.V_angle.Y, 0);
-
-
 
             var distance = 60;
             var height = 75;
-
             Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
+
+            // ✅ Pitch -90 to point "down", Yaw based on view, Roll 90 to rotate the model's long axis
+            var angle = new QAngle(-90f, owner.PlayerPawn.Value.V_angle.Y, 90f);
 
             _ball.Teleport(posInfrontOfPlayer, angle, velocity);
             _ball.DispatchSpawn();
-            _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
+
             _ball.SetScale(0.8f);
         }
+
 
         private void PlayerDeath(EventPlayerDeath death)
         {
@@ -257,6 +256,45 @@ namespace WarcraftPlugin.Classes
  * 
  * 
  * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ 
+
+
+private void SpawnBall(CCSPlayerController owner)
+        {
+            var _ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
+            if (!_ball.IsValid) return;
+
+
+            _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
+
+
+            var SpeedInSpawnBall = 2000;
+            Vector velocity = Player.CalculateVelocityAwayFromPlayer(SpeedInSpawnBall);
+            var angle = new QAngle(-90f, owner.PlayerPawn.Value.V_angle.Y, 0);
+
+
+
+            var distance = 60;
+            var height = 75;
+
+            Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
+
+            _ball.Teleport(posInfrontOfPlayer, angle, velocity);
+            _ball.DispatchSpawn();
+            _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
+            _ball.SetScale(0.8f);
+        }
+
+
+
+
  * 
  * 
  * 
