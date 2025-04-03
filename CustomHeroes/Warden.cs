@@ -247,7 +247,7 @@ namespace WarcraftPlugin.Classes
                 attacker.PrintToChat($"{ChatColors.Red}🩸 Sharp End{ChatColors.Default}: You inflicted bleeding!");
             }
 
-            // TODO: Fan of Knives - throwing knife logic (RMB detection or alternate trigger)
+            // TODO: Fan of Knives 
         }
 
         private void Ultimate()
