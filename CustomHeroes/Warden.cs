@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
@@ -91,34 +90,37 @@ namespace WarcraftPlugin.Classes
 
         private void SpawnBall(CCSPlayerController owner)
         {
+            // Step 1: Spawn the grenade
             var grenade = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
             if (!grenade.IsValid) return;
 
-            var speed = 1000;
+            var speed = 2000;
             Vector velocity = Player.CalculateVelocityAwayFromPlayer(speed);
             Vector spawnPos = owner.CalculatePositionInFront(60, 75);
 
-            grenade.Teleport(spawnPos, owner.PlayerPawn.Value.V_angle, new Vector(0, 0, 0));
+            // Move grenade off-screen to hide it visually, but let it do physics
+            Vector grenadeSpawn = new Vector(-9999f, -9999f, -9999f);
+            grenade.Teleport(grenadeSpawn, new QAngle(), new Vector());
             grenade.DispatchSpawn();
-            Schema.SetSchemaValue(grenade.Handle, "CBaseModelEntity", "m_nRenderMode", 1);
 
-            // Now add the visual
+            // Step 2: Spawn the visible knife model
             var knifeModel = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
             if (!knifeModel.IsValid) return;
 
             knifeModel.SetModel("models/tools/bullet_hit_marker.vmdl");
             knifeModel.SetScale(0.8f);
 
-            // Rotate the knife model forward
-            var angle = new QAngle(-90f, owner.PlayerPawn.Value.V_angle.Y, 90f);
+            // Flip model to face forward
+            var angle = new QAngle(-90f, owner.PlayerPawn.Value.V_angle.Y + 180f, 90f);
             knifeModel.Teleport(spawnPos, angle, null);
 
-            // Attach the knife to the grenade
+            // Parent to grenade for motion
             knifeModel.SetParent(grenade);
 
-            // Apply velocity to grenade
-            grenade.Teleport(null, null, velocity); // ✅ Only sets velocity
+            // Step 3: Apply velocity after spawn
+            grenade.Teleport(null, null, velocity);
         }
+
 
 
         private void PlayerDeath(EventPlayerDeath death)
