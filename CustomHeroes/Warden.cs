@@ -139,7 +139,7 @@ namespace WarcraftPlugin.Classes
         {
             private readonly CHEGrenadeProjectile _grenade;
             private readonly CDynamicProp _visual;
-            private readonly float _damage = 100f;
+            private readonly float _damage = 50f;
             private readonly float _radius = 80f;
             private bool _hasHit = false;
 
@@ -172,6 +172,7 @@ namespace WarcraftPlugin.Classes
 
                         SkillFunctions.DealRawDamage(Owner, player, (int)_damage);
                         Warcraft.SpawnParticle(player.AbsOrigin.With(z: 70), "particles/blood_impact/blood_impact_basic.vpcf");
+                        new BleedEffect(Owner, player, 5, 4).Start();
 
                         var victimNewHP = player.PlayerPawn.Value.Health;
 
