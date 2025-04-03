@@ -4,6 +4,8 @@ using System.Drawing;
 using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
+using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using g3;
 using WarcraftPlugin.Core.Effects;
@@ -103,9 +105,15 @@ namespace WarcraftPlugin.Classes
             Vector velocity = Player.CalculateVelocityAwayFromPlayer((int)SpeedInSpawnBall);
 
             _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, velocity);
-            _ball.DispatchSpawn();
             _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
+            _ball.DispatchSpawn();
+
             _ball.SetScale(0.8f);
+            Schema.SetSchemaValue(_ball.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
+
+            _ball.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_NEVER;
+            _ball.Collision.SolidFlags = 12;
+            _ball.Collision.SolidType = SolidType_t.SOLID_VPHYSICS;
 
             throwingKnifeEffect = new ThrowingKnifeEffect(owner, _ball);
         }
