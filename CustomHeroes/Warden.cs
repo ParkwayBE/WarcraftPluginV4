@@ -102,7 +102,7 @@ namespace WarcraftPlugin.Classes
 
             var SpeedInSpawnBall = 2000;
             Vector velocity = Player.CalculateVelocityAwayFromPlayer(SpeedInSpawnBall);
-            var angle = AngleFromVector(velocity);
+            var angle = new QAngle(-90f, owner.PlayerPawn.Value.V_angle.Y, 0);
 
 
 
@@ -116,16 +116,6 @@ namespace WarcraftPlugin.Classes
             _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
             _ball.SetScale(0.8f);
         }
-
-
-        public static QAngle AngleFromVector(Vector dir)
-        {
-            var length2D = MathF.Sqrt(dir.X * dir.X + dir.Y * dir.Y);
-            var pitch = -MathF.Atan2(dir.Z, length2D) * (180f / MathF.PI);
-            var yaw = MathF.Atan2(dir.Y, dir.X) * (180f / MathF.PI);
-            return new QAngle(pitch, yaw, 0f);
-        }
-
 
         private void PlayerDeath(EventPlayerDeath death)
         {
