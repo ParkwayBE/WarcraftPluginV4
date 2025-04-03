@@ -189,18 +189,14 @@ namespace WarcraftPlugin.Classes
             }
         }
 
-
-
-
         private void PlayerDeath(EventPlayerDeath death)
         {
-            var attacker = death.Userid;
+            var attacker = death.Attacker;
+            if (attacker == null || !attacker.IsValid || attacker.TeamNum == Player.TeamNum)
+                return;
 
             if (_hasUsedRevive || WarcraftPlayer.GetAbilityLevel(1) <= 0)
                 return;
-
-
-            if (attacker == null || !attacker.IsValid || attacker.TeamNum == Player.TeamNum) return;
 
             var roll = Random.Shared.Next(2); // 0 or 1
             var level = WarcraftPlayer.GetAbilityLevel(1);
