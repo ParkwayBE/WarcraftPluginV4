@@ -156,22 +156,16 @@ namespace WarcraftPlugin.Classes
             {
                 if (_hasHit || !_grenade.IsValid) return;
 
-                // Create a box slightly in front of the projectile based on its velocity direction
-                var forwardOffset = SkillFunctions.Normalize(_grenade.AbsVelocity) * 15;
-                var boxCenter = _grenade.AbsOrigin + forwardOffset;
-                var hitbox = Warcraft.CreateBoxAroundPoint(boxCenter, 20f, 20f, 20f); // width, depth, height
-
-                // Optional: show the hitbox for debugging
-                // hitbox.Show(0.05f, Color.Red, 1);
-
                 foreach (var player in Utilities.GetPlayers())
                 {
                     if (!player.IsAlive() || player.TeamNum == Owner.TeamNum || player == Owner)
                         continue;
 
-                    if (hitbox.Contains(player.PlayerPawn.Value.AbsOrigin))
+                    float distance = (_grenade.AbsOrigin - player.PlayerPawn.Value.AbsOrigin).Length();
+                    if (distance <= _radius)
                     {
                         SkillFunctions.DealRawDamage(Owner, player, (int)_damage);
+
                         new BleedEffect(Owner, player, 5, 4).Start();
 
                         _hasHit = true;
@@ -180,7 +174,6 @@ namespace WarcraftPlugin.Classes
                         break;
                     }
                 }
-
             }
 
             public override void OnFinish()
