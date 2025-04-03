@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using g3;
@@ -28,7 +27,7 @@ namespace WarcraftPlugin.Classes
         public override Color DefaultColor => Color.GreenYellow;
         private float _lastThrowTime = 0f;
         private const float ThrowCooldown = 1.5f; // seconds between throws
-        public CPhysicsPropMultiplayer _ball;
+        public CHEGrenadeProjectile _ball;
         public CDynamicProp _ballProp;
         private ThrowingKnifeEffect throwingKnifeEffect;
 
@@ -93,93 +92,87 @@ namespace WarcraftPlugin.Classes
         }
         private void SpawnBall(CCSPlayerController owner)
         {
-            var grenade = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
+            _ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
+            _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
+            _ball.DispatchSpawn();
 
-            // Set custom model BEFORE dispatching spawn
-            grenade.SetModel("models/tools/bullet_hit_marker.vmdl");
-            grenade.SetScale(0.4f); // Optional: scale down for visual size
+            _ballProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
+            _ballProp.SetModel("models/tools/bullet_hit_marker.vmdl");
+            _ballProp.DispatchSpawn();
 
-            // Positioning
-            var distance = 150;
-            var height = 150;
-            var speed = 3000f;
+            var distance = 60;
+            var height = 75;
+            var SpeedInSpawnBall = 3500f;
 
-            var spawnPos = owner.CalculatePositionInFront(distance, height);
-            var direction = owner.CalculateVelocityAwayFromPlayer((int)speed);
+            Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
 
-            Console.WriteLine($"[WCS] Spawn dir: {direction}");
+            _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            _ballProp.SetParent(_ball);
 
-            // Teleport and apply direction
-            grenade.Teleport(spawnPos, null, direction);
-            grenade.DispatchSpawn();
+            _ball.SetColor(Color.FromArgb(255, 200, 50, 50)); // Slightly red
 
+            Vector velocity = owner.CalculateVelocityAwayFromPlayer((int)SpeedInSpawnBall);
+            _ball.Teleport(null, null, velocity);
+            Schema.SetSchemaValue(_ball.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
 
-
-            // Visual tweaks
-            grenade.SetColor(Color.FromArgb(255, 200, 50, 50)); // Slightly red
-            grenade.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PROJECTILE;
-            grenade.Collision.SolidFlags = 12;
-            grenade.Collision.SolidType = SolidType_t.SOLID_VPHYSICS;
-
-            // Set the owner for killfeed / damage logic
-            Schema.SetSchemaValue(grenade.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
-
-            // Start the knife logic
-            throwingKnifeEffect = new ThrowingKnifeEffect(owner, grenade);
+            throwingKnifeEffect = new ThrowingKnifeEffect(owner, _ball);
         }
-
-
 
 
         private class ThrowingKnifeEffect : WarcraftEffect
         {
-            private CHEGrenadeProjectile _projectile;
+            private CPhysicsPropMultiplayer? _prop;
+            private CDynamicProp _ballprop;
+            private Vector _direction;
+            private float _speed = 2500f;
+            private float _travelled = 0f;
+            private float _maxDistance = 2500f;
+            private float _tickInterval = 0.02f;
             private readonly float _damage = 25f;
-            private readonly float _checkInterval = 0.02f;
             private Box3d _hitbox;
+            private CCSPlayerController _owner;
+            private CHEGrenadeProjectile _knife;
 
-            public ThrowingKnifeEffect(CCSPlayerController owner, CHEGrenadeProjectile projectile)
-                : base(owner, onTickInterval: 0.02f)
+
+            public ThrowingKnifeEffect(CCSPlayerController owner, CHEGrenadeProjectile _ball)
+        : base(owner)
             {
-                _projectile = projectile;
+                _owner = owner;
+                _knife = _ball;
             }
+
+            public void UpdateLocation()
+            {
+                var distance = 60;
+                var height = 30;
+
+                Vector velocity = _owner.CalculateVelocityAwayFromPlayer((int)_speed);
+
+
+                Vector posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
+                _owner.PrintToChat($"Updating Ball Position: {posInfrontOfPlayer}");
+                _knife.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+                _knife.Teleport(null, null, velocity);
+            }
+
 
             public override void OnStart()
             {
-                // Could spawn particles here if desired
+                UpdateLocation();
             }
 
             public override void OnTick()
             {
-                if (!_projectile.IsValid) return;
-
-                // Create a hitbox around the projectile
-                var center = _projectile.AbsOrigin;
-                _hitbox = Warcraft.CreateBoxAroundPoint(center, 40, 40, 40); // Adjust size as needed
-
-                foreach (var player in Utilities.GetPlayers())
-                {
-                    if (!player.IsValid || !player.PawnIsAlive || player.TeamNum == Owner.TeamNum || player == Owner)
-                        continue;
-
-                    var hitPoint = player.PlayerPawn.Value.AbsOrigin.Clone().Add(z: 40); // Mid-chest
-                    if (_hitbox.Contains(hitPoint))
-                    {
-                        SkillFunctions.DealRawDamage(Owner, player, (int)_damage);
-                        Owner.PrintToChat($"{ChatColors.Lime}🔪 You hit {player.PlayerName} with a throwing knife!");
-                        _projectile.RemoveIfValid();
-                        Destroy(); // End the effect
-                        return;
-                    }
-                }
+                // WIP
             }
 
             public override void OnFinish()
             {
-                _projectile?.RemoveIfValid();
+                Owner.PrintToChat("[WCS] OnFinish Throwing knife effect triggered...");
+                _prop?.RemoveIfValid();
             }
         }
-
 
         private void PlayerDeath(EventPlayerDeath death)
         {
