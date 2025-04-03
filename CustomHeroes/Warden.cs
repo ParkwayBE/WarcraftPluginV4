@@ -93,7 +93,7 @@ namespace WarcraftPlugin.Classes
             var grenade = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
             if (!grenade.IsValid) return;
 
-            var speed = 2000;
+            var speed = 1;
             Vector velocity = Player.CalculateVelocityAwayFromPlayer(speed);
             Vector spawnPos = owner.CalculatePositionInFront(60, 75);
 
