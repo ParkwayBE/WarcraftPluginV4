@@ -7,7 +7,6 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
-using g3;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -29,7 +28,6 @@ namespace WarcraftPlugin.Classes
         private float _lastThrowTime = 0f;
         private const float ThrowCooldown = 1.5f; // seconds between throws
         public CHEGrenadeProjectile _ball;
-        private ThrowingKnifeEffect throwingKnifeEffect;
 
         public override List<string> PreloadResources => new()
         {
@@ -88,7 +86,10 @@ namespace WarcraftPlugin.Classes
             }
 
             Console.WriteLine("[WCS] Launching ThrowingKnifeEffect...");
-            SpawnBall(Player);
+            WarcraftPlugin.Instance.AddTimer(0.01f, () =>
+            {
+                SpawnBall(shooter);
+            });
         }
 
 
@@ -124,58 +125,7 @@ namespace WarcraftPlugin.Classes
 
 
 
-        private class ThrowingKnifeEffect : WarcraftEffect
-        {
-            private CPhysicsPropMultiplayer? _prop;
-            private Vector _direction;
-            private float _speed = 2500f;
-            private float _travelled = 0f;
-            private float _maxDistance = 2500f;
-            private float _tickInterval = 0.02f;
-            private readonly float _damage = 25f;
-            private Box3d _hitbox;
-            private CCSPlayerController _owner;
-            private CHEGrenadeProjectile _knife;
 
-
-            public ThrowingKnifeEffect(CCSPlayerController owner, CHEGrenadeProjectile _ball)
-        : base(owner)
-            {
-                _owner = owner;
-                _knife = _ball;
-            }
-
-            public void UpdateLocation()
-            {
-                var distance = 60;
-                var height = 30;
-
-                Vector velocity = _owner.CalculateVelocityAwayFromPlayer((int)_speed);
-
-
-                Vector posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
-                _owner.PrintToChat($"Updating Ball Position: {posInfrontOfPlayer}");
-                _knife.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-                _knife.Teleport(null, null, velocity);
-            }
-
-
-            public override void OnStart()
-            {
-                UpdateLocation();
-            }
-
-            public override void OnTick()
-            {
-                // WIP
-            }
-
-            public override void OnFinish()
-            {
-                Owner.PrintToChat("[WCS] OnFinish Throwing knife effect triggered...");
-                _prop?.RemoveIfValid();
-            }
-        }
 
         private void PlayerDeath(EventPlayerDeath death)
         {
