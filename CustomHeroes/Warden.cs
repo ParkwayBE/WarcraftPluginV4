@@ -168,7 +168,7 @@ namespace WarcraftPlugin.Classes
                     float distance = (_grenade.AbsOrigin - player.PlayerPawn.Value.AbsOrigin).Length();
                     if (distance <= _radius)
                     {
-                        player.TakeDamage(_damage, Owner);
+                        SkillFunctions.DealRawDamage(Owner, player, (int)_damage);
                         Warcraft.SpawnParticle(player.AbsOrigin.With(z: 70), "particles/blood_impact/blood_impact_basic.vpcf");
 
                         _hasHit = true;
