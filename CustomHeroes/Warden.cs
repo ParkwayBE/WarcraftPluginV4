@@ -97,7 +97,7 @@ namespace WarcraftPlugin.Classes
             Vector velocity = Player.CalculateVelocityAwayFromPlayer(speed);
             Vector spawnPos = owner.CalculatePositionInFront(60, 75);
 
-            grenade.SetModel("models/props_junk/PopCan01a.vmdl"); // small and nearly invisible
+            grenade.SetScale(0.1f);
             grenade.Teleport(spawnPos, owner.PlayerPawn.Value.V_angle, new Vector(0, 0, 0));
             grenade.DispatchSpawn();
 
