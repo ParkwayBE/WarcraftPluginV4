@@ -100,7 +100,6 @@ namespace WarcraftPlugin.Classes
             var velocity = owner.CalculateVelocityAwayFromPlayer((int)2000f);
 
             grenade.SetModel("models/tools/bullet_hit_marker.vmdl");
-            grenade.SetScale(0.001f); // tiny scale to "hide"
             grenade.Teleport(spawnPos, owner.PlayerPawn.Value.V_angle, velocity);
             grenade.DispatchSpawn();
 
@@ -140,12 +139,12 @@ namespace WarcraftPlugin.Classes
         {
             private readonly CHEGrenadeProjectile _grenade;
             private readonly CDynamicProp _visual;
-            private readonly float _damage = 200f;
-            private readonly float _radius = 35f;
+            private readonly float _damage = 100f;
+            private readonly float _radius = 40f;
             private bool _hasHit = false;
 
             public ThrowingKnifeHitSystem(CCSPlayerController owner, CHEGrenadeProjectile grenade, CDynamicProp visual)
-                : base(owner, onTickInterval: 0.02f)
+                : base(owner, onTickInterval: 0.01f)
             {
                 _grenade = grenade;
                 _visual = visual;

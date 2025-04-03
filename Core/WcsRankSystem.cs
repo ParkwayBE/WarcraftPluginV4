@@ -215,6 +215,8 @@ namespace WarcraftPlugin.Core
 
                     // Console log
                     var attacker = e.Attacker;
+                    if (attacker == null) return HookResult.Continue;
+
                     var name = attacker?.PlayerName ?? "Unknown";
                     Console.WriteLine($"[Dummy] {name} dealt {e.DmgHealth} damage — HP: {currentHp} → {newHp}");
                     attacker.PrintToChat($"[Dummy] {name} dealt {e.DmgHealth} damage — HP: {currentHp} → {newHp}");
