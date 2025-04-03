@@ -29,7 +29,6 @@ namespace WarcraftPlugin.Classes
         private float _lastThrowTime = 0f;
         private const float ThrowCooldown = 1.5f; // seconds between throws
         public CHEGrenadeProjectile _ball;
-        public CDynamicProp _ballProp;
         private ThrowingKnifeEffect throwingKnifeEffect;
 
         public override List<string> PreloadResources => new()
@@ -94,35 +93,37 @@ namespace WarcraftPlugin.Classes
 
         private void SpawnBall(CCSPlayerController owner)
         {
-            var _ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
-            if (!_ball.IsValid) return;
+            var ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
+            if (!ball.IsValid) return;
 
-            var SpeedInSpawnBall = 3500f;
             var distance = 60;
             var height = 75;
+            var speed = 3500;
 
-            Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
-            Vector velocity = Player.CalculateVelocityAwayFromPlayer((int)SpeedInSpawnBall);
+            var pos = owner.CalculatePositionInFront(distance, height);
+            var velocity = owner.CalculateVelocityAwayFromPlayer(speed);
 
-            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, velocity);
-            _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
-            _ball.DispatchSpawn();
+            // 🔥 Correct order!
+            ball.SetModel("models/tools/bullet_hit_marker.vmdl");
+            ball.Teleport(pos, owner.PlayerPawn.Value.V_angle, velocity);
+            ball.DispatchSpawn();
 
-            _ball.SetScale(0.8f);
-            Schema.SetSchemaValue(_ball.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
+            ball.SetScale(0.8f);
+            ball.SetColor(Color.FromArgb(255, 200, 50, 50));
+            Schema.SetSchemaValue(ball.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
 
-            _ball.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_NEVER;
-            _ball.Collision.SolidFlags = 12;
-            _ball.Collision.SolidType = SolidType_t.SOLID_VPHYSICS;
+            ball.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_NEVER;
+            ball.Collision.SolidFlags = 12;
+            ball.Collision.SolidType = SolidType_t.SOLID_VPHYSICS;
 
-            throwingKnifeEffect = new ThrowingKnifeEffect(owner, _ball);
+            throwingKnifeEffect = new ThrowingKnifeEffect(owner, ball);
         }
+
 
 
         private class ThrowingKnifeEffect : WarcraftEffect
         {
             private CPhysicsPropMultiplayer? _prop;
-            private CDynamicProp _ballprop;
             private Vector _direction;
             private float _speed = 2500f;
             private float _travelled = 0f;
