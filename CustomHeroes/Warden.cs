@@ -140,7 +140,7 @@ namespace WarcraftPlugin.Classes
         {
             private readonly CHEGrenadeProjectile _grenade;
             private readonly CDynamicProp _visual;
-            private readonly float _damage = 30f;
+            private readonly float _damage = 200f;
             private readonly float _radius = 45f;
             private bool _hasHit = false;
 
