@@ -92,6 +92,7 @@ namespace WarcraftPlugin.Classes
 
                 var spawnPos = owner.CalculatePositionInFront(60, 75);
                 var velocity = owner.CalculateVelocityAwayFromPlayer((int)1500f);
+                velocity.Z += 75f;
 
                 grenade.SetModel("models/tools/bullet_hit_marker.vmdl");
                 grenade.Teleport(spawnPos, owner.PlayerPawn.Value.V_angle, velocity);
