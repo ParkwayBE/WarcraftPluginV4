@@ -116,7 +116,7 @@ namespace WarcraftPlugin.Classes
             knifeProp.SetParent(grenade); // follow the grenade
 
             // Setup for proper collision
-            grenade.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PROJECTILE;
+            grenade.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DEBRIS;
             grenade.Collision.SolidFlags = 12;
             grenade.Collision.SolidType = SolidType_t.SOLID_VPHYSICS;
 
