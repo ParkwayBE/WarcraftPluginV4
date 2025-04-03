@@ -96,18 +96,16 @@ namespace WarcraftPlugin.Classes
             var grenade = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
 
             // Set custom model BEFORE dispatching spawn
-
+            grenade.SetModel("models/tools/bullet_hit_marker.vmdl");
+            grenade.SetScale(0.4f); // Optional: scale down for visual size
 
             // Positioning
-            var distance = 60;
-            var height = 75;
+            var distance = 50;
+            var height = 50;
             var speed = 3000f;
 
             var spawnPos = owner.CalculatePositionInFront(distance, height);
             var direction = owner.CalculateVelocityAwayFromPlayer((int)speed);
-
-            grenade.SetModel("models/tools/bullet_hit_marker.vmdl");
-            grenade.SetScale(0.4f); // Optional: scale down for visual size
 
             // Teleport and apply direction
             grenade.Teleport(spawnPos, owner.PlayerPawn.Value.EyeAngles, direction);
