@@ -102,7 +102,7 @@ namespace WarcraftPlugin.Classes
                 if (!grenade.IsValid) return;
 
                 var spawnPos = owner.CalculatePositionInFront(60, 75);
-                var velocity = owner.CalculateVelocityAwayFromPlayer((int)2000f);
+                var velocity = owner.CalculateVelocityAwayFromPlayer((int)1500f);
 
                 grenade.SetModel("models/tools/bullet_hit_marker.vmdl");
                 grenade.Teleport(spawnPos, owner.PlayerPawn.Value.V_angle, velocity);
@@ -146,8 +146,8 @@ namespace WarcraftPlugin.Classes
         {
             private readonly CHEGrenadeProjectile _grenade;
             private readonly CDynamicProp _visual;
-            private readonly float _damage = 50f;
             private readonly float _radius = 80f;
+            private float _damage;
             private bool _hasHit = false;
 
             public ThrowingKnifeHitSystem(CCSPlayerController owner, CHEGrenadeProjectile grenade, CDynamicProp visual)
@@ -159,8 +159,8 @@ namespace WarcraftPlugin.Classes
 
             public override void OnStart()
             {
-                //
-                //
+                int level = Owner.GetWarcraftPlayer().GetAbilityLevel(2);
+                _damage = 20f + (level * 5f);
             }
 
             public override void OnTick()
