@@ -96,21 +96,7 @@ namespace WarcraftPlugin.CustomSkills
             if (!victim.IsAlive() || !attacker.IsAlive() || attacker.TeamNum == victim.TeamNum)
                 return;
 
-            int newHealth = victim.PlayerPawn.Value.Health - damage;
-
-            if (newHealth <= 0)
-            {
-                victim.CommitSuicide(true, true); // Kills the player properly
-                Console.WriteLine($"[Chain Lightning] {attacker.PlayerName} killed {victim.PlayerName} with the final zap!");
-            }
-            else
-            {
-                victim.SetHp(newHealth);
-                Console.WriteLine($"[Chain Lightning] {attacker.PlayerName} dealt {damage} to {victim.PlayerName} (new HP: {newHealth})");
-            }
-
-            attacker.PrintToCenter($"⚡ You dealt {damage} damage to {victim.PlayerName}!");
-            victim.PrintToCenter($"⚡ You were hit by {attacker.PlayerName}'s Chain Lightning!");
+            victim.TakeDamage(damage, attacker);
         }
 
         public static void ImpaleTarget(CCSPlayerController attacker, CCSPlayerController victim, float force = 300f)
