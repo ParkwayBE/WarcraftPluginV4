@@ -217,6 +217,7 @@ namespace WarcraftPlugin.Core
                     var attacker = e.Attacker;
                     var name = attacker?.PlayerName ?? "Unknown";
                     Console.WriteLine($"[Dummy] {name} dealt {e.DmgHealth} damage — HP: {currentHp} → {newHp}");
+                    attacker.PrintToChat($"[Dummy] {name} dealt {e.DmgHealth} damage — HP: {currentHp} → {newHp}");
                 }
             }
 
