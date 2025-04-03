@@ -5,7 +5,6 @@ using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
-using g3;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -28,7 +27,6 @@ namespace WarcraftPlugin.Classes
         private const float ThrowCooldown = 1.5f; // seconds between throws
         public CHEGrenadeProjectile _ball;
         public CDynamicProp _ballProp;
-        private ThrowingKnifeEffect throwingKnifeEffect;
 
         public override List<string> PreloadResources => new()
         {
@@ -134,48 +132,6 @@ namespace WarcraftPlugin.Classes
             _ball.DispatchSpawn();
             Schema.SetSchemaValue(_ball.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw); */
 
-            throwingKnifeEffect = new ThrowingKnifeEffect(owner, _ball);
-        }
-
-
-        private class ThrowingKnifeEffect : WarcraftEffect
-        {
-            private CPhysicsPropMultiplayer? _prop;
-            private CDynamicProp _ballprop;
-            private Vector _direction;
-            private float _speed = 2500f;
-            private float _travelled = 0f;
-            private float _maxDistance = 2500f;
-            private float _tickInterval = 0.02f;
-            private readonly float _damage = 25f;
-            private Box3d _hitbox;
-            private CCSPlayerController _owner;
-            private CHEGrenadeProjectile _knife;
-
-
-            public ThrowingKnifeEffect(CCSPlayerController owner, CHEGrenadeProjectile _ball)
-        : base(owner)
-            {
-                _owner = owner;
-                _knife = _ball;
-            }
-
-
-            public override void OnStart()
-            {
-                // wip
-            }
-
-            public override void OnTick()
-            {
-                // WIP
-            }
-
-            public override void OnFinish()
-            {
-                Owner.PrintToChat("[WCS] OnFinish Throwing knife effect triggered...");
-                _prop?.RemoveIfValid();
-            }
         }
 
         private void PlayerDeath(EventPlayerDeath death)
