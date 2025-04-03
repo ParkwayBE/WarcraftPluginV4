@@ -108,7 +108,7 @@ namespace WarcraftPlugin.Classes
             var direction = owner.CalculateVelocityAwayFromPlayer((int)speed);
 
             // Teleport and apply direction
-            grenade.Teleport(spawnPos, owner.PlayerPawn.Value.EyeAngles, direction);
+            grenade.Teleport(spawnPos, null, direction);
             grenade.DispatchSpawn();
 
 
