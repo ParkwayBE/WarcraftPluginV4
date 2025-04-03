@@ -189,6 +189,7 @@ namespace WarcraftPlugin
                 manifest.AddResource("models/weapons/w_eq_bumpmine.vmdl"); //drone
                 manifest.AddResource("models/anubis/structures/pillar02_base01.vmdl"); //spring trap
                 manifest.AddResource("models/props/de_dust/hr_dust/dust_soccerball/dust_soccer_ball001.vmdl");
+                manifest.AddResource("models/CustomModels/ThrowingKnife/knife.vmdl");
                 //manifest.AddResource("models/weapons/w_eq_tablet_dropped.vmdl");
                 //manifest.AddResource("models/weapons/w_eq_tablet.vmdl");
                 //manifest.AddResource("models/generic/conveyor_control_panel_01/conveyor_control_screen_01.vmdl");
