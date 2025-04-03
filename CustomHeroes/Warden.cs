@@ -111,6 +111,9 @@ namespace WarcraftPlugin.Classes
             grenade.Teleport(spawnPos, owner.PlayerPawn.Value.EyeAngles, direction);
             grenade.DispatchSpawn();
 
+            grenade.SetModel("models/tools/bullet_hit_marker.vmdl");
+
+
             // Visual tweaks
             grenade.SetColor(Color.FromArgb(255, 200, 50, 50)); // Slightly red
             grenade.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PROJECTILE;
