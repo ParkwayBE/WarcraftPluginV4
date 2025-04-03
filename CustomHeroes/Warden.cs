@@ -251,6 +251,8 @@ namespace WarcraftPlugin.Classes
             float radius = 1600f;
             float selfSpeedBoost = 0.1f;
 
+            Warcraft.SpawnParticle(Player.PlayerPawn.Value.AbsOrigin, "particles/explosions_fx/explosion_c4_ground_residual_smoke.vpcf", 4f);
+
             foreach (var enemy in Utilities.GetPlayers())
             {
                 if (!enemy.IsAlive() || enemy.TeamNum == Player.TeamNum) continue;
