@@ -114,6 +114,7 @@ namespace WarcraftPlugin.Classes
 
             Vector velocity = owner.CalculateVelocityAwayFromPlayer((int)SpeedInSpawnBall);
             _ball.Teleport(null, null, velocity);
+            _ball.DispatchSpawn();
             Schema.SetSchemaValue(_ball.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
 
             throwingKnifeEffect = new ThrowingKnifeEffect(owner, _ball);
