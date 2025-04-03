@@ -33,7 +33,7 @@ namespace WarcraftPlugin.Classes
         public override List<string> PreloadResources => new()
         {
             "models/props_gameplay/football.vmdl",
-            "CustomModels/ThrowingKnife/knife.vmdl"
+            "CustomModels/ThrowingKnife/knife.vmdl_c"
         };
 
         public override List<IWarcraftAbility> Abilities =>
@@ -92,11 +92,11 @@ namespace WarcraftPlugin.Classes
         private void SpawnBall(CCSPlayerController owner)
         {
             _ball = Utilities.CreateEntityByName<CPhysicsPropMultiplayer>("prop_physics_multiplayer");
-            _ball.SetModel("CustomModels/ThrowingKnife/knife.vmdl");
+            _ball.SetModel("CustomModels/ThrowingKnife/knife.vmdl_c");
             _ball.DispatchSpawn();
 
             _ballProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-            _ballProp.SetModel("CustomModels/ThrowingKnife/knife.vmdl");
+            _ballProp.SetModel("CustomModels/ThrowingKnife/knife.vmdl_c");
             _ballProp.DispatchSpawn();
 
             var distance = 60;
