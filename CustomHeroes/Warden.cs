@@ -90,26 +90,32 @@ namespace WarcraftPlugin.Classes
 
         private void SpawnBall(CCSPlayerController owner)
         {
-            var _ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
-            if (!_ball.IsValid) return;
+            var grenade = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
+            if (!grenade.IsValid) return;
 
-            // ✅ Set model before applying transforms
-            _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
+            var speed = 2000;
+            Vector velocity = Player.CalculateVelocityAwayFromPlayer(speed);
+            Vector spawnPos = owner.CalculatePositionInFront(60, 75);
 
-            var SpeedInSpawnBall = 2000;
-            Vector velocity = Player.CalculateVelocityAwayFromPlayer(SpeedInSpawnBall);
+            grenade.Teleport(spawnPos, owner.PlayerPawn.Value.V_angle, new Vector(0, 0, 0));
+            grenade.DispatchSpawn();
 
-            var distance = 60;
-            var height = 75;
-            Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
+            // Now add the visual
+            var knifeModel = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
+            if (!knifeModel.IsValid) return;
 
-            // ✅ Pitch -90 to point "down", Yaw based on view, Roll 90 to rotate the model's long axis
+            knifeModel.SetModel("models/tools/bullet_hit_marker.vmdl");
+            knifeModel.SetScale(0.8f);
+
+            // Rotate the knife model forward
             var angle = new QAngle(-90f, owner.PlayerPawn.Value.V_angle.Y, 90f);
+            knifeModel.Teleport(spawnPos, angle, null);
 
-            _ball.Teleport(posInfrontOfPlayer, angle, velocity);
-            _ball.DispatchSpawn();
+            // Attach the knife to the grenade
+            knifeModel.SetParent(grenade);
 
-            _ball.SetScale(0.8f);
+            // Apply velocity to grenade
+            grenade.Teleport(null, null, velocity); // ✅ Only sets velocity
         }
 
 
