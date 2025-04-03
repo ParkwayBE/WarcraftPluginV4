@@ -91,32 +91,35 @@ namespace WarcraftPlugin.Classes
             SpawnBall(Player);
         }
 
+
+
         private void SpawnBall(CCSPlayerController owner)
         {
-            var ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
-            if (!ball.IsValid) return;
-
+            //Calculate new arrow pos
             var distance = 60;
             var height = 75;
             var speed = 3500;
 
+            Vector velocity = owner.CalculateVelocityAwayFromPlayer((int)speed);
             var pos = owner.CalculatePositionInFront(distance, height);
-            var velocity = owner.CalculateVelocityAwayFromPlayer(speed);
-
-            // 🔥 Correct order!
-            ball.SetModel("models/tools/bullet_hit_marker.vmdl");
-            ball.Teleport(pos, owner.PlayerPawn.Value.V_angle, velocity);
+            //Spawn arrow
+            var ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
+            if (!ball.IsValid) return;
+            ball.Teleport(pos, new QAngle(z: -90), new Vector());
             ball.DispatchSpawn();
-
-            ball.SetScale(0.8f);
-            ball.SetColor(Color.FromArgb(255, 200, 50, 50));
-            Schema.SetSchemaValue(ball.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
+            ball.SetModel("models/tools/bullet_hit_marker.vmdl");
+            ball.SetColor(Color.FromArgb(255, 45, 25, 25));
+            ball.SetScale(0.5f);
+            ball.Teleport(pos, new QAngle(z: -90), velocity);
 
             ball.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_NEVER;
             ball.Collision.SolidFlags = 12;
             ball.Collision.SolidType = SolidType_t.SOLID_VPHYSICS;
 
-            throwingKnifeEffect = new ThrowingKnifeEffect(owner, ball);
+            Schema.SetSchemaValue(ball.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw); //Fixes killfeed
+
+            //Cleanup
+            WarcraftPlugin.Instance.AddTimer(0.6f, () => { ball?.RemoveIfValid(); });
         }
 
 
