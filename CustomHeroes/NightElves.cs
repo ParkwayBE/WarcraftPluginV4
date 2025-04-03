@@ -21,7 +21,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Evasion", "Gain up to 30% evasion"),
             new WarcraftAbility("Thorns Aura", "Gain up to 50% chance to reflect 25% of the damage taken."),
             new WarcraftAbility("Trueshot Aura", "Deal up to 20% additional damage"),
-            new WarcraftCooldownAbility("Root", "Root up to 4 nearby enemies for 3 seconds!", 25f)
+            new WarcraftCooldownAbility("Root", "Root up to 4 nearby enemies for 3 seconds!", 25f, true)
         ];
 
         public override void Register()
@@ -107,10 +107,20 @@ namespace WarcraftPlugin.Classes
             int maxTargets = 4;
             int rootDuration = 3;
 
+
             foreach (var target in Utilities.GetPlayers())
             {
                 if (!target.IsAlive() || target == Player || target.TeamNum == Player.TeamNum)
                     continue;
+
+                var wcTarget = target.GetWarcraftPlayer();
+                if (wcTarget != null && wcTarget.HasUltimateImmunity)
+                {
+                    Player.PrintToCenter($" {ChatColors.Red}⛔{ChatColors.Default} Target has {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
+                    target.PrintToCenter($" {ChatColors.Green}🛡️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} blocked {ChatColors.LightPurple}Root{ChatColors.Default}!");
+                    continue;
+                }
+
 
                 var pos = target.PlayerPawn.Value.AbsOrigin;
                 var self = Player.PlayerPawn.Value.AbsOrigin;

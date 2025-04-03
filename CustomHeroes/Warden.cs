@@ -39,7 +39,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Sharp End", "Chance for your attacks to deal bleed damage"),
             new WarcraftAbility("Mercy or Revenge", "50% chance to either revive or punish your killer."),
             new WarcraftAbility("Fan Of Knives", "Your knife attacks are throwing knife attacks."),
-            new WarcraftCooldownAbility("Eternal Darkness", "Blind and slow nearby enemies. Gain speed per enemy hit.", 25f)
+            new WarcraftCooldownAbility("Eternal Darkness", "Blind and slow nearby enemies. Gain speed per enemy hit.", 25f, true)
         ];
 
         public override void Register()
@@ -248,7 +248,7 @@ namespace WarcraftPlugin.Classes
             if (!Player.IsAlive()) return;
 
             int affected = 0;
-            float radius = 1600f;
+            float radius = 1200f;
             float selfSpeedBoost = 0.1f;
 
             Warcraft.SpawnParticle(Player.PlayerPawn.Value.AbsOrigin, "particles/explosions_fx/explosion_c4_ground_residual_smoke.vpcf", 4f);
@@ -259,6 +259,14 @@ namespace WarcraftPlugin.Classes
 
                 var dist = (enemy.PlayerPawn.Value.AbsOrigin - Player.PlayerPawn.Value.AbsOrigin).Length();
                 if (dist > radius) continue;
+
+                var wcTarget = enemy.GetWarcraftPlayer();
+                if (wcTarget != null && wcTarget.HasUltimateImmunity)
+                {
+                    Player.PrintToCenter($" {ChatColors.Red}⛔{ChatColors.Default} Target has {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
+                    enemy.PrintToCenter($" {ChatColors.Green}🛡️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} blocked {ChatColors.LightPurple}Root{ChatColors.Default}!");
+                    continue; // ← This is the fix
+                }
 
                 enemy.Blind(5f, Color.Black);
                 SkillFunctions.SlowTarget(Player, enemy, 100, 5f);
