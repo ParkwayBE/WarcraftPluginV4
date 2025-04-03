@@ -25,15 +25,8 @@ namespace WarcraftPlugin.Classes
 
         public override string DisplayName => "Warden";
         public override Color DefaultColor => Color.GreenYellow;
-        private float _lastThrowTime = 0f;
-        private const float ThrowCooldown = 1.5f; // seconds between throws
         public CHEGrenadeProjectile _ball;
         public CDynamicProp _ballProp;
-
-        public override List<string> PreloadResources => new()
-        {
-            "models/props_gameplay/football.vmdl",
-        };
 
         public override List<IWarcraftAbility> Abilities =>
         [
@@ -136,7 +129,7 @@ namespace WarcraftPlugin.Classes
         {
             private readonly CHEGrenadeProjectile _grenade;
             private readonly CDynamicProp _visual;
-            private readonly float _radius = 80f;
+            private readonly float _radius = 40f;
             private float _damage;
             private bool _hasHit = false;
 
