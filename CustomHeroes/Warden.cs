@@ -159,24 +159,17 @@ namespace WarcraftPlugin.Classes
                 // Create a box slightly in front of the projectile based on its velocity direction
                 var forwardOffset = SkillFunctions.Normalize(_grenade.AbsVelocity) * 15;
                 var boxCenter = _grenade.AbsOrigin + forwardOffset;
-                var hitbox = Warcraft.CreateBoxAroundPoint(boxCenter, 30f, 120f, 30f); // width, depth, height,
+                var hitbox = Warcraft.CreateBoxAroundPoint(boxCenter, 20f, 20f, 20f); // width, depth, height
 
                 // Optional: show the hitbox for debugging
-                Console.WriteLine($"[DEBUG] Showing hitbox at: {_grenade.AbsOrigin}");
-                hitbox.Show(Color.Red, 0.05f, 1f);
-
-
+                // hitbox.Show(0.05f, Color.Red, 1);
 
                 foreach (var player in Utilities.GetPlayers())
                 {
                     if (!player.IsAlive() || player.TeamNum == Owner.TeamNum || player == Owner)
                         continue;
-                    var playerPos = player.PlayerPawn.Value.AbsOrigin;
-                    var knifePos = _grenade.AbsOrigin;
 
-                    float distance = (playerPos - knifePos).Length();
-
-                    if (distance <= _radius)
+                    if (hitbox.Contains(player.PlayerPawn.Value.AbsOrigin))
                     {
                         SkillFunctions.DealRawDamage(Owner, player, (int)_damage);
                         new BleedEffect(Owner, player, 5, 4).Start();
