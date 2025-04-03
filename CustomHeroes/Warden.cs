@@ -104,6 +104,8 @@ namespace WarcraftPlugin.Classes
             grenade.Teleport(spawnPos, owner.PlayerPawn.Value.V_angle, velocity);
             grenade.DispatchSpawn();
 
+            grenade.SetColor(Color.FromArgb(0, 45, 25, 25));
+
             // Create visible knife model
             var knifeProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
             if (!knifeProp.IsValid) return;
@@ -188,7 +190,7 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerDeath(EventPlayerDeath death)
         {
-            var attacker = death.Attacker;
+            var attacker = death.Userid;
 
             if (_hasUsedRevive || WarcraftPlayer.GetAbilityLevel(1) <= 0)
                 return;
