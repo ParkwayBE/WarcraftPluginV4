@@ -93,6 +93,7 @@ namespace WarcraftPlugin.Classes
             var _ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
             if (!_ball.IsValid) return;
 
+
             _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
 
 
@@ -109,6 +110,7 @@ namespace WarcraftPlugin.Classes
 
             _ball.Teleport(posInfrontOfPlayer, angle, velocity);
             _ball.DispatchSpawn();
+            _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
             _ball.SetScale(0.8f);
         }
 
