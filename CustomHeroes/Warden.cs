@@ -107,9 +107,9 @@ namespace WarcraftPlugin.Classes
                 knifeProp.SetModel("models/tools/bullet_hit_marker.vmdl");
                 knifeProp.SetScale(0.8f);
                 knifeProp.Teleport(spawnPos, new QAngle(-90f, owner.PlayerPawn.Value.V_angle.Y + 180f, 90f), null);
-                knifeProp.SetParent(grenade); // follow the grenade
+                knifeProp.SetParent(grenade);
                 knifeProp.SetColor(Color.FromArgb(255, 0, 0, 0));
-                // Setup for proper collision
+
                 grenade.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_INTERACTIVE_DEBRIS;
                 Schema.SetSchemaValue(grenade.Handle, "CBaseEntity", "m_flElasticity", 0.0f);
                 Schema.SetSchemaValue(grenade.Handle, "CBaseEntity", "m_flFriction", 1.0f);
@@ -118,11 +118,9 @@ namespace WarcraftPlugin.Classes
 
                 Schema.SetSchemaValue(grenade.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
 
-                // Start hit tracking
                 var effect = new ThrowingKnifeHitSystem(owner, grenade, knifeProp);
                 effect.Start();
 
-                // Cleanup after 2 seconds
                 WarcraftPlugin.Instance.AddTimer(2f, () =>
                 {
                     grenade.RemoveIfValid();
@@ -199,15 +197,13 @@ namespace WarcraftPlugin.Classes
 
             if (roll == 0)
             {
-                // Revenge: damage killer
                 int damage = 20 + (level * 6);
                 SkillFunctions.DealRawDamage(Player, attacker, damage);
                 Player.PrintToChat($" {ChatColors.Red}☠️ No mercy{ChatColors.Default}: You damaged your killer for {damage} HP!");
-                _hasUsedRevive = true; // safe here
+                _hasUsedRevive = true;
             }
             else
             {
-                // Mercy: heal killer, revive self
                 attacker.SetHp(attacker.PlayerPawn.Value.Health + 70);
                 var teammates = Utilities.GetPlayers().Where(p => p.TeamNum == Player.TeamNum && p != Player && p.IsAlive()).ToList();
                 var revivePosition = teammates.Count > 0
@@ -216,7 +212,6 @@ namespace WarcraftPlugin.Classes
 
                 WarcraftPlugin.Instance.AddTimer(2.0f, () =>
                 {
-                    // ✅ This ensures revive logic isn't abused by duplicate events
                     if (_hasUsedRevive) return;
 
                     _hasUsedRevive = true;
@@ -234,10 +229,8 @@ namespace WarcraftPlugin.Classes
             var victim = @event.Userid;
             if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive()) return;
 
-            // ❌ Don't bleed teammates
             if (victim.TeamNum == attacker.TeamNum) return;
 
-            // Sharp End: Bleed effect
             int level = WarcraftPlayer.GetAbilityLevel(0);
             if (level > 0 && @event.Weapon == "knife" && Warcraft.RollDice(level * 10, 100))
             {
@@ -255,8 +248,7 @@ namespace WarcraftPlugin.Classes
             if (!Player.IsAlive()) return;
 
             int affected = 0;
-            float radius = 800f;
-            float slowAmount = 0.7f;
+            float radius = 1600f;
             float selfSpeedBoost = 0.1f;
 
             foreach (var enemy in Utilities.GetPlayers())
@@ -267,7 +259,8 @@ namespace WarcraftPlugin.Classes
                 if (dist > radius) continue;
 
                 enemy.Blind(5f, Color.Black);
-                SkillFunctions.MovementSpeed(enemy, slowAmount, 5f); // Slow
+                SkillFunctions.SlowTarget(Player, enemy, 100, 5f);
+                enemy.PlayLocalSound("sounds/ambient/animal/dog_growl_behind_wall_3.vsnd");
                 affected++;
             }
 
@@ -275,12 +268,12 @@ namespace WarcraftPlugin.Classes
             {
                 float boost = Math.Min(affected * selfSpeedBoost, 1.5f);
                 SkillFunctions.MovementSpeed(Player, 1 + boost, 5f);
-                Player.PrintToChat($"{ChatColors.Green}🌑 Eternal Darkness{ChatColors.Default}: Drained {affected} enemies. Gained +{(boost * 100):F0}% speed!");
+                Player.PrintToChat($" {ChatColors.Green}🌑 Eternal Darkness{ChatColors.Default}: Drained {affected} enemies. Gained +{(boost * 100):F0}% speed!");
                 StartCooldown(3);
             }
             else
             {
-                Player.PrintToChat($"{ChatColors.LightRed}No enemies found for Eternal Darkness.");
+                Player.PrintToChat($" {ChatColors.LightRed}No enemies found for Eternal Darkness.");
             }
         }
 
