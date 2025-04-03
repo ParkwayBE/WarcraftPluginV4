@@ -162,10 +162,7 @@ namespace WarcraftPlugin.Classes
                 var hitbox = Warcraft.CreateBoxAroundPoint(boxCenter, 20f, 20f, 20f); // width, depth, height
 
                 // Optional: show the hitbox for debugging
-                Console.WriteLine($"[DEBUG] Showing hitbox at: {_grenade.AbsOrigin}");
-                hitbox.Show(Color.Red, 0.05f, 1f);
-
-
+                // hitbox.Show(0.05f, Color.Red, 1);
 
                 foreach (var player in Utilities.GetPlayers())
                 {
