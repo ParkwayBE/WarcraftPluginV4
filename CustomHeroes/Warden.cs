@@ -203,6 +203,7 @@ namespace WarcraftPlugin.Classes
                 int damage = 20 + (level * 6);
                 SkillFunctions.DealRawDamage(Player, attacker, damage);
                 Player.PrintToChat($" {ChatColors.Red}☠️ No mercy{ChatColors.Default}: You damaged your killer for {damage} HP!");
+                _hasUsedRevive = true; // safe here
             }
             else
             {
@@ -215,6 +216,10 @@ namespace WarcraftPlugin.Classes
 
                 WarcraftPlugin.Instance.AddTimer(2.0f, () =>
                 {
+                    // ✅ This ensures revive logic isn't abused by duplicate events
+                    if (_hasUsedRevive) return;
+
+                    _hasUsedRevive = true;
                     Player.Respawn();
                     Player.SetHp(100);
                     Player.PlayerPawn.Value.Teleport(revivePosition, null, new Vector());
