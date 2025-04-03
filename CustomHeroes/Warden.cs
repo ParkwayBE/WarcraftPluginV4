@@ -114,7 +114,7 @@ namespace WarcraftPlugin.Classes
             knifeProp.SetScale(0.8f);
             knifeProp.Teleport(spawnPos, new QAngle(-90f, owner.PlayerPawn.Value.V_angle.Y + 180f, 90f), null);
             knifeProp.SetParent(grenade); // follow the grenade
-
+            knifeProp.SetColor(Color.FromArgb(255, 0, 0, 0));
             // Setup for proper collision
             grenade.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_INTERACTIVE_DEBRIS;
             Schema.SetSchemaValue(grenade.Handle, "CBaseEntity", "m_flElasticity", 0.0f);
@@ -141,7 +141,7 @@ namespace WarcraftPlugin.Classes
             private readonly CHEGrenadeProjectile _grenade;
             private readonly CDynamicProp _visual;
             private readonly float _damage = 200f;
-            private readonly float _radius = 45f;
+            private readonly float _radius = 75f;
             private bool _hasHit = false;
 
             public ThrowingKnifeHitSystem(CCSPlayerController owner, CHEGrenadeProjectile grenade, CDynamicProp visual)
@@ -308,6 +308,7 @@ namespace WarcraftPlugin.Classes
                 if (_currentTick >= _ticks || !_target.IsAlive()) return;
 
                 _target.TakeDamage(_damage, Owner);
+
                 _currentTick++;
                 Warcraft.SpawnParticle(_target.PlayerPawn.Value.AbsOrigin.With(z: 70), "particles/blood_impact/blood_impact_blade.vpcf", 0.3f);
             }
