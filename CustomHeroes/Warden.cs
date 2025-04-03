@@ -102,15 +102,15 @@ namespace WarcraftPlugin.Classes
 
             Vector velocity = owner.CalculateVelocityAwayFromPlayer((int)speed);
             var pos = owner.CalculatePositionInFront(distance, height);
+
             //Spawn arrow
             var ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
             if (!ball.IsValid) return;
-            ball.Teleport(pos, new QAngle(z: -90), new Vector());
+            ball.Teleport(pos, new QAngle(z: -90), velocity);
             ball.DispatchSpawn();
             ball.SetModel("models/tools/bullet_hit_marker.vmdl");
             ball.SetColor(Color.FromArgb(255, 45, 25, 25));
             ball.SetScale(0.5f);
-            ball.Teleport(pos, new QAngle(z: -90), velocity);
 
             ball.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_NEVER;
             ball.Collision.SolidFlags = 12;
