@@ -106,38 +106,18 @@ namespace WarcraftPlugin.Classes
 
             Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
 
-            Vector velocity = owner.CalculateVelocityAwayFromPlayer((int)SpeedInSpawnBall);
-            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, velocity);
-
+            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
             _ball.DispatchSpawn();
             _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
             _ball.SetScale(0.8f);
-
-            /*
-            _ballProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-            _ballProp.SetModel("models/tools/bullet_hit_marker.vmdl");
-            _ballProp.DispatchSpawn();
-
-
-
-
-            _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-            _ballProp.SetParent(_ball);
-
-            _ball.SetColor(Color.FromArgb(255, 200, 50, 50)); // Slightly red
-
-            Vector velocity = owner.CalculateVelocityAwayFromPlayer((int)SpeedInSpawnBall);
-            _ball.Teleport(null, null, velocity);
-            _ball.DispatchSpawn();
-            Schema.SetSchemaValue(_ball.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw); */
-
         }
+
+
+
 
         private void PlayerDeath(EventPlayerDeath death)
         {
-            if (death.Userid != Player || !Player.IsValid) return;
-            var attacker = death.Userid;
+            var attacker = death.Attacker;
 
             if (_hasUsedRevive || WarcraftPlayer.GetAbilityLevel(1) <= 0)
                 return;
@@ -262,6 +242,7 @@ namespace WarcraftPlugin.Classes
         }
     }
 }
+
 
 
 
