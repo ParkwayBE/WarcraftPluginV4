@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Helpers;
+using WarcraftPlugin.Models;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 
@@ -100,17 +101,12 @@ namespace WarcraftPlugin.CustomSkills
 
             if (newHealth <= 0)
             {
-                victim.CommitSuicide(true, true); // Kills the player properly
-                Console.WriteLine($"[Chain Lightning] {attacker.PlayerName} killed {victim.PlayerName} with the final zap!");
+                victim.TakeDamage(5000, attacker, KillFeedIcon.knife_widowmaker);
             }
             else
             {
                 victim.SetHp(newHealth);
-                Console.WriteLine($"[Chain Lightning] {attacker.PlayerName} dealt {damage} to {victim.PlayerName} (new HP: {newHealth})");
             }
-
-            attacker.PrintToCenter($"⚡ You dealt {damage} damage to {victim.PlayerName}!");
-            victim.PrintToCenter($"⚡ You were hit by {attacker.PlayerName}'s Chain Lightning!");
         }
 
         public static void ImpaleTarget(CCSPlayerController attacker, CCSPlayerController victim, float force = 300f)
