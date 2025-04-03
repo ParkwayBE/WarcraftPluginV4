@@ -130,5 +130,12 @@ namespace WarcraftPlugin.CustomSkills
         {
             new RestrictWeaponsEffect(player, duration, allowedWeapons).Start();
         }
+
+        public static Vector Normalize(Vector vec)
+        {
+            float length = MathF.Sqrt(vec.X * vec.X + vec.Y * vec.Y + vec.Z * vec.Z);
+            if (length == 0) return new Vector(0, 0, 0);
+            return new Vector(vec.X / length, vec.Y / length, vec.Z / length);
+        }
     }
 }
