@@ -122,15 +122,15 @@ namespace WarcraftPlugin.Classes
             // Step 3: Apply velocity after spawn
             grenade.Teleport(null, null, velocity);
             // This affects the physics grenade (real hitbox and movement)
-            grenade.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PROJECTILE;
-            grenade.Collision.SolidFlags = 12;
-            grenade.Collision.SolidType = SolidType_t.SOLID_VPHYSICS;
+            knifeModel.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PROJECTILE;
+            knifeModel.Collision.SolidFlags = 12;
+            knifeModel.Collision.SolidType = SolidType_t.SOLID_VPHYSICS;
 
             // Optional: tells engine who threw it (used in killfeed/damage attribution)
-            Schema.SetSchemaValue(grenade.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
+            Schema.SetSchemaValue(knifeModel.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
 
             //Cleanup
-            WarcraftPlugin.Instance.AddTimer(0.6f, () => { arrow?.RemoveIfValid(); });
+            WarcraftPlugin.Instance.AddTimer(0.6f, () => { knifeModel?.RemoveIfValid(); });
         }
 
 
