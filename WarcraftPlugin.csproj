@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <OutputType>Library</OutputType>
@@ -17,15 +16,12 @@
     <PackageReadmeFile>Readme.md</PackageReadmeFile>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="CounterStrikeSharp.API" Version="1.0.305" />
     <PackageReference Include="Dapper" Version="2.1.35" />
@@ -33,16 +29,12 @@
     <PackageReference Include="MIConvexHull" Version="1.1.19.1019" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="7.0.0" />
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10" />
-    <PackageReference Include="SQLitePCLRaw.core" Version="2.1.10" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.1" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
-
   <ItemGroup>
     <None Update="lang\da.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -62,13 +54,6 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="CustomHeroes\**" Condition="'$(Configuration)' == 'Debug'" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="CustomHeroes\CustomSkillRace.cs" />
-    <Compile Remove="CustomHeroes\Wraithstalker.cs" />
-  </ItemGroup>
-  </Project>
+	<Import Project=".\PostBuild.targets" Condition="Exists('.\PostBuild.targets')" />
+  
+</Project>
