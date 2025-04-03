@@ -7,6 +7,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
+using g3;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -152,6 +153,32 @@ namespace WarcraftPlugin.Classes
                 _damage = 20f + (level * 5f);
             }
 
+            private bool BoxesIntersect(Box3d a, Box3d b)
+            {
+                var aVerts = a.ComputeVertices();
+                var bVerts = b.ComputeVertices();
+
+                double aMinX = aVerts.Min(v => v.x);
+                double aMaxX = aVerts.Max(v => v.x);
+                double aMinY = aVerts.Min(v => v.y);
+                double aMaxY = aVerts.Max(v => v.y);
+                double aMinZ = aVerts.Min(v => v.z);
+                double aMaxZ = aVerts.Max(v => v.z);
+
+                double bMinX = bVerts.Min(v => v.x);
+                double bMaxX = bVerts.Max(v => v.x);
+                double bMinY = bVerts.Min(v => v.y);
+                double bMaxY = bVerts.Max(v => v.y);
+                double bMinZ = bVerts.Min(v => v.z);
+                double bMaxZ = bVerts.Max(v => v.z);
+
+                return
+                    aMinX <= bMaxX && aMaxX >= bMinX &&
+                    aMinY <= bMaxY && aMaxY >= bMinY &&
+                    aMinZ <= bMaxZ && aMaxZ >= bMinZ;
+            }
+
+
             public override void OnTick()
             {
                 if (_hasHit || !_grenade.IsValid) return;
@@ -173,7 +200,7 @@ namespace WarcraftPlugin.Classes
                         continue;
 
                     var playerBox = player.PlayerPawn.Value.CollisionBox();
-                    if (hitbox.Intersects(playerBox))
+                    if (BoxesIntersect(hitbox, playerBox))
                     {
                         SkillFunctions.DealRawDamage(Owner, player, (int)_damage);
                         new BleedEffect(Owner, player, 5, 4).Start();
