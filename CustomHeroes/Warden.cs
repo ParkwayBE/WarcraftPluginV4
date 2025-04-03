@@ -93,46 +93,53 @@ namespace WarcraftPlugin.Classes
         private void SpawnBall(CCSPlayerController owner)
         {
             // Create grenade (physics)
-            var grenade = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
-            if (!grenade.IsValid) return;
 
-            var spawnPos = owner.CalculatePositionInFront(60, 75);
-            var velocity = owner.CalculateVelocityAwayFromPlayer((int)2000f);
-
-            grenade.SetModel("models/tools/bullet_hit_marker.vmdl");
-            grenade.Teleport(spawnPos, owner.PlayerPawn.Value.V_angle, velocity);
-            grenade.DispatchSpawn();
-
-            grenade.SetColor(Color.FromArgb(0, 45, 25, 25));
-
-            // Create visible knife model
-            var knifeProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-            if (!knifeProp.IsValid) return;
-
-            knifeProp.SetModel("models/tools/bullet_hit_marker.vmdl");
-            knifeProp.SetScale(0.8f);
-            knifeProp.Teleport(spawnPos, new QAngle(-90f, owner.PlayerPawn.Value.V_angle.Y + 180f, 90f), null);
-            knifeProp.SetParent(grenade); // follow the grenade
-            knifeProp.SetColor(Color.FromArgb(255, 0, 0, 0));
-            // Setup for proper collision
-            grenade.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_INTERACTIVE_DEBRIS;
-            Schema.SetSchemaValue(grenade.Handle, "CBaseEntity", "m_flElasticity", 0.0f);
-            Schema.SetSchemaValue(grenade.Handle, "CBaseEntity", "m_flFriction", 1.0f);
-            grenade.Collision.SolidFlags = 12;
-            grenade.Collision.SolidType = SolidType_t.SOLID_VPHYSICS;
-
-            Schema.SetSchemaValue(grenade.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
-
-            // Start hit tracking
-            var effect = new ThrowingKnifeHitSystem(owner, grenade, knifeProp);
-            effect.Start();
-
-            // Cleanup after 2 seconds
-            WarcraftPlugin.Instance.AddTimer(2f, () =>
+            var pawn = owner.PlayerPawn.Value;
+            var activeWeaponName = pawn.WeaponServices!.ActiveWeapon.Value.DesignerName;
+            if (activeWeaponName == "weapon_knife")
             {
-                grenade.RemoveIfValid();
-                knifeProp.RemoveIfValid();
-            });
+                var grenade = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
+                if (!grenade.IsValid) return;
+
+                var spawnPos = owner.CalculatePositionInFront(60, 75);
+                var velocity = owner.CalculateVelocityAwayFromPlayer((int)2000f);
+
+                grenade.SetModel("models/tools/bullet_hit_marker.vmdl");
+                grenade.Teleport(spawnPos, owner.PlayerPawn.Value.V_angle, velocity);
+                grenade.DispatchSpawn();
+
+                grenade.SetColor(Color.FromArgb(0, 45, 25, 25));
+
+                // Create visible knife model
+                var knifeProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
+                if (!knifeProp.IsValid) return;
+
+                knifeProp.SetModel("models/tools/bullet_hit_marker.vmdl");
+                knifeProp.SetScale(0.8f);
+                knifeProp.Teleport(spawnPos, new QAngle(-90f, owner.PlayerPawn.Value.V_angle.Y + 180f, 90f), null);
+                knifeProp.SetParent(grenade); // follow the grenade
+                knifeProp.SetColor(Color.FromArgb(255, 0, 0, 0));
+                // Setup for proper collision
+                grenade.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_INTERACTIVE_DEBRIS;
+                Schema.SetSchemaValue(grenade.Handle, "CBaseEntity", "m_flElasticity", 0.0f);
+                Schema.SetSchemaValue(grenade.Handle, "CBaseEntity", "m_flFriction", 1.0f);
+                grenade.Collision.SolidFlags = 12;
+                grenade.Collision.SolidType = SolidType_t.SOLID_VPHYSICS;
+
+                Schema.SetSchemaValue(grenade.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
+
+                // Start hit tracking
+                var effect = new ThrowingKnifeHitSystem(owner, grenade, knifeProp);
+                effect.Start();
+
+                // Cleanup after 2 seconds
+                WarcraftPlugin.Instance.AddTimer(2f, () =>
+                {
+                    grenade.RemoveIfValid();
+                    knifeProp.RemoveIfValid();
+                });
+            }
+            else return;
         }
 
         private class ThrowingKnifeHitSystem : WarcraftEffect
@@ -169,7 +176,6 @@ namespace WarcraftPlugin.Classes
                     if (distance <= _radius)
                     {
                         SkillFunctions.DealRawDamage(Owner, player, (int)_damage);
-                        Warcraft.SpawnParticle(player.AbsOrigin.With(z: 70), "particles/burning_fx/gas_cannister_idle_billow.vpcf");
 
                         // applying bleed on hit
                         new BleedEffect(Owner, player, 5, 4).Start();
@@ -234,19 +240,21 @@ namespace WarcraftPlugin.Classes
             var victim = @event.Userid;
             if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive()) return;
 
+            // ❌ Don't bleed teammates
+            if (victim.TeamNum == attacker.TeamNum) return;
+
             // Sharp End: Bleed effect
             int level = WarcraftPlayer.GetAbilityLevel(0);
             if (level > 0 && @event.Weapon == "knife" && Warcraft.RollDice(level * 10, 100))
             {
-                int totalTicks = level; // 5–10 ticks
-                int damagePerTick = 2 + (level / 2); // 2–4 damage
+                int totalTicks = level;
+                int damagePerTick = 2 + (level / 2);
 
                 new BleedEffect(attacker, victim, totalTicks, damagePerTick).Start();
-                attacker.PrintToChat($"{ChatColors.Red}🩸 Sharp End{ChatColors.Default}: You inflicted bleeding!");
+                attacker.PrintToChat($" {ChatColors.Red}🩸 Sharp End{ChatColors.Default}: You inflicted bleeding!");
             }
-
-            // TODO: Fan of Knives 
         }
+
 
         private void Ultimate()
         {
