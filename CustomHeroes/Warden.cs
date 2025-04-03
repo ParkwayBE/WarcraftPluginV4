@@ -4,6 +4,8 @@ using System.Drawing;
 using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
+using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
@@ -119,6 +121,16 @@ namespace WarcraftPlugin.Classes
 
             // Step 3: Apply velocity after spawn
             grenade.Teleport(null, null, velocity);
+            // This affects the physics grenade (real hitbox and movement)
+            grenade.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PROJECTILE;
+            grenade.Collision.SolidFlags = 12;
+            grenade.Collision.SolidType = SolidType_t.SOLID_VPHYSICS;
+
+            // Optional: tells engine who threw it (used in killfeed/damage attribution)
+            Schema.SetSchemaValue(grenade.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
+
+            //Cleanup
+            WarcraftPlugin.Instance.AddTimer(0.6f, () => { arrow?.RemoveIfValid(); });
         }
 
 
