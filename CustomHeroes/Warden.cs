@@ -61,13 +61,13 @@ namespace WarcraftPlugin.Classes
 
             // Restrict to knife only
             var allowedWeapons = new List<string> { "weapon_knife" };
-            // SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f);
+            SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f);
         }
 
 
         private void WeaponFire(EventWeaponFire @event)
         {
-            var shooter = @event.Userid; // Uselmess comment
+            var shooter = @event.Userid;
 
             if (shooter == null || !shooter.IsValid)
             {
@@ -168,15 +168,11 @@ namespace WarcraftPlugin.Classes
                     float distance = (_grenade.AbsOrigin - player.PlayerPawn.Value.AbsOrigin).Length();
                     if (distance <= _radius)
                     {
-                        var victimOldHp = player.PlayerPawn.Value.Health;
-
                         SkillFunctions.DealRawDamage(Owner, player, (int)_damage);
-                        Warcraft.SpawnParticle(player.AbsOrigin.With(z: 70), "particles/blood_impact/blood_impact_basic.vpcf");
+                        Warcraft.SpawnParticle(player.AbsOrigin.With(z: 70), "particles/burning_fx/gas_cannister_idle_billow.vpcf");
+
+                        // applying bleed on hit
                         new BleedEffect(Owner, player, 5, 4).Start();
-
-                        var victimNewHP = player.PlayerPawn.Value.Health;
-
-                        Owner.PrintToChat($"You dealt {_damage} throwing knife damage. Victim went from {victimOldHp} to now {victimNewHP} .");
 
                         _hasHit = true;
                         _grenade.RemoveIfValid();
@@ -215,7 +211,7 @@ namespace WarcraftPlugin.Classes
                 // Revenge: damage killer
                 int damage = 20 + (level * 6);
                 SkillFunctions.DealRawDamage(Player, attacker, damage);
-                Player.PrintToChat($"{ChatColors.Red}☠️ Mercy Denied{ChatColors.Default}: You damaged your killer for {damage} HP!");
+                Player.PrintToChat($" {ChatColors.Red}☠️ No mercy{ChatColors.Default}: You damaged your killer for {damage} HP!");
             }
             else
             {
@@ -231,7 +227,7 @@ namespace WarcraftPlugin.Classes
                     Player.Respawn();
                     Player.SetHp(100);
                     Player.PlayerPawn.Value.Teleport(revivePosition, null, new Vector());
-                    Player.PrintToChat($"{ChatColors.Blue}🔄 Mercy Given{ChatColors.Default}: You were revived by fate.");
+                    Player.PrintToChat($" {ChatColors.Blue}🔄 Mercy Given{ChatColors.Default}: You were revived as a reward.");
                 });
             }
         }
@@ -305,9 +301,7 @@ namespace WarcraftPlugin.Classes
                 _damage = damage;
             }
             public override void OnStart()
-            {
-                Owner.PrintToChat($"{ChatColors.Red}DEBUG{ChatColors.Default} BLEED EFFECT called");
-            }
+            {  /* needs to be here */          }
 
             public override void OnTick()
             {
@@ -316,7 +310,7 @@ namespace WarcraftPlugin.Classes
                 _target.TakeDamage(_damage, Owner);
 
                 _currentTick++;
-                Warcraft.SpawnParticle(_target.PlayerPawn.Value.AbsOrigin.With(z: 70), "particles/blood_impact/blood_impact_blade.vpcf", 0.3f);
+                Warcraft.SpawnParticle(_target.PlayerPawn.Value.AbsOrigin.With(z: 70), "particles/burning_fx/gas_cannister_idle_billow.vpcf", 0.3f);
             }
 
             public override void OnFinish() { }
