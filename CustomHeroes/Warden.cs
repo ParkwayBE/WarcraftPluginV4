@@ -107,9 +107,17 @@ namespace WarcraftPlugin.Classes
             //Spawn arrow
             var ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
             if (!ball.IsValid) return;
-            ball.Teleport(pos, new QAngle(z: -90), velocity);
-            ball.DispatchSpawn();
+
+            // Set the model FIRST
             ball.SetModel("models/tools/bullet_hit_marker.vmdl");
+
+            // THEN apply position and velocity
+            ball.Teleport(pos, new QAngle(z: -90), velocity);
+
+            // FINALLY spawn the entity
+            ball.DispatchSpawn();
+
+            // Now apply visuals and collision settings
             ball.SetColor(Color.FromArgb(255, 45, 25, 25));
             ball.SetScale(0.5f);
 
@@ -117,10 +125,11 @@ namespace WarcraftPlugin.Classes
             ball.Collision.SolidFlags = 12;
             ball.Collision.SolidType = SolidType_t.SOLID_VPHYSICS;
 
-            Schema.SetSchemaValue(ball.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw); //Fixes killfeed
+            Schema.SetSchemaValue(ball.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
 
-            //Cleanup
+            // Cleanup after 0.6s
             WarcraftPlugin.Instance.AddTimer(0.6f, () => { ball?.RemoveIfValid(); });
+
         }
 
 
