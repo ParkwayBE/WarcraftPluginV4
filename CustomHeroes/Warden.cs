@@ -67,7 +67,7 @@ namespace WarcraftPlugin.Classes
 
         private void WeaponFire(EventWeaponFire @event)
         {
-            var shooter = @event.Userid; // Uselmess comment
+            var shooter = @event.Userid;
 
             if (shooter == null || !shooter.IsValid)
             {
@@ -90,13 +90,6 @@ namespace WarcraftPlugin.Classes
             SpawnBall(Player);
         }
 
-
-
-
-
-
-
-
         private void SpawnBall(CCSPlayerController owner)
         {
             var _ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
@@ -107,30 +100,12 @@ namespace WarcraftPlugin.Classes
             var height = 75;
 
             Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
+            Vector velocity = Player.CalculateVelocityAwayFromPlayer((int)SpeedInSpawnBall);
 
-            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, velocity);
             _ball.DispatchSpawn();
             _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
             _ball.SetScale(0.8f);
-
-            /*
-            _ballProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-            _ballProp.SetModel("models/tools/bullet_hit_marker.vmdl");
-            _ballProp.DispatchSpawn();
-
-
-
-
-            _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-            _ballProp.SetParent(_ball);
-
-            _ball.SetColor(Color.FromArgb(255, 200, 50, 50)); // Slightly red
-
-            Vector velocity = owner.CalculateVelocityAwayFromPlayer((int)SpeedInSpawnBall);
-            _ball.Teleport(null, null, velocity);
-            _ball.DispatchSpawn();
-            Schema.SetSchemaValue(_ball.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw); */
 
             throwingKnifeEffect = new ThrowingKnifeEffect(owner, _ball);
         }
