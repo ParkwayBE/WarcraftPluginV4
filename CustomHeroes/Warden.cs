@@ -102,8 +102,7 @@ namespace WarcraftPlugin.Classes
 
             var SpeedInSpawnBall = 2000;
             Vector velocity = Player.CalculateVelocityAwayFromPlayer(SpeedInSpawnBall);
-            var viewAngle = owner.PlayerPawn.Value.V_angle;
-            var angle = new QAngle(viewAngle.X, viewAngle.Y, viewAngle.Z + 90f);
+            var angle = AngleFromVector(velocity);
 
 
 
@@ -119,6 +118,13 @@ namespace WarcraftPlugin.Classes
         }
 
 
+        public static QAngle AngleFromVector(Vector dir)
+        {
+            var length2D = MathF.Sqrt(dir.X * dir.X + dir.Y * dir.Y);
+            var pitch = -MathF.Atan2(dir.Z, length2D) * (180f / MathF.PI);
+            var yaw = MathF.Atan2(dir.Y, dir.X) * (180f / MathF.PI);
+            return new QAngle(pitch, yaw, 0f);
+        }
 
 
         private void PlayerDeath(EventPlayerDeath death)
