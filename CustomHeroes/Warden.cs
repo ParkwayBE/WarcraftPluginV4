@@ -264,6 +264,11 @@ namespace WarcraftPlugin.Classes
                 SkillFunctions.SlowTarget(Player, enemy, 100, 5f);
                 enemy.PlayLocalSound("sounds/ambient/animal/dog_growl_behind_wall_3.vsnd");
                 affected++;
+
+                var vel = enemy.PlayerPawn.Value.AbsVelocity;
+                var speed = vel.Length();
+                Console.WriteLine($"[WCS] Affected player {enemy.PlayerName} current speed: {speed}");
+
             }
 
             if (affected > 0)
