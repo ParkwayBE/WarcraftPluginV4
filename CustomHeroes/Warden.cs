@@ -159,7 +159,7 @@ namespace WarcraftPlugin.Classes
                 // Create a box slightly in front of the projectile based on its velocity direction
                 var forwardOffset = SkillFunctions.Normalize(_grenade.AbsVelocity) * 15;
                 var boxCenter = _grenade.AbsOrigin + forwardOffset;
-                var hitbox = Warcraft.CreateBoxAroundPoint(boxCenter, 20f, 20f, 20f); // width, depth, height
+                var hitbox = Warcraft.CreateBoxAroundPoint(boxCenter, 20f, 20f, 20f); // width, depth, height,
 
                 // Optional: show the hitbox for debugging
                 Console.WriteLine($"[DEBUG] Showing hitbox at: {_grenade.AbsOrigin}");
