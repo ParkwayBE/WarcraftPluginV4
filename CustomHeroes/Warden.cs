@@ -160,24 +160,10 @@ namespace WarcraftPlugin.Classes
                 _knife = _ball;
             }
 
-            public void UpdateLocation()
-            {
-                var distance = 60;
-                var height = 30;
-
-                Vector velocity = _owner.CalculateVelocityAwayFromPlayer((int)_speed);
-
-
-                Vector posInfrontOfPlayer = _owner.CalculatePositionInFront(distance, height);
-                _owner.PrintToChat($"Updating Ball Position: {posInfrontOfPlayer}");
-                _knife.Teleport(posInfrontOfPlayer, _owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
-                _knife.Teleport(null, null, velocity);
-            }
-
 
             public override void OnStart()
             {
-                UpdateLocation();
+                // wip
             }
 
             public override void OnTick()
@@ -194,7 +180,8 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerDeath(EventPlayerDeath death)
         {
-            var attacker = death.Attacker;
+            if (death.Userid != Player || !Player.IsValid) return;
+            var attacker = death.Userid;
 
             if (_hasUsedRevive || WarcraftPlayer.GetAbilityLevel(1) <= 0)
                 return;
