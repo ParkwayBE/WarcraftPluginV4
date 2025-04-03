@@ -107,6 +107,8 @@ namespace WarcraftPlugin.Classes
             var spawnPos = owner.CalculatePositionInFront(distance, height);
             var direction = owner.CalculateVelocityAwayFromPlayer((int)speed);
 
+            Console.WriteLine($"[WCS] Spawn dir: {direction}");
+
             // Teleport and apply direction
             grenade.Teleport(spawnPos, null, direction);
             grenade.DispatchSpawn();
