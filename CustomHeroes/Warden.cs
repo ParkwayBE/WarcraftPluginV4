@@ -100,8 +100,8 @@ namespace WarcraftPlugin.Classes
             grenade.SetScale(0.4f); // Optional: scale down for visual size
 
             // Positioning
-            var distance = 50;
-            var height = 50;
+            var distance = 150;
+            var height = 150;
             var speed = 3000f;
 
             var spawnPos = owner.CalculatePositionInFront(distance, height);
