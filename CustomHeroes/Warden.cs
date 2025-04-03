@@ -33,7 +33,6 @@ namespace WarcraftPlugin.Classes
         public override List<string> PreloadResources => new()
         {
             "models/props_gameplay/football.vmdl",
-            "CustomModels/ThrowingKnife/knife.vmdl_c"
         };
 
         public override List<IWarcraftAbility> Abilities =>
@@ -60,7 +59,7 @@ namespace WarcraftPlugin.Classes
             _hasUsedRevive = false;
 
             // Restrict to knife only
-            var allowedWeapons = new List<string> { "weapon_knife" };
+            var allowedWeapons = new List<string> { "weapon_knife", "weapon_c4" };
             SkillFunctions.RestrictWeapons(Player, allowedWeapons, 999f);
         }
 
@@ -71,26 +70,17 @@ namespace WarcraftPlugin.Classes
 
             if (shooter == null || !shooter.IsValid)
             {
-                Console.WriteLine("[WCS] WeaponFire: shooter was null or invalid.");
                 return;
             }
-
-            Console.WriteLine($"[WCS] WeaponFire triggered by: {shooter.PlayerName} ({shooter.SteamID})");
-
-            var weaponName = @event.Weapon?.ToLower() ?? "unknown";
-            Console.WriteLine($"[WCS] Weapon used: {weaponName}");
 
             if (shooter != Player)
             {
-                Console.WriteLine("[WCS] WeaponFire: Shooter is not our class's player, skipping.");
                 return;
             }
-
-            Console.WriteLine("[WCS] Launching ThrowingKnifeEffect...");
-            SpawnBall(Player);
+            SpawnKnife(Player);
         }
 
-        private void SpawnBall(CCSPlayerController owner)
+        private void SpawnKnife(CCSPlayerController owner)
         {
             // Create grenade (physics)
 
@@ -177,7 +167,6 @@ namespace WarcraftPlugin.Classes
                     {
                         SkillFunctions.DealRawDamage(Owner, player, (int)_damage);
 
-                        // applying bleed on hit
                         new BleedEffect(Owner, player, 5, 4).Start();
 
                         _hasHit = true;
@@ -314,7 +303,6 @@ namespace WarcraftPlugin.Classes
                 _target.TakeDamage(_damage, Owner);
 
                 _currentTick++;
-                Warcraft.SpawnParticle(_target.PlayerPawn.Value.AbsOrigin.With(z: 70), "particles/burning_fx/gas_cannister_idle_billow.vpcf", 0.3f);
             }
 
             public override void OnFinish() { }
