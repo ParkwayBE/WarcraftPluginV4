@@ -102,7 +102,9 @@ namespace WarcraftPlugin.Classes
 
             var SpeedInSpawnBall = 2000;
             Vector velocity = Player.CalculateVelocityAwayFromPlayer(SpeedInSpawnBall);
-            var angle = new QAngle(owner.PlayerPawn.Value.V_angle.X - 90f, owner.PlayerPawn.Value.V_angle.Y, 0);
+            var viewAngle = owner.PlayerPawn.Value.V_angle;
+            var angle = new QAngle(viewAngle.X, viewAngle.Y, viewAngle.Z + 90f);
+
 
 
             var distance = 60;
