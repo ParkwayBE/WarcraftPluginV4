@@ -140,7 +140,7 @@ namespace WarcraftPlugin.Classes
             private readonly CHEGrenadeProjectile _grenade;
             private readonly CDynamicProp _visual;
             private readonly float _damage = 100f;
-            private readonly float _radius = 40f;
+            private readonly float _radius = 80f;
             private bool _hasHit = false;
 
             public ThrowingKnifeHitSystem(CCSPlayerController owner, CHEGrenadeProjectile grenade, CDynamicProp visual)
