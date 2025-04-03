@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
@@ -93,13 +94,13 @@ namespace WarcraftPlugin.Classes
             var grenade = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
             if (!grenade.IsValid) return;
 
-            var speed = 1;
+            var speed = 1000;
             Vector velocity = Player.CalculateVelocityAwayFromPlayer(speed);
             Vector spawnPos = owner.CalculatePositionInFront(60, 75);
 
-            grenade.SetScale(0.1f);
             grenade.Teleport(spawnPos, owner.PlayerPawn.Value.V_angle, new Vector(0, 0, 0));
             grenade.DispatchSpawn();
+            Schema.SetSchemaValue(grenade.Handle, "CBaseModelEntity", "m_nRenderMode", 1);
 
             // Now add the visual
             var knifeModel = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
