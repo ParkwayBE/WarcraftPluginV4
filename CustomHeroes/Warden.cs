@@ -168,8 +168,14 @@ namespace WarcraftPlugin.Classes
                     float distance = (_grenade.AbsOrigin - player.PlayerPawn.Value.AbsOrigin).Length();
                     if (distance <= _radius)
                     {
+                        var victimOldHp = player.PlayerPawn.Value.Health;
+
                         SkillFunctions.DealRawDamage(Owner, player, (int)_damage);
                         Warcraft.SpawnParticle(player.AbsOrigin.With(z: 70), "particles/blood_impact/blood_impact_basic.vpcf");
+
+                        var victimNewHP = player.PlayerPawn.Value.Health;
+
+                        Owner.PrintToChat($"You dealt {_damage} throwing knife damage. Victim went from {victimOldHp} to now {victimNewHP} .");
 
                         _hasHit = true;
                         _grenade.RemoveIfValid();
