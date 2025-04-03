@@ -88,17 +88,13 @@ namespace WarcraftPlugin.Classes
             SpawnBall(Player);
         }
 
-
-
-
-
-
-
-
         private void SpawnBall(CCSPlayerController owner)
         {
             var _ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
             if (!_ball.IsValid) return;
+
+            _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
+
 
             var SpeedInSpawnBall = 2000;
             Vector velocity = Player.CalculateVelocityAwayFromPlayer(SpeedInSpawnBall);
@@ -113,7 +109,6 @@ namespace WarcraftPlugin.Classes
 
             _ball.Teleport(posInfrontOfPlayer, angle, velocity);
             _ball.DispatchSpawn();
-            _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
             _ball.SetScale(0.8f);
         }
 
