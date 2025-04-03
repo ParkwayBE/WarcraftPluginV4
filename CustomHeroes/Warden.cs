@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.Core.Effects;
@@ -28,6 +27,8 @@ namespace WarcraftPlugin.Classes
         private float _lastThrowTime = 0f;
         private const float ThrowCooldown = 1.5f; // seconds between throws
         public CHEGrenadeProjectile _ball;
+
+        public CDynamicProp _ballProp;
 
         public override List<string> PreloadResources => new()
         {
@@ -94,42 +95,30 @@ namespace WarcraftPlugin.Classes
 
 
 
-        private void SpawnBall(CCSPlayerController owner)
+        private void SpawnBall(CCSPlayerController shooter)
         {
-            //Calculate new arrow pos
+            _ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
+            _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
+            _ball.DispatchSpawn();
+
+            _ballProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
+            _ballProp.SetModel("models/tools/bullet_hit_marker.vmdl");
+            _ballProp.DispatchSpawn();
+
             var distance = 60;
             var height = 75;
-            var speed = 3500;
+            var SpeedInSpawnBall = 3500f;
 
-            Vector velocity = owner.CalculateVelocityAwayFromPlayer((int)speed);
-            var pos = owner.CalculatePositionInFront(distance, height);
+            Vector posInfrontOfPlayer = shooter.CalculatePositionInFront(distance, height);
 
-            //Spawn arrow
-            var ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
-            if (!ball.IsValid) return;
+            _ballProp.Teleport(posInfrontOfPlayer, shooter.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            _ball.Teleport(posInfrontOfPlayer, shooter.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            _ballProp.SetParent(_ball);
 
-            // Set the model FIRST
-            ball.SetModel("models/tools/bullet_hit_marker.vmdl");
-
-            // THEN apply position and velocity
-            ball.Teleport(pos, new QAngle(z: -90), velocity);
-
-            // FINALLY spawn the entity
-            ball.DispatchSpawn();
-
-            // Now apply visuals and collision settings
-            ball.SetColor(Color.FromArgb(255, 45, 25, 25));
-            ball.SetScale(0.5f);
-
-            ball.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_NEVER;
-            ball.Collision.SolidFlags = 12;
-            ball.Collision.SolidType = SolidType_t.SOLID_VPHYSICS;
-
-            Schema.SetSchemaValue(ball.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
-
-            // Cleanup after 0.6s
-            WarcraftPlugin.Instance.AddTimer(0.6f, () => { ball?.RemoveIfValid(); });
-
+            _ball.SetColor(Color.FromArgb(255, 200, 50, 50)); // Slightly red
+            Vector velocity = shooter.CalculateVelocityAwayFromPlayer((int)SpeedInSpawnBall);
+            _ball.Teleport(null, null, velocity);
+            Schema.SetSchemaValue(_ball.Handle, "CBaseGrenade", "m_hThrower", shooter.PlayerPawn.Raw);
         }
 
 
