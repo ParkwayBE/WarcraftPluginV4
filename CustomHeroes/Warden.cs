@@ -102,13 +102,15 @@ namespace WarcraftPlugin.Classes
 
             var SpeedInSpawnBall = 2000;
             Vector velocity = Player.CalculateVelocityAwayFromPlayer(SpeedInSpawnBall);
+            var angle = new QAngle(owner.PlayerPawn.Value.V_angle.X - 90f, owner.PlayerPawn.Value.V_angle.Y, 0);
+
 
             var distance = 60;
             var height = 75;
 
             Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
 
-            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, velocity);
+            _ball.Teleport(posInfrontOfPlayer, angle, velocity);
             _ball.DispatchSpawn();
             _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
             _ball.SetScale(0.8f);
