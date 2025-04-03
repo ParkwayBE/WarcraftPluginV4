@@ -92,47 +92,97 @@ namespace WarcraftPlugin.Classes
 
         private void SpawnBall(CCSPlayerController owner)
         {
-            // Step 1: Spawn the grenade
+            // Create grenade (physics)
             var grenade = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
             if (!grenade.IsValid) return;
 
-            var speed = 2000;
-            Vector velocity = Player.CalculateVelocityAwayFromPlayer(speed);
-            Vector spawnPos = owner.CalculatePositionInFront(60, 75);
+            var spawnPos = owner.CalculatePositionInFront(60, 75);
+            var velocity = owner.CalculateVelocityAwayFromPlayer((int)2000f);
 
-            // Move grenade off-screen to hide it visually, but let it do physics
-            Vector grenadeSpawn = new Vector(-9999f, -9999f, -9999f);
-            grenade.Teleport(grenadeSpawn, new QAngle(), new Vector());
+            grenade.SetModel("models/tools/bullet_hit_marker.vmdl");
+            grenade.SetScale(0.001f); // tiny scale to "hide"
+            grenade.Teleport(spawnPos, owner.PlayerPawn.Value.V_angle, velocity);
             grenade.DispatchSpawn();
 
-            // Step 2: Spawn the visible knife model
-            var knifeModel = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-            if (!knifeModel.IsValid) return;
+            // Create visible knife model
+            var knifeProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
+            if (!knifeProp.IsValid) return;
 
-            knifeModel.SetModel("models/tools/bullet_hit_marker.vmdl");
-            knifeModel.SetScale(0.8f);
+            knifeProp.SetModel("models/tools/bullet_hit_marker.vmdl");
+            knifeProp.SetScale(0.8f);
+            knifeProp.Teleport(spawnPos, new QAngle(-90f, owner.PlayerPawn.Value.V_angle.Y + 180f, 90f), null);
+            knifeProp.SetParent(grenade); // follow the grenade
 
-            // Flip model to face forward
-            var angle = new QAngle(-90f, owner.PlayerPawn.Value.V_angle.Y + 180f, 90f);
-            knifeModel.Teleport(spawnPos, angle, null);
-
-            // Parent to grenade for motion
-            knifeModel.SetParent(grenade);
-
-            // Step 3: Apply velocity after spawn
-            grenade.Teleport(null, null, velocity);
-            // This affects the physics grenade (real hitbox and movement)
+            // Setup for proper collision
             grenade.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PROJECTILE;
             grenade.Collision.SolidFlags = 12;
             grenade.Collision.SolidType = SolidType_t.SOLID_VPHYSICS;
 
-            // Optional: tells engine who threw it (used in killfeed/damage attribution)
             Schema.SetSchemaValue(grenade.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
 
+            // Start hit tracking
+            var effect = new ThrowingKnifeHitSystem(owner, grenade, knifeProp);
+            effect.Start();
 
-            //Cleanup
-            WarcraftPlugin.Instance.AddTimer(0.6f, () => { knifeModel?.RemoveIfValid(); });
+            // Cleanup after 2 seconds
+            WarcraftPlugin.Instance.AddTimer(2f, () =>
+            {
+                grenade.RemoveIfValid();
+                knifeProp.RemoveIfValid();
+            });
         }
+
+        private class ThrowingKnifeHitSystem : WarcraftEffect
+        {
+            private readonly CHEGrenadeProjectile _grenade;
+            private readonly CDynamicProp _visual;
+            private readonly float _damage = 30f;
+            private readonly float _radius = 45f;
+            private bool _hasHit = false;
+
+            public ThrowingKnifeHitSystem(CCSPlayerController owner, CHEGrenadeProjectile grenade, CDynamicProp visual)
+                : base(owner, onTickInterval: 0.02f)
+            {
+                _grenade = grenade;
+                _visual = visual;
+            }
+
+            public override void OnStart()
+            {
+                //
+                //
+            }
+
+            public override void OnTick()
+            {
+                if (_hasHit || !_grenade.IsValid) return;
+
+                foreach (var player in Utilities.GetPlayers())
+                {
+                    if (!player.IsAlive() || player.TeamNum == Owner.TeamNum || player == Owner)
+                        continue;
+
+                    float distance = (_grenade.AbsOrigin - player.PlayerPawn.Value.AbsOrigin).Length();
+                    if (distance <= _radius)
+                    {
+                        player.TakeDamage(_damage, Owner);
+                        Warcraft.SpawnParticle(player.AbsOrigin.With(z: 70), "particles/blood_impact/blood_impact_basic.vpcf");
+
+                        _hasHit = true;
+                        _grenade.RemoveIfValid();
+                        _visual.RemoveIfValid();
+                        break;
+                    }
+                }
+            }
+
+            public override void OnFinish()
+            {
+                _grenade?.RemoveIfValid();
+                _visual?.RemoveIfValid();
+            }
+        }
+
 
 
 
@@ -270,6 +320,80 @@ namespace WarcraftPlugin.Classes
 
 /*
  * SEMI WORKING COPY
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ private void SpawnBall(CCSPlayerController owner)
+        {
+            // Step 1: Spawn the grenade
+            var grenade = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
+            if (!grenade.IsValid) return;
+
+            var speed = 2000;
+            Vector velocity = Player.CalculateVelocityAwayFromPlayer(speed);
+            Vector spawnPos = owner.CalculatePositionInFront(60, 75);
+
+            // Move grenade off-screen to hide it visually, but let it do physics
+            Vector grenadeSpawn = new Vector(-9999f, -9999f, -9999f);
+            grenade.Teleport(grenadeSpawn, new QAngle(), new Vector());
+            grenade.DispatchSpawn();
+
+            // Step 2: Spawn the visible knife model
+            var knifeModel = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
+            if (!knifeModel.IsValid) return;
+
+            knifeModel.SetModel("models/tools/bullet_hit_marker.vmdl");
+            knifeModel.SetScale(0.8f);
+
+            // Flip model to face forward
+            var angle = new QAngle(-90f, owner.PlayerPawn.Value.V_angle.Y + 180f, 90f);
+            knifeModel.Teleport(spawnPos, angle, null);
+
+            // Parent to grenade for motion
+            knifeModel.SetParent(grenade);
+
+            // Step 3: Apply velocity after spawn
+            grenade.Teleport(null, null, velocity);
+            // This affects the physics grenade (real hitbox and movement)
+            grenade.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PROJECTILE;
+            grenade.Collision.SolidFlags = 12;
+            grenade.Collision.SolidType = SolidType_t.SOLID_VPHYSICS;
+
+            // Optional: tells engine who threw it (used in killfeed/damage attribution)
+            Schema.SetSchemaValue(grenade.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
+
+
+            //Cleanup
+            WarcraftPlugin.Instance.AddTimer(0.6f, () => { knifeModel?.RemoveIfValid(); });
+        }
+
+
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
  * 
  * 
  * 
