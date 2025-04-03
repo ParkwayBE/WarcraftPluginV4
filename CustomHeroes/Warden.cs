@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using g3;
 using WarcraftPlugin.Core.Effects;
@@ -90,21 +89,37 @@ namespace WarcraftPlugin.Classes
             Console.WriteLine("[WCS] Launching ThrowingKnifeEffect...");
             SpawnBall(Player);
         }
+
+
+
+
+
+
+
+
         private void SpawnBall(CCSPlayerController owner)
         {
-            _ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
-            _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
-            _ball.DispatchSpawn();
+            var _ball = Utilities.CreateEntityByName<CHEGrenadeProjectile>("hegrenade_projectile");
+            if (!_ball.IsValid) return;
 
+            var SpeedInSpawnBall = 3500f;
+            var distance = 60;
+            var height = 75;
+
+            Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
+
+            _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
+            _ball.DispatchSpawn();
+            _ball.SetModel("models/tools/bullet_hit_marker.vmdl");
+            _ball.SetScale(0.8f);
+
+            /*
             _ballProp = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
             _ballProp.SetModel("models/tools/bullet_hit_marker.vmdl");
             _ballProp.DispatchSpawn();
 
-            var distance = 60;
-            var height = 75;
-            var SpeedInSpawnBall = 3500f;
 
-            Vector posInfrontOfPlayer = owner.CalculatePositionInFront(distance, height);
+
 
             _ballProp.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
             _ball.Teleport(posInfrontOfPlayer, owner.PlayerPawn.Value.V_angle, new Vector(nint.Zero));
@@ -114,7 +129,8 @@ namespace WarcraftPlugin.Classes
 
             Vector velocity = owner.CalculateVelocityAwayFromPlayer((int)SpeedInSpawnBall);
             _ball.Teleport(null, null, velocity);
-            Schema.SetSchemaValue(_ball.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw);
+            _ball.DispatchSpawn();
+            Schema.SetSchemaValue(_ball.Handle, "CBaseGrenade", "m_hThrower", owner.PlayerPawn.Raw); */
 
             throwingKnifeEffect = new ThrowingKnifeEffect(owner, _ball);
         }
