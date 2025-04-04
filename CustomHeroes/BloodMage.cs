@@ -146,7 +146,7 @@ namespace WarcraftPlugin.Classes
                 origin.Z += 10;
 
                 int radius = 150;
-                int damage = 5 + flameLevel * 5; // Scales with level
+                int damage = flameLevel; // Scales with level
                 int ticks = 5;
                 float tickInterval = 0.5f;
 
