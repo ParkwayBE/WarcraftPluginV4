@@ -57,26 +57,31 @@ namespace WarcraftPlugin.Classes
             if (Player == null || !_phoenixActivationTime.TryGetValue(Player, out float lastUsedTime))
                 return;
 
-            if (Server.CurrentTime - lastUsedTime <= 10f)
+            WarcraftPlugin.Instance.AddTimer(2f, () =>
             {
-                // Respawn self
-                Player.Respawn();
-                Player.PrintToChat($"{ChatColors.LightRed}🔥 Phoenix triggered! You have returned from death.");
 
-                // Respawn up to 2 teammates
-                var teammates = Utilities.GetPlayers()
-                    .Where(p => p != Player && p.TeamNum == Player.TeamNum && !p.IsAlive())
-                    .Take(2)
-                    .ToList();
 
-                foreach (var ally in teammates)
+                if (Server.CurrentTime - lastUsedTime <= 10f)
                 {
-                    ally.Respawn();
-                    ally.PrintToChat($"{ChatColors.LightPurple}🔥 You were revived by Phoenix!");
-                }
+                    // Respawn self
+                    Player.Respawn();
+                    Player.PrintToChat($"{ChatColors.LightRed}🔥 Phoenix triggered! You have returned from death.");
 
-                _phoenixActivationTime.Remove(Player);
-            }
+                    // Respawn up to 2 teammates
+                    var teammates = Utilities.GetPlayers()
+                        .Where(p => p != Player && p.TeamNum == Player.TeamNum && !p.IsAlive())
+                        .Take(2)
+                        .ToList();
+
+                    foreach (var ally in teammates)
+                    {
+                        ally.Respawn();
+                        ally.PrintToChat($"{ChatColors.LightPurple}🔥 You were revived by Phoenix!");
+                    }
+
+                    _phoenixActivationTime.Remove(Player);
+                }
+            });
         }
 
 
@@ -100,7 +105,6 @@ namespace WarcraftPlugin.Classes
 
             public override void OnStart()
             {
-                Warcraft.SpawnParticle(_center, "particles/incendiarygrenade/incendiarygrenade_fire.vpcf", _maxTicks * 0.5f);
             }
 
             public override void OnTick()
@@ -112,6 +116,8 @@ namespace WarcraftPlugin.Classes
                     {
                         SkillFunctions.DealRawDamage(Owner, enemy, _damage);
                         enemy.PrintToChat($"{ChatColors.Red}🔥 You're burning!");
+                        Warcraft.SpawnParticle(Owner.PlayerPawn.Value.AbsOrigin, "particles/burning_fx/barrel_burning_engine_fire.vpcf", 1f);
+
                     }
                 }
             }
