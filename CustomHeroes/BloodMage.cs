@@ -54,22 +54,23 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerDeath(EventPlayerDeath death)
         {
-            if (Player == null || !_phoenixActivationTime.TryGetValue(Player, out float lastUsedTime))
+            var victim = death.Userid;
+            if (victim == null || !_phoenixActivationTime.TryGetValue(victim, out float lastUsedTime))
                 return;
+
+            Console.WriteLine($"[WCS] 🔥 Phoenix death check: {victim.PlayerName}, LastUsedTime: {lastUsedTime}");
 
             WarcraftPlugin.Instance.AddTimer(2f, () =>
             {
-
-
                 if (Server.CurrentTime - lastUsedTime <= 10f)
                 {
                     // Respawn self
-                    Player.Respawn();
-                    Player.PrintToChat($" {ChatColors.LightRed}🔥 Phoenix triggered! You have returned from death.");
+                    victim.Respawn();
+                    victim.PrintToChat($" {ChatColors.LightRed}🔥 Phoenix triggered! You have returned from death.");
 
-                    // Respawn up to 2 teammates
+                    // Respawn up to 2 dead teammates
                     var teammates = Utilities.GetPlayers()
-                        .Where(p => p != Player && p.TeamNum == Player.TeamNum && !p.IsAlive())
+                        .Where(p => p != victim && p.TeamNum == victim.TeamNum && !p.IsAlive())
                         .Take(2)
                         .ToList();
 
@@ -79,7 +80,11 @@ namespace WarcraftPlugin.Classes
                         ally.PrintToChat($" {ChatColors.LightPurple}🔥 You were revived by Phoenix!");
                     }
 
-                    _phoenixActivationTime.Remove(Player);
+                    _phoenixActivationTime.Remove(victim);
+                }
+                else
+                {
+                    Console.WriteLine($"[WCS] Phoenix trigger window missed for {victim.PlayerName}");
                 }
             });
         }
