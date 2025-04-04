@@ -48,7 +48,7 @@ namespace WarcraftPlugin.Classes
 
             _phoenixActivationTime[Player] = Server.CurrentTime;
 
-            Player.PrintToCenter($"{ChatColors.Orange}🔥 Phoenix ready! If you die in the next 10 seconds, you will rise again.");
+            Player.PrintToCenter($" {ChatColors.Orange}🔥 Phoenix ready! If you die in the next 10 seconds, you will rise again.");
             StartCooldown(3); // Index 3 = Ultimate
         }
 
@@ -65,7 +65,7 @@ namespace WarcraftPlugin.Classes
                 {
                     // Respawn self
                     Player.Respawn();
-                    Player.PrintToChat($"{ChatColors.LightRed}🔥 Phoenix triggered! You have returned from death.");
+                    Player.PrintToChat($" {ChatColors.LightRed}🔥 Phoenix triggered! You have returned from death.");
 
                     // Respawn up to 2 teammates
                     var teammates = Utilities.GetPlayers()
@@ -76,7 +76,7 @@ namespace WarcraftPlugin.Classes
                     foreach (var ally in teammates)
                     {
                         ally.Respawn();
-                        ally.PrintToChat($"{ChatColors.LightPurple}🔥 You were revived by Phoenix!");
+                        ally.PrintToChat($" {ChatColors.LightPurple}🔥 You were revived by Phoenix!");
                     }
 
                     _phoenixActivationTime.Remove(Player);
@@ -116,7 +116,7 @@ namespace WarcraftPlugin.Classes
                     {
                         SkillFunctions.DealRawDamage(Owner, enemy, _damage);
                         enemy.PrintToChat($"{ChatColors.Red}🔥 You're burning!");
-                        Warcraft.SpawnParticle(Owner.PlayerPawn.Value.AbsOrigin, "particles/burning_fx/barrel_burning_engine_fire.vpcf", 1f);
+                        Warcraft.SpawnParticle(enemy.PlayerPawn.Value.AbsOrigin, "particles/burning_fx/barrel_burning_engine_fire.vpcf", 1f);
 
                     }
                 }
