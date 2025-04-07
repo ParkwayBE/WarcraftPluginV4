@@ -223,7 +223,7 @@ namespace WarcraftPlugin.Classes
                     {
                         player.EmitSound("talk.vsnd");
                         int hp = player.PlayerPawn.Value.Health;
-                        SkillFunctions.DealRawDamage(_owner, player, _damage);
+                        SkillFunctions.DealRawDamage(_owner, player, _damage, KillFeedIcon.radarjammer);
                     }
                 }
             }

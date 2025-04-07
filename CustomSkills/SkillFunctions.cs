@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Helpers;
+using WarcraftPlugin.Models;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 
@@ -91,7 +92,7 @@ namespace WarcraftPlugin.CustomSkills
 
         private static readonly HashSet<nint> DamageLoopProtection = new();
 
-        public static void DealRawDamage(CCSPlayerController attacker, CCSPlayerController victim, int damage)
+        public static void DealRawDamage(CCSPlayerController attacker, CCSPlayerController victim, int damage, KillFeedIcon? icon = null)
         {
             if (attacker == null || victim == null || !attacker.IsValid || !victim.IsValid)
                 return;
