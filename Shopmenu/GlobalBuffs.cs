@@ -87,10 +87,12 @@ namespace WarcraftPlugin.Core
                 var directionVec = new Vector();
                 NativeAPI.AngleVectors(directionAngle.Handle, directionVec.Handle, nint.Zero, nint.Zero);
 
-                if (directionVec.Z < 0.475f)
-                    directionVec.Z = 0.475f;
+                if (directionVec.Z < 0.6f)
+                    directionVec.Z = 0.6f;
 
-                directionVec *= 420; // fixed forward push
+
+
+                directionVec *= 520; // fixed forward push
                 player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
                 player.PlayerPawn.Value.AbsVelocity.Y = directionVec.Y;
                 player.PlayerPawn.Value.AbsVelocity.Z = directionVec.Z;
@@ -99,7 +101,7 @@ namespace WarcraftPlugin.Core
             // Apply reduced gravity for 5 seconds
             WarcraftPlugin.Instance.AddTimer(0.05f, () =>
             {
-                new SetGravityEffect(player, 80f, 5f).Start();
+                new SetGravityEffect(player, 70f, 5f).Start();
             });
 
             return HookResult.Continue;
