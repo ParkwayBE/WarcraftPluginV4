@@ -247,43 +247,26 @@ namespace WarcraftPlugin.Core
             var enemyTeam = owner.TeamNum == (byte)CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
 
             var dummy = Utilities.GetPlayers()
-                .FirstOrDefault(p => p.IsBot && p.IsValid && p.TeamNum == (byte)enemyTeam && p.PlayerPawn?.Value != null);
+                .FirstOrDefault(p => p.IsBot && p.IsValid && p.TeamNum == (byte)enemyTeam && p.PlayerPawn?.Value != null && p.IsAlive());
 
             if (dummy == null)
             {
-                owner.PrintToChat(" \x07[Dummy] No bot found on the enemy team.");
+                owner.PrintToChat(" \x07[Dummy] No valid bot found on the enemy team.");
                 return;
             }
 
-            if (!dummy.IsAlive())
-            {
-                DummyTracking.Remove(owner.Slot);
-                owner.PrintToChat(" \x07[Dummy] Dummy bot was dead. Searching for a new one...");
-                return;
-            }
-
-            // Store this dummy to track HP events later
+            // Track this dummy
             DummyTracking[owner.Slot] = dummy;
 
-            // Positioning
+            // Position in front of player
             var forward = owner.PlayerPawn.Value.EyeAngles.ToForward();
             var spawnPos = owner.EyePosition() + forward * 100;
-
-            if (dummy.PlayerPawn?.Value == null)
-            {
-                owner.PrintToChat(" \x07[Dummy] Bot is not fully initialized. Try again in a second.");
-                return;
-            }
-
             dummy.PlayerPawn.Value.Teleport(spawnPos, new QAngle(), new Vector());
 
-            // Buff and disable
+            // Give health
             BonusHealth(dummy, 9999);
-            dummy.PlayerPawn.Value.Teleport(null, null, new Vector(0, 0, 0));
 
-            dummy.PlayerPawn.Value.SetColor(Color.Gray);
-            dummy.PlayerName = "TrainingDummy";
-
+            // Strip weapons
             foreach (var weapon in dummy.PlayerPawn.Value.WeaponServices.MyWeapons)
             {
                 if (weapon.IsValid)
@@ -292,8 +275,12 @@ namespace WarcraftPlugin.Core
                 }
             }
 
-            owner.PrintToChat(" \x04[Dummy] Dummy bot has been moved in front of you and frozen.");
+            // Optional cosmetic
+            dummy.PlayerPawn.Value.SetColor(Color.Gray);
+            dummy.PrintToChat(" \x07[Dummy] You are now a training dummy.");
+            owner.PrintToChat(" \x04[Dummy] Dummy bot has been moved in front of you for testing.");
         }
+
 
 
 
