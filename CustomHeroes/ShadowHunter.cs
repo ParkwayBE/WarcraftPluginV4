@@ -7,6 +7,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.Core.Effects;
+using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
@@ -222,16 +223,7 @@ namespace WarcraftPlugin.Classes
                     {
                         player.EmitSound("talk.vsnd");
                         int hp = player.PlayerPawn.Value.Health;
-                        if (hp <= _damage)
-                        {
-                            player.CommitSuicide(true, true);
-                            Console.WriteLine($"[SerpentWard] {player.PlayerName} was killed by the Ward!");
-                        }
-                        else
-                        {
-                            player.SetHp(hp - _damage);
-                            Console.WriteLine($"[SerpentWard] {player.PlayerName} took {_damage} damage from the Ward.");
-                        }
+                        SkillFunctions.DealRawDamage(_owner, player, _damage);
                     }
                 }
             }
