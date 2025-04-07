@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
@@ -103,7 +104,11 @@ namespace WarcraftPlugin.Core
 
                         // Deduct money & confirm purchase
                         moneyService.Account = Math.Max(0, currentMoney - item.Cost);
-                        pl.ExecuteClientCommandFromServer("buy vest");
+
+
+                        // ____________________________
+                        Utilities.SetStateChanged(player, "CBaseEntity", "m_iHealth");
+                        //------------------------------
 
                         pl.PrintToChat($" {ChatColors.Green}✔ You bought {item.Name} for ${item.Cost}!");
                         boughtItems.Add(item.Name);
@@ -203,12 +208,28 @@ namespace WarcraftPlugin.Core
         public int Cost => 2000;
         public bool IsPersistent => true;
 
+        private readonly HashSet<string> restrictedRaces = new()
+        {
+            "human_alliance",
+            "laser_light_show"
+        };
+
         public bool Apply(CCSPlayerController player)
         {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            var race = wcPlayer.GetClass().InternalName;
+            if (restrictedRaces.Contains(race))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) is restricted from buying this item.");
+                return false;
+            }
+
             if (player.PlayerPawn?.Value != null)
             {
                 player.PlayerPawn.Value.Health += 50;
-                player.PrintToChat($"{ChatColors.Green}+50 HP applied!");
+                Utilities.SetStateChanged(player, "CBaseEntity", "m_iHealth");
+
+                player.PrintToChat($" {ChatColors.Green}+50 HP applied!");
                 return true;
             }
             return false;
@@ -237,6 +258,8 @@ namespace WarcraftPlugin.Core
                 if (health < 200)
                 {
                     player.PlayerPawn.Value.Health = Math.Min(health + 2, 200);
+                    Utilities.SetStateChanged(player, "CBaseEntity", "m_iHealth");
+
                 }
 
                 // Re-schedule the timer
@@ -244,7 +267,7 @@ namespace WarcraftPlugin.Core
             }
 
             regenTimers[player] = WarcraftPlugin.Instance.AddTimer(1.0f, RepeatRegen);
-            player.PrintToChat($"{ChatColors.Green}✔ You feel rejuvenated... (+2 HP/sec up to 200)");
+            player.PrintToChat($" {ChatColors.Green}✔ You feel rejuvenated... (+2 HP/sec up to 200)");
             return true;
         }
 
@@ -255,7 +278,7 @@ namespace WarcraftPlugin.Core
             {
                 timer.Kill();
                 regenTimers.Remove(player);
-                player.PrintToChat($"{ChatColors.Red}✖ Ring of Regeneration faded away.");
+                player.PrintToChat($" {ChatColors.Red}✖ Ring of Regeneration faded away.");
             }
         }
     }
@@ -266,13 +289,27 @@ namespace WarcraftPlugin.Core
         public int Cost => 3000;
         public bool IsPersistent => false;
 
+        private readonly HashSet<string> restrictedRaces = new()
+        {
+            "archmage_proudmoore",
+            "crypt_lord"
+        };
+
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             if (wcPlayer == null) return false;
 
+            var race = wcPlayer.GetClass().InternalName;
+
+            if (restrictedRaces.Contains(race))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) is restricted from buying this item.");
+                return false;
+            }
+
             wcPlayer.HasUltimateImmunity = true;
-            player.PrintToChat($"{ChatColors.Green}✔ You are now immune to ultimates this round.");
+            player.PrintToChat($" {ChatColors.Green}✔ You are now immune to ultimates this round.");
             return true;
         }
 
@@ -282,7 +319,7 @@ namespace WarcraftPlugin.Core
             if (wcPlayer == null) return;
 
             wcPlayer.HasUltimateImmunity = false;
-            player.PrintToChat($"{ChatColors.Red}✖ Your ultimate immunity has worn off.");
+            player.PrintToChat($" {ChatColors.Red}✖ Your ultimate immunity has worn off.");
         }
     }
 
