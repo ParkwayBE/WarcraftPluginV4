@@ -10,25 +10,36 @@ namespace WarcraftPlugin.Core
     public class ShopMenu
     {
         private readonly WarcraftPlugin _plugin;
-        private static Dictionary<CCSPlayerController, Action<string>> pendingInputs = new();
+        private static readonly Dictionary<CCSPlayerController, HashSet<string>> purchasesThisRound = new();
+        private static readonly Dictionary<CCSPlayerController, List<IShopItem>> roundBoundItems = new();
 
         public ShopMenu(WarcraftPlugin plugin)
         {
             _plugin = plugin;
             _plugin.AddCommandListener("say", OnPlayerChat);
+
+            _plugin.RegisterEventHandler<EventRoundEnd>((@event, info) =>
+            {
+                foreach (var (player, items) in roundBoundItems)
+                {
+                    foreach (var item in items)
+                    {
+                        item.ResetEffect(player);
+                    }
+                }
+
+                purchasesThisRound.Clear();
+                roundBoundItems.Clear();
+
+                return HookResult.Continue;
+            });
+
         }
 
         public HookResult OnPlayerChat(CCSPlayerController? player, CommandInfo info)
         {
             var message = info.GetArg(1).ToLower();
             if (player == null) return HookResult.Continue;
-
-            if (pendingInputs.TryGetValue(player, out var action))
-            {
-                action.Invoke(message);
-                pendingInputs.Remove(player);
-                return HookResult.Handled;
-            }
 
             if (message == "shop" || message == "shopmenu")
             {
@@ -61,18 +72,44 @@ namespace WarcraftPlugin.Core
 
                         int currentMoney = moneyService.Account;
 
+                        // Check if already purchased this item
+                        if (!purchasesThisRound.TryGetValue(pl, out var boughtItems))
+                        {
+                            boughtItems = new HashSet<string>();
+                            purchasesThisRound[pl] = boughtItems;
+                        }
+
+                        if (boughtItems.Contains(item.Name))
+                        {
+                            pl.PrintToChat($" {ChatColors.Red}✖ You already bought {item.Name} this round.");
+                            return;
+                        }
+
                         if (currentMoney < item.Cost)
                         {
-                            pl.PrintToChat($" {ChatColors.Red}✖ You can't afford this item. It costs ${item.Cost}.");
+                            pl.PrintToChat($" {ChatColors.Red}✖ You can't afford {item.Name}. It costs ${item.Cost}.");
+                            return;
                         }
-                        else
+
+                        bool success = item.Apply(pl);
+                        if (!success)
                         {
-                            moneyService.Account = Math.Max(0, currentMoney - item.Cost);
+                            // Block purchase if Apply failed (e.g., due to race restriction)
+                            return;
+                        }
 
-                            pl.ExecuteClientCommandFromServer("buy vest");
+                        // Deduct money & confirm purchase
+                        moneyService.Account = Math.Max(0, currentMoney - item.Cost);
+                        pl.ExecuteClientCommandFromServer("buy vest");
 
-                            item.Apply(pl);
-                            pl.PrintToChat($" {ChatColors.Green}✔ You bought {item.Name} for ${item.Cost}!");
+                        pl.PrintToChat($" {ChatColors.Green}✔ You bought {item.Name} for ${item.Cost}!");
+                        boughtItems.Add(item.Name);
+
+                        if (!item.IsPersistent)
+                        {
+                            if (!roundBoundItems.ContainsKey(pl))
+                                roundBoundItems[pl] = new List<IShopItem>();
+                            roundBoundItems[pl].Add(item);
                         }
                     });
                 }
@@ -100,7 +137,7 @@ namespace WarcraftPlugin.Core
                 11 => new ShopItem11(),
                 12 => new ShopItem12(),
                 13 => new ShopItem13(),
-                14 => new ShopItem14(), // Functional item (+50 HP)
+                14 => new ShopItem14(),
                 15 => new ShopItem15(),
                 16 => new ShopItem16(),
                 _ => new ShopItem1()
@@ -112,71 +149,84 @@ namespace WarcraftPlugin.Core
     {
         string Name { get; }
         int Cost { get; }
-        void Apply(CCSPlayerController player);
+        bool IsPersistent { get; }
+        bool Apply(CCSPlayerController player);
+        void ResetEffect(CCSPlayerController player);
     }
 
-    // === Example Placeholder Items ===
+    // === Example Functional Item ===
     public class ShopItem1 : IShopItem
     {
         public string Name => "Speed Boots";
         public int Cost => 1600;
+        public bool IsPersistent => false;
 
-        // Races that already have speed-based perks and shouldn't buy this
         private readonly HashSet<string> restrictedRaces = new()
-    {
-        "undead_scourge",
-        "laser_light_show",
-        // Add more here if needed
-    };
+        {
+            "undead_scourge",
+            "laser_light_show"
+        };
 
-        public void Apply(CCSPlayerController player)
+        public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null) return;
+            if (wcPlayer == null) return false;
 
-            var race = wcPlayer.GetClass();
-            string raceName = race.InternalName;
-
-            if (restrictedRaces.Contains(raceName))
+            var race = wcPlayer.GetClass().InternalName;
+            if (restrictedRaces.Contains(race))
             {
-                player.PrintToChat($" {ChatColors.Red}✖ Your current race ({race.DisplayName}) already has movement buffs. You can't equip Boots of speed.");
-                return;
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) already has movement buffs.");
+                return false;
             }
 
-            // Otherwise apply effect
             player.PlayerPawn.Value.VelocityModifier += 0.25f;
-            player.PrintToChat($" {ChatColors.Green}✔ Boots of speed equipped! (+25% movement speed)");
+            player.PrintToChat($" {ChatColors.Green}✔ Speed Boots equipped! (+25% movement speed)");
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player)
+        {
+            if (player.IsValid && player.PlayerPawn?.Value != null)
+            {
+                player.PlayerPawn.Value.VelocityModifier = 1.0f;
+            }
         }
     }
-    public class ShopItem2 : IShopItem { public string Name => "Placeholder 2"; public int Cost => 1300; public void Apply(CCSPlayerController player) { } }
-    public class ShopItem3 : IShopItem { public string Name => "Placeholder 3"; public int Cost => 2200; public void Apply(CCSPlayerController player) { } }
-    public class ShopItem4 : IShopItem { public string Name => "Placeholder 4"; public int Cost => 3100; public void Apply(CCSPlayerController player) { } }
-    public class ShopItem5 : IShopItem { public string Name => "Placeholder 5"; public int Cost => 900; public void Apply(CCSPlayerController player) { } }
-    public class ShopItem6 : IShopItem { public string Name => "Placeholder 6"; public int Cost => 1600; public void Apply(CCSPlayerController player) { } }
-    public class ShopItem7 : IShopItem { public string Name => "Placeholder 7"; public int Cost => 2400; public void Apply(CCSPlayerController player) { } }
-    public class ShopItem8 : IShopItem { public string Name => "Placeholder 8"; public int Cost => 3300; public void Apply(CCSPlayerController player) { } }
-    public class ShopItem9 : IShopItem { public string Name => "Placeholder 9"; public int Cost => 1000; public void Apply(CCSPlayerController player) { } }
-    public class ShopItem10 : IShopItem { public string Name => "Placeholder 10"; public int Cost => 1800; public void Apply(CCSPlayerController player) { } }
-    public class ShopItem11 : IShopItem { public string Name => "Placeholder 11"; public int Cost => 2600; public void Apply(CCSPlayerController player) { } }
-    public class ShopItem12 : IShopItem { public string Name => "Placeholder 12"; public int Cost => 3500; public void Apply(CCSPlayerController player) { } }
-    public class ShopItem13 : IShopItem { public string Name => "Placeholder 13"; public int Cost => 1100; public void Apply(CCSPlayerController player) { } }
 
-    // === Functional Example ===
+    // === Health Boost (persistent) ===
     public class ShopItem14 : IShopItem
     {
         public string Name => "Vitality Boost";
         public int Cost => 2000;
+        public bool IsPersistent => true;
 
-        public void Apply(CCSPlayerController player)
+        public bool Apply(CCSPlayerController player)
         {
             if (player.PlayerPawn?.Value != null)
             {
                 player.PlayerPawn.Value.Health += 50;
-                player.PrintToChat($" {ChatColors.Green}+50 HP applied!");
+                player.PrintToChat($"{ChatColors.Green}+50 HP applied!");
+                return true;
             }
+            return false;
         }
+
+        public void ResetEffect(CCSPlayerController player) { }
     }
 
-    public class ShopItem15 : IShopItem { public string Name => "Placeholder 15"; public int Cost => 2800; public void Apply(CCSPlayerController player) { } }
-    public class ShopItem16 : IShopItem { public string Name => "Placeholder 16"; public int Cost => 3900; public void Apply(CCSPlayerController player) { } }
+    // === Placeholder Stubs ===
+    public class ShopItem2 : IShopItem { public string Name => "Placeholder 2"; public int Cost => 1300; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem3 : IShopItem { public string Name => "Placeholder 3"; public int Cost => 2200; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem4 : IShopItem { public string Name => "Placeholder 4"; public int Cost => 3100; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem5 : IShopItem { public string Name => "Placeholder 5"; public int Cost => 900; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem6 : IShopItem { public string Name => "Placeholder 6"; public int Cost => 1600; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem7 : IShopItem { public string Name => "Placeholder 7"; public int Cost => 2400; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem8 : IShopItem { public string Name => "Placeholder 8"; public int Cost => 3300; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem9 : IShopItem { public string Name => "Placeholder 9"; public int Cost => 1000; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem10 : IShopItem { public string Name => "Placeholder 10"; public int Cost => 1800; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem11 : IShopItem { public string Name => "Placeholder 11"; public int Cost => 2600; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem12 : IShopItem { public string Name => "Placeholder 12"; public int Cost => 3500; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem13 : IShopItem { public string Name => "Placeholder 13"; public int Cost => 1100; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem15 : IShopItem { public string Name => "Placeholder 15"; public int Cost => 2800; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem16 : IShopItem { public string Name => "Placeholder 16"; public int Cost => 3900; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
 }
