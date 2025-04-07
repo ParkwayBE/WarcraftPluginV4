@@ -22,7 +22,7 @@ namespace WarcraftPlugin.Classes
         public override List<IWarcraftAbility> Abilities =>
         [
             new WarcraftAbility("Flame Strike", "Call down flames when hitting an enemy."),
-            new WarcraftAbility("Banish", "Obscure your target's screen, Enemies close to the target take additional damage for the next 5-10 seconds."),
+            new WarcraftAbility("Banish", "Obscure your target's screen, Enemies close to the target Have their ultimate immunity removed."), // TODO : STILL HAVE TO CODE THIS
             new WarcraftAbility("Siphon Mana", "5-25% to siphon money from your target. You deal an additional point of damage for every 1000 dollars you have."),
             new WarcraftCooldownAbility("Phoenix", "If you activated your ultimate in the last 10 seconds when you die. You will respawn yourself and up to 2 teammates!", 8f, false)
         ];
@@ -48,7 +48,7 @@ namespace WarcraftPlugin.Classes
 
             _phoenixActivationTime[Player] = Server.CurrentTime;
 
-            Player.PrintToCenter($" {ChatColors.Orange}🔥 Phoenix ready! If you die in the next 10 seconds, you will rise again.");
+            Player.PrintToCenter($" {ChatColors.Green}🔥 Phoenix ready!{ChatColors.Default} If you die in the next 10 seconds, you will rise again.");
             StartCooldown(3); // Index 3 = Ultimate
         }
 
@@ -58,15 +58,13 @@ namespace WarcraftPlugin.Classes
             if (victim == null || !_phoenixActivationTime.TryGetValue(victim, out float lastUsedTime))
                 return;
 
-            Console.WriteLine($"[WCS] 🔥 Phoenix death check: {victim.PlayerName}, LastUsedTime: {lastUsedTime}");
-
             WarcraftPlugin.Instance.AddTimer(2f, () =>
             {
                 if (Server.CurrentTime - lastUsedTime <= 10f)
                 {
                     // Respawn self
                     victim.Respawn();
-                    victim.PrintToChat($" {ChatColors.LightRed}🔥 Phoenix triggered! You have returned from death.");
+                    victim.PrintToChat($" {ChatColors.Green}🔥 Phoenix{ChatColors.Default} triggered! You have returned from death.");
 
                     // Respawn up to 2 dead teammates
                     var teammates = Utilities.GetPlayers()
@@ -130,34 +128,95 @@ namespace WarcraftPlugin.Classes
             public override void OnFinish() { }
         }
 
+        private class BanishEffect : WarcraftEffect
+        {
+            private readonly Vector _center;
+            private readonly int _radius;
+            private readonly int _duration;
+            private readonly CCSPlayerController _victim;
+
+            public BanishEffect(CCSPlayerController owner, Vector center, int radius, float duration, CCSPlayerController victim)
+    : base(owner, duration)
+            {
+                _center = center;
+                _radius = radius;
+                _victim = victim;
+            }
+
+
+            public override void OnStart()
+            {
+                if (_victim.IsValid)
+                {
+                    // Blind Effect
+
+                    int banishLevel = Owner.GetWarcraftPlayer()?.GetAbilityLevel(1) ?? 0;
+                    if (banishLevel > 0)
+                    {
+                        _victim.Blind(_duration, Color.DarkRed);
+                        Owner.PrintToChat($" {ChatColors.Green}Banish{ChatColors.Default}: You blinded {_victim.PlayerName}.");
+
+                    }
+
+                }
+            }
+
+            public override void OnTick()
+            {
+                foreach (var player in Utilities.GetPlayers().Where(p => p.IsValid && p.IsAlive() && p.TeamNum != Owner.TeamNum))
+                {
+                    if ((player.PlayerPawn.Value.AbsOrigin - _center).Length() < _radius)
+                    {
+                        var wcPlayer = player.GetWarcraftPlayer();
+                        if (wcPlayer != null && wcPlayer.HasUltimateImmunity)
+                        {
+                            wcPlayer.HasUltimateImmunity = false;
+                            player.PrintToChat($"{ChatColors.Red}❌ Your ultimate immunity has been stripped!");
+                            Owner.PrintToChat($"{ChatColors.LightPurple}You removed ultimate immunity from {player.PlayerName}.");
+                        }
+                        else
+                        {
+                            Owner.PrintToChat("There were no players with immunity to strip.");
+                        }
+                    }
+                }
+            }
+
+            public override void OnFinish()
+            {
+                // 
+            }
+        }
 
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
             var attacker = @event.Attacker;
             var victim = @event.Userid;
-            if (attacker == null || victim == null || attacker == victim) return;
+            if (attacker == null || victim == null || attacker == victim || attacker.TeamNum == victim.TeamNum) return;
+            int banishLevel = WarcraftPlayer.GetAbilityLevel(1);
+            var origin = victim.PlayerPawn.Value.AbsOrigin;
+            origin.Z += 10;
+            int flameLevel = WarcraftPlayer.GetAbilityLevel(0);
+            int radius = 150;
+            int damage = flameLevel;
+            int ticks = 5;
+            float tickInterval = 0.5f;
+            float duration = 1f + (0.1f * banishLevel);
 
             //Flamestrike
-            int flameLevel = WarcraftPlayer.GetAbilityLevel(0);
             if (flameLevel > 0 && Random.Shared.Next(100) < 20 + flameLevel * 5) // 25–45% chance
             {
-                var origin = victim.PlayerPawn.Value.AbsOrigin;
-                origin.Z += 10;
-
-                int radius = 150;
-                int damage = flameLevel; // Scales with level
-                int ticks = 5;
-                float tickInterval = 0.5f;
-
                 new FlameStrikeEffect(attacker, origin, radius, damage, ticks, tickInterval).Start();
-
-                attacker.PrintToChat($"{ChatColors.Orange}🔥 Flame Strike! Burning enemies at {victim.PlayerName}'s location.");
+                attacker.PrintToChat($" {ChatColors.Orange}🔥 Flame Strike! Burning enemies at {victim.PlayerName}'s location.");
             }
 
-
-
-
+            // Banish
+            if (banishLevel > 0 && Random.Shared.Next(100) < 20 + banishLevel * 2) // 20-30% chance
+            {
+                new BanishEffect(attacker, origin, radius, duration, victim).Start();
+                attacker.PrintToChat($" {ChatColors.Orange}Banish{ChatColors.Default}: Removing ultimate immunity.");
+            }
 
             // --- Siphon Mana ---
             int siphonLevel = WarcraftPlayer.GetAbilityLevel(2); // Ability 2: Siphon Mana
@@ -168,7 +227,7 @@ namespace WarcraftPlugin.Classes
 
                 if (attackerMoneyService != null && victimMoneyService != null)
                 {
-                    int stealAmount = 100 + 100 * siphonLevel;
+                    int stealAmount = 100 * siphonLevel;
 
                     int victimMoney = victimMoneyService.Account;
                     int attackerMoney = attackerMoneyService.Account;
@@ -176,8 +235,8 @@ namespace WarcraftPlugin.Classes
                     victimMoneyService.Account = Math.Max(0, victimMoney - stealAmount);
                     attackerMoneyService.Account = Math.Min(16000, attackerMoney + stealAmount);
 
-                    attacker.PrintToChat($" {ChatColors.Green}💰 You siphoned ${stealAmount} from {victim.PlayerName}!");
-                    victim.PrintToChat($" {ChatColors.Red}💸 {attacker.PlayerName} siphoned ${stealAmount} from you!");
+                    attacker.PrintToChat($" {ChatColors.Green}💰 You siphoned ${stealAmount} {ChatColors.Default}from {victim.PlayerName}!");
+                    victim.PrintToChat($" {ChatColors.Red}💸 {attacker.PlayerName} {ChatColors.Default}siphoned ${stealAmount} from you!");
                 }
 
             }
@@ -194,16 +253,6 @@ namespace WarcraftPlugin.Classes
                     @event.AddBonusDamage(bonusDamage);
                     attacker.PrintToChat($" {ChatColors.Orange}💸 Siphon Mana: +{bonusDamage} bonus damage from your ${currentMoney}!");
                 }
-            }
-
-
-
-            // --- Banish (logic stub) ---
-            int banishLevel = WarcraftPlayer.GetAbilityLevel(1); // Ability 1: Banish
-            if (banishLevel > 0)
-            {
-                // TO DO: Add visual + AoE splash around victim for the next 5–10s
-                // Suggestion: Freeze screen + slow + bonus damage flag
             }
         }
     }

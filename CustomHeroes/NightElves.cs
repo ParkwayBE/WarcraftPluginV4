@@ -4,6 +4,7 @@ using System.Drawing;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
+using WarcraftPlugin.Core;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
@@ -143,6 +144,7 @@ namespace WarcraftPlugin.Classes
             else
             {
                 Player.PrintToChat($" {ChatColors.LightRed}Root failed: No enemies nearby.");
+                CooldownManager.StartCooldown(WarcraftPlayer, 3, 5f);
             }
         }
     }

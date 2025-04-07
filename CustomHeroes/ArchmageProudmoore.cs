@@ -197,7 +197,7 @@ namespace WarcraftPlugin.Classes
             revived.GiveNamedItem("weapon_knife");
             revived.PlayerPawn.Value.SetColor(Color.Blue);
 
-            Player.PrintToChat($"{ChatColors.Green}🧊 Water Elemental{ChatColors.Default}: You revived {revived.PlayerName} with {bonusHp} HP!");
+            Player.PrintToChat($" {ChatColors.Green}🧊 Water Elemental{ChatColors.Default}: You revived {revived.PlayerName} with {bonusHp} HP!");
 
             WarcraftPlugin.Instance.AddTimer(0.2f, () =>
             {
@@ -206,7 +206,7 @@ namespace WarcraftPlugin.Classes
                     revived.PlayerPawn.Value.Teleport(deathPosition, null, null);
                     var allowedWeapons = new List<string> { "weapon_knife" };
                     SkillFunctions.RestrictWeapons(revived, allowedWeapons, 30f);
-                    revived.PrintToCenter($"{ChatColors.Blue}🧊 Water Elemental{ChatColors.Default} You were summoned by {attacker.PlayerName}!");
+                    revived.PrintToCenter($" {ChatColors.Blue}🧊 Water Elemental{ChatColors.Default} You were summoned by {attacker.PlayerName}!");
                 }
             });
         }
