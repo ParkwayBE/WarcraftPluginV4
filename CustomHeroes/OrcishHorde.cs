@@ -4,7 +4,6 @@ using System.Drawing;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
-using WarcraftPlugin.Core;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
@@ -119,7 +118,7 @@ namespace WarcraftPlugin.Classes
                 {
                     caster.PrintToCenter($" {ChatColors.Red}⛔{ChatColors.Default} Target has {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
                     closest.PrintToCenter($" {ChatColors.Green}🛡️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} blocked {ChatColors.LightPurple}Chain Lightning{ChatColors.Default}!");
-                    CooldownManager.StartCooldown(WarcraftPlayer, 3, 5f);
+                    StartCooldown(3, 5f);
                     return;
                 }
 

@@ -5,7 +5,7 @@ using WarcraftPlugin.Models;
 
 namespace WarcraftPlugin.Core
 {
-    public class CooldownManager
+    internal class CooldownManager
     {
         private readonly float _tickRate = 0.25f;
 
