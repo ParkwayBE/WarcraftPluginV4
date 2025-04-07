@@ -106,7 +106,8 @@ namespace WarcraftPlugin.Core
 
                         // Deduct money & confirm purchase
                         moneyService.Account = Math.Max(0, currentMoney - item.Cost);
-                        player.PlayLocalSound("sounds/buttons/button9.vsnd");
+                        Utilities.SetStateChanged(player, "CCSPlayerController", "m_pInGameMoneyServices");
+                        player.PlayLocalSound("sounds/common/talk.vsnd");
 
 
 
@@ -225,6 +226,7 @@ namespace WarcraftPlugin.Core
                 {
                     // Heal for 2
                     player.PlayerPawn.Value.Health = Math.Min(currentHp + 2, 200);
+                    Server.NextFrame(() => Utilities.SetStateChanged(player.PlayerPawn.Value!, "CBaseEntity", "m_iHealth"));
 
                 }
 
@@ -632,8 +634,7 @@ namespace WarcraftPlugin.Core
             if (player.PlayerPawn?.Value != null)
             {
                 player.PlayerPawn.Value.Health += 50;
-                Utilities.SetStateChanged(player, "CBaseEntity", "m_iHealth");
-
+                Server.NextFrame(() => Utilities.SetStateChanged(player.PlayerPawn.Value!, "CBaseEntity", "m_iHealth"));
                 player.PrintToChat($" {ChatColors.Green}+50 HP applied!");
                 return true;
             }
