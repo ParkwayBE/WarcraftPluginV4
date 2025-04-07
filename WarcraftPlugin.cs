@@ -137,6 +137,9 @@ namespace WarcraftPlugin
 
             new ShopMenu(this);
 
+            new GlobalBuffs(this);
+
+
 
 
             if (Config.ShowCommandAdverts)

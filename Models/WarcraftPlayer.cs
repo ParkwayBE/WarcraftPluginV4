@@ -15,6 +15,8 @@ namespace WarcraftPlugin.Models
         internal CCSPlayerController Player { get; init; }
 
         internal string DesiredClass { get; set; }
+        public bool HasOrbOfSlow { get; set; } = false;
+
 
         internal int currentXp;
         internal int currentLevel;

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
+using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Menu;
 
@@ -164,10 +166,9 @@ namespace WarcraftPlugin.Core
         void ResetEffect(CCSPlayerController player);
     }
 
-    // === Example Functional Item ===
     public class ShopItem1 : IShopItem
     {
-        public string Name => "Speed Boots";
+        public string Name => "Boots of speed";
         public int Cost => 1600;
         public bool IsPersistent => false;
 
@@ -203,43 +204,6 @@ namespace WarcraftPlugin.Core
         }
     }
 
-    // === Health Boost (persistent) ===
-    public class ShopItem14 : IShopItem
-    {
-        public string Name => "Vitality Boost";
-        public int Cost => 2000;
-        public bool IsPersistent => true;
-
-        private readonly HashSet<string> restrictedRaces = new()
-        {
-            "human_alliance",
-            "laser_light_show"
-        };
-
-        public bool Apply(CCSPlayerController player)
-        {
-            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            var race = wcPlayer.GetClass().InternalName;
-            if (restrictedRaces.Contains(race))
-            {
-                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) is restricted from buying this item.");
-                return false;
-            }
-
-            if (player.PlayerPawn?.Value != null)
-            {
-                player.PlayerPawn.Value.Health += 50;
-                Utilities.SetStateChanged(player, "CBaseEntity", "m_iHealth");
-
-                player.PrintToChat($" {ChatColors.Green}+50 HP applied!");
-                return true;
-            }
-            return false;
-        }
-
-        public void ResetEffect(CCSPlayerController player) { }
-    }
-
     public class ShopItem2 : IShopItem
     {
         public string Name => "Ring of Regeneration";
@@ -259,19 +223,9 @@ namespace WarcraftPlugin.Core
                 int currentHp = player.PlayerPawn.Value.Health;
                 if (currentHp < 200)
                 {
-                    // Heal for 3
-                    player.PlayerPawn.Value.Health = Math.Min(currentHp + 3, 200);
+                    // Heal for 2
+                    player.PlayerPawn.Value.Health = Math.Min(currentHp + 2, 200);
 
-                    // Deal 1 damage using a fake poison tick
-                    if (player.PlayerPawn.Value.Health > 1)
-                    {
-                        int damage = 1;
-                        player.TakeDamage(damage, player);
-                    }
-
-
-                    // Optional sound
-                    // player.PlayLocalSound("sounds/items/smallmedkit1.vsnd"); 
                 }
 
                 // Reschedule the timer
@@ -336,19 +290,356 @@ namespace WarcraftPlugin.Core
         }
     }
 
+    public class ShopItem4 : IShopItem
+    {
+        public string Name => "Grand Tome of Experience";
+        public int Cost => 5000;
+        public bool IsPersistent => true; // XP is permanent
+        private const int xpToGive = 300;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            var plugin = WarcraftPlugin.Instance;
+            if (plugin == null) return false;
+
+            plugin.XpSystem.AddXp(player, xpToGive);
+            player.PrintToChat($"{ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
+
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player)
+        {
+            // Nothing to reset — XP gain is permanent
+        }
+    }
+
+    public class ShopItem5 : IShopItem
+    {
+        public string Name => "Grand Tome of Experience";
+        public int Cost => 5000;
+        public bool IsPersistent => true;
+        private const int xpToGive = 300;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            var plugin = WarcraftPlugin.Instance;
+            if (plugin == null) return false;
+
+            plugin.XpSystem.AddXp(player, xpToGive);
+            player.PrintToChat($" {ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
+
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player)
+        {
+            // Nothing to reset — XP gain is permanent
+        }
+    }
+
+    public class ShopItem6 : IShopItem
+    {
+        public string Name => "Gambling Tome of Experience";
+        public int Cost => 1; // SET TO 10.000
+        public bool IsPersistent => true;
+
+        private const int xpToGiveMin = 100;
+        private const int xpToGiveMax = 900;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            var plugin = WarcraftPlugin.Instance;
+            if (plugin == null) return false;
+
+            var random = new Random();
+            int xpToGive = random.Next(xpToGiveMin, xpToGiveMax + 1);
+
+            // Roll for GOLD bonus
+            int roll = random.Next(1, 431); // 1 in 430 chance
+            bool isGold = roll == 1;
+
+            if (isGold)
+            {
+                xpToGive += 1000;
+                Utilities.GetPlayers().ForEach(p =>
+                {
+                    p.PrintToChat($" {ChatColors.Gold}✨ {player.PlayerName} rolled a GOLD CASE in the XP shop and gained +1000 bonus XP! ✨");
+                });
+            }
+
+            plugin.XpSystem.AddXp(player, xpToGive);
+
+            player.PrintToChat($" {ChatColors.Green}🎲 You gained {xpToGive} XP from the Gambling Tome of Experience!");
+            if (isGold)
+            {
+                player.PrintToChat($" {ChatColors.Gold}💛 You wasted your knife luck for this round...");
+            }
+
+            return true;
+        }
 
 
-    // === Placeholder Stubs ===
-    public class ShopItem4 : IShopItem { public string Name => "Placeholder 4"; public int Cost => 3100; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
-    public class ShopItem5 : IShopItem { public string Name => "Placeholder 5"; public int Cost => 900; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
-    public class ShopItem6 : IShopItem { public string Name => "Placeholder 6"; public int Cost => 1600; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
-    public class ShopItem7 : IShopItem { public string Name => "Placeholder 7"; public int Cost => 2400; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
-    public class ShopItem8 : IShopItem { public string Name => "Placeholder 8"; public int Cost => 3300; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
-    public class ShopItem9 : IShopItem { public string Name => "Placeholder 9"; public int Cost => 1000; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
-    public class ShopItem10 : IShopItem { public string Name => "Placeholder 10"; public int Cost => 1800; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
-    public class ShopItem11 : IShopItem { public string Name => "Placeholder 11"; public int Cost => 2600; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
-    public class ShopItem12 : IShopItem { public string Name => "Placeholder 12"; public int Cost => 3500; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
-    public class ShopItem13 : IShopItem { public string Name => "Placeholder 13"; public int Cost => 1100; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
-    public class ShopItem15 : IShopItem { public string Name => "Placeholder 15"; public int Cost => 2800; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
-    public class ShopItem16 : IShopItem { public string Name => "Placeholder 16"; public int Cost => 3900; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+        public void ResetEffect(CCSPlayerController player)
+        {
+            // Nothing to reset — XP gain is permanent
+        }
+    }
+
+    public class ShopItem7 : IShopItem
+    {
+        public string Name => "Tome of Experience";
+        public int Cost => 1000;
+        public bool IsPersistent => true;
+        private const int xpToGive = 50;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            var plugin = WarcraftPlugin.Instance;
+            if (plugin == null) return false;
+
+            plugin.XpSystem.AddXp(player, xpToGive);
+            player.PrintToChat($" {ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
+
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player)
+        {
+            // Nothing to reset — XP gain is permanent
+        }
+    }
+
+
+    public class ShopItem8 : IShopItem
+    {
+        public string Name => "Feather Boots";
+        public int Cost => 3100;
+        public bool IsPersistent => false;
+
+        private readonly HashSet<string> restrictedRaces = new()
+        {
+            "undead_scourge"
+        };
+
+        public bool Apply(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer == null || player.PlayerPawn?.Value == null) return false;
+
+            // Optional: Restrict by race
+            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot wear Feather Boots.");
+                return false;
+            }
+
+            // ✅ Your actual effect goes here
+            player.PlayerPawn.Value.GravityScale = 0.75f; // Example: reduce gravity for higher jumps
+
+            player.PrintToChat($" {ChatColors.Green}✔ Feather Boots equipped! Gravity reduced.");
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player)
+        {
+            if (player.PlayerPawn?.Value != null)
+            {
+                player.PlayerPawn.Value.GravityScale = 1.0f; // Reset gravity to normal
+                player.PrintToChat($" {ChatColors.Default}✖ Feather Boots have worn off.");
+            }
+        }
+
+    }
+
+    public class ShopItem9 : IShopItem { public string Name => "Longjump"; public int Cost => 1000; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem10 : IShopItem
+    {
+        public string Name => "Cloak of invisibility";
+        public int Cost => 1800;
+        public bool IsPersistent => false;
+
+        private readonly HashSet<string> restrictedRaces = new()
+        {
+            "human_alliance"
+        };
+
+        public static void Invisibility(CCSPlayerController player, float duration, int amount)
+        {
+            var InvisEffect = new SetInvisibility(player, duration, amount);
+            InvisEffect.Start();
+        }
+
+        public bool Apply(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer == null) return false;
+
+            var race = wcPlayer.GetClass().InternalName;
+            if (restrictedRaces.Contains(race))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) already has invisibility buffs.");
+                return false;
+            }
+
+            Invisibility(player, 999f, 175);
+            player.PrintToChat($" {ChatColors.Green}✔ Cloak of Invisibility equipped.");
+            return true;
+        }
+
+
+        public void ResetEffect(CCSPlayerController player)
+        {
+            Invisibility(player, 999f, 255);
+        }
+    }
+
+
+
+    public class ShopItem11 : IShopItem
+    {
+        public string Name => "Orb of Slow";
+        public int Cost => 2800;
+        public bool IsPersistent => false;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer == null) return false;
+
+            wcPlayer.HasOrbOfSlow = true;
+            player.PrintToChat($" {ChatColors.Green}✔ Orb of Slow equipped! You now have a chance to slow enemies on hit.");
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer == null) return;
+
+            wcPlayer.HasOrbOfSlow = false;
+        }
+    }
+    public class ShopItem12 : IShopItem { public string Name => "Armor piercing rounds"; public int Cost => 3500; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem13 : IShopItem { public string Name => "Disguise"; public int Cost => 1100; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+
+    public class ShopItem14 : IShopItem
+    {
+        public string Name => "Vitality Boost";
+        public int Cost => 2000;
+        public bool IsPersistent => true;
+
+        private readonly HashSet<string> restrictedRaces = new()
+        {
+            "human_alliance",
+            "laser_light_show"
+        };
+
+        public bool Apply(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            var race = wcPlayer.GetClass().InternalName;
+            if (restrictedRaces.Contains(race))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) is restricted from buying this item.");
+                return false;
+            }
+
+            if (player.PlayerPawn?.Value != null)
+            {
+                player.PlayerPawn.Value.Health += 50;
+                Utilities.SetStateChanged(player, "CBaseEntity", "m_iHealth");
+
+                player.PrintToChat($" {ChatColors.Green}+50 HP applied!");
+                return true;
+            }
+            return false;
+        }
+
+        public void ResetEffect(CCSPlayerController player) { }
+    }
+
+    public class ShopItem15 : IShopItem
+    {
+        public string Name => "Gift of Experience";
+        public int Cost => 4000;  // Updated cost
+        public bool IsPersistent => true;
+
+        private const int xpToGive = 200;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            var plugin = WarcraftPlugin.Instance;
+            if (plugin == null) return false;
+
+            var teammates = Utilities.GetPlayers()
+                .Where(p => p.IsValid && p != player && p.TeamNum == player.TeamNum && p.IsBot == false)
+                .ToList();
+
+            if (teammates.Count == 0)
+            {
+                player.PrintToChat($"{ChatColors.Red}✖ No teammates found to gift XP to.");
+                return false;
+            }
+
+            var random = new Random();
+            var chosenTeammate = teammates[random.Next(teammates.Count)];
+
+            plugin.XpSystem.AddXp(chosenTeammate, xpToGive);
+            player.PrintToChat($"{ChatColors.Green}✔ You gifted {xpToGive} XP to {chosenTeammate.PlayerName}!");
+            chosenTeammate.PrintToChat($"{ChatColors.Gold}✨ {player.PlayerName} has gifted you {xpToGive} XP!");
+
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player)
+        {
+            // XP is permanent — no reset needed
+        }
+    }
+    public class ShopItem16 : IShopItem
+    {
+        public string Name => "Scroll of Resurrection";
+        public int Cost => 3900;
+        public bool IsPersistent => false;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            if (player == null || player.PlayerPawn?.Value == null || player.IsAlive())
+            {
+                player.PrintToChat($"{ChatColors.Red}✖ You must be dead to use the Scroll of Resurrection!");
+                return false;
+            }
+
+            // Get a random living ally
+            var allies = Utilities.GetPlayers()
+                .Where(p => p != player && p.TeamNum == player.TeamNum && p.IsAlive())
+                .ToList();
+
+            if (allies.Count == 0)
+            {
+                player.PrintToChat($"{ChatColors.Red}✖ No living teammates to anchor your resurrection.");
+                return false;
+            }
+
+            var random = new Random();
+            var anchor = allies[random.Next(allies.Count)];
+            var resurrectionPosition = anchor.PlayerPawn.Value.AbsOrigin;
+
+            player.PrintToChat($"{ChatColors.Gold}⏳ Channeling resurrection... You will respawn in 3 seconds!");
+
+            WarcraftPlugin.Instance.AddTimer(3.0f, () =>
+            {
+                if (!player.IsValid || player.IsAlive()) return;
+
+                player.Respawn();
+                player.PlayerPawn.Value.Teleport(resurrectionPosition);
+                player.PrintToChat($"{ChatColors.Green}✔ You have been resurrected at {anchor.PlayerName}'s former position!");
+            });
+
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player) { }
+    }
 }
