@@ -452,7 +452,31 @@ namespace WarcraftPlugin.Core
 
     }
 
-    public class ShopItem9 : IShopItem { public string Name => "Longjump"; public int Cost => 1000; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem9 : IShopItem
+    {
+        public string Name => "Longjump";
+        public int Cost => 1000;
+        public bool IsPersistent => false;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer == null || player.PlayerPawn?.Value == null) return false;
+
+            wcPlayer.HasLongjumpBoots = true;
+            player.PrintToChat($"{ChatColors.Green}✔ Longjump Boots equipped. Press jump to leap forward!");
+
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer == null) return;
+
+            wcPlayer.HasLongjumpBoots = false;
+        }
+    }
     public class ShopItem10 : IShopItem
     {
         public string Name => "Cloak of invisibility";
@@ -520,8 +544,68 @@ namespace WarcraftPlugin.Core
             wcPlayer.HasOrbOfSlow = false;
         }
     }
-    public class ShopItem12 : IShopItem { public string Name => "Armor piercing rounds"; public int Cost => 3500; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
-    public class ShopItem13 : IShopItem { public string Name => "Disguise"; public int Cost => 1100; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
+    public class ShopItem12 : IShopItem
+    {
+        public string Name => "Armor piercing rounds";
+        public int Cost => 2800;
+        public bool IsPersistent => false;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer == null) return false;
+
+            wcPlayer.HasArmorPiercingRounds = true;
+            player.PrintToChat($" {ChatColors.Green}✔ Orb of Slow equipped! You now have a chance to slow enemies on hit.");
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer == null) return;
+
+            wcPlayer.HasArmorPiercingRounds = false;
+        }
+    }
+    public class ShopItem13 : IShopItem
+    {
+        public string Name => "Disguise";
+        public int Cost => 1100;
+        public bool IsPersistent => false;
+
+        private readonly string ctModel = "characters/models/ctm_heavy/ctm_heavy.vmdl";
+        private readonly string tModel = "characters/models/tm_phoenix_heavy/tm_phoenix_heavy.vmdl";
+
+        public bool Apply(CCSPlayerController player)
+        {
+            if (player.PlayerPawn?.Value == null || !player.IsValid) return false;
+
+            var modelToApply = player.TeamNum switch
+            {
+                2 => ctModel, // Terrorist gets disguised as CT
+                3 => tModel,  // CT gets disguised as T
+                _ => null
+            };
+
+            if (modelToApply == null)
+            {
+                player.PrintToChat($"{ChatColors.Red}✖ Could not apply disguise.");
+                return false;
+            }
+
+            player.PlayerPawn.Value.SetModel(modelToApply);
+            player.PrintToChat($"{ChatColors.Green}✔ You are now disguised as the enemy!");
+
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player)
+        {
+            // Let CS2 reset model on death or round start naturally
+        }
+    }
+
 
     public class ShopItem14 : IShopItem
     {
@@ -562,7 +646,7 @@ namespace WarcraftPlugin.Core
     public class ShopItem15 : IShopItem
     {
         public string Name => "Gift of Experience";
-        public int Cost => 4000;  // Updated cost
+        public int Cost => 10;
         public bool IsPersistent => true;
 
         private const int xpToGive = 200;

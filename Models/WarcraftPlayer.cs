@@ -16,6 +16,9 @@ namespace WarcraftPlugin.Models
 
         internal string DesiredClass { get; set; }
         public bool HasOrbOfSlow { get; set; } = false;
+        public bool HasArmorPiercingRounds { get; set; } = false;
+
+        public bool HasLongjumpBoots { get; set; } = false;
 
 
         internal int currentXp;
