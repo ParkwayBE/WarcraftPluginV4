@@ -277,7 +277,6 @@ namespace WarcraftPlugin.Core
 
             // Optional cosmetic
             dummy.PlayerPawn.Value.SetColor(Color.Gray);
-            dummy.PrintToChat(" \x07[Dummy] You are now a training dummy.");
             owner.PrintToChat(" \x04[Dummy] Dummy bot has been moved in front of you for testing.");
         }
 

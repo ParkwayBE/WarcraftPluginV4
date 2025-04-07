@@ -89,12 +89,11 @@ namespace WarcraftPlugin.CustomSkills
             }
         }
 
+        private static readonly HashSet<nint> DamageLoopProtection = new();
+
         public static void DealRawDamage(CCSPlayerController attacker, CCSPlayerController victim, int damage)
         {
-            if (attacker == null || victim == null)
-                return;
-
-            if (!attacker.IsValid || !victim.IsValid)
+            if (attacker == null || victim == null || !attacker.IsValid || !victim.IsValid)
                 return;
 
             if (attacker.PlayerPawn?.Value == null || victim.PlayerPawn?.Value == null)
@@ -103,11 +102,21 @@ namespace WarcraftPlugin.CustomSkills
             if (!attacker.IsAlive() || !victim.IsAlive())
                 return;
 
-            if (attacker.TeamNum == victim.TeamNum)
+            // Prevent recursion
+            if (DamageLoopProtection.Contains(victim.Handle))
                 return;
 
-            victim.TakeDamage(damage, attacker);
+            try
+            {
+                DamageLoopProtection.Add(victim.Handle);
+                victim.TakeDamage(damage, attacker); // raw internal damage
+            }
+            finally
+            {
+                DamageLoopProtection.Remove(victim.Handle);
+            }
         }
+
 
 
         public static void ImpaleTarget(CCSPlayerController attacker, CCSPlayerController victim, float force = 300f)
