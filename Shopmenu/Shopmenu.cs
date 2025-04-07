@@ -11,7 +11,6 @@ namespace WarcraftPlugin.Core
     {
         private readonly WarcraftPlugin _plugin;
         private static Dictionary<CCSPlayerController, Action<string>> pendingInputs = new();
-        private static Random rng = new();
 
         public ShopMenu(WarcraftPlugin plugin)
         {
@@ -44,15 +43,6 @@ namespace WarcraftPlugin.Core
         {
             List<Menu.Menu> pages = new();
 
-            // Set static item costs (Placeholder 1 - 16)
-            int[] itemCosts = new int[]
-            {
-        800, 1300, 2200, 3100,
-        900, 1600, 2400, 3300,
-        1000, 1800, 2600, 3500,
-        1100, 2000, 2800, 3900
-            };
-
             for (int i = 0; i < 4; i++)
             {
                 var menu = MenuManagerExtra.CreateMenu($"Shop Page {i + 1}/4", 5);
@@ -61,8 +51,8 @@ namespace WarcraftPlugin.Core
                 for (int j = 1; j <= 4; j++)
                 {
                     int itemIndex = i * 4 + j;
-                    int cost = itemCosts[itemIndex - 1];
-                    string itemName = $"Placeholder {itemIndex} - ${cost}";
+                    var item = GetShopItem(itemIndex);
+                    string itemName = $"{item.Name} - ${item.Cost}";
 
                     menu.Add(itemName, null, (pl, opt) =>
                     {
@@ -71,14 +61,16 @@ namespace WarcraftPlugin.Core
 
                         int currentMoney = moneyService.Account;
 
-                        if (currentMoney < cost)
+                        if (currentMoney < item.Cost)
                         {
-                            pl.PrintToChat($" {ChatColors.Red}✖ You can't afford this item. It costs ${cost}.");
+                            pl.PrintToChat($" {ChatColors.Red}✖ You can't afford this item. It costs ${item.Cost}.");
                         }
                         else
                         {
-                            moneyService.Account = Math.Max(0, currentMoney - cost);
-                            pl.PrintToChat($" {ChatColors.Green}✔ You bought {itemName} for ${cost}!");
+                            moneyService.Account = Math.Max(0, currentMoney - item.Cost);
+
+                            item.Apply(pl);
+                            pl.PrintToChat($" {ChatColors.Green}✔ You bought {item.Name} for ${item.Cost}!");
                         }
                     });
                 }
@@ -89,23 +81,69 @@ namespace WarcraftPlugin.Core
             MenuManagerExtra.OpenMainMenuExtra(player, pages);
         }
 
+        private IShopItem GetShopItem(int index)
+        {
+            return index switch
+            {
+                1 => new ShopItem1(),
+                2 => new ShopItem2(),
+                3 => new ShopItem3(),
+                4 => new ShopItem4(),
+                5 => new ShopItem5(),
+                6 => new ShopItem6(),
+                7 => new ShopItem7(),
+                8 => new ShopItem8(),
+                9 => new ShopItem9(),
+                10 => new ShopItem10(),
+                11 => new ShopItem11(),
+                12 => new ShopItem12(),
+                13 => new ShopItem13(),
+                14 => new ShopItem14(), // Functional item (+50 HP)
+                15 => new ShopItem15(),
+                16 => new ShopItem16(),
+                _ => new ShopItem1()
+            };
+        }
     }
 
-    // === Placeholder Item Classes (Future logic per item goes here) ===
-    public class ShopItem1 { public void Apply(CCSPlayerController player) { } }
-    public class ShopItem2 { public void Apply(CCSPlayerController player) { } }
-    public class ShopItem3 { public void Apply(CCSPlayerController player) { } }
-    public class ShopItem4 { public void Apply(CCSPlayerController player) { } }
-    public class ShopItem5 { public void Apply(CCSPlayerController player) { } }
-    public class ShopItem6 { public void Apply(CCSPlayerController player) { } }
-    public class ShopItem7 { public void Apply(CCSPlayerController player) { } }
-    public class ShopItem8 { public void Apply(CCSPlayerController player) { } }
-    public class ShopItem9 { public void Apply(CCSPlayerController player) { } }
-    public class ShopItem10 { public void Apply(CCSPlayerController player) { } }
-    public class ShopItem11 { public void Apply(CCSPlayerController player) { } }
-    public class ShopItem12 { public void Apply(CCSPlayerController player) { } }
-    public class ShopItem13 { public void Apply(CCSPlayerController player) { } }
-    public class ShopItem14 { public void Apply(CCSPlayerController player) { } }
-    public class ShopItem15 { public void Apply(CCSPlayerController player) { } }
-    public class ShopItem16 { public void Apply(CCSPlayerController player) { } }
+    public interface IShopItem
+    {
+        string Name { get; }
+        int Cost { get; }
+        void Apply(CCSPlayerController player);
+    }
+
+    // === Example Placeholder Items ===
+    public class ShopItem1 : IShopItem { public string Name => "Placeholder 1"; public int Cost => 800; public void Apply(CCSPlayerController player) { } }
+    public class ShopItem2 : IShopItem { public string Name => "Placeholder 2"; public int Cost => 1300; public void Apply(CCSPlayerController player) { } }
+    public class ShopItem3 : IShopItem { public string Name => "Placeholder 3"; public int Cost => 2200; public void Apply(CCSPlayerController player) { } }
+    public class ShopItem4 : IShopItem { public string Name => "Placeholder 4"; public int Cost => 3100; public void Apply(CCSPlayerController player) { } }
+    public class ShopItem5 : IShopItem { public string Name => "Placeholder 5"; public int Cost => 900; public void Apply(CCSPlayerController player) { } }
+    public class ShopItem6 : IShopItem { public string Name => "Placeholder 6"; public int Cost => 1600; public void Apply(CCSPlayerController player) { } }
+    public class ShopItem7 : IShopItem { public string Name => "Placeholder 7"; public int Cost => 2400; public void Apply(CCSPlayerController player) { } }
+    public class ShopItem8 : IShopItem { public string Name => "Placeholder 8"; public int Cost => 3300; public void Apply(CCSPlayerController player) { } }
+    public class ShopItem9 : IShopItem { public string Name => "Placeholder 9"; public int Cost => 1000; public void Apply(CCSPlayerController player) { } }
+    public class ShopItem10 : IShopItem { public string Name => "Placeholder 10"; public int Cost => 1800; public void Apply(CCSPlayerController player) { } }
+    public class ShopItem11 : IShopItem { public string Name => "Placeholder 11"; public int Cost => 2600; public void Apply(CCSPlayerController player) { } }
+    public class ShopItem12 : IShopItem { public string Name => "Placeholder 12"; public int Cost => 3500; public void Apply(CCSPlayerController player) { } }
+    public class ShopItem13 : IShopItem { public string Name => "Placeholder 13"; public int Cost => 1100; public void Apply(CCSPlayerController player) { } }
+
+    // === Functional Example ===
+    public class ShopItem14 : IShopItem
+    {
+        public string Name => "Vitality Boost";
+        public int Cost => 2000;
+
+        public void Apply(CCSPlayerController player)
+        {
+            if (player.PlayerPawn?.Value != null)
+            {
+                player.PlayerPawn.Value.Health += 50;
+                player.PrintToChat($"{ChatColors.Green}+50 HP applied!");
+            }
+        }
+    }
+
+    public class ShopItem15 : IShopItem { public string Name => "Placeholder 15"; public int Cost => 2800; public void Apply(CCSPlayerController player) { } }
+    public class ShopItem16 : IShopItem { public string Name => "Placeholder 16"; public int Cost => 3900; public void Apply(CCSPlayerController player) { } }
 }
