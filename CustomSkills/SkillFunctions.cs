@@ -91,13 +91,24 @@ namespace WarcraftPlugin.CustomSkills
 
         public static void DealRawDamage(CCSPlayerController attacker, CCSPlayerController victim, int damage)
         {
-            if (victim == null || !victim.IsValid || victim.PlayerPawn?.Value == null) return;
+            if (attacker == null || victim == null)
+                return;
 
-            if (!victim.IsAlive() || !attacker.IsAlive() || attacker.TeamNum == victim.TeamNum)
+            if (!attacker.IsValid || !victim.IsValid)
+                return;
+
+            if (attacker.PlayerPawn?.Value == null || victim.PlayerPawn?.Value == null)
+                return;
+
+            if (!attacker.IsAlive() || !victim.IsAlive())
+                return;
+
+            if (attacker.TeamNum == victim.TeamNum)
                 return;
 
             victim.TakeDamage(damage, attacker);
         }
+
 
         public static void ImpaleTarget(CCSPlayerController attacker, CCSPlayerController victim, float force = 300f)
         {
