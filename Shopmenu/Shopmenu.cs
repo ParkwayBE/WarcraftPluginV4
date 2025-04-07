@@ -104,6 +104,8 @@ namespace WarcraftPlugin.Core
 
                         // Deduct money & confirm purchase
                         moneyService.Account = Math.Max(0, currentMoney - item.Cost);
+                        player.PlayLocalSound("sounds/buttons/button9.vsnd");
+
 
 
                         // ____________________________
@@ -254,22 +256,33 @@ namespace WarcraftPlugin.Core
             {
                 if (!player.IsValid || !player.IsAlive() || player.PlayerPawn?.Value == null) return;
 
-                var health = player.PlayerPawn.Value.Health;
-                if (health < 200)
+                int currentHp = player.PlayerPawn.Value.Health;
+                if (currentHp < 200)
                 {
-                    player.PlayerPawn.Value.Health = Math.Min(health + 2, 200);
-                    Utilities.SetStateChanged(player, "CBaseEntity", "m_iHealth");
+                    // Heal for 3
+                    player.PlayerPawn.Value.Health = Math.Min(currentHp + 3, 200);
 
+                    // Deal 1 damage using a fake poison tick
+                    if (player.PlayerPawn.Value.Health > 1)
+                    {
+                        int damage = 1;
+                        player.TakeDamage(damage, player);
+                    }
+
+
+                    // Optional sound
+                    // player.PlayLocalSound("sounds/items/smallmedkit1.vsnd"); 
                 }
 
-                // Re-schedule the timer
+                // Reschedule the timer
                 regenTimers[player] = WarcraftPlugin.Instance.AddTimer(1.0f, RepeatRegen);
             }
 
             regenTimers[player] = WarcraftPlugin.Instance.AddTimer(1.0f, RepeatRegen);
-            player.PrintToChat($" {ChatColors.Green}✔ You feel rejuvenated... (+2 HP/sec up to 200)");
+            player.PrintToChat($"{ChatColors.Green}✔ Regeneration active! (+2 HP/sec)");
             return true;
         }
+
 
 
         public void ResetEffect(CCSPlayerController player)
