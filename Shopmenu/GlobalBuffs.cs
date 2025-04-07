@@ -90,7 +90,7 @@ namespace WarcraftPlugin.Core
                 if (directionVec.Z < 0.475f)
                     directionVec.Z = 0.475f;
 
-                directionVec *= 320; // fixed forward push
+                directionVec *= 620; // fixed forward push
                 player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
                 player.PlayerPawn.Value.AbsVelocity.Y = directionVec.Y;
                 player.PlayerPawn.Value.AbsVelocity.Z = directionVec.Z;
