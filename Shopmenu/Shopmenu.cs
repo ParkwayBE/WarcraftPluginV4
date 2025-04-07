@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
+using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Menu;
+
 
 namespace WarcraftPlugin.Core
 {
@@ -214,9 +217,78 @@ namespace WarcraftPlugin.Core
         public void ResetEffect(CCSPlayerController player) { }
     }
 
+    public class ShopItem2 : IShopItem
+    {
+        public string Name => "Ring of Regeneration";
+        public int Cost => 2500;
+        public bool IsPersistent => false; // so it cleans on round end
+
+        private readonly Dictionary<CCSPlayerController, Timer> regenTimers = new();
+
+        public bool Apply(CCSPlayerController player)
+        {
+            if (player.PlayerPawn?.Value == null || !player.IsValid) return false;
+
+            void RepeatRegen()
+            {
+                if (!player.IsValid || !player.IsAlive() || player.PlayerPawn?.Value == null) return;
+
+                var health = player.PlayerPawn.Value.Health;
+                if (health < 200)
+                {
+                    player.PlayerPawn.Value.Health = Math.Min(health + 2, 200);
+                }
+
+                // Re-schedule the timer
+                regenTimers[player] = WarcraftPlugin.Instance.AddTimer(1.0f, RepeatRegen);
+            }
+
+            regenTimers[player] = WarcraftPlugin.Instance.AddTimer(1.0f, RepeatRegen);
+            player.PrintToChat($"{ChatColors.Green}✔ You feel rejuvenated... (+2 HP/sec up to 200)");
+            return true;
+        }
+
+
+        public void ResetEffect(CCSPlayerController player)
+        {
+            if (regenTimers.TryGetValue(player, out var timer))
+            {
+                timer.Kill();
+                regenTimers.Remove(player);
+                player.PrintToChat($"{ChatColors.Red}✖ Ring of Regeneration faded away.");
+            }
+        }
+    }
+
+    public class ShopItem3 : IShopItem
+    {
+        public string Name => "Necklace of Immunity";
+        public int Cost => 3000;
+        public bool IsPersistent => false;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer == null) return false;
+
+            wcPlayer.HasUltimateImmunity = true;
+            player.PrintToChat($"{ChatColors.Green}✔ You are now immune to ultimates this round.");
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer == null) return;
+
+            wcPlayer.HasUltimateImmunity = false;
+            player.PrintToChat($"{ChatColors.Red}✖ Your ultimate immunity has worn off.");
+        }
+    }
+
+
+
     // === Placeholder Stubs ===
-    public class ShopItem2 : IShopItem { public string Name => "Placeholder 2"; public int Cost => 1300; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
-    public class ShopItem3 : IShopItem { public string Name => "Placeholder 3"; public int Cost => 2200; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
     public class ShopItem4 : IShopItem { public string Name => "Placeholder 4"; public int Cost => 3100; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
     public class ShopItem5 : IShopItem { public string Name => "Placeholder 5"; public int Cost => 900; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
     public class ShopItem6 : IShopItem { public string Name => "Placeholder 6"; public int Cost => 1600; public bool IsPersistent => false; public bool Apply(CCSPlayerController player) => true; public void ResetEffect(CCSPlayerController player) { } }
