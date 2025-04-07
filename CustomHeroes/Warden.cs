@@ -7,7 +7,6 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
-using WarcraftPlugin.Core;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -290,7 +289,7 @@ namespace WarcraftPlugin.Classes
             else
             {
                 Player.PrintToChat($" {ChatColors.LightRed}No enemies found for Eternal Darkness.");
-                CooldownManager.StartCooldown(WarcraftPlayer, 3, 5f);
+                StartCooldown(3, 5f);
             }
         }
 
