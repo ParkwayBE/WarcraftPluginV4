@@ -99,7 +99,7 @@ namespace WarcraftPlugin.Core
             // Apply reduced gravity for 5 seconds
             WarcraftPlugin.Instance.AddTimer(0.05f, () =>
             {
-                new SetGravityEffect(player, 0.8f, 5f).Start();
+                new SetGravityEffect(player, 80f, 5f).Start();
             });
 
             return HookResult.Continue;
