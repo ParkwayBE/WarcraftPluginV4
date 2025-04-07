@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -70,7 +69,7 @@ namespace WarcraftPlugin.Core
                         {
                             moneyService.Account = Math.Max(0, currentMoney - item.Cost);
 
-                            Utilities.SetStateChanged(player, "CCSPlayerController", "m_iAccount");
+                            pl.ExecuteClientCommandFromServer("buy vest");
 
                             item.Apply(pl);
                             pl.PrintToChat($" {ChatColors.Green}✔ You bought {item.Name} for ${item.Cost}!");
