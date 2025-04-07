@@ -223,6 +223,7 @@ namespace WarcraftPlugin.Classes
                     {
                         player.EmitSound("talk.vsnd");
                         int hp = player.PlayerPawn.Value.Health;
+                        player.PrintToChat("⚠ WARD TRIGGERED");
                         SkillFunctions.DealRawDamage(_owner, player, _damage, KillFeedIcon.radarjammer);
                     }
                 }
