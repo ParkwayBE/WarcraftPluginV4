@@ -116,7 +116,38 @@ namespace WarcraftPlugin.Core
     }
 
     // === Example Placeholder Items ===
-    public class ShopItem1 : IShopItem { public string Name => "Placeholder 1"; public int Cost => 800; public void Apply(CCSPlayerController player) { } }
+    public class ShopItem1 : IShopItem
+    {
+        public string Name => "Speed Boots";
+        public int Cost => 1600;
+
+        // Races that already have speed-based perks and shouldn't buy this
+        private readonly HashSet<string> restrictedRaces = new()
+    {
+        "undead_scourge",
+        "laser_light_show",
+        // Add more here if needed
+    };
+
+        public void Apply(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer == null) return;
+
+            var race = wcPlayer.GetClass();
+            string raceName = race.InternalName;
+
+            if (restrictedRaces.Contains(raceName))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your current race ({race.DisplayName}) already has movement buffs. You can't equip Boots of speed.");
+                return;
+            }
+
+            // Otherwise apply effect
+            player.PlayerPawn.Value.VelocityModifier += 0.25f;
+            player.PrintToChat($" {ChatColors.Green}✔ Boots of speed equipped! (+25% movement speed)");
+        }
+    }
     public class ShopItem2 : IShopItem { public string Name => "Placeholder 2"; public int Cost => 1300; public void Apply(CCSPlayerController player) { } }
     public class ShopItem3 : IShopItem { public string Name => "Placeholder 3"; public int Cost => 2200; public void Apply(CCSPlayerController player) { } }
     public class ShopItem4 : IShopItem { public string Name => "Placeholder 4"; public int Cost => 3100; public void Apply(CCSPlayerController player) { } }
@@ -141,7 +172,7 @@ namespace WarcraftPlugin.Core
             if (player.PlayerPawn?.Value != null)
             {
                 player.PlayerPawn.Value.Health += 50;
-                player.PrintToChat($"{ChatColors.Green}+50 HP applied!");
+                player.PrintToChat($" {ChatColors.Green}+50 HP applied!");
             }
         }
     }
