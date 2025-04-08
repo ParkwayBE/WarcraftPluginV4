@@ -166,24 +166,26 @@ namespace WarcraftPlugin.Core
             if (wcAttacker == null || !wcAttacker.HasArmorPiercingRounds)
                 return HookResult.Continue;
 
-            // Do a ray trace to get where the shot would land
             Vector start = Warcraft.EyePosition(attacker);
             Vector lookDirection = attacker.PlayerPawn.Value.EyeAngles.ToForward();
-            Vector end = start + (lookDirection * 4096); // Long range shot
+            Vector farEnd = start + (lookDirection * 4096); // Far in aim direction
 
-            var traceResult = RayTracer.Trace(start, end, true);
+            // Try to trace until it hits something
+            Vector traceEnd = RayTracer.Trace(start, farEnd, true);
 
-            if (traceResult != default)
+            if (traceEnd == default)
             {
-                end = traceResult;
+                traceEnd = farEnd; // fallback: just shoot forward far
             }
 
-            end.Z += 20f;
+            // Raise Z slightly so it doesn't go underground
+            traceEnd.Z += 5f;
 
-            Warcraft.DrawLaserBetween(start, end, Color.White, 0.15f, 0.8f);
+            Warcraft.DrawLaserBetween(start, traceEnd, Color.White, 0.12f, 0.9f);
 
             return HookResult.Continue;
         }
+
 
 
         private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
