@@ -702,19 +702,13 @@ namespace WarcraftPlugin.Core
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             wcPlayer.RespawnQueued = true;
             wcPlayer.RespawnLocation = anchor.PlayerPawn.Value.AbsOrigin;
+            wcPlayer.RespawnTriggerTime = Server.CurrentTime + 3f;
 
             player.PrintToChat($"{ChatColors.Gold}⏳ Channeling resurrection... You will respawn in 3 seconds!");
 
-            WarcraftPlugin.Instance.AddTimer(3.0f, () =>
-            {
-                if (!player.IsValid || player.IsAlive())
-                    return;
-
-                player.Respawn(); // Just respawn now, teleport comes from GlobalBuffs
-            });
-
             return true;
         }
+
 
 
 

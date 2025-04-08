@@ -2,6 +2,7 @@
 using System.Drawing;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Helpers;
@@ -83,6 +84,9 @@ namespace WarcraftPlugin.Core
                 player.PlayerPawn.Value.Health += 50;
             }
 
+            _plugin.AddTimer(1.0f, RepeatRespawnCheck, TimerFlags.REPEAT);
+
+
             return HookResult.Continue;
         }
         private HookResult OnGrenadeThrown(EventGrenadeThrown @event, GameEventInfo info)
@@ -117,6 +121,36 @@ namespace WarcraftPlugin.Core
             }
 
             return HookResult.Continue;
+        }
+
+
+        private void RepeatRespawnCheck()
+        {
+            foreach (var player in Utilities.GetPlayers())
+            {
+                var wcPlayer = _plugin.GetWcPlayer(player);
+                if (wcPlayer == null || !wcPlayer.RespawnQueued) continue;
+
+                if (Server.CurrentTime >= wcPlayer.RespawnTriggerTime)
+                {
+                    wcPlayer.RespawnQueued = false;
+
+                    if (!player.IsValid || player.IsAlive()) continue;
+
+                    player.Respawn();
+
+                    // Delay teleport safely
+                    var targetLocation = wcPlayer.RespawnLocation;
+                    _plugin.AddTimer(0.2f, () =>
+                    {
+                        if (player.IsValid && player.PlayerPawn?.Value != null)
+                        {
+                            player.PlayerPawn.Value.Teleport(targetLocation);
+                            player.PrintToChat($"{ChatColors.Green}✔ You have been resurrected at your ally’s location!");
+                        }
+                    });
+                }
+            }
         }
 
 

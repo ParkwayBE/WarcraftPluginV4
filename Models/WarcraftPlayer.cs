@@ -28,6 +28,8 @@ namespace WarcraftPlugin.Models
         public bool RespawnQueued { get; set; } = false;
         public Vector RespawnLocation { get; set; } = default;
 
+        public float RespawnTriggerTime { get; set; }
+
 
 
 
