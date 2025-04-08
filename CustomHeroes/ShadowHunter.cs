@@ -221,8 +221,6 @@ namespace WarcraftPlugin.Classes
                     float distanceSq = dx * dx + dy * dy + dz * dz;
                     if (distanceSq <= _radius * _radius)
                     {
-                        Console.WriteLine($"[Ward] Playing sound on {player.PlayerName}");
-                        player.EmitSound("gypsy_draw_01.vsnd");
                         int hp = player.PlayerPawn.Value.Health;
                         SkillFunctions.DealRawDamage(_owner, player, _damage, KillFeedIcon.breachcharge);
 
