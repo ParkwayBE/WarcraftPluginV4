@@ -38,10 +38,40 @@ namespace WarcraftPlugin.Core
             _plugin.RegisterEventHandler<EventPlayerJump>(OnPlayerJump);
             _plugin.RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
             _plugin.RegisterEventHandler<EventGrenadeThrown>(OnGrenadeThrown);
+            _plugin.RegisterEventHandler<EventPlayerSpawn>(OnSpawn);
+
 
         }
 
         // 🧠 SECTION 1: Manual Global Buffs
+
+        private HookResult OnSpawn(EventPlayerSpawn @event, GameEventInfo info)
+        {
+            var player = @event.Userid;
+            if (!player.IsValid || !player.IsAlive() || player.PlayerPawn?.Value == null)
+                return HookResult.Continue;
+
+            var wcPlayer = _plugin.GetWcPlayer(player);
+            if (wcPlayer == null) return HookResult.Continue;
+
+            if (wcPlayer.RespawnQueued)
+            {
+                wcPlayer.RespawnQueued = false;
+
+                var location = wcPlayer.RespawnLocation;
+                _plugin.AddTimer(0.2f, () =>
+                {
+                    if (player.IsValid && player.PlayerPawn?.Value != null)
+                    {
+                        player.PlayerPawn.Value.Teleport(location);
+                        player.PrintToChat($"{ChatColors.Green}✔ You have been resurrected at your ally's location!");
+                    }
+                });
+            }
+
+            return HookResult.Continue;
+        }
+
 
         private HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
         {

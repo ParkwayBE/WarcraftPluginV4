@@ -682,7 +682,7 @@ namespace WarcraftPlugin.Core
         {
             if (player == null || player.PlayerPawn?.Value == null || player.IsAlive())
             {
-                player.PrintToChat($" {ChatColors.Red}✖ You must be dead to use the Scroll of Resurrection!");
+                player.PrintToChat($"{ChatColors.Red}✖ You must be dead to use the Scroll of Resurrection!");
                 return false;
             }
 
@@ -692,45 +692,30 @@ namespace WarcraftPlugin.Core
 
             if (allies.Count == 0)
             {
-                player.PrintToChat($" {ChatColors.Red}✖ No living teammates to anchor your resurrection.");
+                player.PrintToChat($"{ChatColors.Red}✖ No living teammates to anchor your resurrection.");
                 return false;
             }
 
             var random = new Random();
             var anchor = allies[random.Next(allies.Count)];
-            var resurrectionPosition = anchor.PlayerPawn.Value.AbsOrigin;
 
-            player.PrintToChat($" {ChatColors.Gold}⏳ Channeling resurrection... You will respawn in 3 seconds!");
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            wcPlayer.RespawnQueued = true;
+            wcPlayer.RespawnLocation = anchor.PlayerPawn.Value.AbsOrigin;
+
+            player.PrintToChat($"{ChatColors.Gold}⏳ Channeling resurrection... You will respawn in 3 seconds!");
 
             WarcraftPlugin.Instance.AddTimer(3.0f, () =>
             {
-                if (!player.IsValid || player.IsAlive()) return;
+                if (!player.IsValid || player.IsAlive())
+                    return;
 
-                Console.WriteLine("[DEBUG] Player is valid and not dead, attempting to respawn player");
-
-                player.Respawn();
-
-                WarcraftPlugin.Instance.AddTimer(0.3f, () =>
-                {
-                    if (player?.IsValid == true && player.PlayerPawn?.Value != null)
-                    {
-                        var pawn = player.PlayerPawn.Value;
-                        if (pawn.AbsOrigin == default)
-                        {
-                            // Safety net: prevent teleporting to an invalid or default position
-                            Console.WriteLine("[ScrollRes] Aborted teleport: default origin");
-                            return;
-                        }
-
-                        pawn.Teleport(resurrectionPosition);
-                        player.PrintToChat($"{ChatColors.Green}✔ You have been resurrected at {anchor.PlayerName}'s former position!");
-                    }
-                });
-
+                player.Respawn(); // Just respawn now, teleport comes from GlobalBuffs
             });
 
             return true;
         }
+
 
 
         public void ResetEffect(CCSPlayerController player) { }

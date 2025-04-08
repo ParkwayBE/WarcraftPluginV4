@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Core;
 using WarcraftPlugin.Helpers;
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace WarcraftPlugin.Models
 {
@@ -24,6 +25,10 @@ namespace WarcraftPlugin.Models
         public bool HasLongjumpBoots { get; set; } = false;
         public bool HasOrbOfReflection { get; set; } = false;
         public float LastReflectionTime { get; set; } = 0f;
+        public bool RespawnQueued { get; set; } = false;
+        public Vector RespawnLocation { get; set; } = default;
+
+
 
 
         internal int currentXp;
