@@ -234,7 +234,7 @@ namespace WarcraftPlugin.Classes
                     break;
 
                 case 2: // Remove Invisibility
-                    SkillFunctions.SetInvisibility(victim, 255, 1); // Use dummy duration
+                    victim.PlayerPawn.Value.SetColor(Color.White);
                     attacker.PrintToChat($" {ChatColors.Orange}👀 You revealed your enemy!");
                     laserColor = Color.Orange;
                     break;
@@ -424,8 +424,8 @@ namespace WarcraftPlugin.Classes
             SkillFunctions.DealRawDamage(Player, targetPlayer, 10);
 
             // Sound & visual feedback
-            Player.EmitSound("weapons/knife/knife_hit3.vsnd");
-            targetPlayer.EmitSound("weapons/knife/knife_hit1.vsnd");
+            Player.EmitSound("knife_hit3.vsnd");
+            targetPlayer.EmitSound("knife_hit1.vsnd");
 
             Player.PrintToChat($" {ChatColors.Green}👅 You lashed {targetPlayer.PlayerName}!");
         }
