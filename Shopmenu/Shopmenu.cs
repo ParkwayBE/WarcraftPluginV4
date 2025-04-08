@@ -67,7 +67,7 @@ namespace WarcraftPlugin.Core
 
                 for (int j = 1; j <= 5; j++)
                 {
-                    int itemIndex = i * 4 + j;
+                    int itemIndex = i * 5 + j;
                     var item = GetShopItem(itemIndex);
                     string itemName = $"{item.Name} - ${item.Cost}";
 
