@@ -686,7 +686,6 @@ namespace WarcraftPlugin.Core
                 return false;
             }
 
-            // Get a random living ally
             var allies = Utilities.GetPlayers()
                 .Where(p => p != player && p.TeamNum == player.TeamNum && p.IsAlive())
                 .ToList();
@@ -708,12 +707,21 @@ namespace WarcraftPlugin.Core
                 if (!player.IsValid || player.IsAlive()) return;
 
                 player.Respawn();
-                player.PlayerPawn.Value.Teleport(resurrectionPosition);
-                player.PrintToChat($"{ChatColors.Green}✔ You have been resurrected at {anchor.PlayerName}'s former position!");
+
+                // Delay teleport until next frame to ensure PlayerPawn is ready
+                Server.NextFrame(() =>
+                {
+                    if (player.IsValid && player.PlayerPawn?.Value != null)
+                    {
+                        player.PlayerPawn.Value.Teleport(resurrectionPosition);
+                        player.PrintToChat($"{ChatColors.Green}✔ You have been resurrected at {anchor.PlayerName}'s former position!");
+                    }
+                });
             });
 
             return true;
         }
+
 
         public void ResetEffect(CCSPlayerController player) { }
     }
