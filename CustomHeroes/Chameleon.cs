@@ -394,13 +394,11 @@ namespace WarcraftPlugin.Classes
             if (!Player.IsValid || !Player.IsAlive())
                 return;
 
-            // ✅ Use RayTracer to get aim direction
-            var eyePos = Warcraft.EyePosition(Player); // ✅ correct usage for your plugin
+            var eyePos = Warcraft.EyePosition(Player);
             var viewDirection = Player.PlayerPawn.Value.EyeAngles.ToForward();
-            Vector targetPoint = eyePos + viewDirection * 800f; // 800 units forward
+            Vector targetPoint = eyePos + viewDirection * 800f;
             Vector hitPosition = RayTracer.Trace(eyePos, targetPoint, true);
 
-            // ✅ Find nearest valid enemy near hitPosition
             CCSPlayerController? targetPlayer = null;
             float closestDistance = 200f;
 
@@ -423,37 +421,48 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
-            // ✅ Apply pull force toward the player
-            void ApplyPullForce()
+            // 👅 Pull logic: apply 7 pulses of force
+            int pullCount = 0;
+            int maxPulls = 7;
+            float interval = 0.1f;
+            float pullStrength = 950f;
+
+            void ChainPull()
             {
+                if (!Player.IsValid || !Player.IsAlive() || !targetPlayer.IsValid || !targetPlayer.IsAlive())
+                    return;
+
                 Vector pullDirection = Player.PlayerPawn.Value.AbsOrigin - targetPlayer.PlayerPawn.Value.AbsOrigin;
-                Vector pullForce = Normalize(pullDirection) * 1800f; // Increase strength here
+                Vector pullForce = Normalize(pullDirection) * pullStrength;
+
+                // Apply slight upward lift
+                pullForce.Z += 50f;
                 targetPlayer.PlayerPawn.Value.Teleport(null, null, pullForce);
+
+                // Optional visual feedback
+                Warcraft.DrawLaserBetween(targetPlayer.PlayerPawn.Value.AbsOrigin, Player.PlayerPawn.Value.AbsOrigin, Color.Purple, 0.1f, 1.5f);
+
+                pullCount++;
+                if (pullCount < maxPulls)
+                {
+                    WarcraftPlugin.Instance.AddTimer(interval, ChainPull);
+                }
             }
 
-            // 🔁 First pull
-            ApplyPullForce();
+            // Start pulling
+            WarcraftPlugin.Instance.AddTimer(0.0f, ChainPull);
 
-            // 🔁 Repeat pull after 0.2s to reinforce
-            Server.NextFrame(() =>
-            {
-                WarcraftPlugin.Instance.AddTimer(0.2f, () =>
-                {
-                    if (targetPlayer.IsValid && targetPlayer.IsAlive())
-                        ApplyPullForce();
-                });
-            });
-
-            // ✅ Optional minor damage
+            // 💥 Apply light damage only once
             SkillFunctions.DealRawDamage(Player, targetPlayer, 10);
 
-            // ✅ Feedback
+            // 🎵 Sounds and feedback
             Player.EmitSound("knife_hit3.vsnd");
             targetPlayer.EmitSound("knife_hit1.vsnd");
             Player.PrintToChat($"{ChatColors.Green}👅 You lashed {targetPlayer.PlayerName}!");
 
             StartCooldown(3);
         }
+
 
 
     }
