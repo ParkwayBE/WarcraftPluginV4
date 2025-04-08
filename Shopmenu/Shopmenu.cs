@@ -318,10 +318,10 @@ namespace WarcraftPlugin.Core
 
     public class ShopItem5 : IShopItem
     {
-        public string Name => "Grand Tome of Experience";
-        public int Cost => 5000;
+        public string Name => "Massive Tome of Experience";
+        public int Cost => 10000;
         public bool IsPersistent => true;
-        private const int xpToGive = 300;
+        private const int xpToGive = 600;
 
         public bool Apply(CCSPlayerController player)
         {
