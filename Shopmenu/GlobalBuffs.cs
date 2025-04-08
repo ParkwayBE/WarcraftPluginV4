@@ -40,10 +40,6 @@ namespace WarcraftPlugin.Core
             _plugin.RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
             _plugin.RegisterEventHandler<EventGrenadeThrown>(OnGrenadeThrown);
             _plugin.RegisterEventHandler<EventPlayerSpawn>(OnSpawn);
-            _plugin.RegisterEventHandler<EventWeaponFire>(OnWeaponFire);
-
-
-
         }
 
         // 🧠 SECTION 1: Manual Global Buffs
@@ -154,43 +150,6 @@ namespace WarcraftPlugin.Core
                 }
             }
         }
-
-
-        private HookResult OnWeaponFire(EventWeaponFire @event, GameEventInfo info)
-        {
-            var attacker = @event.Userid;
-            if (!attacker.IsValid || attacker.PlayerPawn?.Value == null || !attacker.IsAlive())
-                return HookResult.Continue;
-
-            var wcAttacker = _plugin.GetWcPlayer(attacker);
-            if (wcAttacker == null || !wcAttacker.HasArmorPiercingRounds)
-                return HookResult.Continue;
-
-            // Eye position and aim direction
-            Vector eyePos = Warcraft.EyePosition(attacker);
-            Vector aimDirection = attacker.PlayerPawn.Value.EyeAngles.ToForward();
-
-            // Get a far point in the direction the player is looking
-            Vector maxRange = aimDirection * 2048f;
-            Vector endPoint = eyePos + maxRange;
-
-            // Perform a ray trace to simulate bullet collision
-            var traceResult = RayTracer.Trace(eyePos, endPoint, true);
-            if (traceResult != default)
-            {
-                endPoint = traceResult;
-            }
-
-            // Optional: raise impact point slightly
-            endPoint.Z += 5f;
-
-            Warcraft.DrawLaserBetween(eyePos, endPoint, Color.White, 0.2f, 0.9f);
-
-            return HookResult.Continue;
-        }
-
-
-
 
         private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
         {
