@@ -64,7 +64,7 @@ namespace WarcraftPlugin.Core
                     if (player.IsValid && player.PlayerPawn?.Value != null)
                     {
                         player.PlayerPawn.Value.Teleport(location);
-                        player.PrintToChat($"{ChatColors.Green}✔ You have been resurrected at your ally's location!");
+                        player.PrintToChat($" {ChatColors.Green}✔ You have been resurrected at your ally's location!");
                     }
                 });
             }
@@ -102,11 +102,11 @@ namespace WarcraftPlugin.Core
                             return;
 
                         string[] grenades = {
-                    "weapon_hegrenade",
-                    "weapon_flashbang",
-                    "weapon_incgrenade",
-                    "weapon_decoy"
-                };
+                            "weapon_hegrenade",
+                            "weapon_flashbang",
+                            "weapon_incgrenade",
+                            "weapon_decoy"
+                        };
 
                         string randomGrenade = grenades[Random.Shared.Next(grenades.Length)];
                         player.GiveNamedItem(randomGrenade);
