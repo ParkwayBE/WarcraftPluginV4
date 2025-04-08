@@ -235,7 +235,7 @@ namespace WarcraftPlugin.Classes
                     break;
 
                 case 2: // Remove Invisibility
-                    victim.PlayerPawn.Value.SetColor(Color.White);
+                    SkillFunctions.SetInvisibility(victim, 0f, 255);
                     attacker.PrintToChat($" {ChatColors.Orange}👀 You revealed your enemy!");
                     laserColor = Color.Orange;
                     break;
@@ -308,17 +308,19 @@ namespace WarcraftPlugin.Classes
 
             public override void OnStart()
             {
+                Console.WriteLine("[ChameleonCloak] Cloak effect started.");
+
                 _previousPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
                 _currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
 
-                float checkDelay = 3f - (_abilityLevel * 0.5f); // 2.5s → 0.5s based on level
-
-                _positionComparisonTimer = WarcraftPlugin.Instance.AddTimer(checkDelay, () =>
+                _positionComparisonTimer = WarcraftPlugin.Instance.AddTimer(1.0f, () =>
                 {
                     _previousPosition = _currentPosition.Clone();
                     _currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
 
-                    if (_previousPosition.Equals(_currentPosition))
+                    if (_previousPosition.X == _currentPosition.X &&
+                        _previousPosition.Y == _currentPosition.Y &&
+                        _previousPosition.Z == _currentPosition.Z)
                     {
                         if (!_isCloaked)
                         {
@@ -333,6 +335,7 @@ namespace WarcraftPlugin.Classes
                         {
                             DisableCloak();
                             _isCloaked = false;
+                            Console.WriteLine("[ChameleonCloak] Cloak disabled due to movement.");
                         }
                     }
                 }, TimerFlags.REPEAT);
@@ -340,9 +343,13 @@ namespace WarcraftPlugin.Classes
 
             public override void OnFinish()
             {
+                Console.WriteLine("[ChameleonCloak] Cloak effect finished.");
                 _positionComparisonTimer?.Kill();
                 if (_isCloaked)
+                {
                     DisableCloak();
+                    _isCloaked = false;
+                }
             }
 
             public void BreakCloakFromWeaponFire()
@@ -351,29 +358,29 @@ namespace WarcraftPlugin.Classes
                 {
                     DisableCloak();
                     _isCloaked = false;
-                    Console.WriteLine("[ChameleonCloak] Invisibility broken by weapon fire.");
+                    Console.WriteLine("[ChameleonCloak] Cloak disabled due to weapon fire.");
                 }
             }
-
 
             private void EnableCloak()
             {
                 var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(Owner);
-                bool upgraded = wcPlayer != null && wcPlayer.ChameleonDefensive;
+                bool upgraded = wcPlayer?.ChameleonDefensive == true;
 
-                int alpha = upgraded ? 100 : 175; // Lower = more invisible
+                int alpha = upgraded ? 100 : 175;
                 Owner.PlayerPawn.Value.SetColor(Color.FromArgb(alpha, 255, 255, 255));
-                Console.WriteLine($"[ChameleonCloak] Cloak enabled (alpha={alpha})");
+                Console.WriteLine($"[ChameleonCloak] Cloak enabled (alpha={alpha}).");
             }
 
             private void DisableCloak()
             {
                 Owner.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
-                Console.WriteLine("[ChameleonCloak] Cloak disabled");
+                Console.WriteLine("[ChameleonCloak] Cloak reset to full visibility.");
             }
 
             public override void OnTick() { }
         }
+
 
         public static Vector Normalize(Vector v)
         {
