@@ -209,7 +209,6 @@ namespace WarcraftPlugin.Core
             }
         }
     }
-
     public class ShopItem2 : IShopItem
     {
         public string Name => "Ring of Regeneration";
@@ -256,7 +255,6 @@ namespace WarcraftPlugin.Core
             }
         }
     }
-
     public class ShopItem3 : IShopItem
     {
         public string Name => "Necklace of Immunity";
@@ -296,7 +294,6 @@ namespace WarcraftPlugin.Core
             player.PrintToChat($" {ChatColors.Red}✖ Your ultimate immunity has worn off.");
         }
     }
-
     public class ShopItem4 : IShopItem
     {
         public string Name => "Grand Tome of Experience";
@@ -320,7 +317,6 @@ namespace WarcraftPlugin.Core
             // Nothing to reset — XP gain is permanent
         }
     }
-
     public class ShopItem5 : IShopItem
     {
         public string Name => "Massive Tome of Experience";
@@ -344,7 +340,6 @@ namespace WarcraftPlugin.Core
             // Nothing to reset — XP gain is permanent
         }
     }
-
     public class ShopItem6 : IShopItem
     {
         public string Name => "Gambling Tome of Experience";
@@ -392,7 +387,6 @@ namespace WarcraftPlugin.Core
             // Nothing to reset — XP gain is permanent
         }
     }
-
     public class ShopItem7 : IShopItem
     {
         public string Name => "Tome of Experience";
@@ -416,8 +410,6 @@ namespace WarcraftPlugin.Core
             // Nothing to reset — XP gain is permanent
         }
     }
-
-
     public class ShopItem8 : IShopItem
     {
         public string Name => "Feather Boots";
@@ -458,7 +450,6 @@ namespace WarcraftPlugin.Core
         }
 
     }
-
     public class ShopItem9 : IShopItem
     {
         public string Name => "Longjump";
@@ -524,9 +515,6 @@ namespace WarcraftPlugin.Core
             Invisibility(player, 999f, 255);
         }
     }
-
-
-
     public class ShopItem11 : IShopItem
     {
         public string Name => "Orb of Slow";
@@ -612,8 +600,6 @@ namespace WarcraftPlugin.Core
             // Let CS2 reset model on death or round start naturally
         }
     }
-
-
     public class ShopItem14 : IShopItem
     {
         public string Name => "Periapt of Health";
@@ -648,7 +634,6 @@ namespace WarcraftPlugin.Core
 
         public void ResetEffect(CCSPlayerController player) { }
     }
-
     public class ShopItem15 : IShopItem
     {
         public string Name => "Gift of Experience";
@@ -732,7 +717,6 @@ namespace WarcraftPlugin.Core
 
         public void ResetEffect(CCSPlayerController player) { }
     }
-
     public class ShopItem17 : IShopItem
     {
         public string Name => "Gloves of Warmth";
@@ -756,8 +740,6 @@ namespace WarcraftPlugin.Core
                 wcPlayer.HasGlovesOfWarmth = false;
         }
     }
-
-
     public class ShopItem18 : IShopItem
     {
         public string Name => "Mask of Death";
@@ -781,7 +763,6 @@ namespace WarcraftPlugin.Core
                 wcPlayer.HasMaskOfDeath = false;
         }
     }
-
     public class ShopItem19 : IShopItem
     {
         public string Name => "Helm of Excellence";
@@ -805,8 +786,6 @@ namespace WarcraftPlugin.Core
                 wcPlayer.HasHelmOfExcellence = false;
         }
     }
-
-
     public class ShopItem20 : IShopItem
     {
         public string Name => "Orb of Reflection";

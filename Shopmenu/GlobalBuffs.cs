@@ -147,9 +147,9 @@ namespace WarcraftPlugin.Core
             if (wcVictim.HasOrbOfReflection && attacker.IsValid && attacker.IsAlive())
             {
                 float now = Server.CurrentTime;
-                if (now - wcVictim.lastReflectionTime > 1.0f)
+                if (now - wcVictim.LastReflectionTime > 1.0f)
                 {
-                    wcVictim.lastReflectionTime = now;
+                    wcVictim.LastReflectionTime = now;
 
                     int reflected = (int)(@event.DmgHealth * 0.25f);
                     if (reflected > 0)
