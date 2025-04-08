@@ -221,7 +221,7 @@ namespace WarcraftPlugin.Classes
                 {
                     revived.PlayerPawn.Value.Teleport(deathPosition, null, null);
                     var allowedWeapons = new List<string> { "weapon_knife" };
-                    SkillFunctions.RestrictWeapons(revived, allowedWeapons, 30f);
+                    SkillFunctions.RestrictWeapons(revived, allowedWeapons, 999f);
                     revived.PrintToCenter($" {ChatColors.Blue}🧊 Water Elemental{ChatColors.Default} You were summoned by {attacker.PlayerName}!");
                 }
             });
