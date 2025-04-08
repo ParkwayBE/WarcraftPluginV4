@@ -199,6 +199,16 @@ namespace WarcraftPlugin.Core
             if (wcAttacker.HasArmorPiercingRounds)
             {
                 SkillFunctions.DealRawDamage(attacker, victim, 5);
+                Vector start = Warcraft.EyePosition(attacker);
+                Vector end = victim.PlayerPawn.Value.AbsOrigin.Clone();
+                end.Z += 30f; // Raise impact point slightly
+
+                Color tracerColor = Color.White; // Or Color.Yellow for contrast
+                float tracerDuration = 0.15f;
+                float tracerWidth = 0.5f;
+
+                Warcraft.DrawLaserBetween(start, end, tracerColor, tracerDuration, tracerWidth);
+
                 attacker.PrintToCenter("You dealt 5 additional damage with each hit");
             }
 
