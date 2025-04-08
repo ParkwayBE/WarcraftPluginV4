@@ -40,6 +40,7 @@ namespace WarcraftPlugin.Core
             _plugin.RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
             _plugin.RegisterEventHandler<EventGrenadeThrown>(OnGrenadeThrown);
             _plugin.RegisterEventHandler<EventPlayerSpawn>(OnSpawn);
+            _plugin.RegisterEventHandler<EventPlayerDeath>(OnPlayerDeath);
         }
 
         // 🧠 SECTION 1: Manual Global Buffs
@@ -67,6 +68,31 @@ namespace WarcraftPlugin.Core
                     }
                 });
             }
+
+            return HookResult.Continue;
+        }
+
+        private HookResult OnPlayerDeath(EventPlayerDeath @event, GameEventInfo info)
+        {
+            var player = @event.Userid;
+            if (!player.IsValid || player.PlayerPawn?.Value == null)
+                return HookResult.Continue;
+
+            var wcPlayer = _plugin.GetWcPlayer(player);
+            if (wcPlayer == null) return HookResult.Continue;
+
+            wcPlayer.HasOrbOfSlow = false;
+            wcPlayer.HasArmorPiercingRounds = false;
+            wcPlayer.HasMaskOfDeath = false;
+            wcPlayer.HasHelmOfExcellence = false;
+            wcPlayer.HasGlovesOfWarmth = false;
+            wcPlayer.HasLongjumpBoots = false;
+            wcPlayer.HasOrbOfReflection = false;
+            wcPlayer.HasDamageReflection = false;
+            wcPlayer.ChameleonOffensive = false;
+            wcPlayer.ChameleonDefensive = false;
+            wcPlayer.HasUltimateImmunity = false;
+            wcPlayer.RespawnQueued = false;
 
             return HookResult.Continue;
         }
@@ -151,18 +177,32 @@ namespace WarcraftPlugin.Core
 
         private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
         {
-            foreach (var p in Utilities.GetPlayers())
+            foreach (var player in Utilities.GetPlayers())
             {
-                if (!p.IsValid || p.PlayerPawn?.Value == null) continue;
+                if (!player.IsValid || player.PlayerPawn?.Value == null)
+                    continue;
 
-                var wcPlayer = _plugin.GetWcPlayer(p);
+                var wcPlayer = _plugin.GetWcPlayer(player);
                 if (wcPlayer == null) continue;
 
-                // Put clearing functions underneath to clear certain effects from players at round end
+                // Safety reset: remove ultimate immunity
+                wcPlayer.HasOrbOfSlow = false;
+                wcPlayer.HasArmorPiercingRounds = false;
+                wcPlayer.HasMaskOfDeath = false;
+                wcPlayer.HasHelmOfExcellence = false;
+                wcPlayer.HasGlovesOfWarmth = false;
+                wcPlayer.HasLongjumpBoots = false;
+                wcPlayer.HasOrbOfReflection = false;
+                wcPlayer.HasDamageReflection = false;
+                wcPlayer.ChameleonOffensive = false;
+                wcPlayer.ChameleonDefensive = false;
+                wcPlayer.HasUltimateImmunity = false;
+
             }
 
             return HookResult.Continue;
         }
+
 
 
 
@@ -206,7 +246,7 @@ namespace WarcraftPlugin.Core
 
             if (wcVictim != null && wcVictim.HasHelmOfExcellence && @event.Hitgroup == (int)HitGroup.Head)
             {
-                int DmgDealt = @event.DmgHealth; // = (int)(@event.DmgHealth * 0.65f);
+                int DmgDealt = @event.DmgHealth;
                 int DmgReduction = (int)(DmgDealt * 0.65f);
                 SkillFunctions.SetBonusHealth(victim, DmgReduction);
                 victim.PrintToCenter($" {ChatColors.Green}🛡️ Helm of Excellence absorbed some of the damage!");
@@ -225,8 +265,8 @@ namespace WarcraftPlugin.Core
                     if (reflected > 0)
                     {
                         SkillFunctions.DealRawDamage(victim, attacker, reflected);
-                        attacker.PrintToChat($"{ChatColors.Red}⚡ You were struck by reflected damage!");
-                        victim.PrintToChat($"{ChatColors.Green}✔ Orb of Reflection struck your attacker for {reflected} damage!");
+                        attacker.PrintToChat($" {ChatColors.Red}⚡ You were struck by reflected damage!");
+                        victim.PrintToChat($" {ChatColors.Green}✔ Orb of Reflection struck your attacker for {reflected} damage!");
                     }
                 }
             }

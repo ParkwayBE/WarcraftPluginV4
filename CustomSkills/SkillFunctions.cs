@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using CounterStrikeSharp.API.Core;
+using WarcraftPlugin.Core;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
@@ -15,6 +16,29 @@ namespace WarcraftPlugin.CustomSkills
         {
             new SetMovementSpeed(player, amount, duration).Start();
         }
+        public static void SetMovementSpeed(CCSPlayerController player, float amount, float duration)
+        {
+            new SetMovementSpeed(player, amount, duration).Start();
+        }
+
+        public static void SetGravity(CCSPlayerController player, float gravityPercent, float duration = 999f)
+        {
+            new SetGravityEffect(player, gravityPercent, duration).Start();
+        }
+
+        public static void ApplyForwardBoost(CCSPlayerController player, float strength)
+        {
+            if (player?.PlayerPawn?.Value == null) return;
+
+            var forward = player.PlayerPawn.Value.EyeAngles.ToForward();
+            Vector velocity = forward * (strength * 400); // Adjust power
+            velocity.Z += 150f; // Add lift
+
+            player.PlayerPawn.Value.Teleport(null, null, velocity);
+        }
+
+
+
         public static void SetBonusHealth(CCSPlayerController player, int amount)
         {
             new SetBonusHealth(player, amount).Start();
@@ -120,10 +144,6 @@ namespace WarcraftPlugin.CustomSkills
                 DamageLoopProtection.Remove(victim.Handle);
             }
         }
-
-
-
-
 
 
         public static void ImpaleTarget(CCSPlayerController attacker, CCSPlayerController victim, float force = 300f)

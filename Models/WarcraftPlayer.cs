@@ -30,6 +30,11 @@ namespace WarcraftPlugin.Models
 
         public float RespawnTriggerTime { get; set; }
 
+        public bool HasDamageReflection { get; set; } = false;
+
+        public bool ChameleonOffensive { get; set; } = false;
+        public bool ChameleonDefensive { get; set; } = false;
+
 
 
 
