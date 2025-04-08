@@ -171,15 +171,31 @@ namespace WarcraftPlugin.Classes
         {
             var attacker = @event.Attacker;
             var victim = @event.Userid;
+            int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
+
+            int level = WarcraftPlayer.GetAbilityLevel(1);
+
+
+            int BlindPercent = abilityLevel * 2;
+            int chancePercent = level * 10;
+            float blindTime = abilityLevel / 2f;
+
+
+            if (!Warcraft.RollDice(BlindPercent, 100))
+            {
+                if (level <= 0) return;
+                victim.Blind(blindTime, Color.WhiteSmoke);
+            }
+
+            if (!Warcraft.RollDice(chancePercent, 100)) return;
+
+            if (level <= 0) return;
+
             SkillFunctions.SlowTarget(attacker, victim, 25, 3.5f);
 
             if (victim.PlayerPawn?.Value?.Health > 0) return;
 
-            int level = WarcraftPlayer.GetAbilityLevel(1);
-            if (level <= 0) return;
 
-            int chancePercent = level * 10;
-            if (!Warcraft.RollDice(chancePercent, 100)) return;
 
             // Find a dead teammate
             var deadTeammates = Utilities.GetPlayers().Where(p =>

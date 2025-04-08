@@ -62,10 +62,10 @@ namespace WarcraftPlugin.Core
 
             for (int i = 0; i < 4; i++)
             {
-                var menu = MenuManagerExtra.CreateMenu($"Shop Page {i + 1}/4", 5);
+                var menu = MenuManagerExtra.CreateMenu($"Shop Page {i + 1}/4", 6);
                 menu.Category = "Shop";
 
-                for (int j = 1; j <= 4; j++)
+                for (int j = 1; j <= 5; j++)
                 {
                     int itemIndex = i * 4 + j;
                     var item = GetShopItem(itemIndex);
@@ -153,8 +153,13 @@ namespace WarcraftPlugin.Core
                 14 => new ShopItem14(),
                 15 => new ShopItem15(),
                 16 => new ShopItem16(),
+                17 => new ShopItem17(),
+                18 => new ShopItem18(),
+                19 => new ShopItem19(),
+                20 => new ShopItem20(),
                 _ => new ShopItem1()
             };
+
         }
     }
 
@@ -611,7 +616,7 @@ namespace WarcraftPlugin.Core
 
     public class ShopItem14 : IShopItem
     {
-        public string Name => "Vitality Boost";
+        public string Name => "Periapt of Health";
         public int Cost => 2000;
         public bool IsPersistent => true;
 
@@ -657,22 +662,22 @@ namespace WarcraftPlugin.Core
             var plugin = WarcraftPlugin.Instance;
             if (plugin == null) return false;
 
-            var teammates = Utilities.GetPlayers()
-                .Where(p => p.IsValid && p != player && p.TeamNum == player.TeamNum && p.IsBot == false)
+            var players = Utilities.GetPlayers()
+                .Where(p => p.IsValid && p != player && p.IsBot == false)
                 .ToList();
 
-            if (teammates.Count == 0)
+            if (players.Count == 0)
             {
-                player.PrintToChat($"{ChatColors.Red}✖ No teammates found to gift XP to.");
+                player.PrintToChat($" {ChatColors.Red}✖ No teammates found to gift XP to.");
                 return false;
             }
 
             var random = new Random();
-            var chosenTeammate = teammates[random.Next(teammates.Count)];
+            var chosenTeammate = players[random.Next(players.Count)];
 
             plugin.XpSystem.AddXp(chosenTeammate, xpToGive);
-            player.PrintToChat($"{ChatColors.Green}✔ You gifted {xpToGive} XP to {chosenTeammate.PlayerName}!");
-            chosenTeammate.PrintToChat($"{ChatColors.Gold}✨ {player.PlayerName} has gifted you {xpToGive} XP!");
+            player.PrintToChat($" {ChatColors.Green}✔ You gifted {xpToGive} XP to {chosenTeammate.PlayerName}!");
+            chosenTeammate.PrintToChat($" {ChatColors.Gold}✨ {player.PlayerName} has gifted you {xpToGive} XP!");
 
             return true;
         }
@@ -727,4 +732,65 @@ namespace WarcraftPlugin.Core
 
         public void ResetEffect(CCSPlayerController player) { }
     }
+
+    public class ShopItem17 : IShopItem
+    {
+        public string Name => "Placeholder 17";
+        public int Cost => 3700;
+        public bool IsPersistent => false;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            player.PrintToChat($"{ChatColors.Green}✔ You bought Placeholder 17!");
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player) { }
+    }
+
+    public class ShopItem18 : IShopItem
+    {
+        public string Name => "Placeholder 18";
+        public int Cost => 2800;
+        public bool IsPersistent => false;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            player.PrintToChat($"{ChatColors.Green}✔ You bought Placeholder 18!");
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player) { }
+    }
+
+    public class ShopItem19 : IShopItem
+    {
+        public string Name => "Placeholder 19";
+        public int Cost => 4600;
+        public bool IsPersistent => false;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            player.PrintToChat($"{ChatColors.Green}✔ You bought Placeholder 19!");
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player) { }
+    }
+
+    public class ShopItem20 : IShopItem
+    {
+        public string Name => "Placeholder 20";
+        public int Cost => 6000;
+        public bool IsPersistent => false;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            player.PrintToChat($"{ChatColors.Green}✔ You bought Placeholder 20!");
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player) { }
+    }
+
 }
