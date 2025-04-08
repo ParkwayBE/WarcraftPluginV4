@@ -40,6 +40,8 @@ namespace WarcraftPlugin.Core
             _plugin.RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
             _plugin.RegisterEventHandler<EventGrenadeThrown>(OnGrenadeThrown);
             _plugin.RegisterEventHandler<EventPlayerSpawn>(OnSpawn);
+            _plugin.RegisterEventHandler<EventWeaponFire>(OnWeaponFire);
+
 
 
         }
@@ -154,6 +156,34 @@ namespace WarcraftPlugin.Core
         }
 
 
+        private HookResult OnWeaponFire(EventWeaponFire @event, GameEventInfo info)
+        {
+            var attacker = @event.Userid;
+            if (!attacker.IsValid || attacker.PlayerPawn?.Value == null || !attacker.IsAlive())
+                return HookResult.Continue;
+
+            var wcAttacker = _plugin.GetWcPlayer(attacker);
+            if (wcAttacker == null || !wcAttacker.HasArmorPiercingRounds)
+                return HookResult.Continue;
+
+            // Do a ray trace to get where the shot would land
+            Vector start = Warcraft.EyePosition(attacker);
+            Vector lookDirection = attacker.PlayerPawn.Value.EyeAngles.ToForward();
+            Vector end = start + (lookDirection * 4096); // Long range shot
+
+            var traceResult = RayTracer.Trace(start, end, true);
+
+            if (traceResult != default)
+            {
+                end = traceResult;
+            }
+
+            end.Z += 20f;
+
+            Warcraft.DrawLaserBetween(start, end, Color.White, 0.15f, 0.8f);
+
+            return HookResult.Continue;
+        }
 
 
         private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
@@ -199,16 +229,6 @@ namespace WarcraftPlugin.Core
             if (wcAttacker.HasArmorPiercingRounds)
             {
                 SkillFunctions.DealRawDamage(attacker, victim, 5);
-                Vector start = Warcraft.EyePosition(attacker);
-                Vector end = victim.PlayerPawn.Value.AbsOrigin.Clone();
-                end.Z += 30f; // Raise impact point slightly
-
-                Color tracerColor = Color.White; // Or Color.Yellow for contrast
-                float tracerDuration = 0.15f;
-                float tracerWidth = 0.5f;
-
-                Warcraft.DrawLaserBetween(start, end, tracerColor, tracerDuration, tracerWidth);
-
                 attacker.PrintToCenter("You dealt 5 additional damage with each hit");
             }
 
