@@ -710,17 +710,23 @@ namespace WarcraftPlugin.Core
 
                 player.Respawn();
 
-                Console.WriteLine("[DEBUG] Respawn succesfull");
-
                 WarcraftPlugin.Instance.AddTimer(0.3f, () =>
                 {
-                    if (player.IsValid && player.PlayerPawn?.Value != null)
+                    if (player?.IsValid == true && player.PlayerPawn?.Value != null)
                     {
-                        Console.WriteLine("[DEBUG] Player is valid and not null, attempting to teleport player to defined position");
-                        player.PlayerPawn.Value.Teleport(resurrectionPosition);
-                        player.PrintToChat($" {ChatColors.Green}✔ You have been resurrected at {anchor.PlayerName}'s former position!");
+                        var pawn = player.PlayerPawn.Value;
+                        if (pawn.AbsOrigin == default)
+                        {
+                            // Safety net: prevent teleporting to an invalid or default position
+                            Console.WriteLine("[ScrollRes] Aborted teleport: default origin");
+                            return;
+                        }
+
+                        pawn.Teleport(resurrectionPosition);
+                        player.PrintToChat($"{ChatColors.Green}✔ You have been resurrected at {anchor.PlayerName}'s former position!");
                     }
                 });
+
             });
 
             return true;
