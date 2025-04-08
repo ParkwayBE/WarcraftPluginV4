@@ -706,12 +706,17 @@ namespace WarcraftPlugin.Core
             {
                 if (!player.IsValid || player.IsAlive()) return;
 
+                Console.WriteLine("[DEBUG] Player is valid and not dead, attempting to respawn player");
+
                 player.Respawn();
+
+                Console.WriteLine("[DEBUG] Respawn succesfull");
 
                 WarcraftPlugin.Instance.AddTimer(0.3f, () =>
                 {
                     if (player.IsValid && player.PlayerPawn?.Value != null)
                     {
+                        Console.WriteLine("[DEBUG] Player is valid and not null, attempting to teleport player to defined position");
                         player.PlayerPawn.Value.Teleport(resurrectionPosition);
                         player.PrintToChat($" {ChatColors.Green}✔ You have been resurrected at {anchor.PlayerName}'s former position!");
                     }
