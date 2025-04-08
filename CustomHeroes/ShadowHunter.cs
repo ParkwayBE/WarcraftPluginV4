@@ -102,12 +102,12 @@ namespace WarcraftPlugin.Classes
         internal class SerpentWardEffect : WarcraftEffect
         {
             private readonly Vector _origin;
-            private readonly float _radius = 65f;
+            private readonly float _radius = 125f;
             private readonly int beamCount = 8;
             private float _rotationAngle = 0f;
 
             private readonly float _damageInterval = 0.7f;
-            private readonly int _damage = 8;
+            private readonly int _damage = 14;
             private Timer? _damageTimer;
             private Timer? _beamRotationTimer;
             private readonly CCSPlayerController _owner;
@@ -222,9 +222,7 @@ namespace WarcraftPlugin.Classes
                     if (distanceSq <= _radius * _radius)
                     {
                         player.EmitSound("gypsy_draw_01.vsnd");
-                        Console.WriteLine($"[SerpentWard] Applying {_damage} damage to {player.PlayerName}");
                         int hp = player.PlayerPawn.Value.Health;
-                        player.PrintToChat("⚠ WARD TRIGGERED");
                         SkillFunctions.DealRawDamage(_owner, player, _damage, KillFeedIcon.breachcharge);
                     }
                 }
