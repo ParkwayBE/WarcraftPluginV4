@@ -4,7 +4,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Memory;
 using Microsoft.Extensions.Localization;
 using WarcraftPlugin.Helpers;
 
@@ -156,7 +155,7 @@ internal class MenuPlayer
         {
             MenuManagerExtra.SwitchMenu(player, moveRight: true);
         }
-        
+
     }
 
     internal void ScrollUp()
@@ -226,7 +225,15 @@ internal class MenuPlayer
         }
 
         var selectKey = player.IsAlive() ? Localizer["menu.option.select"] : Localizer["menu.option.select.dead"];
-        builder.AppendLine($"<center><font color='red' class='fontSize-sm'>{Localizer["menu.navigate"]}:</font><font color='orange' class='fontSize-s'> {Localizer["menu.option.up"]} {Localizer["menu.option.down"]}</font><font color='white' class='fontSize-sm'> | </font><font color='red' class='fontSize-sm'>{Localizer["menu.select"]}: </font><font color='orange' class='fontSize-sm'>{selectKey}</font><font color='white' class='fontSize-sm'> | </font><font color='red' class='fontSize-sm'>{Localizer["menu.exit"]}: </font><font color='orange' class='fontSize-sm'>{Localizer["menu.option.exit"]}</font></center>");
+        builder.AppendLine($"<center>" +
+            $"<font color='red' class='fontSize-sm'>{Localizer["menu.navigate"]}:</font>" +
+            $"<font color='orange' class='fontSize-s'> {Localizer["menu.option.up"]} {Localizer["menu.option.down"]} {Localizer["menu.option.left"]} {Localizer["menu.option.right"]}</font>" +
+            $"<font color='white' class='fontSize-sm'> | </font>" +
+            $"<font color='red' class='fontSize-sm'>{Localizer["menu.select"]}: </font>" +
+            $"<font color='orange' class='fontSize-sm'>{selectKey}</font>" +
+            $"<font color='white' class='fontSize-sm'> | </font>" +
+            $"<font color='red' class='fontSize-sm'>{Localizer["menu.exit"]}: </font>" +
+            $"<font color='orange' class='fontSize-sm'>{Localizer["menu.option.exit"]}</font></center>");
         builder.AppendLine("<br>");
         CenterHtml = builder.ToString();
     }
