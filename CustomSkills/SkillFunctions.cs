@@ -94,29 +94,35 @@ namespace WarcraftPlugin.CustomSkills
 
         public static void DealRawDamage(CCSPlayerController attacker, CCSPlayerController victim, int damage, KillFeedIcon? icon = null)
         {
-            if (attacker == null || victim == null || !attacker.IsValid || !victim.IsValid)
+            if (victim == null || !victim.IsValid || victim.PlayerPawn?.Value == null || !victim.IsAlive())
                 return;
 
-            if (attacker.PlayerPawn?.Value == null || victim.PlayerPawn?.Value == null)
-                return;
+            if (attacker != null && (!attacker.IsValid || attacker.PlayerPawn?.Value == null))
+                attacker = null;
 
-            if (!attacker.IsAlive() || !victim.IsAlive())
-                return;
-
-            // Prevent recursion
             if (DamageLoopProtection.Contains(victim.Handle))
                 return;
 
             try
             {
                 DamageLoopProtection.Add(victim.Handle);
-                victim.TakeDamage(damage, attacker); // raw internal damage
+
+                victim.TakeDamage(
+                    damage,
+                    attacker,
+                    icon,
+                    inflictor: null,
+                    penetrationKill: false
+                );
             }
             finally
             {
                 DamageLoopProtection.Remove(victim.Handle);
             }
         }
+
+
+
 
 
 
