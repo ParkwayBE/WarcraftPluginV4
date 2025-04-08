@@ -709,7 +709,7 @@ namespace WarcraftPlugin.Core
                 player.Respawn();
 
                 // Delay teleport until next frame to ensure PlayerPawn is ready
-                Server.NextFrame(() =>
+                WarcraftPlugin.Instance.AddTimer(0.1f, () =>
                 {
                     if (player.IsValid && player.PlayerPawn?.Value != null)
                     {
