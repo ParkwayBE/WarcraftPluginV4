@@ -416,7 +416,7 @@ namespace WarcraftPlugin.Classes
 
             // Pull the target toward the player
             Vector pullDirection = Player.PlayerPawn.Value.AbsOrigin - targetPlayer.PlayerPawn.Value.AbsOrigin;
-            Vector pullForce = Normalize(pullDirection) * 500f;
+            Vector pullForce = Normalize(pullDirection) * 1500f;
 
             targetPlayer.PlayerPawn.Value.Teleport(null, null, pullForce);
 
