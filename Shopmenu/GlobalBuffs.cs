@@ -136,8 +136,6 @@ namespace WarcraftPlugin.Core
                     if (!player.IsValid || player.IsAlive()) continue;
 
                     player.Respawn();
-
-                    // Delay teleport safely
                     var targetLocation = wcPlayer.RespawnLocation;
                     _plugin.AddTimer(0.2f, () =>
                     {
@@ -184,7 +182,6 @@ namespace WarcraftPlugin.Core
 
             if (wcAttacker == null) return HookResult.Continue;
 
-            // Orb of Slow effect
             if (wcAttacker.HasOrbOfSlow)
             {
                 SkillFunctions.SlowTarget(attacker, victim, 25, 3f); // 25% chance to slow for 3s
@@ -209,8 +206,12 @@ namespace WarcraftPlugin.Core
 
             if (wcVictim != null && wcVictim.HasHelmOfExcellence && @event.Hitgroup == (int)HitGroup.Head)
             {
-                @event.DmgHealth = (int)(@event.DmgHealth * 0.65f);
+                int DmgDealt = @event.DmgHealth; // = (int)(@event.DmgHealth * 0.65f);
+                int DmgReduction = (int)(DmgDealt * 0.65f);
+                SkillFunctions.SetBonusHealth(victim, DmgReduction);
                 victim.PrintToCenter($" {ChatColors.Green}🛡️ Helm of Excellence absorbed some of the damage!");
+                Server.NextFrame(() => Utilities.SetStateChanged(victim.PlayerPawn.Value!, "CBaseEntity", "m_iHealth"));
+
             }
 
             if (wcVictim.HasOrbOfReflection && attacker.IsValid && attacker.IsAlive())
@@ -230,8 +231,6 @@ namespace WarcraftPlugin.Core
                 }
             }
 
-
-
             /////////////////////////////////////////////////////////////////////////////////////////////////////
             return HookResult.Continue;
 
@@ -247,7 +246,6 @@ namespace WarcraftPlugin.Core
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             if (wcPlayer == null || !wcPlayer.HasLongjumpBoots) return HookResult.Continue;
 
-            // Apply forward force
             WarcraftPlugin.Instance.AddTimer(0.05f, () =>
             {
                 var directionAngle = player.PlayerPawn.Value.EyeAngles;
@@ -259,13 +257,12 @@ namespace WarcraftPlugin.Core
 
 
 
-                directionVec *= 520; // fixed forward push
+                directionVec *= 520;
                 player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
                 player.PlayerPawn.Value.AbsVelocity.Y = directionVec.Y;
                 player.PlayerPawn.Value.AbsVelocity.Z = directionVec.Z;
             });
 
-            // Apply reduced gravity for 5 seconds
             WarcraftPlugin.Instance.AddTimer(0.05f, () =>
             {
                 new SetGravityEffect(player, 70f, 5f).Start();
