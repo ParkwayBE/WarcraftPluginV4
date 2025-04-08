@@ -46,7 +46,7 @@ namespace WarcraftPlugin.Core
                 var wcPlayer = _plugin.GetWcPlayer(p);
                 if (wcPlayer == null) continue;
 
-                wcPlayer.HasUsedSerpentWardThisRound = false;
+                // Put clearing functions underneath to clear certain effects from players at round end
             }
 
             return HookResult.Continue;

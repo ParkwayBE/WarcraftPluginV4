@@ -81,23 +81,24 @@ namespace WarcraftPlugin.Classes
             if (WarcraftPlayer.GetAbilityLevel(2) <= 0)
                 return;
 
+            // Remove the actual decoy grenade so it doesn't distract/confuse players
             Utilities.GetEntityFromIndex<CDecoyProjectile>(grenade.Entityid)?.RemoveIfValid();
-            var wcPlayer = Player.GetWarcraftPlayer();
 
-            if (wcPlayer.HasUsedSerpentWardThisRound)
-            {
-                Player.PrintToChat($"{ChatColors.Red}[WCS] You’ve already used your Serpent Ward this round!");
-                return;
-            }
+            // 🔥 Destroy any existing wards first
+            foreach (var existingWard in activeWards)
+                existingWard.Destroy();
+            activeWards.Clear();
 
+            // Create and place the new ward
             var origin = new Vector(grenade.X, grenade.Y, grenade.Z);
-            var ward = new SerpentWardEffect(Player, origin);
-
-            ward.Start();
-            activeWards.Add(ward);
+            var newWard = new SerpentWardEffect(Player, origin);
+            newWard.Start();
+            activeWards.Add(newWard);
 
             Player.PrintToChat($" {ChatColors.Green}Serpent Ward{ChatColors.Default} : Ward placed!");
         }
+
+
 
         private void OnRoundEnd(EventRoundEnd @event)
         {
