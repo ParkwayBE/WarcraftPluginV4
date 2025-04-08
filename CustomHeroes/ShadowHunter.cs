@@ -82,6 +82,13 @@ namespace WarcraftPlugin.Classes
                 return;
 
             Utilities.GetEntityFromIndex<CDecoyProjectile>(grenade.Entityid)?.RemoveIfValid();
+            var wcPlayer = Player.GetWarcraftPlayer();
+
+            if (wcPlayer.HasUsedSerpentWardThisRound)
+            {
+                Player.PrintToChat($"{ChatColors.Red}[WCS] You’ve already used your Serpent Ward this round!");
+                return;
+            }
 
             var origin = new Vector(grenade.X, grenade.Y, grenade.Z);
             var ward = new SerpentWardEffect(Player, origin);

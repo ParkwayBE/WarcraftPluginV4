@@ -18,6 +18,7 @@ namespace WarcraftPlugin.Core
             _plugin.RegisterEventHandler<EventRoundStart>(OnRoundStart);
             _plugin.RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt);
             _plugin.RegisterEventHandler<EventPlayerJump>(OnPlayerJump);
+            _plugin.RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
 
         }
 
@@ -31,6 +32,21 @@ namespace WarcraftPlugin.Core
                     continue;
 
                 player.PlayerPawn.Value.Health += 50;
+            }
+
+            return HookResult.Continue;
+        }
+
+        private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
+        {
+            foreach (var p in Utilities.GetPlayers())
+            {
+                if (!p.IsValid || p.PlayerPawn?.Value == null) continue;
+
+                var wcPlayer = _plugin.GetWcPlayer(p);
+                if (wcPlayer == null) continue;
+
+                wcPlayer.HasUsedSerpentWardThisRound = false;
             }
 
             return HookResult.Continue;

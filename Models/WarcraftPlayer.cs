@@ -19,6 +19,7 @@ namespace WarcraftPlugin.Models
         public bool HasArmorPiercingRounds { get; set; } = false;
 
         public bool HasLongjumpBoots { get; set; } = false;
+        public bool HasUsedSerpentWardThisRound { get; set; } = false;
 
 
         internal int currentXp;
