@@ -682,7 +682,7 @@ namespace WarcraftPlugin.Core
         {
             if (player == null || player.PlayerPawn?.Value == null || player.IsAlive())
             {
-                player.PrintToChat($"{ChatColors.Red}✖ You must be dead to use the Scroll of Resurrection!");
+                player.PrintToChat($" {ChatColors.Red}✖ You must be dead to use the Scroll of Resurrection!");
                 return false;
             }
 
@@ -692,7 +692,7 @@ namespace WarcraftPlugin.Core
 
             if (allies.Count == 0)
             {
-                player.PrintToChat($"{ChatColors.Red}✖ No living teammates to anchor your resurrection.");
+                player.PrintToChat($" {ChatColors.Red}✖ No living teammates to anchor your resurrection.");
                 return false;
             }
 
@@ -700,7 +700,7 @@ namespace WarcraftPlugin.Core
             var anchor = allies[random.Next(allies.Count)];
             var resurrectionPosition = anchor.PlayerPawn.Value.AbsOrigin;
 
-            player.PrintToChat($"{ChatColors.Gold}⏳ Channeling resurrection... You will respawn in 3 seconds!");
+            player.PrintToChat($" {ChatColors.Gold}⏳ Channeling resurrection... You will respawn in 3 seconds!");
 
             WarcraftPlugin.Instance.AddTimer(3.0f, () =>
             {
@@ -708,13 +708,12 @@ namespace WarcraftPlugin.Core
 
                 player.Respawn();
 
-                // Delay teleport until next frame to ensure PlayerPawn is ready
                 WarcraftPlugin.Instance.AddTimer(0.1f, () =>
                 {
                     if (player.IsValid && player.PlayerPawn?.Value != null)
                     {
                         player.PlayerPawn.Value.Teleport(resurrectionPosition);
-                        player.PrintToChat($"{ChatColors.Green}✔ You have been resurrected at {anchor.PlayerName}'s former position!");
+                        player.PrintToChat($" {ChatColors.Green}✔ You have been resurrected at {anchor.PlayerName}'s former position!");
                     }
                 });
             });
