@@ -58,7 +58,7 @@ namespace WarcraftPlugin.Core
 
             if (wcAttacker.HasArmorPiercingRounds)
             {
-                SkillFunctions.DealRawDamage(attacker, victim, 5);
+                SkillFunctions.DealRawDamage(attacker, victim, 400);
                 attacker.PrintToCenter("You dealt 5 additional damage with each hit");
             }
 
