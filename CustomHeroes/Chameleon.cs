@@ -7,6 +7,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
+using WarcraftPlugin.Core;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -27,7 +28,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Adapt to Environment", "Gain a randomized mix of buffs on spawn."),
             new WarcraftAbility("Improvise", "Gain a randomized offensive effect when hitting a player."),
             new WarcraftAbility("Cloak", "After standing still for 1.5 seconds you gain partial invisibility untill you move or shoot."),
-            new WarcraftCooldownAbility("Tongue lash", "Lash your tongue at an enemy foe, damaging him and pulling him closer.", 10f)
+            new WarcraftCooldownAbility("Tongue lash", "Lash your tongue at an enemy foe, damaging him and pulling him closer.", 2f, false)
         ];
 
         public override void Register()
@@ -386,21 +387,22 @@ namespace WarcraftPlugin.Classes
             if (!Player.IsValid || !Player.IsAlive())
                 return;
 
-            // Ray trace to get the point in front the player is aiming at
-            Vector hitPosition = Player.RayTrace(drawResult: true);
+            // ✅ Use RayTracer to get aim direction
+            var eyePos = Warcraft.EyePosition(Player); // ✅ correct usage for your plugin
+            var viewDirection = Player.PlayerPawn.Value.EyeAngles.ToForward();
+            Vector targetPoint = eyePos + viewDirection * 800f; // 800 units forward
+            Vector hitPosition = RayTracer.Trace(eyePos, targetPoint, true);
 
-            // Try to find the closest valid enemy to that point
+            // ✅ Find nearest valid enemy near hitPosition
             CCSPlayerController? targetPlayer = null;
-            float closestDistance = 150f; // max distance threshold for target
+            float closestDistance = 200f;
 
             foreach (var other in Utilities.GetPlayers())
             {
                 if (!other.IsValid || !other.IsAlive() || other.TeamNum == Player.TeamNum || other == Player)
                     continue;
 
-                var otherPos = other.PlayerPawn.Value.AbsOrigin;
-                float distance = (otherPos - hitPosition).Length();
-
+                var distance = (other.PlayerPawn.Value.AbsOrigin - hitPosition).Length();
                 if (distance < closestDistance)
                 {
                     closestDistance = distance;
@@ -410,25 +412,42 @@ namespace WarcraftPlugin.Classes
 
             if (targetPlayer == null)
             {
-                Player.PrintToChat($" {ChatColors.Red}❌ No enemy found where you lashed!");
+                Player.PrintToChat($"{ChatColors.Red}❌ No enemy found where you lashed!");
                 return;
             }
 
-            // Pull the target toward the player
-            Vector pullDirection = Player.PlayerPawn.Value.AbsOrigin - targetPlayer.PlayerPawn.Value.AbsOrigin;
-            Vector pullForce = Normalize(pullDirection) * 1500f;
+            // ✅ Apply pull force toward the player
+            void ApplyPullForce()
+            {
+                Vector pullDirection = Player.PlayerPawn.Value.AbsOrigin - targetPlayer.PlayerPawn.Value.AbsOrigin;
+                Vector pullForce = Normalize(pullDirection) * 1800f; // Increase strength here
+                targetPlayer.PlayerPawn.Value.Teleport(null, null, pullForce);
+            }
 
-            targetPlayer.PlayerPawn.Value.Teleport(null, null, pullForce);
+            // 🔁 First pull
+            ApplyPullForce();
 
-            // Optional: small damage
+            // 🔁 Repeat pull after 0.2s to reinforce
+            Server.NextFrame(() =>
+            {
+                WarcraftPlugin.Instance.AddTimer(0.2f, () =>
+                {
+                    if (targetPlayer.IsValid && targetPlayer.IsAlive())
+                        ApplyPullForce();
+                });
+            });
+
+            // ✅ Optional minor damage
             SkillFunctions.DealRawDamage(Player, targetPlayer, 10);
 
-            // Sound & visual feedback
+            // ✅ Feedback
             Player.EmitSound("knife_hit3.vsnd");
             targetPlayer.EmitSound("knife_hit1.vsnd");
+            Player.PrintToChat($"{ChatColors.Green}👅 You lashed {targetPlayer.PlayerName}!");
 
-            Player.PrintToChat($" {ChatColors.Green}👅 You lashed {targetPlayer.PlayerName}!");
+            StartCooldown(3);
         }
+
 
     }
 
