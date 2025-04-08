@@ -735,62 +735,99 @@ namespace WarcraftPlugin.Core
 
     public class ShopItem17 : IShopItem
     {
-        public string Name => "Placeholder 17";
-        public int Cost => 3700;
-        public bool IsPersistent => false;
-
-        public bool Apply(CCSPlayerController player)
-        {
-            player.PrintToChat($"{ChatColors.Green}✔ You bought Placeholder 17!");
-            return true;
-        }
-
-        public void ResetEffect(CCSPlayerController player) { }
-    }
-
-    public class ShopItem18 : IShopItem
-    {
-        public string Name => "Placeholder 18";
+        public string Name => "Gloves of Warmth";
         public int Cost => 2800;
         public bool IsPersistent => false;
 
         public bool Apply(CCSPlayerController player)
         {
-            player.PrintToChat($"{ChatColors.Green}✔ You bought Placeholder 18!");
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer == null) return false;
+
+            wcPlayer.HasGlovesOfWarmth = true;
+            player.PrintToChat($"{ChatColors.Green}✔ Gloves of Warmth equipped!");
             return true;
         }
 
-        public void ResetEffect(CCSPlayerController player) { }
+        public void ResetEffect(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer != null)
+                wcPlayer.HasGlovesOfWarmth = false;
+        }
+    }
+
+
+    public class ShopItem18 : IShopItem
+    {
+        public string Name => "Mask of Death";
+        public int Cost => 2900;
+        public bool IsPersistent => false;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer == null) return false;
+
+            wcPlayer.HasMaskOfDeath = true;
+            player.PrintToChat($"{ChatColors.Green}✔ Mask of Death equipped. You may reveal enemies!");
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer != null)
+                wcPlayer.HasMaskOfDeath = false;
+        }
     }
 
     public class ShopItem19 : IShopItem
     {
-        public string Name => "Placeholder 19";
-        public int Cost => 4600;
+        public string Name => "Helm of Excellence";
+        public int Cost => 3000;
         public bool IsPersistent => false;
 
         public bool Apply(CCSPlayerController player)
         {
-            player.PrintToChat($"{ChatColors.Green}✔ You bought Placeholder 19!");
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer == null) return false;
+
+            wcPlayer.HasHelmOfExcellence = true;
+            player.PrintToChat($"{ChatColors.Green}✔ Helm of Excellence equipped. Headshots hurt less!");
             return true;
         }
 
-        public void ResetEffect(CCSPlayerController player) { }
+        public void ResetEffect(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer != null)
+                wcPlayer.HasHelmOfExcellence = false;
+        }
     }
+
 
     public class ShopItem20 : IShopItem
     {
-        public string Name => "Placeholder 20";
-        public int Cost => 6000;
+        public string Name => "Orb of Reflection";
+        public int Cost => 3600;
         public bool IsPersistent => false;
 
         public bool Apply(CCSPlayerController player)
         {
-            player.PrintToChat($"{ChatColors.Green}✔ You bought Placeholder 20!");
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer == null) return false;
+
+            wcPlayer.HasOrbOfReflection = true;
+            player.PrintToChat($"{ChatColors.Green}✔ Orb of Reflection equipped! Some of the damage you take will be returned.");
             return true;
         }
 
-        public void ResetEffect(CCSPlayerController player) { }
+        public void ResetEffect(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer != null)
+                wcPlayer.HasOrbOfReflection = false;
+        }
     }
-
 }

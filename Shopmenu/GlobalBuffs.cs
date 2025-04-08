@@ -1,11 +1,29 @@
-﻿using CounterStrikeSharp.API;
+﻿using System;
+using System.Drawing;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.CustomSkills;
+using WarcraftPlugin.Helpers;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
+
 
 
 namespace WarcraftPlugin.Core
 {
+    public enum HitGroup
+    {
+        Generic = 0,
+        Head = 1,
+        Chest = 2,
+        Stomach = 3,
+        LeftArm = 4,
+        RightArm = 5,
+        LeftLeg = 6,
+        RightLeg = 7,
+        Gear = 10
+    }
+
     public class GlobalBuffs
     {
         private readonly WarcraftPlugin _plugin;
@@ -19,6 +37,7 @@ namespace WarcraftPlugin.Core
             _plugin.RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt);
             _plugin.RegisterEventHandler<EventPlayerJump>(OnPlayerJump);
             _plugin.RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
+            _plugin.RegisterEventHandler<EventGrenadeThrown>(OnGrenadeThrown);
 
         }
 
@@ -36,6 +55,32 @@ namespace WarcraftPlugin.Core
 
             return HookResult.Continue;
         }
+        private HookResult OnGrenadeThrown(EventGrenadeThrown @event, GameEventInfo info)
+        {
+            var player = @event.Userid;
+            if (!player.IsValid || player.PlayerPawn?.Value == null || !player.IsAlive())
+                return HookResult.Continue;
+
+            var wcPlayer = _plugin.GetWcPlayer(player);
+            if (wcPlayer.HasGlovesOfWarmth)
+            {
+                Server.NextFrame(() =>
+                {
+                    _plugin.AddTimer(5f, () =>
+                    {
+                        if (!player.IsValid || player.PlayerPawn?.Value == null || !player.IsAlive())
+                            return;
+
+                        player.GiveNamedItem("weapon_incgrenade");
+                        player.PrintToChat($" {ChatColors.Green}You received a bonus grenade from your Gloves of Warmth!");
+                    });
+                });
+            }
+
+            return HookResult.Continue;
+        }
+
+
 
         private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
         {
@@ -53,7 +98,10 @@ namespace WarcraftPlugin.Core
         }
 
 
-        // 🧠 SECTION 2: Shop & Debuff Effects
+
+        ///
+
+        // SECTION 2: Shop & Debuff Effects
         private HookResult OnPlayerHurt(EventPlayerHurt @event, GameEventInfo info)
         {
             var attacker = @event.Attacker;
@@ -63,6 +111,8 @@ namespace WarcraftPlugin.Core
                 return HookResult.Continue;
 
             var wcAttacker = WarcraftPlugin.Instance.GetWcPlayer(attacker);
+            var wcVictim = WarcraftPlugin.Instance.GetWcPlayer(victim);
+
             if (wcAttacker == null) return HookResult.Continue;
 
             // Orb of Slow effect
@@ -78,14 +128,46 @@ namespace WarcraftPlugin.Core
                 attacker.PrintToCenter("You dealt 5 additional damage with each hit");
             }
 
+            if (wcAttacker.HasMaskOfDeath && Random.Shared.Next(100) < 20)
+            {
+                if (wcVictim != null)
+                {
+                    wcVictim.HasUltimateImmunity = false;
+                    victim.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
+                    victim.PrintToChat($" {ChatColors.Red}✖ Your invisibility and immunity were stripped!");
+                }
+            }
+
+            if (wcVictim != null && wcVictim.HasHelmOfExcellence && @event.Hitgroup == (int)HitGroup.Head)
+            {
+                @event.DmgHealth = (int)(@event.DmgHealth * 0.65f);
+                victim.PrintToCenter($" {ChatColors.Green}🛡️ Helm of Excellence absorbed some of the damage!");
+            }
+
+            if (wcVictim.HasOrbOfReflection && attacker.IsValid && attacker.IsAlive())
+            {
+                float now = Server.CurrentTime;
+                if (now - wcVictim.lastReflectionTime > 1.0f)
+                {
+                    wcVictim.lastReflectionTime = now;
+
+                    int reflected = (int)(@event.DmgHealth * 0.25f);
+                    if (reflected > 0)
+                    {
+                        SkillFunctions.DealRawDamage(victim, attacker, reflected);
+                        attacker.PrintToChat($"{ChatColors.Red}⚡ You were struck by reflected damage!");
+                        victim.PrintToChat($"{ChatColors.Green}✔ Orb of Reflection struck your attacker for {reflected} damage!");
+                    }
+                }
+            }
 
 
 
-
-
-            // Add more shop-related flags here (lifesteal, orb of fire, etc.)
-
+            /////////////////////////////////////////////////////////////////////////////////////////////////////
             return HookResult.Continue;
+
+
+
         }
 
         private HookResult OnPlayerJump(EventPlayerJump @event, GameEventInfo info)

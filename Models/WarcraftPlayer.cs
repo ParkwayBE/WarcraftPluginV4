@@ -17,8 +17,13 @@ namespace WarcraftPlugin.Models
         internal string DesiredClass { get; set; }
         public bool HasOrbOfSlow { get; set; } = false;
         public bool HasArmorPiercingRounds { get; set; } = false;
+        public bool HasMaskOfDeath { get; set; } = false;
+        public bool HasHelmOfExcellence { get; set; } = false;
+        public bool HasGlovesOfWarmth { get; set; } = false;
 
         public bool HasLongjumpBoots { get; set; } = false;
+        public bool HasOrbOfReflection { get; set; } = false;
+        public float LastReflectionTime { get; set; } = 0f;
 
 
         internal int currentXp;
