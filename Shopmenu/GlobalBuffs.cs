@@ -71,14 +71,24 @@ namespace WarcraftPlugin.Core
                         if (!player.IsValid || player.PlayerPawn?.Value == null || !player.IsAlive())
                             return;
 
-                        player.GiveNamedItem("weapon_incgrenade");
-                        player.PrintToChat($" {ChatColors.Green}You received a bonus grenade from your Gloves of Warmth!");
+                        string[] grenades = {
+                    "weapon_hegrenade",
+                    "weapon_flashbang",
+                    "weapon_incgrenade",
+                    "weapon_decoy"
+                };
+
+                        string randomGrenade = grenades[Random.Shared.Next(grenades.Length)];
+                        player.GiveNamedItem(randomGrenade);
+
+                        player.PrintToChat($" {ChatColors.Green}You received a random grenade: {randomGrenade.Replace("weapon_", "").ToUpper()}!");
                     });
                 });
             }
 
             return HookResult.Continue;
         }
+
 
 
 

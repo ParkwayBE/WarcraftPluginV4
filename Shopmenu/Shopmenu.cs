@@ -175,7 +175,7 @@ namespace WarcraftPlugin.Core
     public class ShopItem1 : IShopItem
     {
         public string Name => "Boots of speed";
-        public int Cost => 1600;
+        public int Cost => 2600;
         public bool IsPersistent => false;
 
         private readonly HashSet<string> restrictedRaces = new()
@@ -211,8 +211,8 @@ namespace WarcraftPlugin.Core
     }
     public class ShopItem2 : IShopItem
     {
-        public string Name => "Ring of Regeneration";
-        public int Cost => 2500;
+        public string Name => "Ring of Regen";
+        public int Cost => 3500;
         public bool IsPersistent => false; // so it cleans on round end
 
         private readonly Dictionary<CCSPlayerController, Timer> regenTimers = new();
@@ -258,7 +258,7 @@ namespace WarcraftPlugin.Core
     public class ShopItem3 : IShopItem
     {
         public string Name => "Necklace of Immunity";
-        public int Cost => 3000;
+        public int Cost => 2500;
         public bool IsPersistent => false;
 
         private readonly HashSet<string> restrictedRaces = new()
@@ -296,7 +296,7 @@ namespace WarcraftPlugin.Core
     }
     public class ShopItem4 : IShopItem
     {
-        public string Name => "Grand Tome of Experience";
+        public string Name => "Grand Exp Tome";
         public int Cost => 5000;
         public bool IsPersistent => true; // XP is permanent
         private const int xpToGive = 300;
@@ -319,7 +319,7 @@ namespace WarcraftPlugin.Core
     }
     public class ShopItem5 : IShopItem
     {
-        public string Name => "Massive Tome of Experience";
+        public string Name => "Massive Exp Tome";
         public int Cost => 10000;
         public bool IsPersistent => true;
         private const int xpToGive = 600;
@@ -342,8 +342,8 @@ namespace WarcraftPlugin.Core
     }
     public class ShopItem6 : IShopItem
     {
-        public string Name => "Gambling Tome of Experience";
-        public int Cost => 1; // SET TO 10.000
+        public string Name => "Gambling Exp Tome";
+        public int Cost => 10000;
         public bool IsPersistent => true;
 
         private const int xpToGiveMin = 100;
@@ -389,7 +389,7 @@ namespace WarcraftPlugin.Core
     }
     public class ShopItem7 : IShopItem
     {
-        public string Name => "Tome of Experience";
+        public string Name => "Exp Tome";
         public int Cost => 1000;
         public bool IsPersistent => true;
         private const int xpToGive = 50;
@@ -453,7 +453,7 @@ namespace WarcraftPlugin.Core
     public class ShopItem9 : IShopItem
     {
         public string Name => "Longjump";
-        public int Cost => 1000;
+        public int Cost => 4000;
         public bool IsPersistent => false;
 
         public bool Apply(CCSPlayerController player)
@@ -504,7 +504,7 @@ namespace WarcraftPlugin.Core
                 return false;
             }
 
-            Invisibility(player, 999f, 175);
+            Invisibility(player, 999f, 150);
             player.PrintToChat($" {ChatColors.Green}✔ Cloak of Invisibility equipped.");
             return true;
         }
@@ -541,7 +541,7 @@ namespace WarcraftPlugin.Core
     }
     public class ShopItem12 : IShopItem
     {
-        public string Name => "Armor piercing rounds";
+        public string Name => "FMJ Bullets";
         public int Cost => 2800;
         public bool IsPersistent => false;
 
@@ -566,7 +566,7 @@ namespace WarcraftPlugin.Core
     public class ShopItem13 : IShopItem
     {
         public string Name => "Disguise";
-        public int Cost => 1100;
+        public int Cost => 1400;
         public bool IsPersistent => false;
 
         private readonly string ctModel = "characters/models/ctm_heavy/ctm_heavy.vmdl";
@@ -603,7 +603,7 @@ namespace WarcraftPlugin.Core
     public class ShopItem14 : IShopItem
     {
         public string Name => "Periapt of Health";
-        public int Cost => 2000;
+        public int Cost => 2400;
         public bool IsPersistent => true;
 
         private readonly HashSet<string> restrictedRaces = new()
@@ -637,10 +637,10 @@ namespace WarcraftPlugin.Core
     public class ShopItem15 : IShopItem
     {
         public string Name => "Gift of Experience";
-        public int Cost => 10;
+        public int Cost => 4000;
         public bool IsPersistent => true;
 
-        private const int xpToGive = 200;
+        private const int xpToGive = 300;
 
         public bool Apply(CCSPlayerController player)
         {
@@ -675,7 +675,7 @@ namespace WarcraftPlugin.Core
     public class ShopItem16 : IShopItem
     {
         public string Name => "Scroll of Resurrection";
-        public int Cost => 3900;
+        public int Cost => 5000;
         public bool IsPersistent => false;
 
         public bool Apply(CCSPlayerController player)
@@ -729,6 +729,7 @@ namespace WarcraftPlugin.Core
             if (wcPlayer == null) return false;
 
             wcPlayer.HasGlovesOfWarmth = true;
+            player.GiveNamedItem("weapon_hegrenade");
             player.PrintToChat($"{ChatColors.Green}✔ Gloves of Warmth equipped!");
             return true;
         }
@@ -743,7 +744,7 @@ namespace WarcraftPlugin.Core
     public class ShopItem18 : IShopItem
     {
         public string Name => "Mask of Death";
-        public int Cost => 2900;
+        public int Cost => 1900;
         public bool IsPersistent => false;
 
         public bool Apply(CCSPlayerController player)
@@ -789,7 +790,7 @@ namespace WarcraftPlugin.Core
     public class ShopItem20 : IShopItem
     {
         public string Name => "Orb of Reflection";
-        public int Cost => 3600;
+        public int Cost => 2800;
         public bool IsPersistent => false;
 
         public bool Apply(CCSPlayerController player)
