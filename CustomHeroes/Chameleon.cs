@@ -297,7 +297,7 @@ namespace WarcraftPlugin.Classes
         {
             private Vector _previousPosition;
             private Vector _currentPosition;
-            private Timer? _positionComparisonTimer;
+            private CounterStrikeSharp.API.Modules.Timers.Timer? _positionComparisonTimer;
             private bool _isCloaked;
             private readonly int _abilityLevel;
 
@@ -422,40 +422,34 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
-            int pullsRemaining = 7;
-            float pullStrength = 950f;
-
-            void ExecutePull()
+            // Apply the pull effect 7 times with delay
+            for (int i = 0; i < 7; i++)
             {
-                if (!Player.IsValid || !Player.IsAlive() || !targetPlayer.IsValid || !targetPlayer.IsAlive())
-                    return;
-
-                Vector pullDirection = Player.PlayerPawn.Value.AbsOrigin - targetPlayer.PlayerPawn.Value.AbsOrigin;
-                Vector pullForce = Chameleon.Normalize(pullDirection) * pullStrength;
-                pullForce.Z += 50f;
-
-                targetPlayer.PlayerPawn.Value.Teleport(null, null, pullForce);
-
-                Warcraft.DrawLaserBetween(targetPlayer.PlayerPawn.Value.AbsOrigin, Player.PlayerPawn.Value.AbsOrigin, Color.Purple, 0.1f, 1.5f);
-
-                pullsRemaining--;
-
-                if (pullsRemaining > 0)
-                {
-                    WarcraftPlugin.Instance.AddTimer(0.1f, ExecutePull);
-                }
+                float delay = 0.1f * i;
+                WarcraftPlugin.Instance.AddTimer(delay, () => PullTarget(targetPlayer));
             }
 
-            // Start the first pull
-            ExecutePull();
-
-            // Optional damage (once)
+            // Optional one-time effects
             SkillFunctions.DealRawDamage(Player, targetPlayer, 25);
             Player.EmitSound("knife_hit3.vsnd");
             targetPlayer.EmitSound("knife_hit1.vsnd");
             Player.PrintToChat($" {ChatColors.Green}👅 You lashed {targetPlayer.PlayerName}!");
 
             StartCooldown(3);
+        }
+
+
+        private void PullTarget(CCSPlayerController targetPlayer)
+        {
+            if (!Player.IsValid || !Player.IsAlive() || !targetPlayer.IsValid || !targetPlayer.IsAlive())
+                return;
+
+            Vector pullDirection = Player.PlayerPawn.Value.AbsOrigin - targetPlayer.PlayerPawn.Value.AbsOrigin;
+            Vector pullForce = Chameleon.Normalize(pullDirection) * 950f;
+            pullForce.Z += 50f;
+
+            targetPlayer.PlayerPawn.Value.Teleport(null, null, pullForce);
+            Warcraft.DrawLaserBetween(targetPlayer.PlayerPawn.Value.AbsOrigin, Player.PlayerPawn.Value.AbsOrigin, Color.Purple, 0.1f, 1.5f);
         }
 
 
