@@ -26,7 +26,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Blizzard", "Chance to slow your target and obscure his vision ."),
             new WarcraftAbility("Water Elemental", "When you kill a player you have a chance to revive a teammate as a Water Elemental."),
             new WarcraftAbility("Brilliance Aura", "You and up to two random allies have a chance to block some ultimates."),
-            new WarcraftCooldownAbility("Flight","Conjure a spell that allows you to fly.", 2f, false)
+            new WarcraftCooldownAbility("Flight","Conjure a spell that allows you to fly.", 2f, false) //
         ];
 
         public override void Register()
