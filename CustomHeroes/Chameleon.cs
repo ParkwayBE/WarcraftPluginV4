@@ -233,7 +233,6 @@ namespace WarcraftPlugin.Classes
                 cloakEffect = null;
             }
         }
-
         private void OnWeaponFire(EventWeaponFire @event)
         {
             if (cloakEffect != null)
@@ -253,7 +252,6 @@ namespace WarcraftPlugin.Classes
                 });
             }
         }
-
 
         private readonly Dictionary<ulong, float> lastEffectTime = new();
 
@@ -359,8 +357,6 @@ namespace WarcraftPlugin.Classes
             cloakEffect?.BreakCloakFromWeaponFire();
             return HookResult.Continue;
         }
-
-
 
         public class ChameleonCloakEffect : WarcraftEffect
         {
@@ -483,7 +479,6 @@ namespace WarcraftPlugin.Classes
                 Player.PlayerPawn.Value.AbsVelocity.X = direction.X;
                 Player.PlayerPawn.Value.AbsVelocity.Y = direction.Y;
                 Player.PlayerPawn.Value.AbsVelocity.Z = direction.Z;
-
             });
 
             // Apply gravity temporarily
@@ -549,8 +544,6 @@ namespace WarcraftPlugin.Classes
                     StartCooldown(3);
                     return;
                 }
-
-
             }
             StartCooldown(3, 3f);
             Player.PrintToChat($"{ChatColors.Red}❌ No visible enemy found to lash!");
@@ -572,12 +565,5 @@ namespace WarcraftPlugin.Classes
 
             Warcraft.DrawLaserBetween(targetOrigin, yourEyePos, Color.Purple, 0.1f, 1.5f);
         }
-
-
-
-
-
-
     }
-
 }
