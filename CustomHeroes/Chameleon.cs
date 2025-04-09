@@ -64,32 +64,32 @@ namespace WarcraftPlugin.Classes
                 // 🎲 Effect 1: Bonus Health
                 p =>
                 {
-                    Console.WriteLine("🎲 Effect 1 triggered: Bonus health");
+                    Player.PrintToChat($" {ChatColors.Green} Bonus health activated.");
                     SkillFunctions.SetBonusHealth(p, 15 * AbilityLevel);
                 },
 
                 // 🎲 Effect 2: Bonus Movement Speed
                 p =>
                 {
-                    Console.WriteLine("🎲 Effect 2 triggered: Bonus movement speed");
+                    Player.PrintToChat($" {ChatColors.Green} Bonus movement speed activated.");
                     SkillFunctions.SetMovementSpeed(p, 0.1f * AbilityLevel, 999f);
                 },
 
                 // 🎲 Effect 3: Team Health Buff
                 p =>
                 {
-                    Console.WriteLine("🎲 Effect 3 triggered: Bonus health for the entire team");
+                    Player.PrintToChat($" {ChatColors.Green} Bonus health for team activated.");
                     foreach (var teammate in Utilities.GetPlayers().Where(t => t.TeamNum == p.TeamNum && t.IsAlive()))
                     {
                         SkillFunctions.SetBonusHealth(teammate, 10 + 5 * AbilityLevel);
-                        teammate.PrintToChat($"{ChatColors.Green}⛑️ Chameleon granted you bonus health!");
+                        teammate.PrintToChat($" {ChatColors.Green}⛑️ Chameleon granted you bonus health!");
                     }
                 },
 
                 // 🎲 Effect 4: Ult Immunity for self + 2 allies
                 p =>
                 {
-                    Console.WriteLine("🎲 Effect 4 triggered: Ultimate immunity for self and 2 allies");
+                    Player.PrintToChat($" {ChatColors.Green} Ult immunity activated for you and 2 allies.");
 
                     var self = WarcraftPlugin.Instance.GetWcPlayer(p);
                     if (self != null)
@@ -102,7 +102,7 @@ namespace WarcraftPlugin.Classes
                         if (wcAlly != null)
                         {
                             wcAlly.HasUltimateImmunity = true;
-                            ally.PrintToChat($"{ChatColors.Lime}🛡️ You received temporary ultimate immunity from a Chameleon!");
+                            ally.PrintToChat($" {ChatColors.Green}🛡️ You received temporary {ChatColors.LightPurple}ultimate immunity{ChatColors.Green} from a Chameleon!");
                         }
                     }
                 },
@@ -110,7 +110,7 @@ namespace WarcraftPlugin.Classes
                // 🎲 Effect 5: Reduced gravity + long jump
                 p =>
 {
-                    Console.WriteLine("🎲 Effect 5 triggered: Longjump READY (wait for player to jump)");
+                    Player.PrintToChat($" {ChatColors.Green} Longjump activated.");
                     var wc = WarcraftPlugin.Instance.GetWcPlayer(p);
                     if (wc != null)
                     {
@@ -123,26 +123,25 @@ namespace WarcraftPlugin.Classes
                 // 🎲 Effect 6: Juggernaut Mode
                 p =>
                 {
-                    Console.WriteLine("🎲 Effect 6 triggered: Juggernaut mode");
-                    SkillFunctions.SetBonusHealth(p, 75);
+                    Player.PrintToChat($" {ChatColors.Green} Juggernaut activated, reduced MS but alot of health is gained..");
+                    SkillFunctions.SetBonusHealth(p, 125);
                     SkillFunctions.SetMovementSpeed(p, -0.15f, 999f);                },
 
                 // 🎲 Effect 7: Random weapon loadout
                 p =>
                 {
-                    Console.WriteLine("🎲 Effect 7 triggered: Random rifle + nades");
                     string[] rifles = { "weapon_ak47", "weapon_m4a1", "weapon_famas", "weapon_galilar" };
                     string selected = rifles[Random.Shared.Next(rifles.Length)];
                     p.GiveNamedItem(selected);
                     p.GiveNamedItem("weapon_hegrenade");
                     p.GiveNamedItem("weapon_smokegrenade");
-                    p.PrintToChat($"{ChatColors.Gold}🎁 You received a {selected.Replace("weapon_", "").ToUpper()} and grenades!");
+                    p.PrintToChat($" {ChatColors.Gold}🎁 You received a {selected.Replace("weapon_", "").ToUpper()} and grenades!");
                 },
 
                 // 🎲 Effect 8: Defensive cloak upgrade
                 p =>
                 {
-                    Console.WriteLine("🎲 Effect 8 triggered: Upgraded cloak");
+                    Player.PrintToChat($" {ChatColors.Green} Defensive Cloak upgrade activated.");
                     var wc = WarcraftPlugin.Instance.GetWcPlayer(p);
                     if (wc != null) wc.ChameleonDefensive = true;
                 },
@@ -150,7 +149,7 @@ namespace WarcraftPlugin.Classes
                 // 🎲 Effect 9: Offensive boost
                 p =>
                 {
-                    Console.WriteLine("🎲 Effect 9 triggered: Offensive skills double in efficiency");
+                    Player.PrintToChat($" {ChatColors.Green} Offensiveskills boost activated.");
                     var wc = WarcraftPlugin.Instance.GetWcPlayer(p);
                     if (wc != null) wc.ChameleonOffensive = true;
                 },
@@ -158,10 +157,9 @@ namespace WarcraftPlugin.Classes
                 // 🎲 Effect 10: Reflect Damage (temporary)
                 p =>
                 {
-                    Console.WriteLine("🎲 Effect 10 triggered: 25% chance to reflect incoming damage");
+                    Player.PrintToChat($" {ChatColors.Green} You will reflect 25% damage taken this round.");
                     var wc = WarcraftPlugin.Instance.GetWcPlayer(p);
                     if (wc != null) wc.HasDamageReflection = true;
-                    p.PrintToChat($"{ChatColors.LightBlue}⚔️ You are temporarily reflecting 25% of damage!");
                 }
             };
 
@@ -259,35 +257,46 @@ namespace WarcraftPlugin.Classes
             Vector end = Warcraft.EyePosition(victim);
             Color laserColor = Color.White;
 
+            var wc = WarcraftPlugin.Instance.GetWcPlayer(attacker);
+            bool isUpgraded = wc != null && wc.ChameleonOffensive;
+
             switch (effect)
             {
                 case 0: // Slow
-                    SkillFunctions.SlowTarget(attacker, victim, 100, 0.5f);
+                    SkillFunctions.SlowTarget(attacker, victim, 100, isUpgraded ? 1.0f : 0.5f);
                     attacker.PrintToChat($" {ChatColors.Green}🎯 You slowed your enemy!");
                     laserColor = Color.Blue;
                     break;
 
                 case 1: // Lifesteal
                     float damageDealt = @event.DmgHealth;
-                    SkillFunctions.LeechHealth(attacker, victim, 100, damageDealt, level); // level used as multiplier or dummy param
-                    attacker.PrintToChat($" {ChatColors.Green}🧛 You leeched {damageDealt * 0.5f:0} HP!");
-                    laserColor = Color.HotPink;
+                    float multiplier = isUpgraded ? 1.0f : 0.5f;
+                    SkillFunctions.LeechHealth(attacker, victim, 100, damageDealt, level);
+                    attacker.PrintToChat($" {ChatColors.Green}🧛 You leeched {(damageDealt * multiplier):0} HP!");
                     break;
 
-                case 2: // Remove Invisibility
+                case 2:
                     SkillFunctions.SetInvisibility(victim, 0f, 255);
                     attacker.PrintToChat($" {ChatColors.Orange}👀 You revealed your enemy!");
                     laserColor = Color.Orange;
                     break;
 
-                case 3: // Freeze
-                    SkillFunctions.SetMovementSpeed(victim, -1.0f, 0.5f); // freeze
-                    attacker.PrintToChat($" {ChatColors.Blue}❄️ You froze your enemy!");
+                case 3: // Freeze or slow
+                    if (isUpgraded)
+                    {
+                        new FreezePlayerEffect(attacker, 1.0f, victim).Start();
+                        attacker.PrintToChat($" {ChatColors.Blue}❄️ You completely froze your enemy!");
+                    }
+                    else
+                    {
+                        SkillFunctions.SetMovementSpeed(victim, -1.0f, 0.5f);
+                        attacker.PrintToChat($" {ChatColors.Blue}❄️ You slowed your enemy!");
+                    }
                     laserColor = Color.Cyan;
                     break;
 
                 case 4: // Float
-                    SkillFunctions.SetGravity(victim, 0.0f, 0.5f);
+                    SkillFunctions.SetGravity(victim, 0.0f, isUpgraded ? 1.0f : 0.5f);
                     Vector upward = new(0, 0, 200f);
                     victim.PlayerPawn.Value.Teleport(null, null, upward);
                     attacker.PrintToChat($" {ChatColors.LightBlue}🌪️ You made your enemy float!");
@@ -296,26 +305,18 @@ namespace WarcraftPlugin.Classes
 
                 case 5: // Restrict weapons
                     var allowedWeapons = new List<string>
-                        {
-                            "weapon_knife",
-                            "weapon_c4",
-                            "weapon_glock",
-                            "weapon_hkp2000",
-                            "weapon_usp_silencer",
-                            "weapon_p250",
-                            "weapon_tec9",
-                            "weapon_fiveseven",
-                            "weapon_cz75a",
-                            "weapon_deagle",
-                            "weapon_revolver",
-                            "weapon_elite"
-                        };
+                    {
+                        "weapon_knife", "weapon_c4", "weapon_glock", "weapon_hkp2000", "weapon_usp_silencer",
+                        "weapon_p250", "weapon_tec9", "weapon_fiveseven", "weapon_cz75a",
+                        "weapon_deagle", "weapon_revolver", "weapon_elite"
+                    };
 
-                    SkillFunctions.RestrictWeapons(victim, allowedWeapons, 0.5f);
+                    SkillFunctions.RestrictWeapons(victim, allowedWeapons, isUpgraded ? 1.0f : 0.5f);
                     attacker.PrintToChat($" {ChatColors.Red}💥 You restricted your enemy's weapons!");
                     laserColor = Color.Red;
                     break;
             }
+
 
             // 🎯 Draw effect laser
             Warcraft.DrawLaserBetween(start, end, laserColor, duration: 0.3f, width: 1.5f);
@@ -559,14 +560,6 @@ namespace WarcraftPlugin.Classes
 
             return corners;
         }
-
-
-
-
-
-
-
-
 
         // End temp function
 
