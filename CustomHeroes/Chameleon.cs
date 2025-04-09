@@ -452,14 +452,8 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
-            // Apply the pull effect 7 times with delay
-            for (int i = 0; i < 7; i++)
-            {
-                float delay = 0.3f * i;
-                var targetCopy = targetPlayer; // Capture loop variable correctly
-                WarcraftPlugin.Instance.AddTimer(delay, () => PullTarget(targetCopy));
-            }
-
+            // Pull target once with enhanced force
+            PullTarget(targetPlayer);
 
             // Optional one-time effects
             SkillFunctions.DealRawDamage(Player, targetPlayer, 25);
@@ -469,6 +463,7 @@ namespace WarcraftPlugin.Classes
 
             StartCooldown(3);
         }
+
 
 
         private void PullTarget(CCSPlayerController targetPlayer)
@@ -483,8 +478,8 @@ namespace WarcraftPlugin.Classes
             Vector targetOrigin = targetPlayer.PlayerPawn.Value.AbsOrigin;
 
             Vector pullDirection = yourEyePos - targetOrigin;
-            Vector pullForce = Chameleon.Normalize(pullDirection) * 450f;
-            pullForce.Z += 10f; // Optional lift
+            Vector pullForce = Chameleon.Normalize(pullDirection) * 1500f;
+            pullForce.Z += 30f; // Optional lift
 
             targetPlayer.PlayerPawn.Value.Teleport(null, null, pullForce);
 
