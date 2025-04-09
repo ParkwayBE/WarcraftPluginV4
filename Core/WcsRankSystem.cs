@@ -168,7 +168,7 @@ namespace WarcraftPlugin.Core
             string mostPlayedRace = stats.OrderByDescending(s => s.Kills).FirstOrDefault().Race ?? "N/A";
             int mostPlayedKills = stats.OrderByDescending(s => s.Kills).FirstOrDefault().Kills;
 
-            var menu = MenuManagerExtra.CreateMenu($"{name}'s WCS Stats", 6);
+            var menu = MenuManagerExtra.CreateMenu($" \x02{name}\x06's WCS Stats", 6);
             menu.Category = " \x06Player Stats";
 
             menu.Add($"Total Level: {totalLevel}", null, null);
