@@ -16,7 +16,7 @@ namespace WarcraftPlugin.Core
         private readonly WarcraftPlugin _plugin;
         List<String> admins = new List<String>();
         private static Dictionary<CCSPlayerController, Action<string>> pendingInputs = new Dictionary<CCSPlayerController, Action<string>>();
-
+        private List<ulong> _mutedPlayers = new List<ulong>();
 
         public AdminPanel(WarcraftPlugin plugin)
         {
@@ -27,6 +27,32 @@ namespace WarcraftPlugin.Core
             //_plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat, HookMode.Pre);
             //_plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat2, HookMode.Pre);
             _plugin.AddCommandListener("say", OnPlayerChat2);
+            LoadMutedPlayers();
+        }
+        private void LoadMutedPlayers()
+        {
+            Database db = _plugin.GetDatabase();
+            var mutedPlayers = db.GetAllMutedPlayers();
+            if(mutedPlayers.Count == 0)
+            {
+                return;
+            }
+            _mutedPlayers.Clear();
+            foreach ( var mutedPlayer in mutedPlayers)
+            {
+                
+                _mutedPlayers.Add(mutedPlayer);
+            }
+        }
+        private void MutePlayer(CCSPlayerController player)
+        {
+            Database db = _plugin.GetDatabase();
+            db.MutePlayer(player);
+        }
+        private void UnmutePlayer(CCSPlayerController player)
+        {
+            Database db = _plugin.GetDatabase();
+            db.UnmutePlayer(player);
         }
 
         public void OpenAdminPanel(CCSPlayerController? player, CommandInfo commandInfo)
@@ -147,6 +173,43 @@ namespace WarcraftPlugin.Core
                     });
                     // Add the submenu to the existing list of menus for the player
                     MenuManagerExtra.OpenMainMenuExtra(pl, new List<Menu.Menu> { xpSubMenu });
+                });
+                rightMenu.Add("Mute Menu", null, (pl, opt) =>
+                {
+                    var muteSubMenu = MenuManager.CreateMenu("Select a player to mute", 5);
+                    LoadMutedPlayers();
+                    var mutedPlayers = _mutedPlayers;
+                    foreach (var targetPlayer in Players)
+                    {
+                        if (!mutedPlayers.Contains(targetPlayer.SteamID))
+                        { 
+                            muteSubMenu.Add(targetPlayer.PlayerName, null, (pl, opt) =>
+                            {
+                                MutePlayer(targetPlayer);
+                                LoadMutedPlayers();
+                            });
+                        }
+                    }
+                    var unmuteSubMenu = MenuManager.CreateMenu("Select a player to umute", 5);
+                    foreach (var mutedPlayer in _mutedPlayers)
+                    {
+                        muteSubMenu.Add(mutedPlayer.ToString(), null, (pl, opt) =>
+                        {
+                           foreach(var player in Players)
+                            {
+                                if(player.SteamID == mutedPlayer)
+                                {
+                                    muteSubMenu.Add(player.PlayerName, null, (pl, opt) =>
+                                    {
+                                        UnmutePlayer(player);
+                                        LoadMutedPlayers();
+                                    });
+                                }
+                            }
+                            
+                        });
+                        MenuManagerExtra.OpenMainMenuExtra(pl, new List<Menu.Menu> { muteSubMenu });
+                    }
                 });
 
                 // Open the multi-column menu for the player
