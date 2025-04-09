@@ -35,6 +35,9 @@ namespace WarcraftPlugin.Models
         public bool ChameleonOffensive { get; set; } = false;
         public bool ChameleonDefensive { get; set; } = false;
 
+        public bool ChameleonHasLongjump { get; set; } = false;
+
+
 
 
 

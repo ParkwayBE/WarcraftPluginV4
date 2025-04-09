@@ -37,6 +37,8 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerDeath>(PlayerDeath);
             HookEvent<EventRoundEnd>(RoundEnd);
             HookEvent<EventWeaponFire>(OnWeaponFire);
+            HookEvent<EventPlayerJump>(OnPlayerJump);
+
 
             HookAbility(3, Ultimate);
         }
@@ -106,11 +108,15 @@ namespace WarcraftPlugin.Classes
 
                // 🎲 Effect 5: Reduced gravity + long jump
                 p =>
-                {
-                    Console.WriteLine("🎲 Effect 5 triggered: Reduced gravity and longjump");
-                    SkillFunctions.SetGravity(p, 75f, 999f); // 3 seconds duration
-                    SkillFunctions.ApplyForwardBoost(p, 100f); // gentle boost
-                },
+{
+                    Console.WriteLine("🎲 Effect 5 triggered: Longjump READY (wait for player to jump)");
+                    var wc = WarcraftPlugin.Instance.GetWcPlayer(p);
+                    if (wc != null)
+                    {
+                        wc.ChameleonHasLongjump = true;
+                    }
+                }
+,
 
 
                 // 🎲 Effect 6: Juggernaut Mode
@@ -418,6 +424,39 @@ namespace WarcraftPlugin.Classes
             return length > 0 ? new Vector(v.X / length, v.Y / length, v.Z / length) : new Vector();
         }
 
+        private void OnPlayerJump(EventPlayerJump jump)
+        {
+            var wc = WarcraftPlugin.Instance.GetWcPlayer(Player);
+            if (wc == null || !wc.ChameleonHasLongjump)
+                return;
+
+            wc.ChameleonHasLongjump = false;
+
+            // Apply longjump boost
+            WarcraftPlugin.Instance.AddTimer(0.05f, () =>
+            {
+                var angle = Player.PlayerPawn.Value.EyeAngles;
+                var direction = new Vector();
+                NativeAPI.AngleVectors(angle.Handle, direction.Handle, nint.Zero, nint.Zero);
+
+                if (direction.Z < 0.475f)
+                    direction.Z = 0.475f;
+
+                direction *= 300f; // You can adjust force here
+
+                Player.PlayerPawn.Value.AbsVelocity.X = direction.X;
+                Player.PlayerPawn.Value.AbsVelocity.Y = direction.Y;
+                Player.PlayerPawn.Value.AbsVelocity.Z = direction.Z;
+
+            });
+
+            // Apply gravity temporarily
+            WarcraftPlugin.Instance.AddTimer(0.05f, () =>
+            {
+                new SetGravityEffect(Player, 0.75f, 1.5f).Start();
+            });
+        }
+
 
         private void Ultimate()
         {
@@ -432,35 +471,26 @@ namespace WarcraftPlugin.Classes
 
             foreach (var enemy in players)
             {
-                var enemyEyePos = Warcraft.EyePosition(enemy);
+                var enemyChest = enemy.PlayerPawn.Value.AbsOrigin + new Vector(0, 0, 40f);
+                var result = RayTracer.Trace(eyePos, enemyChest, true);
 
-                // Raytrace from us to the enemy's eye position
-                var traceResult = RayTracer.Trace(eyePos, enemyEyePos, true);
-
-                // If the trace reached the enemy directly
-                if ((traceResult - enemyEyePos).Length() < 5f)
+                if (enemy.PlayerPawn.Value.CollisionBox().Contains(result))
                 {
-                    // ✅ Found a visible target
+                    // ✅ Target is visible
                     PullTarget(enemy);
 
-                    // 🎯 Feedback + Effects
                     SkillFunctions.DealRawDamage(Player, enemy, 25);
                     Player.EmitSound("knife_hit3.vsnd");
                     enemy.EmitSound("knife_hit1.vsnd");
                     Player.PrintToChat($" {ChatColors.Green}👅 You lashed {enemy.PlayerName}!");
-
+                    Warcraft.DrawLaserBetween(eyePos, enemyChest, Color.Red, 0.4f, 2.0f);
                     StartCooldown(3);
                     return;
                 }
             }
 
-            // ❌ No valid visible enemy found
             Player.PrintToChat($"{ChatColors.Red}❌ No visible enemy found to lash!");
         }
-
-
-
-
 
         private void PullTarget(CCSPlayerController targetPlayer)
         {
