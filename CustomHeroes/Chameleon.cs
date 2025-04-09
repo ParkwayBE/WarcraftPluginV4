@@ -484,7 +484,7 @@ namespace WarcraftPlugin.Classes
 
             Vector pullDirection = yourEyePos - targetOrigin;
             Vector pullForce = Chameleon.Normalize(pullDirection) * 450f;
-            pullForce.Z += 80f; // Optional lift
+            pullForce.Z += 10f; // Optional lift
 
             targetPlayer.PlayerPawn.Value.Teleport(null, null, pullForce);
 
