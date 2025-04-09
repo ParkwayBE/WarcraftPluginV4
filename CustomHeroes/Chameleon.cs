@@ -77,7 +77,6 @@ namespace WarcraftPlugin.Classes
                 // 🎲 Effect 3: Team Health Buff
                 p =>
                 {
-                    Player.PrintToChat($" {ChatColors.Green} Bonus health for team activated.");
                     foreach (var teammate in Utilities.GetPlayers().Where(t => t.TeamNum == p.TeamNum && t.IsAlive()))
                     {
                         SkillFunctions.SetBonusHealth(teammate, 10 + 5 * AbilityLevel);
@@ -471,7 +470,21 @@ namespace WarcraftPlugin.Classes
             var eyePos = Warcraft.EyePosition(Player);
             var viewAngles = Player.PlayerPawn.Value.EyeAngles;
 
-            Vector rayResult = RayTracer.Trace(eyePos, viewAngles, drawResult: true, fromPlayer: true);
+            var rays = new List<Vector>();
+            var rayAngles = new List<QAngle>
+            {
+                viewAngles, // center
+                new QAngle(viewAngles.X + 3f, viewAngles.Y, viewAngles.Z), // up
+                new QAngle(viewAngles.X - 3f, viewAngles.Y, viewAngles.Z), // down
+                new QAngle(viewAngles.X, viewAngles.Y + 5f, viewAngles.Z), // right
+                new QAngle(viewAngles.X, viewAngles.Y - 5f, viewAngles.Z)  // left
+            };
+
+            foreach (var angle in rayAngles)
+            {
+                rays.Add(RayTracer.Trace(eyePos, angle, drawResult: false, fromPlayer: true));
+            }
+
 
             // Find nearby enemies
             var candidates = Utilities.GetPlayers()
@@ -492,17 +505,21 @@ namespace WarcraftPlugin.Classes
                 var center = originalBox.Center.ToVector();
                 var box = Geometry.CreateBoxAroundPoint(center, 80, 80, 120);
 
-                if (box.Contains(rayResult))
+                Vector hitRay = rays.FirstOrDefault(r => box.Contains(r));
+
+                if (box.Contains(hitRay))
                 {
+                    Warcraft.DrawLaserBetween(eyePos, hitRay, Color.Red, 0.3f, 2.0f);
                     PullTarget(enemy);
                     SkillFunctions.DealRawDamage(Player, enemy, 25);
                     Player.EmitSound("knife_hit3.vsnd");
                     enemy.EmitSound("knife_hit1.vsnd");
                     Player.PrintToChat($" {ChatColors.Green}👅 You lashed {enemy.PlayerName}!");
-                    Warcraft.DrawLaserBetween(eyePos, rayResult, Color.Red, 0.3f, 2.0f);
                     StartCooldown(3);
                     return;
                 }
+
+
             }
             StartCooldown(3, 3f);
             Player.PrintToChat($"{ChatColors.Red}❌ No visible enemy found to lash!");
