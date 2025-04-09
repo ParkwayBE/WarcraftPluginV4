@@ -492,7 +492,7 @@ namespace WarcraftPlugin.Classes
             var viewAngles = Player.PlayerPawn.Value.EyeAngles;
 
             // 1. Raytrace directly forward from the player's eye
-            Vector rayResult = RayTracer.Trace(eyePos, viewAngles, drawResult: false, fromPlayer: true);
+            Vector rayResult = RayTracer.Trace(eyePos, viewAngles, drawResult: true, fromPlayer: true);
 
             // 2. Find nearby enemies
             var candidates = Utilities.GetPlayers()
@@ -512,7 +512,6 @@ namespace WarcraftPlugin.Classes
                     Player.EmitSound("knife_hit3.vsnd");
                     enemy.EmitSound("knife_hit1.vsnd");
                     Player.PrintToChat($" {ChatColors.Green}👅 You lashed {enemy.PlayerName}!");
-                    Warcraft.DrawLaserBetween(eyePos, rayResult, Color.Red, 0.3f, 2.0f);
                     StartCooldown(3);
                     return;
                 }
