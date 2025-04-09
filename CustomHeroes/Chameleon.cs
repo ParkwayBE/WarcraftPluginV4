@@ -421,47 +421,43 @@ namespace WarcraftPlugin.Classes
                 return;
             }
 
-            // 👅 Pull logic: apply 7 pulses of force
-            int pullCount = 0;
-            int maxPulls = 7;
-            float interval = 0.1f;
+            int pullsRemaining = 7;
             float pullStrength = 950f;
 
-            void ChainPull()
+            void ExecutePull()
             {
                 if (!Player.IsValid || !Player.IsAlive() || !targetPlayer.IsValid || !targetPlayer.IsAlive())
                     return;
 
                 Vector pullDirection = Player.PlayerPawn.Value.AbsOrigin - targetPlayer.PlayerPawn.Value.AbsOrigin;
-                Vector pullForce = Normalize(pullDirection) * pullStrength;
-
-                // Apply slight upward lift
+                Vector pullForce = Chameleon.Normalize(pullDirection) * pullStrength;
                 pullForce.Z += 50f;
+
                 targetPlayer.PlayerPawn.Value.Teleport(null, null, pullForce);
 
-                // Optional visual feedback
                 Warcraft.DrawLaserBetween(targetPlayer.PlayerPawn.Value.AbsOrigin, Player.PlayerPawn.Value.AbsOrigin, Color.Purple, 0.1f, 1.5f);
 
-                pullCount++;
-                if (pullCount < maxPulls)
+                pullsRemaining--;
+
+                if (pullsRemaining > 0)
                 {
-                    WarcraftPlugin.Instance.AddTimer(interval, ChainPull);
+                    WarcraftPlugin.Instance.AddTimer(0.1f, ExecutePull);
                 }
             }
 
-            // Start pulling
-            WarcraftPlugin.Instance.AddTimer(0.0f, ChainPull);
+            // Start the first pull
+            ExecutePull();
 
-            // 💥 Apply light damage only once
-            SkillFunctions.DealRawDamage(Player, targetPlayer, 10);
-
-            // 🎵 Sounds and feedback
+            // Optional damage (once)
+            SkillFunctions.DealRawDamage(Player, targetPlayer, 25);
             Player.EmitSound("knife_hit3.vsnd");
             targetPlayer.EmitSound("knife_hit1.vsnd");
-            Player.PrintToChat($"{ChatColors.Green}👅 You lashed {targetPlayer.PlayerName}!");
+            Player.PrintToChat($" {ChatColors.Green}👅 You lashed {targetPlayer.PlayerName}!");
 
             StartCooldown(3);
         }
+
+
 
 
 
