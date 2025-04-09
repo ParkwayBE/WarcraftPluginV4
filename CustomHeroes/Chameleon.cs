@@ -27,7 +27,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Adapt to Environment", "Gain a randomized mix of buffs on spawn."),
             new WarcraftAbility("Improvise", "Gain a randomized offensive effect when hitting a player."),
             new WarcraftAbility("Cloak", "After standing still for 1.5 seconds you gain partial invisibility untill you move or shoot."),
-            new WarcraftCooldownAbility("Tongue lash", "Lash your tongue at an enemy foe, damaging him and pulling him closer.", 20f, false)
+            new WarcraftCooldownAbility("Tongue lash", "Lash your tongue at an enemy foe, damaging him and pulling him closer.", 20f, true)
         ];
 
         public override void Register()
@@ -467,10 +467,9 @@ namespace WarcraftPlugin.Classes
             var eyePos = Warcraft.EyePosition(Player);
             var viewAngles = Player.PlayerPawn.Value.EyeAngles;
 
-            // 1. Raytrace directly forward from the player's eye
             Vector rayResult = RayTracer.Trace(eyePos, viewAngles, drawResult: true, fromPlayer: true);
 
-            // 2. Find nearby enemies
+            // Find nearby enemies
             var candidates = Utilities.GetPlayers()
                 .Where(p => p.IsValid && p.IsAlive() && p.TeamNum != Player.TeamNum && p != Player)
                 .OrderBy(p => (p.PlayerPawn.Value.AbsOrigin - eyePos).Length())
@@ -478,10 +477,16 @@ namespace WarcraftPlugin.Classes
 
             foreach (var enemy in candidates)
             {
-                // Create a slightly inflated collision box for easier aim detection
+                var wcTarget = enemy.GetWarcraftPlayer();
+                if (wcTarget != null && wcTarget.HasUltimateImmunity)
+                {
+                    Console.WriteLine($"[Chameleon] Skipping {enemy.PlayerName} – has ultimate immunity");
+                    continue;
+                }
+
                 var originalBox = enemy.PlayerPawn.Value.CollisionBox();
                 var center = originalBox.Center.ToVector();
-                var box = Geometry.CreateBoxAroundPoint(center, 60, 60, 80); // default ~50x50x72
+                var box = Geometry.CreateBoxAroundPoint(center, 60, 60, 80);
 
                 if (box.Contains(rayResult))
                 {
@@ -490,13 +495,11 @@ namespace WarcraftPlugin.Classes
                     Player.EmitSound("knife_hit3.vsnd");
                     enemy.EmitSound("knife_hit1.vsnd");
                     Player.PrintToChat($" {ChatColors.Green}👅 You lashed {enemy.PlayerName}!");
-                    Warcraft.DrawLaserBetween(eyePos, rayResult, Color.Red, 0.3f, 2.0f); // Single laser
+                    Warcraft.DrawLaserBetween(eyePos, rayResult, Color.Red, 0.3f, 2.0f);
                     StartCooldown(3);
                     return;
                 }
             }
-
-
             StartCooldown(3, 3f);
             Player.PrintToChat($"{ChatColors.Red}❌ No visible enemy found to lash!");
         }
@@ -508,12 +511,9 @@ namespace WarcraftPlugin.Classes
             if (!Player.IsValid || !Player.IsAlive() || !targetPlayer.IsValid || !targetPlayer.IsAlive())
                 return;
 
-            // Pull from the target's position towards your elevated eye position
             Vector yourEyePos = Warcraft.EyePosition(Player);
-            yourEyePos.Z += 30f; // Raise the pull point slightly above head for smoother pull arc
-
+            yourEyePos.Z += 30f;
             Vector targetOrigin = targetPlayer.PlayerPawn.Value.AbsOrigin;
-
             Vector pullDirection = yourEyePos - targetOrigin;
             Vector pullForce = Chameleon.Normalize(pullDirection) * 1500f;
             pullForce.Z += 30f; // Optional lift
