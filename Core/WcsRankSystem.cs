@@ -118,9 +118,9 @@ namespace WarcraftPlugin.Core
             const int valueColumnStart = 36;
 
             // Build raw lines
-            string line1 = BuildRankLine($" {ChatColors.Yellow}Total Level:", $" {ChatColors.Purple}{totalLevel} / {maxTotalLevel}", valueColumnStart);
-            string line2 = BuildRankLine($" {ChatColors.Yellow}Races Trained:", $" {ChatColors.Purple}{allClassData.Count} / {classCount}", valueColumnStart);
-            string line3 = BuildRankLine($" {ChatColors.Yellow}Leaderboard Rank:", $" {ChatColors.Purple} #{rank}", valueColumnStart);
+            string line1 = BuildRankLine($"Total Level:", $" {totalLevel} / {maxTotalLevel}", valueColumnStart);
+            string line2 = BuildRankLine($"Races Trained:", $" {allClassData.Count} / {classCount}", valueColumnStart);
+            string line3 = BuildRankLine($"Leaderboard Rank:", $" #{rank}", valueColumnStart);
 
             // Print all
             player.PrintToChat($" {ChatColors.Red}★ {ChatColors.Yellow}Your WCS Rank Summary ★");
@@ -134,7 +134,7 @@ namespace WarcraftPlugin.Core
         private string BuildRankLine(string label, string value, int valueStartColumn)
         {
             int space = Math.Max(1, valueStartColumn - label.Length);
-            return $" {ChatColors.Yellow}{label}{new string(' ', space)}{ChatColors.Default}1{value}";
+            return $"{label}{new string(' ', space)}1{value}";
         }
 
 
@@ -168,15 +168,15 @@ namespace WarcraftPlugin.Core
             string mostPlayedRace = stats.OrderByDescending(s => s.Kills).FirstOrDefault().Race ?? "N/A";
             int mostPlayedKills = stats.OrderByDescending(s => s.Kills).FirstOrDefault().Kills;
 
-            var menu = MenuManagerExtra.CreateMenu($" {ChatColors.Red}2{name}{ChatColors.Yellow}'s WCS Stats", 6);
-            menu.Category = $" {ChatColors.Yellow}Player Stats";
+            var menu = MenuManagerExtra.CreateMenu($"2{name}'s WCS Stats", 6);
+            menu.Category = $"Player Stats";
 
             menu.Add($"Total Level: {totalLevel}", null, null);
             menu.Add($"Total Kills: {totalKills}", null, null);
             menu.Add($"Total Deaths: {totalDeaths}", null, null);
             menu.Add($"K/D Ratio: {kdRatio:0.00}", null, null);
             menu.Add($"Most Played: {mostPlayedRace} ({mostPlayedKills} kills)", null, null);
-            menu.Add($" {ChatColors.Yellow}↩ Return to Top10 Menu", null, (pl, _) => ShowTop10InChat(pl));
+            menu.Add("<font color='#FFFF00'>↩ Return to Top10 Menu</font>", null, (pl, _) => ShowTop10InChat(pl));
 
             MenuManagerExtra.OpenMainMenuExtra(viewer, new List<Menu.Menu> { menu });
         }
