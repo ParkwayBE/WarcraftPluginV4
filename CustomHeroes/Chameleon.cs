@@ -84,17 +84,29 @@ namespace WarcraftPlugin.Classes
                     }
                 },
 
-                // 🎲 Effect 4: Ult Immunity for self + 2 allies
+                // 🎲 Effect 4: Ult Immunity for self + 2 allies, if lucky 3 allies
                 p =>
-                {
+    {
+                    int level = WarcraftPlayer.GetAbilityLevel(0);
+                    int chanceForThird = 10 + (level - 1) * 10; // 10% at lvl 1 → 50% at lvl 5
+                    var rand = new Random();
+
                     Player.PrintToChat($" {ChatColors.Green} Ult immunity activated for you and 2 allies.");
 
                     var self = WarcraftPlugin.Instance.GetWcPlayer(p);
                     if (self != null)
                         self.HasUltimateImmunity = true;
 
-                    var allies = Utilities.GetPlayers().Where(t => t.TeamNum == p.TeamNum && t != p && t.IsAlive()).OrderBy(_ => Guid.NewGuid()).Take(2);
-                    foreach (var ally in allies)
+                    // Shuffle all teammates (excluding self)
+                    var teammates = Utilities.GetPlayers()
+                        .Where(t => t.TeamNum == p.TeamNum && t != p && t.IsAlive())
+                        .OrderBy(_ => Guid.NewGuid())
+                        .ToList();
+
+                    // Always grant to 2 teammates
+                    var guaranteedAllies = teammates.Take(2).ToList();
+
+                    foreach (var ally in guaranteedAllies)
                     {
                         var wcAlly = WarcraftPlugin.Instance.GetWcPlayer(ally);
                         if (wcAlly != null)
@@ -103,7 +115,23 @@ namespace WarcraftPlugin.Classes
                             ally.PrintToChat($" {ChatColors.Green}🛡️ You received temporary {ChatColors.LightPurple}ultimate immunity{ChatColors.Green} from a Chameleon!");
                         }
                     }
+
+                    // 10–50% chance to grant to a third teammate
+                    if (teammates.Count >= 3 && rand.Next(100) < chanceForThird)
+                    {
+                        var thirdAlly = teammates.Skip(2).FirstOrDefault(); // Next in the shuffled list
+                        if (thirdAlly != null)
+                        {
+                            var wcThird = WarcraftPlugin.Instance.GetWcPlayer(thirdAlly);
+                            if (wcThird != null)
+                            {
+                                wcThird.HasUltimateImmunity = true;
+                                thirdAlly.PrintToChat($" {ChatColors.Green}🛡️ Lucky! You also got {ChatColors.LightPurple}ultimate immunity{ChatColors.Green} from a Chameleon!");
+                            }
+                        }
+                    }
                 },
+
 
                // 🎲 Effect 5: Reduced gravity + long jump
                 p =>
@@ -122,8 +150,13 @@ namespace WarcraftPlugin.Classes
                 p =>
                 {
                     Player.PrintToChat($" {ChatColors.Green} Juggernaut activated, reduced MS but alot of health is gained..");
-                    SkillFunctions.SetBonusHealth(p, 125);
-                    SkillFunctions.SetMovementSpeed(p, -0.15f, 999f);                },
+                    int bonushealth = AbilityLevel * 30;
+                    SkillFunctions.SetBonusHealth(p, bonushealth);
+                    var pawn = p.PlayerPawn.Value;
+                    float speed = 1f - 0.2f;
+                    pawn.VelocityModifier = speed;
+
+                },
 
                 // 🎲 Effect 7: Random weapon loadout
                 p =>
@@ -188,7 +221,6 @@ namespace WarcraftPlugin.Classes
                 cloakEffect = null;
 
             }
-
         }
         private void RoundEnd(EventRoundEnd @event)
         {
@@ -199,9 +231,7 @@ namespace WarcraftPlugin.Classes
                 wcPlayer.ChameleonDefensive = false;
                 cloakEffect?.Destroy();
                 cloakEffect = null;
-
             }
-
         }
 
         private void OnWeaponFire(EventWeaponFire @event)
@@ -287,8 +317,9 @@ namespace WarcraftPlugin.Classes
                     }
                     else
                     {
-                        SkillFunctions.SetMovementSpeed(victim, -1.0f, 0.5f);
-                        attacker.PrintToChat($" {ChatColors.Blue}❄️ You slowed your enemy!");
+                        float freezeTime = level / 10;
+                        new FreezePlayerEffect(attacker, freezeTime, victim).Start();
+                        attacker.PrintToChat($" {ChatColors.Blue}❄️ You completely froze your enemy!");
                     }
                     laserColor = Color.Cyan;
                     break;
