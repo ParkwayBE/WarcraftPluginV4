@@ -27,7 +27,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Adapt to Environment", "Gain a randomized mix of buffs on spawn."),
             new WarcraftAbility("Improvise", "Gain a randomized offensive effect when hitting a player."),
             new WarcraftAbility("Cloak", "After standing still for 1.5 seconds you gain partial invisibility untill you move or shoot."),
-            new WarcraftCooldownAbility("Tongue lash", "Lash your tongue at an enemy foe, damaging him and pulling him closer.", 20f, true)
+            new WarcraftCooldownAbility("Tongue lash", "Lash your tongue at an enemy foe, damaging him and pulling him closer.", 3f, true)
         ];
 
         public override void Register()
