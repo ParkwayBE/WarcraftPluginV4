@@ -69,7 +69,7 @@ namespace WarcraftPlugin
         public Config Config { get; set; } = null!;
 
 
-        internal WarcraftPlayer GetWcPlayer(CCSPlayerController player)
+        public WarcraftPlayer GetWcPlayer(CCSPlayerController player)
         {
 
             if (!player.IsValid || player.ControllingBot) return null; // removed isbot line
