@@ -24,15 +24,22 @@ namespace WarcraftPlugin.Core
             admins.Add("76561198061919153");
             admins.Add("76561198024206738");
             _plugin.AddCommand("adm", "opens admin panel", OpenAdminPanel);
+            _plugin.AddCommand("say", "for mutes", CheckIfMuted);
             //_plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat, HookMode.Pre);
             //_plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat2, HookMode.Pre);
             _plugin.AddCommandListener("say", OnPlayerChat2);
+
             LoadMutedPlayers();
         }
+        private HookResult CheckIfMuted
         private void LoadMutedPlayers()
         {
             Database db = _plugin.GetDatabase();
             var mutedPlayers = db.GetAllMutedPlayers();
+            if(mutedPlayers == null)
+            {
+                return;
+            }
             if(mutedPlayers.Count == 0)
             {
                 return;
