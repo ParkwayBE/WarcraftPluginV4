@@ -7,6 +7,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
+using g3;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -238,6 +239,9 @@ namespace WarcraftPlugin.Classes
             if (attacker == null || victim == null || !attacker.IsValid || !victim.IsValid || attacker == victim)
                 return;
 
+            if (attacker.TeamNum == victim.TeamNum)
+                return;
+
             int level = WarcraftPlayer.GetAbilityLevel(1);
             if (level <= 0) return;
 
@@ -441,10 +445,10 @@ namespace WarcraftPlugin.Classes
                 var direction = new Vector();
                 NativeAPI.AngleVectors(angle.Handle, direction.Handle, nint.Zero, nint.Zero);
 
-                if (direction.Z < 0.475f)
-                    direction.Z = 0.475f;
+                if (direction.Z < 0.5f)
+                    direction.Z = 0.5f;
 
-                direction *= 300f; // You can adjust force here
+                direction *= 550f; // You can adjust force here
 
                 Player.PlayerPawn.Value.AbsVelocity.X = direction.X;
                 Player.PlayerPawn.Value.AbsVelocity.Y = direction.Y;
@@ -455,7 +459,7 @@ namespace WarcraftPlugin.Classes
             // Apply gravity temporarily
             WarcraftPlugin.Instance.AddTimer(0.05f, () =>
             {
-                new SetGravityEffect(Player, 70f, 1.5f).Start();
+                new SetGravityEffect(Player, 65f, 3.5f).Start();
             });
         }
 
@@ -486,7 +490,9 @@ namespace WarcraftPlugin.Classes
 
                 var originalBox = enemy.PlayerPawn.Value.CollisionBox();
                 var center = originalBox.Center.ToVector();
-                var box = Geometry.CreateBoxAroundPoint(center, 60, 60, 80);
+                var box = Geometry.CreateBoxAroundPoint(center, 80, 80, 120);
+                DrawBox(box, Color.Yellow, 1.0f);
+
 
                 if (box.Contains(rayResult))
                 {
@@ -504,7 +510,65 @@ namespace WarcraftPlugin.Classes
             Player.PrintToChat($"{ChatColors.Red}❌ No visible enemy found to lash!");
         }
 
+        /// TEMP FUNCTION:
+        /// 
+        public static void DrawBox(Box3d box, Color color, float duration = 1f, float width = 1f)
+        {
+            var corners = GetBoxCorners(box);
 
+            for (int i = 0; i < 4; i++)
+            {
+                // Bottom square
+                Warcraft.DrawLaserBetween(corners[i], corners[(i + 1) % 4], color, duration, width);
+                // Top square
+                Warcraft.DrawLaserBetween(corners[i + 4], corners[((i + 1) % 4) + 4], color, duration, width);
+                // Vertical lines
+                Warcraft.DrawLaserBetween(corners[i], corners[i + 4], color, duration, width);
+            }
+        }
+
+
+
+        public static List<Vector> GetBoxCorners(Box3d box)
+        {
+            var center = box.Center;
+
+            // You know the dimensions used: (e.g. 80x80x120)
+            // So half-extents:
+            float hx = 80f / 2;
+            float hy = 80f / 2;
+            float hz = 120f / 2;
+
+            var corners = new List<Vector>();
+
+            // Generate corners around center
+            for (int dx = -1; dx <= 1; dx += 2)
+            {
+                for (int dy = -1; dy <= 1; dy += 2)
+                {
+                    for (int dz = -1; dz <= 1; dz += 2)
+                    {
+                        float x = (float)center.x + dx * hx;
+                        float y = (float)center.y + dy * hy;
+                        float z = (float)center.z + dz * hz;
+
+                        corners.Add(new Vector(x, y, z));
+                    }
+                }
+            }
+
+            return corners;
+        }
+
+
+
+
+
+
+
+
+
+        // End temp function
 
         private void PullTarget(CCSPlayerController targetPlayer)
         {
