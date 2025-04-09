@@ -52,6 +52,9 @@ namespace WarcraftPlugin.Classes
                 var random = new Random();
                 int AbilityLevel = WarcraftPlayer.GetAbilityLevel(0);
 
+                cloakEffect = new ChameleonCloakEffect(Player, WarcraftPlayer.GetAbilityLevel(2));
+                cloakEffect.Start();
+
                 // List of possible effects
                 var effects = new List<Action<CCSPlayerController>>
 {
@@ -178,6 +181,9 @@ namespace WarcraftPlugin.Classes
             {
                 wcPlayer.ChameleonOffensive = false;
                 wcPlayer.ChameleonDefensive = false;
+                cloakEffect?.Destroy();
+                cloakEffect = null;
+
             }
 
         }
@@ -188,6 +194,9 @@ namespace WarcraftPlugin.Classes
             {
                 wcPlayer.ChameleonOffensive = false;
                 wcPlayer.ChameleonDefensive = false;
+                cloakEffect?.Destroy();
+                cloakEffect = null;
+
             }
 
         }
@@ -401,7 +410,7 @@ namespace WarcraftPlugin.Classes
             Vector hitPosition = RayTracer.Trace(eyePos, targetPoint, true);
 
             CCSPlayerController? targetPlayer = null;
-            float closestDistance = 200f;
+            float closestDistance = 1200f;
 
             foreach (var other in Utilities.GetPlayers())
             {
