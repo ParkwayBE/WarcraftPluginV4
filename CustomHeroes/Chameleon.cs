@@ -456,8 +456,10 @@ namespace WarcraftPlugin.Classes
             for (int i = 0; i < 7; i++)
             {
                 float delay = 0.3f * i;
-                WarcraftPlugin.Instance.AddTimer(delay, () => PullTarget(targetPlayer));
+                var targetCopy = targetPlayer; // Capture loop variable correctly
+                WarcraftPlugin.Instance.AddTimer(delay, () => PullTarget(targetCopy));
             }
+
 
             // Optional one-time effects
             SkillFunctions.DealRawDamage(Player, targetPlayer, 25);
@@ -475,8 +477,8 @@ namespace WarcraftPlugin.Classes
                 return;
 
             Vector pullDirection = Player.PlayerPawn.Value.AbsOrigin - targetPlayer.PlayerPawn.Value.AbsOrigin;
-            Vector pullForce = Chameleon.Normalize(pullDirection) * 950f;
-            pullForce.Z += 50f;
+            Vector pullForce = Chameleon.Normalize(pullDirection) * 750f;
+            pullForce.Z += 80f;
 
             targetPlayer.PlayerPawn.Value.Teleport(null, null, pullForce);
             Warcraft.DrawLaserBetween(targetPlayer.PlayerPawn.Value.AbsOrigin, Player.PlayerPawn.Value.AbsOrigin, Color.Purple, 0.1f, 1.5f);
