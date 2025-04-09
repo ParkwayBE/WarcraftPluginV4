@@ -425,7 +425,7 @@ namespace WarcraftPlugin.Classes
             // Apply the pull effect 7 times with delay
             for (int i = 0; i < 7; i++)
             {
-                float delay = 0.1f * i;
+                float delay = 0.3f * i;
                 WarcraftPlugin.Instance.AddTimer(delay, () => PullTarget(targetPlayer));
             }
 
