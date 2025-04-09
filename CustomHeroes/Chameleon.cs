@@ -101,13 +101,14 @@ namespace WarcraftPlugin.Classes
                     }
                 },
 
-                // 🎲 Effect 5: Reduced gravity + long jump
+               // 🎲 Effect 5: Reduced gravity + long jump
                 p =>
                 {
                     Console.WriteLine("🎲 Effect 5 triggered: Reduced gravity and longjump");
-                    SkillFunctions.SetGravity(p, 0.75f);
-                    SkillFunctions.ApplyForwardBoost(p, 1.1f); // gentle boost
+                    SkillFunctions.SetGravity(p, 75f, 999f); // 3 seconds duration
+                    SkillFunctions.ApplyForwardBoost(p, 100f); // gentle boost
                 },
+
 
                 // 🎲 Effect 6: Juggernaut Mode
                 p =>
