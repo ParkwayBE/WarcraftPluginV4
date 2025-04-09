@@ -62,7 +62,7 @@ namespace WarcraftPlugin.Core
                 CREATE TABLE IF NOT EXISTS mutedplayers (
                     steamid UNSIGNED BIG INT NOT NULL,
                     muted INT DEFAULT 0,
-                    PRIMARY KEY (steamid, race)
+                    PRIMARY KEY (steamid)
                 );
             ");
 
