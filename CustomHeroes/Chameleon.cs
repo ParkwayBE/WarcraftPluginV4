@@ -457,6 +457,31 @@ namespace WarcraftPlugin.Classes
             });
         }
 
+        private float Dot(Vector a, Vector b)
+        {
+            return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+        }
+
+        private bool IsFacingTarget(CCSPlayerController player, CCSPlayerController target, float angleThresholdDegrees = 90f)
+        {
+            var eyeAngles = player.PlayerPawn.Value.EyeAngles;
+            var playerLookDir = new Vector();
+            NativeAPI.AngleVectors(eyeAngles.Handle, playerLookDir.Handle, nint.Zero, nint.Zero);
+
+            var toTarget = target.PlayerPawn.Value.AbsOrigin - player.PlayerPawn.Value.AbsOrigin;
+            toTarget.Z = 0;
+            playerLookDir = Chameleon.Normalize(playerLookDir);
+            toTarget = Chameleon.Normalize(toTarget);
+
+            float dot = Dot(playerLookDir, toTarget);
+            float threshold = MathF.Cos(MathF.PI * angleThresholdDegrees / 180f);
+
+            return dot >= threshold;
+        }
+
+
+
+
 
         private void Ultimate()
         {
@@ -471,12 +496,15 @@ namespace WarcraftPlugin.Classes
 
             foreach (var enemy in players)
             {
+                if (!IsFacingTarget(Player, enemy))
+                    continue;
+
                 var enemyChest = enemy.PlayerPawn.Value.AbsOrigin + new Vector(0, 0, 40f);
                 var result = RayTracer.Trace(eyePos, enemyChest, true);
 
                 if (enemy.PlayerPawn.Value.CollisionBox().Contains(result))
                 {
-                    // ✅ Target is visible
+                    // ✅ Visible AND facing
                     PullTarget(enemy);
 
                     SkillFunctions.DealRawDamage(Player, enemy, 25);
@@ -491,6 +519,7 @@ namespace WarcraftPlugin.Classes
 
             Player.PrintToChat($"{ChatColors.Red}❌ No visible enemy found to lash!");
         }
+
 
         private void PullTarget(CCSPlayerController targetPlayer)
         {
