@@ -433,11 +433,12 @@ namespace WarcraftPlugin.Classes
             foreach (var enemy in players)
             {
                 var enemyEyePos = Warcraft.EyePosition(enemy);
+
+                // Raytrace from us to the enemy's eye position
                 var traceResult = RayTracer.Trace(eyePos, enemyEyePos, true);
 
-                float distanceToTarget = (traceResult - enemyEyePos).Length();
-
-                if (distanceToTarget < 20f)
+                // If the trace reached the enemy directly
+                if ((traceResult - enemyEyePos).Length() < 5f)
                 {
                     // ✅ Found a visible target
                     PullTarget(enemy);
@@ -456,6 +457,7 @@ namespace WarcraftPlugin.Classes
             // ❌ No valid visible enemy found
             Player.PrintToChat($"{ChatColors.Red}❌ No visible enemy found to lash!");
         }
+
 
 
 
