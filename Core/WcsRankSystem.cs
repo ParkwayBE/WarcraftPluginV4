@@ -118,9 +118,9 @@ namespace WarcraftPlugin.Core
             const int valueColumnStart = 36;
 
             // Build raw lines
-            string line1 = BuildRankLine($"<font color='##FFFF00'>Total Level:", $" {totalLevel} / {maxTotalLevel}</font>", valueColumnStart);
-            string line2 = BuildRankLine($"<font color='##FFFF00'>Races Trained:", $" {allClassData.Count} / {classCount}</font>", valueColumnStart);
-            string line3 = BuildRankLine($"<font color='##FFFF00'>Leaderboard Rank:", $" #{rank}</font>", valueColumnStart);
+            string line1 = BuildRankLine($" <font color='##FFFF00'>Total Level:", $" {totalLevel} / {maxTotalLevel}</font>", valueColumnStart);
+            string line2 = BuildRankLine($" <font color='##FFFF00'>Races Trained:", $" {allClassData.Count} / {classCount}</font>", valueColumnStart);
+            string line3 = BuildRankLine($" <font color='##FFFF00'>Leaderboard Rank:", $" #{rank}</font>", valueColumnStart);
 
             // Print all
             player.PrintToChat($" <font color='##FFFF00'>★</font> <font color='##FFFF00'>Your WCS Rank Summary</font> <font color='##FFFF00'>★</font>");
@@ -171,12 +171,12 @@ namespace WarcraftPlugin.Core
             var menu = MenuManagerExtra.CreateMenu($"<font color='##FFFF00'>2{name}'s WCS Stats</font>", 6);
             menu.Category = $"Player Stats";
 
-            menu.Add($"<font color='##FFFF00'>Total Level:</font><font color='##FFFF00'> {totalLevel}</font>", null, null);
-            menu.Add($"<font color='##FFFF00'>Total Kills:</font><font color='##FFFF00'> {totalKills}</font>", null, null);
-            menu.Add($"<font color='##FFFF00'>Total Deaths:</font><font color='##FFFF00'> {totalDeaths}</font>", null, null);
-            menu.Add($"<font color='##FFFF00'>K/D Ratio:</font><font color='##FFFF00'> {kdRatio:0.00}</font>", null, null);
-            menu.Add($"<font color='##FFFF00'>Most Played:</font><font color='##FFFF00'> {mostPlayedRace} ({mostPlayedKills} kills)</font>", null, null);
-            menu.Add("<font color='##FFFF00'>↩ Return to Top10 Menu</font>", null, (pl, _) => ShowTop10InChat(pl));
+            menu.Add($" <font color='##FFFF00'>Total Level:</font><font color='##FFFF00'> {totalLevel}</font>", null, null);
+            menu.Add($" <font color='##FFFF00'>Total Kills:</font><font color='##FFFF00'> {totalKills}</font>", null, null);
+            menu.Add($" <font color='##FFFF00'>Total Deaths:</font><font color='##FFFF00'> {totalDeaths}</font>", null, null);
+            menu.Add($" <font color='##FFFF00'>K/D Ratio:</font><font color='##FFFF00'> {kdRatio:0.00}</font>", null, null);
+            menu.Add($" <font color='##FFFF00'>Most Played:</font><font color='##FFFF00'> {mostPlayedRace} ({mostPlayedKills} kills)</font>", null, null);
+            menu.Add(" <font color='##FFFF00'>↩ Return to Top10 Menu</font>", null, (pl, _) => ShowTop10InChat(pl));
 
             MenuManagerExtra.OpenMainMenuExtra(viewer, new List<Menu.Menu> { menu });
         }
