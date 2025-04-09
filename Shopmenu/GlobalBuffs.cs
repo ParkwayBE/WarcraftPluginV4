@@ -250,7 +250,16 @@ namespace WarcraftPlugin.Core
                 int DmgReduction = (int)(DmgDealt * 0.65f);
                 SkillFunctions.SetBonusHealth(victim, DmgReduction);
                 victim.PrintToCenter($" {ChatColors.Green}🛡️ Helm of Excellence absorbed some of the damage!");
-                Server.NextFrame(() => Utilities.SetStateChanged(victim.PlayerPawn.Value!, "CBaseEntity", "m_iHealth"));
+                if (victim != null && victim.IsValid && victim.PlayerPawn != null && victim.PlayerPawn.IsValid)
+                {
+                    Server.NextFrame(() =>
+                    {
+                        if (victim.PlayerPawn != null && victim.PlayerPawn.IsValid)
+                        {
+                            Utilities.SetStateChanged(victim.PlayerPawn.Value, "CBaseEntity", "m_iHealth");
+                        }
+                    });
+                }
 
             }
 
