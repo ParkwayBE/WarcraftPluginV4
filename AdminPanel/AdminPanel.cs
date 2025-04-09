@@ -403,7 +403,7 @@ namespace WarcraftPlugin.Menu
             column = Math.Clamp(column, 0, menus.Count - 1);
             PlayerMenuColumn[player.Slot] = column;
 
-            MenuAPI.Players[player.Slot].OpenMainMenu(menus[column], 0);
+            MenuAPI.Players[player.Slot].OpenMainMenu(menus[0], selectedOptionIndex);
         }
 
         internal static void CloseMenu(CCSPlayerController player)
