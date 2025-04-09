@@ -476,13 +476,21 @@ namespace WarcraftPlugin.Classes
             if (!Player.IsValid || !Player.IsAlive() || !targetPlayer.IsValid || !targetPlayer.IsAlive())
                 return;
 
-            Vector pullDirection = Player.PlayerPawn.Value.AbsOrigin - targetPlayer.PlayerPawn.Value.AbsOrigin;
-            Vector pullForce = Chameleon.Normalize(pullDirection) * 750f;
-            pullForce.Z += 80f;
+            // Pull from the target's position towards your elevated eye position
+            Vector yourEyePos = Warcraft.EyePosition(Player);
+            yourEyePos.Z += 30f; // Raise the pull point slightly above head for smoother pull arc
+
+            Vector targetOrigin = targetPlayer.PlayerPawn.Value.AbsOrigin;
+
+            Vector pullDirection = yourEyePos - targetOrigin;
+            Vector pullForce = Chameleon.Normalize(pullDirection) * 450f;
+            pullForce.Z += 80f; // Optional lift
 
             targetPlayer.PlayerPawn.Value.Teleport(null, null, pullForce);
-            Warcraft.DrawLaserBetween(targetPlayer.PlayerPawn.Value.AbsOrigin, Player.PlayerPawn.Value.AbsOrigin, Color.Purple, 0.1f, 1.5f);
+
+            Warcraft.DrawLaserBetween(targetOrigin, yourEyePos, Color.Purple, 0.1f, 1.5f);
         }
+
 
 
 
