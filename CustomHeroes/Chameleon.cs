@@ -492,7 +492,7 @@ namespace WarcraftPlugin.Classes
                 .OrderBy(p => (p.PlayerPawn.Value.AbsOrigin - eyePos).Length())
                 .ToList();
 
-            foreach (var enemy in candidates)
+            foreach (var enemy in candidates) // Fixed
             {
                 var wcTarget = enemy.GetWarcraftPlayer();
                 if (wcTarget != null && wcTarget.HasUltimateImmunity)
