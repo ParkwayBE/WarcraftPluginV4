@@ -480,7 +480,7 @@ namespace WarcraftPlugin.Classes
                 var wcTarget = enemy.GetWarcraftPlayer();
                 if (wcTarget != null && wcTarget.HasUltimateImmunity)
                 {
-                    Console.WriteLine($"[Chameleon] Skipping {enemy.PlayerName} – has ultimate immunity");
+                    Console.WriteLine($"[Chameleon] Skipping {enemy.PlayerName} – has ultimate immunity"); // weird bug ? 
                     continue;
                 }
 
