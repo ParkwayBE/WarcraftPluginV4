@@ -489,29 +489,30 @@ namespace WarcraftPlugin.Classes
                 return;
 
             var eyePos = Warcraft.EyePosition(Player);
-            var players = Utilities.GetPlayers()
+            var viewAngles = Player.PlayerPawn.Value.EyeAngles;
+
+            // 1. Raytrace directly forward from the player's eye
+            Vector rayResult = RayTracer.Trace(eyePos, viewAngles, drawResult: true, fromPlayer: true);
+
+            // 2. Find nearby enemies
+            var candidates = Utilities.GetPlayers()
                 .Where(p => p.IsValid && p.IsAlive() && p.TeamNum != Player.TeamNum && p != Player)
                 .OrderBy(p => (p.PlayerPawn.Value.AbsOrigin - eyePos).Length())
                 .ToList();
 
-            foreach (var enemy in players)
+            foreach (var enemy in candidates)
             {
-                if (!IsFacingTarget(Player, enemy))
-                    continue;
+                var box = enemy.PlayerPawn.Value.CollisionBox();
 
-                var enemyChest = enemy.PlayerPawn.Value.AbsOrigin + new Vector(0, 0, 40f);
-                var result = RayTracer.Trace(eyePos, enemyChest, true);
-
-                if (enemy.PlayerPawn.Value.CollisionBox().Contains(result))
+                if (box.Contains(rayResult))
                 {
-                    // ✅ Visible AND facing
+                    // ✅ Valid pull target
                     PullTarget(enemy);
-
                     SkillFunctions.DealRawDamage(Player, enemy, 25);
                     Player.EmitSound("knife_hit3.vsnd");
                     enemy.EmitSound("knife_hit1.vsnd");
                     Player.PrintToChat($" {ChatColors.Green}👅 You lashed {enemy.PlayerName}!");
-                    Warcraft.DrawLaserBetween(eyePos, enemyChest, Color.Red, 0.4f, 2.0f);
+                    Warcraft.DrawLaserBetween(eyePos, rayResult, Color.Red, 0.4f, 2.0f);
                     StartCooldown(3);
                     return;
                 }
@@ -519,6 +520,7 @@ namespace WarcraftPlugin.Classes
 
             Player.PrintToChat($"{ChatColors.Red}❌ No visible enemy found to lash!");
         }
+
 
 
         private void PullTarget(CCSPlayerController targetPlayer)
