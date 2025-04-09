@@ -169,14 +169,14 @@ namespace WarcraftPlugin.Core
             int mostPlayedKills = stats.OrderByDescending(s => s.Kills).FirstOrDefault().Kills;
 
             var menu = MenuManagerExtra.CreateMenu($"{name}'s WCS Stats", 6);
-            menu.Category = "\x06Player Stats";
+            menu.Category = " \x06Player Stats";
 
             menu.Add($"Total Level: {totalLevel}", null, null);
             menu.Add($"Total Kills: {totalKills}", null, null);
             menu.Add($"Total Deaths: {totalDeaths}", null, null);
             menu.Add($"K/D Ratio: {kdRatio:0.00}", null, null);
             menu.Add($"Most Played: {mostPlayedRace} ({mostPlayedKills} kills)", null, null);
-            menu.Add("\x06↩ Return to Top10 Menu", null, (pl, _) => ShowTop10InChat(pl));
+            menu.Add(" \x06↩ Return to Top10 Menu", null, (pl, _) => ShowTop10InChat(pl));
 
             MenuManagerExtra.OpenMainMenuExtra(viewer, new List<Menu.Menu> { menu });
         }
