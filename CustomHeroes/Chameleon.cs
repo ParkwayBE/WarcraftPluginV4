@@ -7,7 +7,6 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
-using WarcraftPlugin.Core;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -426,43 +425,38 @@ namespace WarcraftPlugin.Classes
                 return;
 
             var eyePos = Warcraft.EyePosition(Player);
-            var viewDirection = Player.PlayerPawn.Value.EyeAngles.ToForward();
-            Vector targetPoint = eyePos + viewDirection * 800f;
-            Vector hitPosition = RayTracer.Trace(eyePos, targetPoint, true);
+            var players = Utilities.GetPlayers()
+                .Where(p => p.IsValid && p.IsAlive() && p.TeamNum != Player.TeamNum && p != Player)
+                .OrderBy(p => (p.PlayerPawn.Value.AbsOrigin - eyePos).Length())
+                .ToList();
 
-            CCSPlayerController? targetPlayer = null;
-            float closestDistance = 1200f;
-
-            foreach (var other in Utilities.GetPlayers())
+            foreach (var enemy in players)
             {
-                if (!other.IsValid || !other.IsAlive() || other.TeamNum == Player.TeamNum || other == Player)
-                    continue;
+                var enemyEyePos = Warcraft.EyePosition(enemy);
+                var traceResult = RayTracer.Trace(eyePos, enemyEyePos, true);
 
-                var distance = (other.PlayerPawn.Value.AbsOrigin - hitPosition).Length();
-                if (distance < closestDistance)
+                float distanceToTarget = (traceResult - enemyEyePos).Length();
+
+                if (distanceToTarget < 20f)
                 {
-                    closestDistance = distance;
-                    targetPlayer = other;
+                    // ✅ Found a visible target
+                    PullTarget(enemy);
+
+                    // 🎯 Feedback + Effects
+                    SkillFunctions.DealRawDamage(Player, enemy, 25);
+                    Player.EmitSound("knife_hit3.vsnd");
+                    enemy.EmitSound("knife_hit1.vsnd");
+                    Player.PrintToChat($" {ChatColors.Green}👅 You lashed {enemy.PlayerName}!");
+
+                    StartCooldown(3);
+                    return;
                 }
             }
 
-            if (targetPlayer == null)
-            {
-                Player.PrintToChat($"{ChatColors.Red}❌ No enemy found where you lashed!");
-                return;
-            }
-
-            // Pull target once with enhanced force
-            PullTarget(targetPlayer);
-
-            // Optional one-time effects
-            SkillFunctions.DealRawDamage(Player, targetPlayer, 25);
-            Player.EmitSound("knife_hit3.vsnd");
-            targetPlayer.EmitSound("knife_hit1.vsnd");
-            Player.PrintToChat($" {ChatColors.Green}👅 You lashed {targetPlayer.PlayerName}!");
-
-            StartCooldown(3);
+            // ❌ No valid visible enemy found
+            Player.PrintToChat($"{ChatColors.Red}❌ No visible enemy found to lash!");
         }
+
 
 
 
