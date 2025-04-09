@@ -169,14 +169,14 @@ namespace WarcraftPlugin.Core
             int mostPlayedKills = stats.OrderByDescending(s => s.Kills).FirstOrDefault().Kills;
 
             var menu = MenuManagerExtra.CreateMenu($"{name}'s WCS Stats", 6);
-            menu.Category = "Player Stats";
+            menu.Category = "\x06Player Stats";
 
             menu.Add($"Total Level: {totalLevel}", null, null);
             menu.Add($"Total Kills: {totalKills}", null, null);
             menu.Add($"Total Deaths: {totalDeaths}", null, null);
             menu.Add($"K/D Ratio: {kdRatio:0.00}", null, null);
             menu.Add($"Most Played: {mostPlayedRace} ({mostPlayedKills} kills)", null, null);
-            menu.Add("↩ Back to Top10", null, (pl, _) => ShowTop10InChat(pl));
+            menu.Add("\x06↩ Return to Top10 Menu", null, (pl, _) => ShowTop10InChat(pl));
 
             MenuManagerExtra.OpenMainMenuExtra(viewer, new List<Menu.Menu> { menu });
         }
@@ -230,7 +230,23 @@ namespace WarcraftPlugin.Core
 
                     var row = results[idx];
                     string playerName = _database.GetPlayerName(row.SteamId.ToString()) ?? $"SteamID: {row.SteamId}";
-                    string label = $"#{idx + 1} - {playerName} ({row.TotalLevel} lvl)";
+                    string label;
+                    string color;
+                    string emoji;
+
+                    switch (idx)
+                    {
+                        case 0:
+                            color = "\x06"; emoji = "🥇"; break; // Gold
+                        case 1:
+                            color = "\x0B"; emoji = "🥈"; break; // Silver
+                        case 2:
+                            color = "\x0E"; emoji = "🥉"; break; // Bronze
+                        default:
+                            color = "\x01"; emoji = "🔹"; break; // Normal
+                    }
+
+                    label = $"{color}{emoji} #{idx + 1} - {playerName} ({row.TotalLevel} lvl)";
 
                     menu.Add(label, null, (pl, opt) =>
                     {
