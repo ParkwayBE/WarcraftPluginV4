@@ -531,19 +531,24 @@ namespace WarcraftPlugin.Classes
                 var center = originalBox.Center.ToVector();
                 var box = Geometry.CreateBoxAroundPoint(center, 80, 80, 120);
 
-                Vector hitRay = rays.FirstOrDefault(r => box.Contains(r));
+                Vector? hitRay = rays.FirstOrDefault(r => box.Contains(r));
 
-                if (box.Contains(hitRay))
+                foreach (var ray in rays)
                 {
-                    Warcraft.DrawLaserBetween(eyePos, hitRay, Color.Red, 0.3f, 2.0f);
-                    PullTarget(enemy);
-                    SkillFunctions.DealRawDamage(Player, enemy, 25);
-                    Player.EmitSound("knife_hit3.vsnd");
-                    enemy.EmitSound("knife_hit1.vsnd");
-                    Player.PrintToChat($" {ChatColors.Green}👅 You lashed {enemy.PlayerName}!");
-                    StartCooldown(3);
-                    return;
+                    if (box.Contains(ray))
+                    {
+                        Warcraft.DrawLaserBetween(eyePos, ray, Color.Red, 0.3f, 2.0f);
+                        PullTarget(enemy);
+                        SkillFunctions.DealRawDamage(Player, enemy, 25);
+                        Player.EmitSound("knife_hit3.vsnd");
+                        enemy.EmitSound("knife_hit1.vsnd");
+                        Player.PrintToChat($" {ChatColors.Green}👅 You lashed {enemy.PlayerName}!");
+                        StartCooldown(3);
+                        return;
+                    }
                 }
+
+
             }
             StartCooldown(3, 3f);
             Player.PrintToChat($"{ChatColors.Red}❌ No visible enemy found to lash!");
