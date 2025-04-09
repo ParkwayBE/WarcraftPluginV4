@@ -37,6 +37,7 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerDeath>(PlayerDeath);
             HookEvent<EventRoundEnd>(RoundEnd);
+            HookEvent<EventWeaponFire>(OnWeaponFire);
 
             HookAbility(3, Ultimate);
         }
@@ -199,6 +200,26 @@ namespace WarcraftPlugin.Classes
 
             }
 
+        }
+
+        private void OnWeaponFire(EventWeaponFire @event)
+        {
+            if (cloakEffect != null)
+            {
+                cloakEffect.Destroy();
+                cloakEffect = null;
+
+                // Restart after 5 seconds (or however long you want)
+                WarcraftPlugin.Instance.AddTimer(5f, () =>
+                {
+                    if (Player.IsValid && Player.IsAlive())
+                    {
+                        cloakEffect = new ChameleonCloakEffect(Player, WarcraftPlayer.GetAbilityLevel(2));
+                        cloakEffect.Start();
+                        Console.WriteLine($"[Cloak] {Player.PlayerName}'s cloak restarted after delay.");
+                    }
+                });
+            }
         }
 
 
