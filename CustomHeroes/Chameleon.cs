@@ -426,11 +426,13 @@ namespace WarcraftPlugin.Classes
 
         private void OnPlayerJump(EventPlayerJump jump)
         {
+            if (jump.Userid != Player)
+                return; // Not your class instance
+
             var wc = WarcraftPlugin.Instance.GetWcPlayer(Player);
             if (wc == null || !wc.ChameleonHasLongjump)
                 return;
 
-            wc.ChameleonHasLongjump = false;
 
             // Apply longjump boost
             WarcraftPlugin.Instance.AddTimer(0.05f, () =>
@@ -453,35 +455,9 @@ namespace WarcraftPlugin.Classes
             // Apply gravity temporarily
             WarcraftPlugin.Instance.AddTimer(0.05f, () =>
             {
-                new SetGravityEffect(Player, 0.75f, 1.5f).Start();
+                new SetGravityEffect(Player, 70f, 1.5f).Start();
             });
         }
-
-        private float Dot(Vector a, Vector b)
-        {
-            return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
-        }
-
-        private bool IsFacingTarget(CCSPlayerController player, CCSPlayerController target, float angleThresholdDegrees = 90f)
-        {
-            var eyeAngles = player.PlayerPawn.Value.EyeAngles;
-            var playerLookDir = new Vector();
-            NativeAPI.AngleVectors(eyeAngles.Handle, playerLookDir.Handle, nint.Zero, nint.Zero);
-
-            var toTarget = target.PlayerPawn.Value.AbsOrigin - player.PlayerPawn.Value.AbsOrigin;
-            toTarget.Z = 0;
-            playerLookDir = Chameleon.Normalize(playerLookDir);
-            toTarget = Chameleon.Normalize(toTarget);
-
-            float dot = Dot(playerLookDir, toTarget);
-            float threshold = MathF.Cos(MathF.PI * angleThresholdDegrees / 180f);
-
-            return dot >= threshold;
-        }
-
-
-
-
 
         private void Ultimate()
         {
@@ -502,20 +478,24 @@ namespace WarcraftPlugin.Classes
 
             foreach (var enemy in candidates)
             {
-                var box = enemy.PlayerPawn.Value.CollisionBox();
+                // Create a slightly inflated collision box for easier aim detection
+                var originalBox = enemy.PlayerPawn.Value.CollisionBox();
+                var center = originalBox.Center.ToVector();
+                var box = Geometry.CreateBoxAroundPoint(center, 60, 60, 80); // default ~50x50x72
 
                 if (box.Contains(rayResult))
                 {
-                    // ✅ Valid pull target
                     PullTarget(enemy);
                     SkillFunctions.DealRawDamage(Player, enemy, 25);
                     Player.EmitSound("knife_hit3.vsnd");
                     enemy.EmitSound("knife_hit1.vsnd");
                     Player.PrintToChat($" {ChatColors.Green}👅 You lashed {enemy.PlayerName}!");
+                    Warcraft.DrawLaserBetween(eyePos, rayResult, Color.Red, 0.3f, 2.0f); // Single laser
                     StartCooldown(3);
                     return;
                 }
             }
+
 
             StartCooldown(3, 3f);
             Player.PrintToChat($"{ChatColors.Red}❌ No visible enemy found to lash!");
