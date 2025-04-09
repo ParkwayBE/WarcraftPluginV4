@@ -74,28 +74,44 @@ namespace WarcraftPlugin.Core
 
         private HookResult OnPlayerDeath(EventPlayerDeath @event, GameEventInfo info)
         {
-            var player = @event.Userid;
-            if (!player.IsValid || player.PlayerPawn?.Value == null)
+            var victim = @event.Userid;
+            if (!victim.IsValid || victim.PlayerPawn?.Value == null)
                 return HookResult.Continue;
 
-            var wcPlayer = _plugin.GetWcPlayer(player);
-            if (wcPlayer == null) return HookResult.Continue;
+            var wcVictim = _plugin.GetWcPlayer(victim);
+            if (wcVictim == null) return HookResult.Continue;
 
-            wcPlayer.HasOrbOfSlow = false;
-            wcPlayer.HasArmorPiercingRounds = false;
-            wcPlayer.HasMaskOfDeath = false;
-            wcPlayer.HasHelmOfExcellence = false;
-            wcPlayer.HasGlovesOfWarmth = false;
-            wcPlayer.HasLongjumpBoots = false;
-            wcPlayer.HasOrbOfReflection = false;
-            wcPlayer.HasDamageReflection = false;
-            wcPlayer.ChameleonOffensive = false;
-            wcPlayer.ChameleonDefensive = false;
-            wcPlayer.HasUltimateImmunity = false;
-            wcPlayer.RespawnQueued = false;
+            // 🧠 Reset player-specific buffs
+            wcVictim.HasOrbOfSlow = false;
+            wcVictim.HasArmorPiercingRounds = false;
+            wcVictim.HasMaskOfDeath = false;
+            wcVictim.HasHelmOfExcellence = false;
+            wcVictim.HasGlovesOfWarmth = false;
+            wcVictim.HasLongjumpBoots = false;
+            wcVictim.HasOrbOfReflection = false;
+            wcVictim.HasDamageReflection = false;
+            wcVictim.ChameleonOffensive = false;
+            wcVictim.ChameleonDefensive = false;
+            wcVictim.HasUltimateImmunity = false;
+            wcVictim.RespawnQueued = false;
+
+            // 🧠 Track death in stats
+            WarcraftPlugin.Instance.GetDatabase().RegisterDeath(victim, wcVictim.className);
+
+            // 🧠 Track kill (if valid attacker)
+            var attacker = @event.Attacker;
+            if (attacker != null && attacker.IsValid && attacker != victim)
+            {
+                var wcAttacker = _plugin.GetWcPlayer(attacker);
+                if (wcAttacker != null)
+                {
+                    WarcraftPlugin.Instance.GetDatabase().RegisterKill(attacker, wcAttacker.className);
+                }
+            }
 
             return HookResult.Continue;
         }
+
 
 
         private HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)

@@ -49,7 +49,41 @@ namespace WarcraftPlugin.Core
                 );
             ");
 
+            _connection.Execute(@"
+                CREATE TABLE IF NOT EXISTS playerstats (
+                    steamid UNSIGNED BIG INT NOT NULL,
+                    race VARCHAR(32) NOT NULL,
+                    kills INT DEFAULT 0,
+                    deaths INT DEFAULT 0,
+                    PRIMARY KEY (steamid, race)
+                );
+            ");
+
+
         }
+
+        public void RegisterKill(CCSPlayerController attacker, string race)
+        {
+            if (attacker == null || !attacker.IsValid) return;
+
+            _connection.Execute(@"
+        INSERT INTO playerstats (steamid, race, kills)
+        VALUES (@steamid, @race, 1)
+        ON CONFLICT(steamid, race) DO UPDATE SET kills = kills + 1;",
+                new { steamid = attacker.SteamID, race });
+        }
+
+        public void RegisterDeath(CCSPlayerController victim, string race)
+        {
+            if (victim == null || !victim.IsValid) return;
+
+            _connection.Execute(@"
+        INSERT INTO playerstats (steamid, race, deaths)
+        VALUES (@steamid, @race, 1)
+        ON CONFLICT(steamid, race) DO UPDATE SET deaths = deaths + 1;",
+                new { steamid = victim.SteamID, race });
+        }
+
         internal int ChangePlayerRole(CCSPlayerController player, int role)
         {
             var dbPlayer = _connection.QueryFirstOrDefault<DatabasePlayer>(@"

@@ -10,6 +10,7 @@ using CounterStrikeSharp.API.Modules.Utils;
 using Dapper;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Helpers;
+using WarcraftPlugin.Menu;
 
 namespace WarcraftPlugin.Core
 {
@@ -138,6 +139,47 @@ namespace WarcraftPlugin.Core
 
 
 
+        private void ShowPlayerStatsMenu(CCSPlayerController viewer, ulong steamId)
+        {
+            if (_database == null) return;
+
+            var connection = typeof(Database)
+                .GetField("_connection", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.GetValue(_database) as Microsoft.Data.Sqlite.SqliteConnection;
+
+            if (connection == null) return;
+
+            string name = _database.GetPlayerName(steamId.ToString()) ?? $"SteamID: {steamId}";
+
+            // Get all race stats
+            var stats = connection.Query<(string Race, int Kills, int Deaths)>(
+                @"SELECT race, kills, deaths FROM playerstats WHERE steamid = @steamid;",
+                new { steamid = steamId }).ToList();
+
+            // Get total level
+            int totalLevel = connection.ExecuteScalar<int>(
+                @"SELECT SUM(currentLevel) FROM raceinformation WHERE steamid = @steamid;",
+                new { steamid = steamId });
+
+            int totalKills = stats.Sum(s => s.Kills);
+            int totalDeaths = stats.Sum(s => s.Deaths);
+            double kdRatio = totalDeaths > 0 ? (double)totalKills / totalDeaths : totalKills;
+
+            string mostPlayedRace = stats.OrderByDescending(s => s.Kills).FirstOrDefault().Race ?? "N/A";
+            int mostPlayedKills = stats.OrderByDescending(s => s.Kills).FirstOrDefault().Kills;
+
+            var menu = MenuManagerExtra.CreateMenu($"{name}'s WCS Stats", 6);
+            menu.Category = "Player Stats";
+
+            menu.Add($"Total Level: {totalLevel}", null, null);
+            menu.Add($"Total Kills: {totalKills}", null, null);
+            menu.Add($"Total Deaths: {totalDeaths}", null, null);
+            menu.Add($"K/D Ratio: {kdRatio:0.00}", null, null);
+            menu.Add($"Most Played: {mostPlayedRace} ({mostPlayedKills} kills)", null, null);
+            menu.Add("↩ Back to Top10", null, (pl, _) => ShowTop10InChat(pl));
+
+            MenuManagerExtra.OpenMainMenuExtra(viewer, new List<Menu.Menu> { menu });
+        }
 
 
 
@@ -172,32 +214,36 @@ namespace WarcraftPlugin.Core
                 return;
             }
 
-            player.PrintToChat(" \x0B★ \x06WCS Leaderboard — Top 10 Players \x0B★");
+            // Build the menu pages
+            var pages = new List<Menu.Menu>();
 
-            int rank = 1;
-            foreach (var row in results)
+            for (int pageIndex = 0; pageIndex < 2; pageIndex++)
             {
-                string? name = _database?.GetPlayerName(row.SteamId.ToString()) ?? $"SteamID: {row.SteamId}";
-                string emoji = rank switch
+                var menu = MenuManagerExtra.CreateMenu($"Leaderboard Page {pageIndex + 1}/2", 6);
+                menu.Category = "Top10";
+
+                for (int i = 0; i < 5; i++)
                 {
-                    1 => "★",
-                    2 => "☆",
-                    3 => "○",
-                    _ => $"#{rank}"
-                };
+                    int idx = pageIndex * 5 + i;
+                    if (idx >= results.Count)
+                        break;
 
+                    var row = results[idx];
+                    string playerName = _database.GetPlayerName(row.SteamId.ToString()) ?? $"SteamID: {row.SteamId}";
+                    string label = $"#{idx + 1} - {playerName} ({row.TotalLevel} lvl)";
 
-                string color = row.SteamId == player.SteamID ? "\x10" : "\x09"; // highlight if it's the local player
-                string paddedName = name.Length > 24 ? name.Substring(0, 24) : name.PadRight(24);
-                string paddedLevel = row.TotalLevel.ToString().PadLeft(4); // aligns right (e.g., " 208")
+                    menu.Add(label, null, (pl, opt) =>
+                    {
+                        ShowPlayerStatsMenu(pl, row.SteamId);
+                    });
+                }
 
-                player.PrintToChat($"{emoji} \x09{paddedName} \x01– \x07{paddedLevel} levels");
-
-                rank++;
+                pages.Add(menu);
             }
 
-            player.PrintToChat("────────────────────────────");
+            MenuManagerExtra.OpenMainMenuExtra(player, pages);
         }
+
 
         private HookResult OnPlayerHurt(EventPlayerHurt e, GameEventInfo info)
         {
