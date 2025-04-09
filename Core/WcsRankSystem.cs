@@ -10,6 +10,7 @@ using CounterStrikeSharp.API.Modules.Utils;
 using Dapper;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Helpers;
+using WarcraftPlugin.Menu;
 
 namespace WarcraftPlugin.Core
 {
@@ -138,6 +139,47 @@ namespace WarcraftPlugin.Core
 
 
 
+        private void ShowPlayerStatsMenu(CCSPlayerController viewer, ulong steamId)
+        {
+            if (_database == null) return;
+
+            var connection = typeof(Database)
+                .GetField("_connection", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.GetValue(_database) as Microsoft.Data.Sqlite.SqliteConnection;
+
+            if (connection == null) return;
+
+            string name = _database.GetPlayerName(steamId.ToString()) ?? $"SteamID: {steamId}";
+
+            // Get all race stats
+            var stats = connection.Query<(string Race, int Kills, int Deaths)>(
+                @"SELECT race, kills, deaths FROM playerstats WHERE steamid = @steamid;",
+                new { steamid = steamId }).ToList();
+
+            // Get total level
+            int totalLevel = connection.ExecuteScalar<int>(
+                @"SELECT SUM(currentLevel) FROM raceinformation WHERE steamid = @steamid;",
+                new { steamid = steamId });
+
+            int totalKills = stats.Sum(s => s.Kills);
+            int totalDeaths = stats.Sum(s => s.Deaths);
+            double kdRatio = totalDeaths > 0 ? (double)totalKills / totalDeaths : totalKills;
+
+            string mostPlayedRace = stats.OrderByDescending(s => s.Kills).FirstOrDefault().Race ?? "N/A";
+            int mostPlayedKills = stats.OrderByDescending(s => s.Kills).FirstOrDefault().Kills;
+
+            var menu = MenuManagerExtra.CreateMenu($" \x02{name}\x06's WCS Stats", 6);
+            menu.Category = " \x06Player Stats";
+
+            menu.Add($"Total Level: {totalLevel}", null, null);
+            menu.Add($"Total Kills: {totalKills}", null, null);
+            menu.Add($"Total Deaths: {totalDeaths}", null, null);
+            menu.Add($"K/D Ratio: {kdRatio:0.00}", null, null);
+            menu.Add($"Most Played: {mostPlayedRace} ({mostPlayedKills} kills)", null, null);
+            menu.Add(" \x06↩ Return to Top10 Menu", null, (pl, _) => ShowTop10InChat(pl));
+
+            MenuManagerExtra.OpenMainMenuExtra(viewer, new List<Menu.Menu> { menu });
+        }
 
 
 
@@ -172,32 +214,52 @@ namespace WarcraftPlugin.Core
                 return;
             }
 
-            player.PrintToChat(" \x0B★ \x06WCS Leaderboard — Top 10 Players \x0B★");
+            // Build the menu pages
+            var pages = new List<Menu.Menu>();
 
-            int rank = 1;
-            foreach (var row in results)
+            for (int pageIndex = 0; pageIndex < 2; pageIndex++)
             {
-                string? name = _database?.GetPlayerName(row.SteamId.ToString()) ?? $"SteamID: {row.SteamId}";
-                string emoji = rank switch
+                var menu = MenuManagerExtra.CreateMenu($"Leaderboard Page {pageIndex + 1}/2", 6);
+                menu.Category = "Top10";
+
+                for (int i = 0; i < 5; i++)
                 {
-                    1 => "★",
-                    2 => "☆",
-                    3 => "○",
-                    _ => $"#{rank}"
-                };
+                    int idx = pageIndex * 5 + i;
+                    if (idx >= results.Count)
+                        break;
 
+                    var row = results[idx];
+                    string playerName = _database.GetPlayerName(row.SteamId.ToString()) ?? $"SteamID: {row.SteamId}";
+                    string label;
+                    string color;
+                    string emoji;
 
-                string color = row.SteamId == player.SteamID ? "\x10" : "\x09"; // highlight if it's the local player
-                string paddedName = name.Length > 24 ? name.Substring(0, 24) : name.PadRight(24);
-                string paddedLevel = row.TotalLevel.ToString().PadLeft(4); // aligns right (e.g., " 208")
+                    switch (idx)
+                    {
+                        case 0:
+                            color = "\x06"; emoji = "🥇"; break; // Gold
+                        case 1:
+                            color = "\x0B"; emoji = "🥈"; break; // Silver
+                        case 2:
+                            color = "\x0E"; emoji = "🥉"; break; // Bronze
+                        default:
+                            color = "\x01"; emoji = "🔹"; break; // Normal
+                    }
 
-                player.PrintToChat($"{emoji} \x09{paddedName} \x01– \x07{paddedLevel} levels");
+                    label = $"{color}{emoji} #{idx + 1} - {playerName} ({row.TotalLevel} lvl)";
 
-                rank++;
+                    menu.Add(label, null, (pl, opt) =>
+                    {
+                        ShowPlayerStatsMenu(pl, row.SteamId);
+                    });
+                }
+
+                pages.Add(menu);
             }
 
-            player.PrintToChat("────────────────────────────");
+            MenuManagerExtra.OpenMainMenuExtra(player, pages);
         }
+
 
         private HookResult OnPlayerHurt(EventPlayerHurt e, GameEventInfo info)
         {
@@ -247,43 +309,26 @@ namespace WarcraftPlugin.Core
             var enemyTeam = owner.TeamNum == (byte)CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
 
             var dummy = Utilities.GetPlayers()
-                .FirstOrDefault(p => p.IsBot && p.IsValid && p.TeamNum == (byte)enemyTeam && p.PlayerPawn?.Value != null);
+                .FirstOrDefault(p => p.IsBot && p.IsValid && p.TeamNum == (byte)enemyTeam && p.PlayerPawn?.Value != null && p.IsAlive());
 
             if (dummy == null)
             {
-                owner.PrintToChat(" \x07[Dummy] No bot found on the enemy team.");
+                owner.PrintToChat(" \x07[Dummy] No valid bot found on the enemy team.");
                 return;
             }
 
-            if (!dummy.IsAlive())
-            {
-                DummyTracking.Remove(owner.Slot);
-                owner.PrintToChat(" \x07[Dummy] Dummy bot was dead. Searching for a new one...");
-                return;
-            }
-
-            // Store this dummy to track HP events later
+            // Track this dummy
             DummyTracking[owner.Slot] = dummy;
 
-            // Positioning
+            // Position in front of player
             var forward = owner.PlayerPawn.Value.EyeAngles.ToForward();
             var spawnPos = owner.EyePosition() + forward * 100;
-
-            if (dummy.PlayerPawn?.Value == null)
-            {
-                owner.PrintToChat(" \x07[Dummy] Bot is not fully initialized. Try again in a second.");
-                return;
-            }
-
             dummy.PlayerPawn.Value.Teleport(spawnPos, new QAngle(), new Vector());
 
-            // Buff and disable
+            // Give health
             BonusHealth(dummy, 9999);
-            dummy.PlayerPawn.Value.Teleport(null, null, new Vector(0, 0, 0));
 
-            dummy.PlayerPawn.Value.SetColor(Color.Gray);
-            dummy.PlayerName = "TrainingDummy";
-
+            // Strip weapons
             foreach (var weapon in dummy.PlayerPawn.Value.WeaponServices.MyWeapons)
             {
                 if (weapon.IsValid)
@@ -292,8 +337,11 @@ namespace WarcraftPlugin.Core
                 }
             }
 
-            owner.PrintToChat(" \x04[Dummy] Dummy bot has been moved in front of you and frozen.");
+            // Optional cosmetic
+            dummy.PlayerPawn.Value.SetColor(Color.Gray);
+            owner.PrintToChat(" \x04[Dummy] Dummy bot has been moved in front of you for testing.");
         }
+
 
 
 

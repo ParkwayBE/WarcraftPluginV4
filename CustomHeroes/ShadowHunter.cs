@@ -7,6 +7,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.Core.Effects;
+using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
@@ -29,7 +30,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Healing Wave", "You and your teammates gain additional health on spawn."),
             new WarcraftAbility("Hex", "6-30% chance to remove all bonushealth, bonus speed and invisibility from your target."),
             new WarcraftAbility("Serpent Ward", "Place a ward that damages and slows nearby enemies."),
-            new WarcraftCooldownAbility("Big Bad Voodoo", "Become immune to all damage for the next 0.6-3 seconds", 30f, false)
+            new WarcraftCooldownAbility("Big Bad Voodoo", "Become immune to all damage for the next 3 seconds", 30f, false)
         ];
 
         public override void Register()
@@ -80,16 +81,24 @@ namespace WarcraftPlugin.Classes
             if (WarcraftPlayer.GetAbilityLevel(2) <= 0)
                 return;
 
+            // Remove the actual decoy grenade so it doesn't distract/confuse players
             Utilities.GetEntityFromIndex<CDecoyProjectile>(grenade.Entityid)?.RemoveIfValid();
 
-            var origin = new Vector(grenade.X, grenade.Y, grenade.Z);
-            var ward = new SerpentWardEffect(Player, origin);
+            // 🔥 Destroy any existing wards first
+            foreach (var existingWard in activeWards)
+                existingWard.Destroy();
+            activeWards.Clear();
 
-            ward.Start();
-            activeWards.Add(ward);
+            // Create and place the new ward
+            var origin = new Vector(grenade.X, grenade.Y, grenade.Z);
+            var newWard = new SerpentWardEffect(Player, origin);
+            newWard.Start();
+            activeWards.Add(newWard);
 
             Player.PrintToChat($" {ChatColors.Green}Serpent Ward{ChatColors.Default} : Ward placed!");
         }
+
+
 
         private void OnRoundEnd(EventRoundEnd @event)
         {
@@ -101,12 +110,12 @@ namespace WarcraftPlugin.Classes
         internal class SerpentWardEffect : WarcraftEffect
         {
             private readonly Vector _origin;
-            private readonly float _radius = 50f;
+            private readonly float _radius = 125f;
             private readonly int beamCount = 8;
             private float _rotationAngle = 0f;
 
             private readonly float _damageInterval = 0.7f;
-            private readonly int _damage = 8;
+            private readonly int _damage = 14;
             private Timer? _damageTimer;
             private Timer? _beamRotationTimer;
             private readonly CCSPlayerController _owner;
@@ -220,18 +229,9 @@ namespace WarcraftPlugin.Classes
                     float distanceSq = dx * dx + dy * dy + dz * dz;
                     if (distanceSq <= _radius * _radius)
                     {
-                        player.EmitSound("talk.vsnd");
                         int hp = player.PlayerPawn.Value.Health;
-                        if (hp <= _damage)
-                        {
-                            player.CommitSuicide(true, true);
-                            Console.WriteLine($"[SerpentWard] {player.PlayerName} was killed by the Ward!");
-                        }
-                        else
-                        {
-                            player.SetHp(hp - _damage);
-                            Console.WriteLine($"[SerpentWard] {player.PlayerName} took {_damage} damage from the Ward.");
-                        }
+                        SkillFunctions.DealRawDamage(_owner, player, _damage, KillFeedIcon.breachcharge);
+
                     }
                 }
             }

@@ -53,6 +53,21 @@
     <None Update="lang\en.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="CustomHeroes\ArchmageProudmoore.cs" />
+    <None Include="CustomHeroes\Ben.cs" />
+    <None Include="CustomHeroes\BloodMage.cs" />
+    <None Include="CustomHeroes\Chameleon.cs" />
+    <None Include="CustomHeroes\CryptLord.cs" />
+    <None Include="CustomHeroes\DwarvenSniper.cs" />
+    <None Include="CustomHeroes\HumanAlliance.cs" />
+    <None Include="CustomHeroes\LaserLightShow.cs" />
+    <None Include="CustomHeroes\Lukaku.cs" />
+    <None Include="CustomHeroes\Naix.cs" />
+    <None Include="CustomHeroes\NightElves.cs" />
+    <None Include="CustomHeroes\OrcishHorde.cs" />
+    <None Include="CustomHeroes\ShadowHunter.cs" />
+    <None Include="CustomHeroes\UndeadScourge.cs" />
+    <None Include="CustomHeroes\Warden.cs" />
     <None Include="Resources\nuget\Readme.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
@@ -68,7 +83,22 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="CustomHeroes\ArchmageProudmoore.cs" />
+    <Compile Remove="CustomHeroes\Ben.cs" />
+    <Compile Remove="CustomHeroes\BloodMage.cs" />
+    <Compile Remove="CustomHeroes\Chameleon.cs" />
+    <Compile Remove="CustomHeroes\CryptLord.cs" />
     <Compile Remove="CustomHeroes\CustomSkillRace.cs" />
+    <Compile Remove="CustomHeroes\DwarvenSniper.cs" />
+    <Compile Remove="CustomHeroes\HumanAlliance.cs" />
+    <Compile Remove="CustomHeroes\LaserLightShow.cs" />
+    <Compile Remove="CustomHeroes\Lukaku.cs" />
+    <Compile Remove="CustomHeroes\Naix.cs" />
+    <Compile Remove="CustomHeroes\NightElves.cs" />
+    <Compile Remove="CustomHeroes\OrcishHorde.cs" />
+    <Compile Remove="CustomHeroes\ShadowHunter.cs" />
+    <Compile Remove="CustomHeroes\UndeadScourge.cs" />
+    <Compile Remove="CustomHeroes\Warden.cs" />
     <Compile Remove="CustomHeroes\Wraithstalker.cs" />
   </ItemGroup>
   </Project>

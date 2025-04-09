@@ -46,7 +46,7 @@ namespace WarcraftPlugin.Classes
             {
                 SkillFunctions.MovementSpeed(Player, 0.1f * level2, 999f);
                 SkillFunctions.SetPlayerGravity(Player, gravityPercent, duration);
-                Player.PrintToChat($" Your{ChatColors.LightPurple}gravity{ChatColors.Default} is now {gravityPercent} and gained {speedMultiplier} bonus {ChatColors.LightPurple}movement speed{ChatColors.Default}!");
+                Player.PrintToChat($" Your {ChatColors.LightPurple}gravity{ChatColors.Default} is now {gravityPercent}% and gained {speedMultiplier} bonus {ChatColors.LightPurple}movement speed{ChatColors.Default}!");
 
             });
         }

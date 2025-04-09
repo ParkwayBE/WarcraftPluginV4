@@ -26,7 +26,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Blizzard", "Chance to slow your target and obscure his vision ."),
             new WarcraftAbility("Water Elemental", "When you kill a player you have a chance to revive a teammate as a Water Elemental."),
             new WarcraftAbility("Brilliance Aura", "You and up to two random allies have a chance to block some ultimates."),
-            new WarcraftCooldownAbility("Flight","Conjure a spell that allows you to fly.", 2f, false)
+            new WarcraftCooldownAbility("Flight","Conjure a spell that allows you to fly.", 2f, false) //
         ];
 
         public override void Register()
@@ -171,15 +171,31 @@ namespace WarcraftPlugin.Classes
         {
             var attacker = @event.Attacker;
             var victim = @event.Userid;
+            int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
+
+            int level = WarcraftPlayer.GetAbilityLevel(1);
+
+
+            int BlindPercent = abilityLevel * 2;
+            int chancePercent = level * 10;
+            float blindTime = abilityLevel / 2f;
+
+
+            if (!Warcraft.RollDice(BlindPercent, 100))
+            {
+                if (level <= 0) return;
+                victim.Blind(blindTime, Color.WhiteSmoke);
+            }
+
+            if (!Warcraft.RollDice(chancePercent, 100)) return;
+
+            if (level <= 0) return;
+
             SkillFunctions.SlowTarget(attacker, victim, 25, 3.5f);
 
             if (victim.PlayerPawn?.Value?.Health > 0) return;
 
-            int level = WarcraftPlayer.GetAbilityLevel(1);
-            if (level <= 0) return;
 
-            int chancePercent = level * 10;
-            if (!Warcraft.RollDice(chancePercent, 100)) return;
 
             // Find a dead teammate
             var deadTeammates = Utilities.GetPlayers().Where(p =>
@@ -197,7 +213,7 @@ namespace WarcraftPlugin.Classes
             revived.GiveNamedItem("weapon_knife");
             revived.PlayerPawn.Value.SetColor(Color.Blue);
 
-            Player.PrintToChat($"{ChatColors.Green}🧊 Water Elemental{ChatColors.Default}: You revived {revived.PlayerName} with {bonusHp} HP!");
+            Player.PrintToChat($" {ChatColors.Green}🧊 Water Elemental{ChatColors.Default}: You revived {revived.PlayerName} with {bonusHp} HP!");
 
             WarcraftPlugin.Instance.AddTimer(0.2f, () =>
             {
@@ -205,8 +221,8 @@ namespace WarcraftPlugin.Classes
                 {
                     revived.PlayerPawn.Value.Teleport(deathPosition, null, null);
                     var allowedWeapons = new List<string> { "weapon_knife" };
-                    SkillFunctions.RestrictWeapons(revived, allowedWeapons, 30f);
-                    revived.PrintToCenter($"{ChatColors.Blue}🧊 Water Elemental{ChatColors.Default} You were summoned by {attacker.PlayerName}!");
+                    SkillFunctions.RestrictWeapons(revived, allowedWeapons, 999f);
+                    revived.PrintToCenter($" {ChatColors.Blue}🧊 Water Elemental{ChatColors.Default} You were summoned by {attacker.PlayerName}!");
                 }
             });
         }

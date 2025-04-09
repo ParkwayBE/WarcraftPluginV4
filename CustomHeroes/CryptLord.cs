@@ -97,6 +97,7 @@ namespace WarcraftPlugin.Classes
             {
                 Player.PrintToCenter($" {ChatColors.Red}⛔{ChatColors.Default} Target has {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
                 randomEnemy.PrintToCenter($" {ChatColors.Green}🛡️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} blocked the effect!");
+                StartCooldown(3, 5f);
                 return;
             }
 

@@ -14,7 +14,7 @@ namespace WarcraftPlugin.Menu.WarcraftMenu
             var warcraftClass = wcPlayer.GetClass();
 
             var skillsMenu = MenuManager.CreateMenu(@$"<font color='{warcraftClass.DefaultColor.AdjustBrightness(1.3f).ToHex()}' class='{FontSizes.FontSizeM}'>{warcraftClass.LocalizedDisplayName}</font><font color='gold' class='{FontSizes.FontSizeSm}'> - {plugin.Localizer["menu.skills.level"]} {wcPlayer.GetLevel()}</font><br>
-                <font color='#90EE90' class='{FontSizes.FontSizeS}'>{plugin.Localizer["menu.skills.available", XpSystem.GetFreeSkillPoints(wcPlayer)]}</font>");
+                <font color='#90EE90' class='{FontSizes.FontSizeS}'>{plugin.Localizer["menu.skills.available", XpSystem.GetFreeSkillPoints(wcPlayer)]}</font>", 7);
 
             for (int i = 0; i < warcraftClass.Abilities.Count; i++)
             {

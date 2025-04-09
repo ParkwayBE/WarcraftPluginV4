@@ -69,7 +69,7 @@ namespace WarcraftPlugin
         public Config Config { get; set; } = null!;
 
 
-        internal WarcraftPlayer GetWcPlayer(CCSPlayerController player)
+        public WarcraftPlayer GetWcPlayer(CCSPlayerController player)
         {
 
             if (!player.IsValid || player.ControllingBot) return null; // removed isbot line
@@ -94,6 +94,7 @@ namespace WarcraftPlugin
         internal static void RefreshPlayerName(CCSPlayerController player)
         {
             if (player == null || !player.IsValid) return;
+            return;
             if (Instance.Config.DisableNamePrefix) return;
             var warcraftPlayer = Instance.GetWcPlayer(player);
             if (warcraftPlayer == null) return;
@@ -134,6 +135,12 @@ namespace WarcraftPlugin
             _rankSystem.Initialize();
 
             _admin = new AdminPanel(this);
+
+            new ShopMenu(this);
+
+            new GlobalBuffs(this);
+
+
 
 
             if (Config.ShowCommandAdverts)

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using CounterStrikeSharp.API.Core;
+using WarcraftPlugin.Core;
 using WarcraftPlugin.Helpers;
+using WarcraftPlugin.Models;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 
@@ -14,6 +16,29 @@ namespace WarcraftPlugin.CustomSkills
         {
             new SetMovementSpeed(player, amount, duration).Start();
         }
+        public static void SetMovementSpeed(CCSPlayerController player, float amount, float duration)
+        {
+            new SetMovementSpeed(player, amount, duration).Start();
+        }
+
+        public static void SetGravity(CCSPlayerController player, float gravityPercent, float duration = 999f)
+        {
+            new SetGravityEffect(player, gravityPercent, duration).Start();
+        }
+
+        public static void ApplyForwardBoost(CCSPlayerController player, float strength)
+        {
+            if (player?.PlayerPawn?.Value == null) return;
+
+            var forward = player.PlayerPawn.Value.EyeAngles.ToForward();
+            Vector velocity = forward * (strength * 400); // Adjust power
+            velocity.Z += 150f; // Add lift
+
+            player.PlayerPawn.Value.Teleport(null, null, velocity);
+        }
+
+
+
         public static void SetBonusHealth(CCSPlayerController player, int amount)
         {
             new SetBonusHealth(player, amount).Start();
@@ -89,29 +114,37 @@ namespace WarcraftPlugin.CustomSkills
             }
         }
 
-        public static void DealRawDamage(CCSPlayerController attacker, CCSPlayerController victim, int damage)
-        {
-            if (victim == null || !victim.IsValid || victim.PlayerPawn?.Value == null) return;
+        private static readonly HashSet<nint> DamageLoopProtection = new();
 
-            if (!victim.IsAlive() || !attacker.IsAlive() || attacker.TeamNum == victim.TeamNum)
+        public static void DealRawDamage(CCSPlayerController attacker, CCSPlayerController victim, int damage, KillFeedIcon? icon = null)
+        {
+            if (victim == null || !victim.IsValid || victim.PlayerPawn?.Value == null || !victim.IsAlive())
                 return;
 
-            int newHealth = victim.PlayerPawn.Value.Health - damage;
+            if (attacker != null && (!attacker.IsValid || attacker.PlayerPawn?.Value == null))
+                attacker = null;
 
-            if (newHealth <= 0)
-            {
-                victim.CommitSuicide(true, true); // Kills the player properly
-                Console.WriteLine($"[Chain Lightning] {attacker.PlayerName} killed {victim.PlayerName} with the final zap!");
-            }
-            else
-            {
-                victim.SetHp(newHealth);
-                Console.WriteLine($"[Chain Lightning] {attacker.PlayerName} dealt {damage} to {victim.PlayerName} (new HP: {newHealth})");
-            }
+            if (DamageLoopProtection.Contains(victim.Handle))
+                return;
 
-            attacker.PrintToCenter($"⚡ You dealt {damage} damage to {victim.PlayerName}!");
-            victim.PrintToCenter($"⚡ You were hit by {attacker.PlayerName}'s Chain Lightning!");
+            try
+            {
+                DamageLoopProtection.Add(victim.Handle);
+
+                victim.TakeDamage(
+                    damage,
+                    attacker,
+                    icon,
+                    inflictor: null,
+                    penetrationKill: false
+                );
+            }
+            finally
+            {
+                DamageLoopProtection.Remove(victim.Handle);
+            }
         }
+
 
         public static void ImpaleTarget(CCSPlayerController attacker, CCSPlayerController victim, float force = 300f)
         {
@@ -129,6 +162,13 @@ namespace WarcraftPlugin.CustomSkills
         public static void RestrictWeapons(CCSPlayerController player, List<string> allowedWeapons, float duration = 999f)
         {
             new RestrictWeaponsEffect(player, duration, allowedWeapons).Start();
+        }
+
+        public static Vector Normalize(Vector vec)
+        {
+            float length = MathF.Sqrt(vec.X * vec.X + vec.Y * vec.Y + vec.Z * vec.Z);
+            if (length == 0) return new Vector(0, 0, 0);
+            return new Vector(vec.X / length, vec.Y / length, vec.Z / length);
         }
     }
 }

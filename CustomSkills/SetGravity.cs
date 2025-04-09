@@ -4,7 +4,7 @@ using WarcraftPlugin.Core.Effects;
 
 namespace WarcraftPlugin.CustomSkills
 {
-    internal class SetGravityEffect : WarcraftEffect
+    public class SetGravityEffect : WarcraftEffect
     {
         private readonly float _gravity;
 

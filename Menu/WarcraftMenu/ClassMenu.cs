@@ -1,8 +1,8 @@
-﻿using CounterStrikeSharp.API.Core;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Core;
 using WarcraftPlugin.Helpers;
 
@@ -36,7 +36,7 @@ namespace WarcraftPlugin.Menu.WarcraftMenu
 
             var totalLevels = warcraftClassInformations.Sum(x => x.CurrentLevel);
 
-            var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>{plugin.Localizer["menu.class"]}</font><br><font color='grey' class='{FontSizes.FontSizeS}'>{plugin.Localizer["menu.class.total.levels"]} (</font><font color='gold' class='{FontSizes.FontSizeS}'>{totalLevels}</font><font color='grey' class='{FontSizes.FontSizeS}'>)</font>", 5);
+            var classMenu = MenuManager.CreateMenu(@$"<font color='lightgrey' class='{FontSizes.FontSizeM}'>{plugin.Localizer["menu.class"]}</font><br><font color='grey' class='{FontSizes.FontSizeS}'>{plugin.Localizer["menu.class.total.levels"]} (</font><font color='gold' class='{FontSizes.FontSizeS}'>{totalLevels}</font><font color='grey' class='{FontSizes.FontSizeS}'>)</font>", 6);
 
             foreach (var warClassInformation in warcraftClassInformations
                 .OrderByDescending(x => x.CurrentLevel)

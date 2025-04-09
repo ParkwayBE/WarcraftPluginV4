@@ -118,6 +118,7 @@ namespace WarcraftPlugin.Classes
                 {
                     caster.PrintToCenter($" {ChatColors.Red}⛔{ChatColors.Default} Target has {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
                     closest.PrintToCenter($" {ChatColors.Green}🛡️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} blocked {ChatColors.LightPurple}Chain Lightning{ChatColors.Default}!");
+                    StartCooldown(3, 5f);
                     return;
                 }
 
