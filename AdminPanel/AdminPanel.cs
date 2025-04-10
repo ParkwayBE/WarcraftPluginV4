@@ -29,7 +29,7 @@ namespace WarcraftPlugin.Core
             //_plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat2, HookMode.Pre);
             _plugin.AddCommandListener("say", OnPlayerChat2);
 
-            //LoadMutedPlayers();
+            LoadMutedPlayers();
         }
         //private HookResult CheckIfMuted
         private void LoadMutedPlayers()
@@ -98,7 +98,7 @@ namespace WarcraftPlugin.Core
                 rightMenu.Category = "Admin";
                 // List of menus for navigation
                 List<Menu.Menu> menus = new() { leftMenu, middleMenu, rightMenu };
-
+                
                 // Left Menu Options
                 leftMenu.Add("Spawn Dummy", null, (pl, opt) =>
                 {
