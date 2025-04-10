@@ -94,8 +94,8 @@ namespace WarcraftPlugin
         internal static void RefreshPlayerName(CCSPlayerController player)
         {
             if (player == null || !player.IsValid) return;
-            return;
-            if (Instance.Config.DisableNamePrefix) return;
+            return; /* THIS REMOVES PLAYERNAME PREFIX
+            if (Instance.Config.DisableNamePrefix) return; 
             var warcraftPlayer = Instance.GetWcPlayer(player);
             if (warcraftPlayer == null) return;
 
@@ -110,7 +110,7 @@ namespace WarcraftPlugin
                 if (player == null || !player.IsValid) return;
                 player.PlayerName = playerNameWithPrefix;
                 Utilities.SetStateChanged(player, "CBasePlayerController", "m_iszPlayerName");
-            });
+            }); */
         }
 
         public override void Load(bool hotReload)

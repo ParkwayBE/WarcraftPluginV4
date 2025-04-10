@@ -54,27 +54,30 @@ namespace WarcraftPlugin.Classes
                 var random = new Random();
                 int AbilityLevel = WarcraftPlayer.GetAbilityLevel(0);
 
+                cloakEffect?.Destroy();
+                cloakEffect = null;
+
                 cloakEffect = new ChameleonCloakEffect(Player, WarcraftPlayer.GetAbilityLevel(2));
                 cloakEffect.Start();
 
                 // List of possible effects
                 var effects = new List<Action<CCSPlayerController>>
 {
-                // 🎲 Effect 1: Bonus Health
+                // Effect 1: Bonus Health
                 p =>
                 {
                     Player.PrintToChat($" {ChatColors.Green} Bonus health activated.");
                     SkillFunctions.SetBonusHealth(p, 15 * AbilityLevel);
                 },
 
-                // 🎲 Effect 2: Bonus Movement Speed
+                // Effect 2: Bonus Movement Speed
                 p =>
                 {
                     Player.PrintToChat($" {ChatColors.Green} Bonus movement speed activated.");
                     SkillFunctions.SetMovementSpeed(p, 0.1f * AbilityLevel, 999f);
                 },
 
-                // 🎲 Effect 3: Team Health Buff
+                // Effect 3: Team Health Buff
                 p =>
                 {
                     foreach (var teammate in Utilities.GetPlayers().Where(t => t.TeamNum == p.TeamNum && t.IsAlive()))
@@ -84,7 +87,7 @@ namespace WarcraftPlugin.Classes
                     }
                 },
 
-                // 🎲 Effect 4: Ult Immunity for self + 2 allies, if lucky 3 allies
+                // Effect 4: Ult Immunity for self + 2 allies, if lucky 3 allies
                 p =>
     {
                     int level = WarcraftPlayer.GetAbilityLevel(0);
@@ -133,7 +136,7 @@ namespace WarcraftPlugin.Classes
                 },
 
 
-               // 🎲 Effect 5: Reduced gravity + long jump
+               // Effect 5: Reduced gravity + long jump
                 p =>
 {
                     Player.PrintToChat($" {ChatColors.Green} Longjump activated.");
@@ -146,7 +149,7 @@ namespace WarcraftPlugin.Classes
 ,
 
 
-                // 🎲 Effect 6: Juggernaut Mode
+                // Effect 6: Juggernaut Mode
                 p =>
                 {
                     Player.PrintToChat($" {ChatColors.Green} Juggernaut activated, reduced MS but alot of health is gained..");
@@ -158,7 +161,7 @@ namespace WarcraftPlugin.Classes
 
                 },
 
-                // 🎲 Effect 7: Random weapon loadout
+                // Effect 7: Random weapon loadout
                 p =>
                 {
                     string[] rifles = { "weapon_ak47", "weapon_m4a1", "weapon_famas", "weapon_galilar" };
@@ -169,7 +172,7 @@ namespace WarcraftPlugin.Classes
                     p.PrintToChat($" {ChatColors.Gold}🎁 You received a {selected.Replace("weapon_", "").ToUpper()} and grenades!");
                 },
 
-                // 🎲 Effect 8: Defensive cloak upgrade
+                // Effect 8: Defensive cloak upgrade
                 p =>
                 {
                     Player.PrintToChat($" {ChatColors.Green} Defensive Cloak upgrade activated.");
@@ -177,7 +180,7 @@ namespace WarcraftPlugin.Classes
                     if (wc != null) wc.ChameleonDefensive = true;
                 },
 
-                // 🎲 Effect 9: Offensive boost
+                // Effect 9: Offensive boost
                 p =>
                 {
                     Player.PrintToChat($" {ChatColors.Green} Offensiveskills boost activated.");
@@ -185,7 +188,7 @@ namespace WarcraftPlugin.Classes
                     if (wc != null) wc.ChameleonOffensive = true;
                 },
 
-                // 🎲 Effect 10: Reflect Damage (temporary)
+                // Effect 10: Reflect Damage (temporary)
                 p =>
                 {
                     Player.PrintToChat($" {ChatColors.Green} You will reflect 25% damage taken this round.");
@@ -237,22 +240,19 @@ namespace WarcraftPlugin.Classes
         }
         private void OnWeaponFire(EventWeaponFire @event)
         {
-            if (cloakEffect != null)
+            WarcraftPlugin.Instance.AddTimer(3f, () =>
             {
-                cloakEffect.Destroy();
-                cloakEffect = null;
-
-                // Restart after 5 seconds (or however long you want)
-                WarcraftPlugin.Instance.AddTimer(5f, () =>
+                if (Player.IsValid && Player.IsAlive())
                 {
-                    if (Player.IsValid && Player.IsAlive())
-                    {
-                        cloakEffect = new ChameleonCloakEffect(Player, WarcraftPlayer.GetAbilityLevel(2));
-                        cloakEffect.Start();
-                        Console.WriteLine($"[Cloak] {Player.PlayerName}'s cloak restarted after delay.");
-                    }
-                });
-            }
+                    if (cloakEffect != null)
+                        return; // ✅ already cloaked or in process
+
+                    cloakEffect = new ChameleonCloakEffect(Player, WarcraftPlayer.GetAbilityLevel(2));
+                    cloakEffect.Start();
+                    Console.WriteLine($"[Cloak] {Player.PlayerName}'s cloak restarted after delay.");
+                }
+            });
+
         }
 
         private readonly Dictionary<ulong, float> lastEffectTime = new();
@@ -279,7 +279,7 @@ namespace WarcraftPlugin.Classes
             lastEffectTime[steamId] = now;
 
             var rand = new Random();
-            int effect = rand.Next(6); // 0–5
+            int effect = rand.Next(6); 
 
             Vector start = Warcraft.EyePosition(attacker);
             Vector end = Warcraft.EyePosition(victim);
@@ -309,7 +309,7 @@ namespace WarcraftPlugin.Classes
                     laserColor = Color.Orange;
                     break;
 
-                case 3: // Freeze or slow
+                case 3: // Freeze
                     if (isUpgraded && victim?.PlayerPawn?.Value != null)
                     {
                         new FreezePlayerEffect(attacker, 1.0f, victim).Start();
@@ -347,7 +347,7 @@ namespace WarcraftPlugin.Classes
             }
 
 
-            // 🎯 Draw effect laser
+            // Draw effect laser
             Warcraft.DrawLaserBetween(start, end, laserColor, duration: 0.3f, width: 1.5f);
         }
 
