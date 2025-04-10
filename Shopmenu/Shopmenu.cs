@@ -608,8 +608,9 @@ namespace WarcraftPlugin.Core
         public int Cost => 1400;
         public bool IsPersistent => false;
 
-        private readonly string ctModel = "characters/models/ctm_heavy/ctm_heavy.vmdl";
-        private readonly string tModel = "characters/models/tm_phoenix_heavy/tm_phoenix_heavy.vmdl";
+        private readonly string ctModel = "models/player/custom_player/legacy/ctm_fbi.vmdl";
+        private readonly string tModel = "models/player/custom_player/legacy/tm_leet.vmdl";
+
 
         public bool Apply(CCSPlayerController player)
         {
@@ -624,12 +625,12 @@ namespace WarcraftPlugin.Core
 
             if (modelToApply == null)
             {
-                player.PrintToChat($"{ChatColors.Red}✖ Could not apply disguise.");
+                player.PrintToChat($" {ChatColors.Red}✖ Could not apply disguise.");
                 return false;
             }
 
             player.PlayerPawn.Value.SetModel(modelToApply);
-            player.PrintToChat($"{ChatColors.Green}✔ You are now disguised as the enemy!");
+            player.PrintToChat($" {ChatColors.Green}✔ You are now disguised as the enemy!");
 
             return true;
         }
@@ -706,8 +707,8 @@ namespace WarcraftPlugin.Core
             int maxXp = wcPlayer.amountToLevel;
             int level = wcPlayer.GetLevel();
 
-            chosenTeammate.PrintToChat($"{ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
-            chosenTeammate.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
+            player.PrintToChat($" {ChatColors.Green}✔ You have given {xpToGive} XP to {chosenTeammate.PlayerName} !");
+            chosenTeammate.PrintToChat($" {ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
 
             chosenTeammate.PrintToChat($" {ChatColors.Gold}✨ {player.PlayerName} has gifted you {xpToGive} XP!");
 
@@ -729,7 +730,7 @@ namespace WarcraftPlugin.Core
         {
             if (player == null || player.PlayerPawn?.Value == null || player.IsAlive())
             {
-                player.PrintToChat($"{ChatColors.Red}✖ You must be dead to use the Scroll of Resurrection!");
+                player.PrintToChat($" {ChatColors.Red}✖ You must be dead to use the Scroll of Resurrection!");
                 return false;
             }
 
@@ -739,7 +740,7 @@ namespace WarcraftPlugin.Core
 
             if (allies.Count == 0)
             {
-                player.PrintToChat($"{ChatColors.Red}✖ No living teammates to anchor your resurrection.");
+                player.PrintToChat($" {ChatColors.Red}✖ No living teammates to anchor your resurrection.");
                 return false;
             }
 
@@ -751,7 +752,7 @@ namespace WarcraftPlugin.Core
             wcPlayer.RespawnLocation = anchor.PlayerPawn.Value.AbsOrigin;
             wcPlayer.RespawnTriggerTime = Server.CurrentTime + 3f;
 
-            player.PrintToChat($"{ChatColors.Gold}⏳ Channeling resurrection... You will respawn in 3 seconds!");
+            player.PrintToChat($" {ChatColors.Gold}⏳ Channeling resurrection... You will respawn in 3 seconds!");
 
             return true;
         }
