@@ -136,7 +136,7 @@ namespace WarcraftPlugin.Core
                 return HookResult.Continue;
 
             var wcPlayer = _plugin.GetWcPlayer(player);
-            if (wcPlayer.HasGlovesOfWarmth)
+            if (wcPlayer != null && wcPlayer.HasGlovesOfWarmth)
             {
                 Server.NextFrame(() =>
                 {
