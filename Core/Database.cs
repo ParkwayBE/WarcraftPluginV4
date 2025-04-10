@@ -70,7 +70,7 @@ namespace WarcraftPlugin.Core
         }
         public void MutePlayer(CCSPlayerController player)
         {
-            if(player != null)
+            if (player != null)
             {
                 _connection.Execute(@"
             INSERT INTO mutedplayers (steamid, muted)
@@ -83,19 +83,19 @@ namespace WarcraftPlugin.Core
             if (player != null)
             {
                 _connection.Execute(@"DELETE FROM mutedplayers WHERE @steamid = steamid",
-                      new {steamid = player.SteamID});
+                      new { steamid = player.SteamID });
             }
         }
         public List<ulong> GetAllMutedPlayers()
         {
-      
+
             var mutedPlayers = _connection.Query<DatabasePlayer>(@"
                 SELECT p.* 
                 FROM players p
                 INNER JOIN mutedplayers m ON p.steamid = m.steamid
             ").ToList();
             List<ulong> result = new List<ulong>();
-            foreach( DatabasePlayer player in mutedPlayers )
+            foreach (DatabasePlayer player in mutedPlayers)
             {
                 result.Add(player.SteamId);
             }
@@ -224,10 +224,18 @@ namespace WarcraftPlugin.Core
             if (!raceInformationExists)
             {
                 _connection.Execute(@"
-                insert into `raceinformation` (steamid, racename)
-                values (@steamid, @racename);",
-                    new { steamid = player.SteamID, racename = dbPlayer.CurrentRace });
+                insert into `raceinformation` 
+                (steamid, racename, currentXP, currentLevel, amountToLevel)
+                values 
+                (@steamid, @racename, 0, 1, @amountToLevel);",
+                            new
+                            {
+                                steamid = player.SteamID,
+                                racename = dbPlayer.CurrentRace,
+                                amountToLevel = WarcraftPlugin.Instance.XpSystem.GetXpForLevel(1)
+                            });
             }
+
 
             var raceInformation = _connection.QueryFirst<ClassInformation>(@"
             SELECT * from `raceinformation` where `steamid` = @steamid AND `racename` = @racename",
