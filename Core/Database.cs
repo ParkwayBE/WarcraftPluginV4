@@ -58,8 +58,48 @@ namespace WarcraftPlugin.Core
                     PRIMARY KEY (steamid, race)
                 );
             ");
+            _connection.Execute(@"
+                CREATE TABLE IF NOT EXISTS mutedplayers (
+                    steamid UNSIGNED BIG INT NOT NULL,
+                    muted INT DEFAULT 0,
+                    PRIMARY KEY (steamid)
+                );
+            ");
 
 
+        }
+        public void MutePlayer(CCSPlayerController player)
+        {
+            if(player != null)
+            {
+                _connection.Execute(@"
+            INSERT INTO mutedplayers (steamid, muted)
+            VALUES (@steamid, 1)",
+            new { steamid = player.SteamID });
+            }
+        }
+        public void UnmutePlayer(CCSPlayerController player)
+        {
+            if (player != null)
+            {
+                _connection.Execute(@"DELETE FROM mutedplayers WHERE @steamid = steamid",
+                      new {steamid = player.SteamID});
+            }
+        }
+        public List<ulong> GetAllMutedPlayers()
+        {
+      
+            var mutedPlayers = _connection.Query<DatabasePlayer>(@"
+                SELECT p.* 
+                FROM players p
+                INNER JOIN mutedplayers m ON p.steamid = m.steamid
+            ").ToList();
+            List<ulong> result = new List<ulong>();
+            foreach( DatabasePlayer player in mutedPlayers )
+            {
+                result.Add(player.SteamId);
+            }
+            return result;
         }
 
         public void RegisterKill(CCSPlayerController attacker, string race)
