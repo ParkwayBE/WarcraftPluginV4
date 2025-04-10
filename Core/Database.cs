@@ -224,17 +224,19 @@ namespace WarcraftPlugin.Core
             if (!raceInformationExists)
             {
                 _connection.Execute(@"
-                insert into `raceinformation` 
-                (steamid, racename, currentXP, currentLevel, amountToLevel)
-                values 
-                (@steamid, @racename, 0, 1, @amountToLevel);",
-                            new
-                            {
-                                steamid = player.SteamID,
-                                racename = dbPlayer.CurrentRace,
-                                amountToLevel = WarcraftPlugin.Instance.XpSystem.GetXpForLevel(1)
-                            });
+                    insert into `raceinformation` 
+                    (steamid, racename, currentXP, currentLevel, amountToLevel,
+                     ability1level, ability2level, ability3level, ability4level)
+                    values 
+                    (@steamid, @racename, 0, 1, @amountToLevel, 0, 0, 0, 0);",
+                    new
+                    {
+                        steamid = player.SteamID,
+                        racename = dbPlayer.CurrentRace,
+                        amountToLevel = WarcraftPlugin.Instance.XpSystem.GetXpForLevel(1)
+                    });
             }
+
 
 
             var raceInformation = _connection.QueryFirst<ClassInformation>(@"
