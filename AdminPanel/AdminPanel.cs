@@ -4,6 +4,7 @@ using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.Menu;
 
@@ -17,6 +18,8 @@ namespace WarcraftPlugin.Core
         List<String> admins = new List<String>();
         private static Dictionary<CCSPlayerController, Action<string>> pendingInputs = new Dictionary<CCSPlayerController, Action<string>>();
         private List<ulong> _mutedPlayers = new List<ulong>();
+        Database _db;
+        private Timer? _waitForWcPluginTimer;
 
         public AdminPanel(WarcraftPlugin plugin)
         {
@@ -28,7 +31,28 @@ namespace WarcraftPlugin.Core
             //_plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat, HookMode.Pre);
             //_plugin.RegisterEventHandler<EventPlayerChat>(OnPlayerChat2, HookMode.Pre);
             _plugin.AddCommandListener("say", OnPlayerChat2);
+            _waitForWcPluginTimer = _plugin.AddTimer(1.0f, WaitForWarcraftPlugin, TimerFlags.REPEAT);
+        }
 
+        private void WaitForWarcraftPlugin()
+        {
+            if (WarcraftPlugin.Instance == null)
+            {
+                Server.PrintToConsole("[WCS Rank] ❌ Waiting for WarcraftPlugin.Instance...");
+                return;
+            }
+
+            _db = WarcraftPlugin.Instance.GetDatabase();
+
+            if (_db == null)
+            {
+                Server.PrintToConsole("[WCS Rank] ❌ WarcraftPlugin.Instance loaded but GetDatabase() returned null.");
+                return;
+            }
+
+            Server.PrintToConsole("[WCS Rank] ✅ WarcraftPlugin successfully linked. Rank system is ready!");
+            _waitForWcPluginTimer?.Kill();
+            _waitForWcPluginTimer = null;
             LoadMutedPlayers();
         }
         //private HookResult CheckIfMuted
