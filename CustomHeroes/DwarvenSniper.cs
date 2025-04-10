@@ -245,8 +245,9 @@ namespace WarcraftPlugin.Classes
         {
             var attacker = @event.Attacker;
             var victim = @event.Userid;
+
             if (attacker.TeamNum == victim.TeamNum)
-                return
+                return;
 
             if (@event.Weapon == "ssg08" || @event.Weapon == "awp")
             {
