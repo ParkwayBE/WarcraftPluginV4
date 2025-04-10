@@ -6,6 +6,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using Dapper;
 using Microsoft.Data.Sqlite;
+using Serilog;
 using WarcraftPlugin.Models;
 
 namespace WarcraftPlugin.Core
@@ -88,17 +89,23 @@ namespace WarcraftPlugin.Core
         }
         public List<ulong> GetAllMutedPlayers()
         {
-
             var mutedPlayers = _connection.Query<DatabasePlayer>(@"
-                SELECT p.* 
-                FROM players p
-                INNER JOIN mutedplayers m ON p.steamid = m.steamid
+            SELECT p.*
+            FROM players p
+            INNER JOIN mutedplayers m ON p.steamid = m.steamid
             ").ToList();
-            List<ulong> result = new List<ulong>();
-            foreach (DatabasePlayer player in mutedPlayers)
+
+            // Check if the list is empty (i.e., no muted players found)
+            if (mutedPlayers == null || !mutedPlayers.Any())
             {
-                result.Add(player.SteamId);
+                // Log or handle the case when no muted players are found
+                Console.WriteLine("No muted players found.");
+                return new List<ulong>(); // Return an empty list
             }
+
+            // Convert the muted players to a list of SteamIds
+            List<ulong> result = mutedPlayers.Select(player => player.SteamId).ToList();
+
             return result;
         }
 
