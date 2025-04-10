@@ -125,15 +125,26 @@ namespace WarcraftPlugin.Core
             int maxLevelPerRace = 16;
             int maxTotalLevel = classCount * maxLevelPerRace;
 
+            string kdColor;
+
+            if (kdRatio < 1.0)
+                kdColor = ChatColors.Red.ToString();
+            else if (kdRatio < 1.5)
+                kdColor = ChatColors.Yellow.ToString();
+            else
+                kdColor = ChatColors.Green.ToString();
+
+
+
             // Display
-            player.PrintToChat(" {ChatColors.Yellow}★ Your WCS Rank Summary ★");
-            player.PrintToChat($" {ChatColors.Grey}Total Level:{ChatColors.BlueGrey} {totalLevel} / {maxTotalLevel}");
-            player.PrintToChat($" {ChatColors.Grey}Races Trained:{ChatColors.BlueGrey} {allClassData.Count} / {classCount}");
-            player.PrintToChat($" {ChatColors.Grey}Leaderboard Rank:{ChatColors.BlueGrey} #{rank}");
+            player.PrintToChat($" {ChatColors.Red}★{ChatColors.Default} {ChatColors.LightYellow}Your WCS Rank Summary{ChatColors.Default} {ChatColors.Red}★{ChatColors.Default}");
+            player.PrintToChat($" {ChatColors.Grey}Total Level:{ChatColors.Green} {totalLevel} / {maxTotalLevel}");
+            player.PrintToChat($" {ChatColors.Grey}Races Trained:{ChatColors.Green} {allClassData.Count} / {classCount}");
+            player.PrintToChat($" {ChatColors.Grey}Leaderboard Rank:{ChatColors.Green} #{rank}");
             player.PrintToChat("─────────────────────────────");
             player.PrintToChat($" {ChatColors.Grey}Total Kills:{ChatColors.White} {totalKills}");
             player.PrintToChat($" {ChatColors.Grey}Total Deaths:{ChatColors.White} {totalDeaths}");
-            player.PrintToChat($" {ChatColors.Grey}K/D Ratio:{ChatColors.White} {kdRatio:0.00}");
+            player.PrintToChat($" {ChatColors.Grey}K/D Ratio:{kdColor} {kdRatio:0.00}");
             player.PrintToChat($" {ChatColors.Grey}Most Played:{ChatColors.White} {mostPlayedRace} ({mostPlayedKills} kills)");
             player.PrintToChat("─────────────────────────────");
         }
