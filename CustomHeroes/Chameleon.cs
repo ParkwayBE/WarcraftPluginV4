@@ -310,7 +310,7 @@ namespace WarcraftPlugin.Classes
                     break;
 
                 case 3: // Freeze or slow
-                    if (isUpgraded)
+                    if (isUpgraded && victim?.PlayerPawn?.Value != null)
                     {
                         new FreezePlayerEffect(attacker, 1.0f, victim).Start();
                         attacker.PrintToChat($" {ChatColors.Blue}❄️ You completely froze your enemy!");
@@ -325,12 +325,15 @@ namespace WarcraftPlugin.Classes
                     break;
 
                 case 4: // Float
-                    SkillFunctions.SetGravity(victim, 0.0f, isUpgraded ? 1.0f : 0.5f);
-                    Vector upward = new(0, 0, 200f);
-                    victim.PlayerPawn.Value.Teleport(null, null, upward);
-                    attacker.PrintToChat($" {ChatColors.LightBlue}🌪️ You made your enemy float!");
-                    laserColor = Color.LightBlue;
-                    break;
+                    if (victim?.PlayerPawn?.Value != null)
+                    {
+                        SkillFunctions.SetGravity(victim, 0.0f, isUpgraded ? 1.0f : 0.5f);
+                        Vector upward = new(0, 0, 200f);
+                        victim.PlayerPawn.Value.Teleport(null, null, upward);
+                        attacker.PrintToChat($" {ChatColors.LightBlue}🌪️ You made your enemy float!");
+                        laserColor = Color.LightBlue;
+                        break;
+                    }
 
                 case 5: // Restrict weapons
                     var allowedWeapons = new List<string>

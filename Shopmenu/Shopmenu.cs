@@ -189,7 +189,11 @@ namespace WarcraftPlugin.Core
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             if (wcPlayer == null) return false;
 
-            var race = wcPlayer.GetClass().InternalName;
+            var playerClass = wcPlayer.GetClass();
+            if (playerClass == null) return false;
+
+            var race = playerClass.InternalName;
+
             if (restrictedRaces.Contains(race))
             {
                 player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) already has movement buffs.");
@@ -307,7 +311,15 @@ namespace WarcraftPlugin.Core
             if (plugin == null) return false;
 
             plugin.XpSystem.AddXp(player, xpToGive);
+
+            var wcPlayer = plugin.GetWcPlayer(player);
+            int curXp = wcPlayer.currentXp;
+            int maxXp = wcPlayer.amountToLevel;
+            int level = wcPlayer.GetLevel();
+
             player.PrintToChat($"{ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
+            player.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
+
 
             return true;
         }
@@ -330,7 +342,15 @@ namespace WarcraftPlugin.Core
             if (plugin == null) return false;
 
             plugin.XpSystem.AddXp(player, xpToGive);
-            player.PrintToChat($" {ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
+
+            var wcPlayer = plugin.GetWcPlayer(player);
+            int curXp = wcPlayer.currentXp;
+            int maxXp = wcPlayer.amountToLevel;
+            int level = wcPlayer.GetLevel();
+
+            player.PrintToChat($"{ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
+            player.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
+
 
             return true;
         }
@@ -356,6 +376,10 @@ namespace WarcraftPlugin.Core
 
             var random = new Random();
             int xpToGive = random.Next(xpToGiveMin, xpToGiveMax + 1);
+            var wcPlayer = plugin.GetWcPlayer(player);
+            int curXp = wcPlayer.currentXp;
+            int maxXp = wcPlayer.amountToLevel;
+            int level = wcPlayer.GetLevel();
 
             // Roll for GOLD bonus
             int roll = random.Next(1, 431); // 1 in 430 chance
@@ -367,12 +391,15 @@ namespace WarcraftPlugin.Core
                 Utilities.GetPlayers().ForEach(p =>
                 {
                     p.PrintToChat($" {ChatColors.Gold}✨ {player.PlayerName} rolled a GOLD CASE in the XP shop and gained +1000 bonus XP! ✨");
+
                 });
+                player.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
             }
 
             plugin.XpSystem.AddXp(player, xpToGive);
 
             player.PrintToChat($" {ChatColors.Green}🎲 You gained {xpToGive} XP from the Gambling Tome of Experience!");
+            player.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
             if (isGold)
             {
                 player.PrintToChat($" {ChatColors.Gold}💛 You wasted your knife luck for this round...");
@@ -400,7 +427,15 @@ namespace WarcraftPlugin.Core
             if (plugin == null) return false;
 
             plugin.XpSystem.AddXp(player, xpToGive);
-            player.PrintToChat($" {ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
+
+            var wcPlayer = plugin.GetWcPlayer(player);
+            int curXp = wcPlayer.currentXp;
+            int maxXp = wcPlayer.amountToLevel;
+            int level = wcPlayer.GetLevel();
+
+            player.PrintToChat($"{ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
+            player.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
+
 
             return true;
         }
@@ -661,7 +696,15 @@ namespace WarcraftPlugin.Core
             var chosenTeammate = players[random.Next(players.Count)];
 
             plugin.XpSystem.AddXp(chosenTeammate, xpToGive);
-            player.PrintToChat($" {ChatColors.Green}✔ You gifted {xpToGive} XP to {chosenTeammate.PlayerName}!");
+
+            var wcPlayer = plugin.GetWcPlayer(chosenTeammate);
+            int curXp = wcPlayer.currentXp;
+            int maxXp = wcPlayer.amountToLevel;
+            int level = wcPlayer.GetLevel();
+
+            chosenTeammate.PrintToChat($"{ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
+            chosenTeammate.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
+
             chosenTeammate.PrintToChat($" {ChatColors.Gold}✨ {player.PlayerName} has gifted you {xpToGive} XP!");
 
             return true;
