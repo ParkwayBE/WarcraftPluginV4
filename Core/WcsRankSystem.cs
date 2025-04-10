@@ -79,7 +79,7 @@ namespace WarcraftPlugin.Core
         {
             if (_database == null)
             {
-                player.PrintToChat("[WCS] Rank system is currently unavailable.");
+                player.PrintToChat(" {ChatColors.Red}[WCS] Rank system is currently unavailable.");
                 return;
             }
 
@@ -87,7 +87,7 @@ namespace WarcraftPlugin.Core
 
             if (allClassData == null || allClassData.Count == 0)
             {
-                player.PrintToChat("[WCS] You don't have any race data yet.");
+                player.PrintToChat(" {ChatColors.Gray}[WCS] You don't have any race data yet.");
                 return;
             }
 
@@ -110,25 +110,34 @@ namespace WarcraftPlugin.Core
             );", new { PlayerTotal = totalLevel });
             }
 
+            // Extra stats
+            var stats = connection?.Query<(string Race, int Kills, int Deaths)>(
+                @"SELECT race, kills, deaths FROM playerstats WHERE steamid = @steamid;",
+                new { steamid = player.SteamID })?.ToList() ?? new List<(string, int, int)>();
+
+            int totalKills = stats.Sum(s => s.Kills);
+            int totalDeaths = stats.Sum(s => s.Deaths);
+            double kdRatio = totalDeaths > 0 ? (double)totalKills / totalDeaths : totalKills;
+            string mostPlayedRace = stats.OrderByDescending(s => s.Kills).FirstOrDefault().Race ?? "N/A";
+            int mostPlayedKills = stats.OrderByDescending(s => s.Kills).FirstOrDefault().Kills;
+
             int classCount = WarcraftPlugin.Instance.classManager.GetAllClasses().Count();
             int maxLevelPerRace = 16;
             int maxTotalLevel = classCount * maxLevelPerRace;
 
-            // 👇 Full-width target column for alignment (change if needed)
-            const int valueColumnStart = 36;
-
-            // Build raw lines
-            string line1 = BuildRankLine($" <font color='#A0A0A0'>Total Level:</font>", $" <font color='#87CEFA'>{totalLevel} / {maxTotalLevel}</font>", valueColumnStart);
-            string line2 = BuildRankLine($" <font color='#A0A0A0'>Races Trained:</font>", $" <font color='#87CEFA'>{allClassData.Count} / {classCount}</font>", valueColumnStart);
-            string line3 = BuildRankLine($" <font color='#A0A0A0'>Leaderboard Rank:</font>", $" <font color='#87CEFA'>#{rank}</font>", valueColumnStart);
-
-            // Print all
-            player.PrintToChat(" <font color='#D4AF37'>★</font> <font color='#D4AF37'>Your WCS Rank Summary</font> <font color='#D4AF37'>★</font>");
-            player.PrintToChat(line1);
-            player.PrintToChat(line2);
-            player.PrintToChat(line3);
-            player.PrintToChat("────────────────────────────────────────");
+            // Display
+            player.PrintToChat(" {ChatColors.Yellow}★ Your WCS Rank Summary ★");
+            player.PrintToChat($" {ChatColors.Grey}Total Level:{ChatColors.BlueGrey} {totalLevel} / {maxTotalLevel}");
+            player.PrintToChat($" {ChatColors.Grey}Races Trained:{ChatColors.BlueGrey} {allClassData.Count} / {classCount}");
+            player.PrintToChat($" {ChatColors.Grey}Leaderboard Rank:{ChatColors.BlueGrey} #{rank}");
+            player.PrintToChat("─────────────────────────────");
+            player.PrintToChat($" {ChatColors.Grey}Total Kills:{ChatColors.White} {totalKills}");
+            player.PrintToChat($" {ChatColors.Grey}Total Deaths:{ChatColors.White} {totalDeaths}");
+            player.PrintToChat($" {ChatColors.Grey}K/D Ratio:{ChatColors.White} {kdRatio:0.00}");
+            player.PrintToChat($" {ChatColors.Grey}Most Played:{ChatColors.White} {mostPlayedRace} ({mostPlayedKills} kills)");
+            player.PrintToChat("─────────────────────────────");
         }
+
 
         // ✅ Helper method
         private string BuildRankLine(string label, string value, int valueStartColumn)
