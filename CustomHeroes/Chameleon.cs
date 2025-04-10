@@ -217,6 +217,7 @@ namespace WarcraftPlugin.Classes
             {
                 wcPlayer.ChameleonOffensive = false;
                 wcPlayer.ChameleonDefensive = false;
+                wcPlayer.ChameleonHasLongjump = false;
                 cloakEffect?.Destroy();
                 cloakEffect = null;
 
@@ -229,6 +230,7 @@ namespace WarcraftPlugin.Classes
             {
                 wcPlayer.ChameleonOffensive = false;
                 wcPlayer.ChameleonDefensive = false;
+                wcPlayer.ChameleonHasLongjump = false;
                 cloakEffect?.Destroy();
                 cloakEffect = null;
             }
