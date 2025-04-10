@@ -243,9 +243,13 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
+            var attacker = @event.Attacker;
+            var victim = @event.Userid;
+            if (attacker.TeamNum == victim.TeamNum)
+                return
+
             if (@event.Weapon == "ssg08" || @event.Weapon == "awp")
             {
-                var victim = @event.Userid;
                 var damageBonus = WarcraftPlayer.GetAbilityLevel(0) * 8;
                 @event.AddBonusDamage(damageBonus);
                 Warcraft.SpawnParticle(victim.PlayerPawn.Value.AbsOrigin.With(z: victim.PlayerPawn.Value.AbsOrigin.Z + 60), "particles/ui/hud/ui_transitions_tests_lin_a.vpcf");
