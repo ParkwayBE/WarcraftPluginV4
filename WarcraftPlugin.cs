@@ -328,7 +328,7 @@ namespace WarcraftPlugin
         }
         internal WarcraftPlayer ChangeClass(CCSPlayerController player, string classInternalName, bool force = false)
         {
-            _database.SavePlayerToDatabase(player);
+            _database.SavePlayerToDatabase(player); // ✅ Save old race progress
 
             if (!force && classInternalName == player.GetWarcraftPlayer().className)
                 return player.GetWarcraftPlayer();
@@ -337,15 +337,14 @@ namespace WarcraftPlugin
             var wcPlayer = player.GetWarcraftPlayer();
             wcPlayer.className = classInternalName;
 
-            // Ensure the new class is saved and THEN loaded back in
-            _database.SavePlayerToDatabase(player);
-            _database.SaveCurrentClass(player);
+            _database.SaveCurrentClass(player); // ✅ Just update class name
 
-            wcPlayer = _database.LoadPlayerFromDatabase(player, XpSystem);
-            SetWcPlayer(player, wcPlayer); // Make sure internal cache is updated too
+            wcPlayer = _database.LoadPlayerFromDatabase(player, XpSystem); // ✅ Now load new race data
+            SetWcPlayer(player, wcPlayer); // ✅ Cache update
 
             return wcPlayer;
         }
+
 
 
         private void UltimatePressed(CCSPlayerController client, CommandInfo commandinfo)
