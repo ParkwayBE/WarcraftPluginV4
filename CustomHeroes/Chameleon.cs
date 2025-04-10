@@ -552,7 +552,7 @@ namespace WarcraftPlugin.Classes
 
 
             }
-            StartCooldown(3, 3f);
+            StartCooldown(3, 0.5f);
             Player.PrintToChat($"{ChatColors.Red}❌ No visible enemy found to lash!");
         }
 
