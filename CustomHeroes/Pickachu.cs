@@ -151,6 +151,42 @@ namespace WarcraftPlugin.Classes
             {
             }
 
+            private void CheckForMovementAndAddCharge()
+            {
+                if (Owner == null || Owner.PlayerPawn?.Value == null || !Owner.IsAlive())
+                    return;
+
+                var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
+                var diff = currentPosition - _lastPosition;
+                float movedDist = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
+
+                Console.WriteLine($"[ChargeSystem] Distance moved: {movedDist}");
+
+                bool isMoving = movedDist > 4f;
+                if (!isMoving)
+                {
+                    _lastPosition = currentPosition;
+                    return;
+                }
+
+                _chargeStacks = Math.Min(_chargeStacks + 2, _maxCharge);
+
+                float now = Server.CurrentTime;
+                if (now - _lastChatTime > 2f)
+                {
+                    Console.WriteLine($"[ChargeSystem] {Owner.PlayerName} now at {_chargeStacks} stacks");
+                    Owner.PrintToChat($" {ChatColors.Green}[ChargeSystem]{ChatColors.Default} Charge: {ChatColors.LightYellow}{_chargeStacks}/100");
+                    _lastChatTime = now;
+                }
+
+                int tier = Math.Min(_chargeStacks / 10, 10);
+                float buffMultiplier = tier * 0.1f;
+                Owner.PlayerPawn.Value.VelocityModifier = 1.0f + (buffMultiplier / 2f);
+
+                _lastPosition = currentPosition;
+            }
+
+
             public override void OnStart()
             {
                 if (Owner?.PlayerPawn?.Value == null) return;
@@ -163,35 +199,14 @@ namespace WarcraftPlugin.Classes
                 Console.WriteLine($"[ChargeSystem] TICKING FOR MOVING EFFECT");
                 try
                 {
-                    if (Owner == null || Owner.PlayerPawn?.Value == null || !Owner.IsAlive()) return;
-
-                    var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
-                    var diff = currentPosition - _lastPosition;
-                    float movedDist = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
-                    bool isMoving = movedDist > 4f;
-
-                    if (isMoving)
-                    {
-                        _chargeStacks = Math.Min(_chargeStacks + 2, _maxCharge);
-                        float now = Server.CurrentTime;
-                        if (now - _lastChatTime > 2f)
-                        {
-                            Owner.PrintToChat($" {ChatColors.Green}[ChargeSystem]{ChatColors.Default} Charge: {ChatColors.LightYellow}{_chargeStacks}/100");
-                            _lastChatTime = now;
-                        }
-
-                        int tier = Math.Min(_chargeStacks / 10, 10);
-                        float buffMultiplier = tier * 0.1f;
-                        Owner.PlayerPawn.Value.VelocityModifier = 1.0f + (buffMultiplier / 2f);
-                    }
-
-                    _lastPosition = currentPosition;
+                    CheckForMovementAndAddCharge();
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"[ChargeSystem] OnTick crashed: {ex.Message}");
                 }
             }
+
 
             public override void OnFinish()
             {
