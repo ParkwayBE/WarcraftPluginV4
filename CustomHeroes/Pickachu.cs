@@ -74,7 +74,7 @@ namespace WarcraftPlugin.Classes
                     continue;
 
                 var wcTarget = target.GetWarcraftPlayer();
-                if (wcTarget == null || wcTarget.Player == null)
+                if (wcTarget == null || wcTarget == null) //
                 {
                     Console.WriteLine($"[VoltTackle] Skipping {target.PlayerName} (missing WCPlayer or controller)");
                     continue;
@@ -94,7 +94,7 @@ namespace WarcraftPlugin.Classes
                     continue;
 
                 // ⚡ Apply damage & effect
-                SkillFunctions.DealRawDamage(caster, wcTarget.Player, stackDamage);
+                SkillFunctions.DealRawDamage(caster, target, stackDamage);
                 Warcraft.SpawnParticle(targetPos, "particles/generic_fx/fx_electricspark_glow.vpcf", 2f);
                 Console.WriteLine($"[VoltTackle] {caster.PlayerName} hit {target.PlayerName} for {stackDamage} (Distance: {distance:0.0})");
             }
