@@ -72,71 +72,78 @@ namespace WarcraftPlugin.Classes
             if (WarcraftPlayer.GetAbilityLevel(3) <= 0)
                 return;
 
-            Console.WriteLine("[OrcishHorde] Ultimate activated");
-
             var caster = Player;
-            var casterPos = caster.PlayerPawn?.Value?.AbsOrigin;
-            if (casterPos == null) return;
+            if (caster == null || !caster.IsValid || !caster.IsAlive()) return;
 
-            ChargeWhileMovingEffect effect;
-            if (!_chargeEffects.TryGetValue(caster.SteamID, out effect))
-                return;
-
-
-            float radius = 1500f;
+            if (!_chargeEffects.TryGetValue(caster.SteamID, out var effect)) return;
             int damage = effect.ChargeStacks;
-            bool hitSomething = false;
 
-            foreach (var player in Utilities.GetPlayers())
+            // Begin Volt Tackle — TELEPORT first
+            SkillFunctions.TeleportUltimate(caster);
+            caster.PrintToChat($" {ChatColors.LightPurple}⚡ Volt Tackle initiated!");
+
+            // After teleport, do the AoE check (short delay to ensure teleport finished)
+            WarcraftPlugin.Instance.AddTimer(0.3f, () =>
             {
-                if (player == null || !player.IsValid || !player.IsAlive() || player.PlayerPawn?.Value == null)
-                    continue;
+                var casterPos = caster.PlayerPawn?.Value?.AbsOrigin;
+                if (casterPos == null || !caster.IsValid || !caster.IsAlive()) return;
 
-                if (player == caster || player.TeamNum == caster.TeamNum)
-                    continue;
+                float radius = 1500f;
+                bool hitSomething = false;
 
-                var pos = player.PlayerPawn.Value.AbsOrigin;
-                var diff = pos - casterPos;
-                float distSq = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
-
-                if (distSq > radius * radius)
-                    continue;
-
-                var wcTarget = player.GetWarcraftPlayer();
-                if (wcTarget != null && wcTarget.HasUltimateImmunity)
+                foreach (var player in Utilities.GetPlayers())
                 {
-                    caster.PrintToCenter($" {ChatColors.Red}⛔{ChatColors.Default} Target has {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
-                    player.PrintToCenter($" {ChatColors.Green}🛡️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} blocked {ChatColors.LightPurple}Volt Tackle{ChatColors.Default}!");
-                    continue;
+                    if (player == null || !player.IsValid || !player.IsAlive() || player.PlayerPawn?.Value == null)
+                        continue;
+
+                    if (player == caster || player.TeamNum == caster.TeamNum)
+                        continue;
+
+                    var pos = player.PlayerPawn.Value.AbsOrigin;
+                    var diff = pos - casterPos;
+                    float distSq = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
+
+                    if (distSq > radius * radius)
+                        continue;
+
+                    var wcTarget = player.GetWarcraftPlayer();
+                    if (wcTarget != null && wcTarget.HasUltimateImmunity)
+                    {
+                        caster.PrintToCenter($" {ChatColors.Red}⛔{ChatColors.Default} Target has {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
+                        player.PrintToCenter($" {ChatColors.Green}🛡️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} blocked {ChatColors.LightPurple}Volt Tackle{ChatColors.Default}!");
+                        continue;
+                    }
+
+                    // ✅ Hit confirmed
+                    hitSomething = true;
+                    SkillFunctions.DealRawDamage(caster, player, damage);
+                    caster.PrintToChat($" {ChatColors.Green}[Volt Tackle]{ChatColors.Default} Dealt {ChatColors.LightPurple}{damage}{ChatColors.Default} damage to {ChatColors.Yellow}{player.PlayerName}{ChatColors.Default}.");
+
+                    var lightningPos = Warcraft.EyePosition(player);
+                    var particle = Warcraft.SpawnParticle(lightningPos, "particles/ui/status_levels/ui_status_level7_lightning.vpcf", 2.0f);
+                    if (player.PlayerPawn?.Value != null)
+                    {
+                        particle.SetParent(player.PlayerPawn.Value);
+                    }
+
+                    var raisedPos = pos + new Vector(0, 0, 30);
+                    Warcraft.SpawnParticle(raisedPos, "particles/generic_fx/fx_electricspark_glow.vpcf", 2f);
+                    Warcraft.SpawnParticle(casterPos, "particles/explosions_fx/bumpmine_detonate_sparks.vpcf", 2f);
                 }
 
-                hitSomething = true;
-                SkillFunctions.DealRawDamage(caster, player, damage);
-                caster.PrintToChat($" {ChatColors.Green}[Volt Tackle]{ChatColors.Default} Dealt {ChatColors.LightPurple}{damage}{ChatColors.Default} damage to {ChatColors.Yellow}{player.PlayerName}{ChatColors.Default}.");
-
-                var lightningPos = Warcraft.EyePosition(player);
-                var particle = Warcraft.SpawnParticle(lightningPos, "particles/ui/status_levels/ui_status_level7_lightning.vpcf", 2.0f);
-                if (player.PlayerPawn != null && player.PlayerPawn.Value != null)
+                // No targets? Deal damage to self!
+                if (!hitSomething)
                 {
-                    particle.SetParent(player.PlayerPawn.Value);
+                    caster.PrintToChat($" {ChatColors.Red}⚠️ No targets hit! You shocked yourself for {damage}!");
+                    SkillFunctions.DealRawDamage(caster, caster, damage);
                 }
-                var raisedPos = pos + new Vector(0, 0, 30);
-                Warcraft.SpawnParticle(raisedPos, "particles/generic_fx/fx_electricspark_glow.vpcf", 2f);
-                Warcraft.SpawnParticle(casterPos, "particles/explosions_fx/bumpmine_detonate_sparks.vpcf", 2f);
-            }
 
-            if (hitSomething)
-            {
-                StartCooldown(3);
-                effect._chargeStacks = 0;
-            }
-            else
-            {
-                caster.PrintToCenter($" {ChatColors.Default}⚠️{ChatColors.Default} No valid targets for {ChatColors.LightPurple}Volt Tackle{ChatColors.Default} — Pickachu kept going and crashed.");
+                // Always clear charges and trigger cooldown
                 effect._chargeStacks = 0;
                 StartCooldown(3);
-            }
+            });
         }
+
         internal class ChargeWhileMovingEffect : WarcraftEffect
         {
             private float _lastChatTime;
@@ -160,8 +167,6 @@ namespace WarcraftPlugin.Classes
                 var diff = currentPosition - _lastPosition;
                 float movedDist = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
 
-                Console.WriteLine($"[ChargeSystem] Distance moved: {movedDist}");
-
                 bool isMoving = movedDist > 4f;
                 if (!isMoving)
                 {
@@ -174,8 +179,7 @@ namespace WarcraftPlugin.Classes
                 float now = Server.CurrentTime;
                 if (now - _lastChatTime > 2f)
                 {
-                    Console.WriteLine($"[ChargeSystem] {Owner.PlayerName} now at {_chargeStacks} stacks");
-                    Owner.PrintToChat($" {ChatColors.Green}[ChargeSystem]{ChatColors.Default} Charge: {ChatColors.LightYellow}{_chargeStacks}/100");
+                    Owner.PrintToCenter($" {ChatColors.Green}[ChargeSystem]{ChatColors.Default} Charge: {ChatColors.LightYellow}{_chargeStacks}/100");
                     _lastChatTime = now;
                 }
 
@@ -190,12 +194,10 @@ namespace WarcraftPlugin.Classes
             {
                 if (Owner?.PlayerPawn?.Value == null) return;
                 _lastPosition = CopyPosition(Owner.PlayerPawn.Value.AbsOrigin);
-                Console.WriteLine($"[ChargeSystem] Charging started for {Owner.PlayerName}");
             }
 
             public override void OnTick()
             {
-                Console.WriteLine($"[ChargeSystem] TICKING FOR MOVING EFFECT");
                 try
                 {
                     CheckForMovementAndAddCharge();
