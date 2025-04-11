@@ -19,7 +19,6 @@ namespace WarcraftPlugin.Classes
         public override string DisplayName => "Pickachu";
         public override Color DefaultColor => Color.Yellow;
         private Dictionary<ulong, ChargeWhileMovingEffect> _chargeEffects = new();
-        private static readonly Dictionary<ulong, ParalyzeEffect> _activeParalyzeEffects = new();
 
 
         public override List<IWarcraftAbility> Abilities =>
@@ -54,61 +53,73 @@ namespace WarcraftPlugin.Classes
                 _chargeEffects[player.SteamID] = effect;
             });
         }
-
         private void Ultimate()
         {
-            if (Player == null || !Player.IsAlive())
+            if (WarcraftPlayer.GetAbilityLevel(3) <= 0)
                 return;
+
+            Console.WriteLine("[OrcishHorde] Ultimate activated");
 
             var caster = Player;
-            var casterPos = caster.PlayerPawn.Value.AbsOrigin;
+            var casterPos = caster.PlayerPawn?.Value?.AbsOrigin;
+            if (casterPos == null) return;
 
-            if (!_chargeEffects.TryGetValue(caster.SteamID, out var effect))
+            ChargeWhileMovingEffect effect;
+            if (!_chargeEffects.TryGetValue(caster.SteamID, out effect))
                 return;
 
-            int stackDamage = effect.ChargeStacks;
-            float radius = 15f * effect.ChargeStacks;
 
-            foreach (var target in Utilities.GetPlayers())
+            float radius = 1500f;
+            int damage = effect.ChargeStacks * 4;
+            bool hitSomething = false;
+
+            foreach (var player in Utilities.GetPlayers())
             {
-                if (!target.IsAlive() || target == caster || target.TeamNum == caster.TeamNum)
+                if (player == null || !player.IsValid || !player.IsAlive() || player.PlayerPawn?.Value == null)
                     continue;
 
-                var wcTarget = target.GetWarcraftPlayer();
-                if (wcTarget == null || wcTarget == null) //
-                {
-                    Console.WriteLine($"[VoltTackle] Skipping {target.PlayerName} (missing WCPlayer or controller)");
+                if (player == caster || player.TeamNum == caster.TeamNum)
                     continue;
-                }
 
-                if (wcTarget.HasUltimateImmunity)
+                var pos = player.PlayerPawn.Value.AbsOrigin;
+                var diff = pos - casterPos;
+                float distSq = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
+
+                if (distSq > radius * radius)
+                    continue;
+
+                var wcTarget = player.GetWarcraftPlayer();
+                if (wcTarget != null && wcTarget.HasUltimateImmunity)
                 {
                     caster.PrintToCenter($" {ChatColors.Red}⛔{ChatColors.Default} Target has {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
-                    target.PrintToCenter($" {ChatColors.Green}🛡️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} blocked {ChatColors.LightPurple}Volt Tackle{ChatColors.Default}!");
+                    player.PrintToCenter($" {ChatColors.Green}🛡️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} blocked {ChatColors.LightPurple}Volt Tackle{ChatColors.Default}!");
                     continue;
                 }
 
-                var targetPos = target.PlayerPawn.Value.AbsOrigin;
-                float distance = (targetPos - casterPos).Length();
+                hitSomething = true;
+                SkillFunctions.DealRawDamage(caster, player, damage);
+                caster.PrintToChat($" {ChatColors.Green}[Volt Tackle]{ChatColors.Default} Dealt {ChatColors.LightPurple}{damage}{ChatColors.Default} damage to {ChatColors.Yellow}{player.PlayerName}{ChatColors.Default}.");
 
-                if (distance > radius)
-                    continue;
-
-                // ⚡ Apply damage & effect
-                SkillFunctions.DealRawDamage(caster, target, stackDamage);
-                Warcraft.SpawnParticle(targetPos, "particles/generic_fx/fx_electricspark_glow.vpcf", 2f);
-                Console.WriteLine($"[VoltTackle] {caster.PlayerName} hit {target.PlayerName} for {stackDamage} (Distance: {distance:0.0})");
+                var lightningPos = Warcraft.EyePosition(player);
+                var particle = Warcraft.SpawnParticle(lightningPos, "particles/ui/status_levels/ui_status_level7_lightning.vpcf", 2.0f);
+                particle.SetParent(player.PlayerPawn.Value);
+                var raisedPos = pos + new Vector(0, 0, 30);
+                Warcraft.SpawnParticle(raisedPos, "particles/generic_fx/fx_electricspark_glow.vpcf", 2f);
+                Warcraft.SpawnParticle(casterPos, "particles/explosions_fx/bumpmine_detonate_sparks.vpcf", 2f);
             }
 
-            // 🔋 Reset stacks and cleanup
-            effect._chargeStacks = 0;
-            Warcraft.SpawnParticle(casterPos, "particles/explosions_fx/bumpmine_detonate_sparks.vpcf", 2f);
-            _chargeEffects.Remove(caster.SteamID);
-
-            StartCooldown(3);
+            if (hitSomething)
+            {
+                StartCooldown(3);
+                effect._chargeStacks = 0;
+            }
+            else
+            {
+                caster.PrintToCenter($" {ChatColors.Default}⚠️{ChatColors.Default} No valid targets for {ChatColors.LightPurple}Volt Tackle{ChatColors.Default} — Pickachu kept going and crashed.");
+                effect._chargeStacks = 0;
+                StartCooldown(3);
+            }
         }
-
-
         internal class ChargeWhileMovingEffect : WarcraftEffect
         {
             private Vector _previousPosition;
@@ -173,9 +184,6 @@ namespace WarcraftPlugin.Classes
 
         }
 
-
-
-
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
             var attacker = @event.Attacker;
@@ -190,7 +198,7 @@ namespace WarcraftPlugin.Classes
 
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
-                if (victim == null) return;
+                if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive()) return;
                 @event.AddBonusDamage(electricDamage);
                 Warcraft.SpawnParticle(victimPos, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
             });
@@ -198,14 +206,14 @@ namespace WarcraftPlugin.Classes
             float chance = 0.02f * abilityLevel;
             if (Random.Shared.NextDouble() <= chance)
             {
-                if (victim == null) return;
-                // new ParalyzeEffect(victim, 1.0f).Start();
+                if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive()) return;
+                // Paralyze code needs to be here
                 Console.WriteLine($"[Thunderbolt] Paralyzing victim from Thunderbolt.");
             }
 
             WarcraftPlugin.Instance.AddTimer(3f, () =>
             {
-                if (victim == null) return;
+                if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive()) return;
                 @event.AddBonusDamage(electricDamage);
                 Warcraft.SpawnParticle(victimPos, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
             });
@@ -220,97 +228,7 @@ namespace WarcraftPlugin.Classes
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
             if (abilityLevel <= 0) return;
 
-            /*
-            float chance = (0.1f * abilityLevel) / 2f;
-            if (Random.Shared.NextDouble() <= chance)
-            {
-                new ParalyzeEffect(attacker, 0.5f).Start();
-                Console.WriteLine($"[StaticBody] Paralyzing attacker for hitting Pickachu.");
-            } */
+            // Defensive paralyze code here Static body
         }
-
-
-
-        public class ParalyzeEffect : WarcraftEffect
-        {
-            private Timer? _fireDelayTimer;
-            public ParalyzeEffect(CCSPlayerController owner, float duration = 2.0f)
-                : base(owner, duration, destroyOnDeath: false, destroyOnRoundEnd: false)
-            {
-            }
-
-            public override void OnStart()
-            {
-                if (Owner == null || Owner.PlayerPawn == null || !Owner.IsValid) return;
-
-                ulong steamId = Owner.SteamID;
-                if (_activeParalyzeEffects.ContainsKey(steamId))
-                {
-                    Console.WriteLine($"[ParalyzeEffect] Skipping: {Owner.PlayerName} already has an active ParalyzeEffect.");
-                    Destroy();
-                    return;
-                }
-
-                _activeParalyzeEffects[steamId] = this;
-
-                FreezeInput(Owner, true);
-                Owner.PrintToCenter($"{ChatColors.Red}⚡ Paralyzed! ⚡");
-                Warcraft.SpawnParticle(Owner.PlayerPawn.Value.AbsOrigin, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
-                /*
-                _fireDelayTimer = WarcraftPlugin.Instance.AddTimer(0.25f, () =>
-                {
-                    if (Owner == null || Owner.PlayerPawn == null || !Owner.IsValid) return;
-
-                    var weapon = Owner.PlayerPawn.Value.WeaponServices?.ActiveWeapon?.Value;
-                    if (weapon != null)
-                    {
-                        int currentTick = Server.TickCount;
-                        int durationTicks = (int)(Duration * 20);
-
-                        if (weapon.NextPrimaryAttackTick <= currentTick)
-                        {
-                            weapon.NextPrimaryAttackTick = currentTick + durationTicks;
-                        }
-                    }
-                }, TimerFlags.REPEAT); */
-            }
-            public override void OnTick()
-            {
-                // needs to be here
-            }
-
-            public override void OnFinish()
-            {
-                try
-                {
-                    if (Owner == null || !Owner.IsValid) return;
-                    if (Owner.PlayerPawn == null || Owner.PlayerPawn.Value == null) return;
-
-                    FreezeInput(Owner, false);
-                    //_fireDelayTimer?.Kill();
-                    _activeParalyzeEffects.Remove(Owner.SteamID);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[ParalyzeEffect.OnFinish] CRASH PREVENTED: {ex.Message}");
-                }
-            }
-
-        }
-
-        private static void FreezeInput(CCSPlayerController player, bool freeze)
-        {
-            if (player == null || !player.IsValid || player.PlayerPawn == null || player.PlayerPawn.Value == null)
-                return;
-
-            if (!player.IsAlive()) // ✅ Extra critical check
-                return;
-
-            if (freeze)
-                player.DisableMovement();
-            else
-                player.EnableMovement();
-        }
-
     }
 }
