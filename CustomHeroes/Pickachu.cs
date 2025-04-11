@@ -92,7 +92,7 @@ namespace WarcraftPlugin.Classes
                     continue;
 
                 // Apply damage and effects
-                SkillFunctions.DealRawDamage(Player, wcTarget.Player, stackDamage);
+                SkillFunctions.DealRawDamage(WarcraftPlayer.Player, wcTarget.Player, stackDamage);
                 Warcraft.SpawnParticle(pos, "particles/generic_fx/fx_electricspark_glow.vpcf", 2f);
             }
 
