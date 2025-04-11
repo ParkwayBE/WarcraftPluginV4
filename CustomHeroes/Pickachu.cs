@@ -153,108 +153,104 @@ namespace WarcraftPlugin.Classes
 
             public override void OnStart()
             {
-                if (Owner == null || Owner.PlayerPawn == null || Owner.PlayerPawn.Value == null) return;
-
-                var origin = Owner.PlayerPawn.Value.AbsOrigin.Clone();
+                if (Owner?.PlayerPawn?.Value == null) return;
                 _lastPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
-
                 Console.WriteLine($"[ChargeSystem] Charging started for {Owner.PlayerName}");
-            }
-
-
-            public override void OnFinish()
-            {
-                if (Owner != null && Owner.IsValid)
-                {
-                    Owner.PrintToChat($" {ChatColors.Green}[ChargeSystem]{ChatColors.Default} Stopped charging.");
-                }
-
-                _chargeStacks = 0;
             }
 
             public override void OnTick()
             {
-                if (Owner == null || Owner.PlayerPawn == null || !Owner.IsAlive()) return;
-
-                var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
-                var diff = currentPosition - _lastPosition;
-                float distanceMoved = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
-
-                bool isMoving = distanceMoved > 4f;
-
-                if (isMoving && _chargeStacks < _maxCharge)
+                try
                 {
-                    _chargeStacks += 2;
-                    if (_chargeStacks > _maxCharge) _chargeStacks = _maxCharge;
+                    if (Owner == null || Owner.PlayerPawn?.Value == null || !Owner.IsAlive()) return;
 
-                    float now = Server.CurrentTime;
-                    if (now - _lastChatTime > 2f)
+                    var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
+                    var diff = currentPosition - _lastPosition;
+                    float movedDist = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
+                    bool isMoving = movedDist > 4f;
+
+                    if (isMoving)
                     {
-                        Owner.PrintToChat($" {ChatColors.Green}[ChargeSystem]{ChatColors.Default} Gained charge: {ChatColors.LightYellow}{_chargeStacks}/100");
-                        _lastChatTime = now;
+                        _chargeStacks = Math.Min(_chargeStacks + 2, _maxCharge);
+                        float now = Server.CurrentTime;
+                        if (now - _lastChatTime > 2f)
+                        {
+                            Owner.PrintToChat($" {ChatColors.Green}[ChargeSystem]{ChatColors.Default} Charge: {ChatColors.LightYellow}{_chargeStacks}/100");
+                            _lastChatTime = now;
+                        }
+
+                        int tier = Math.Min(_chargeStacks / 10, 10);
+                        float buffMultiplier = tier * 0.1f;
+                        Owner.PlayerPawn.Value.VelocityModifier = 1.0f + (buffMultiplier / 2f);
                     }
+
+                    _lastPosition = currentPosition;
                 }
-
-                _lastPosition = currentPosition;
-
-                if (_chargeStacks >= 10)
+                catch (Exception ex)
                 {
-                    int tier = Math.Min(_chargeStacks / 10, 10); // max 10 tiers
-                    float buffMultiplier = tier * 0.1f;
-                    Owner.PlayerPawn.Value.VelocityModifier = 1.0f + (buffMultiplier / 2f);
+                    Console.WriteLine($"[ChargeSystem] OnTick crashed: {ex.Message}");
                 }
             }
 
+            public override void OnFinish()
+            {
+                if (Owner?.IsValid == true)
+                {
+                    Owner.PrintToChat($" {ChatColors.Green}[ChargeSystem]{ChatColors.Default} Stopped charging.");
+                }
+                _chargeStacks = 0;
+            }
         }
+
         internal class ElectricShockEffect : WarcraftEffect
         {
-            private readonly CCSPlayerController Attacker;
-            private readonly int Damage;
-            private int TicksRemaining = 3;
+            private readonly CCSPlayerController _attacker;
+            private readonly CCSPlayerController _victim;
+            private readonly int _damagePerTick;
+            private int _ticksRemaining;
 
-            public ElectricShockEffect(CCSPlayerController attacker, CCSPlayerController victim, int damage)
-                : base(victim, duration: 4.5f, destroyOnDeath: true, destroyOnRoundEnd: true)
+            public ElectricShockEffect(CCSPlayerController attacker, CCSPlayerController victim, int totalDamage)
+                : base(victim, duration: 4.5f, onTickInterval: 1.5f)
             {
-                Attacker = attacker;
-                Damage = damage;
+                _attacker = attacker;
+                _victim = victim;
+                _damagePerTick = totalDamage / 3;
+                _ticksRemaining = 3;
             }
 
             public override void OnStart()
             {
-                Console.WriteLine($"[Thunderbolt] Starting ElectricShockEffect on {Owner.PlayerName}");
+                Console.WriteLine($"[Thunderbolt] ElectricShockEffect started on {_victim.PlayerName}");
                 ApplyDamage();
             }
 
             public override void OnTick()
             {
-                TicksRemaining--;
-                ApplyDamage();
-
-                if (TicksRemaining <= 0)
+                if (--_ticksRemaining <= 0 || !_victim.IsAlive())
+                {
                     Destroy();
+                    return;
+                }
+
+                ApplyDamage();
             }
 
             public override void OnFinish()
             {
-                // needs to be here
-                Console.WriteLine($"[Thunderbolt] ElectricShockEffect ended for {Owner?.PlayerName}");
+                Console.WriteLine($"[Thunderbolt] ElectricShockEffect ended for {_victim.PlayerName}");
             }
 
             private void ApplyDamage()
             {
-                if (Owner == null || !Owner.IsValid || !Owner.IsAlive()) return;
-                if (Owner.PlayerPawn == null || Owner.PlayerPawn.Value == null) return;
-                if (Attacker == null || !Attacker.IsValid || !Attacker.IsAlive()) return;
-                if (Attacker.PlayerPawn == null || Attacker.PlayerPawn.Value == null) return;
+                if (_attacker?.IsValid != true || _victim?.IsValid != true || !_victim.IsAlive())
+                    return;
 
-                // ✅ Now it's safe to proceed
-                SkillFunctions.DealRawDamage(Attacker, Owner, Damage);
-
-                var pos = Owner.PlayerPawn.Value.AbsOrigin;
+                _victim.TakeDamage(_damagePerTick, _attacker);  // safer than raw damage
+                var pos = _victim.PlayerPawn.Value.AbsOrigin;
                 Warcraft.SpawnParticle(pos, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
             }
-
         }
+
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
             var attacker = @event.Attacker;
