@@ -199,6 +199,8 @@ namespace WarcraftPlugin.CustomSkills
             new RestrictWeaponsEffect(player, duration, allowedWeapons).Start();
         }
 
+
+        // UTILITY FUNCTIONS
         public static Vector Normalize(Vector vec)
         {
             float length = MathF.Sqrt(vec.X * vec.X + vec.Y * vec.Y + vec.Z * vec.Z);

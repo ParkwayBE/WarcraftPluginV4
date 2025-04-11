@@ -4,6 +4,7 @@ using System.Drawing;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
+using g3;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
@@ -99,6 +100,7 @@ namespace WarcraftPlugin.Classes
 
                 float radius = 1500f;
                 bool hitSomething = false;
+                DrawLaserSphere(caster.PlayerPawn.Value.AbsOrigin, 1500f);
 
                 foreach (var player in Utilities.GetPlayers())
                 {
@@ -318,5 +320,62 @@ namespace WarcraftPlugin.Classes
 
             // Defensive paralyze code here Static body
         }
+
+        public static List<Vector3d> CreateSphereAroundPoint(Vector point, double radius, int numLatitudeSegments = 10, int numLongitudeSegments = 10)
+        {
+            var vertices = new List<Vector3d>();
+
+            for (int lat = 0; lat <= numLatitudeSegments; lat++)
+            {
+                double theta = lat * Math.PI / numLatitudeSegments;
+                double sinTheta = Math.Sin(theta);
+                double cosTheta = Math.Cos(theta);
+
+                for (int lon = 0; lon <= numLongitudeSegments; lon++)
+                {
+                    double phi = lon * 2 * Math.PI / numLongitudeSegments;
+                    double sinPhi = Math.Sin(phi);
+                    double cosPhi = Math.Cos(phi);
+
+                    double x = cosPhi * sinTheta;
+                    double y = cosTheta;
+                    double z = sinPhi * sinTheta;
+
+                    vertices.Add(new Vector3d(x * radius, y * radius, z * radius) + point.ToVector3d());
+                }
+            }
+
+            return vertices;
+        }
+
+        public static void DrawLaserSphere(Vector center, float radius, float duration = 3f)
+        {
+            var points = CreateSphereAroundPoint(center, radius);
+
+            // Connect points in horizontal "latitude" bands
+            int latSegments = 10;
+            int lonSegments = 10;
+
+            for (int lat = 0; lat < latSegments; lat++)
+            {
+                for (int lon = 0; lon < lonSegments; lon++)
+                {
+                    int index1 = lat * (lonSegments + 1) + lon;
+                    int index2 = index1 + 1;
+                    int index3 = index1 + (lonSegments + 1);
+
+                    if (index2 < points.Count)
+                    {
+                        Warcraft.DrawLaserBetween(points[index1].ToVector(), points[index2].ToVector(), Color.Yellow, duration, 1.2f);
+                    }
+
+                    if (index3 < points.Count)
+                    {
+                        Warcraft.DrawLaserBetween(points[index1].ToVector(), points[index3].ToVector(), Color.Yellow, duration, 1.2f);
+                    }
+                }
+            }
+        }
+
     }
 }
