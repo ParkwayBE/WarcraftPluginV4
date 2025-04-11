@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.Core.Effects;
 using WarcraftPlugin.CustomSkills;
@@ -70,7 +69,7 @@ namespace WarcraftPlugin.Classes
 
 
             float radius = 1500f;
-            int damage = effect.ChargeStacks * 4;
+            int damage = effect.ChargeStacks;
             bool hitSomething = false;
 
             foreach (var player in Utilities.GetPlayers())
@@ -123,7 +122,7 @@ namespace WarcraftPlugin.Classes
         internal class ChargeWhileMovingEffect : WarcraftEffect
         {
             private Vector _previousPosition;
-            private Timer? _chargeTimer;
+            private float _lastChatTime;
             public int _chargeStacks;
             private readonly int _maxCharge = 100;
 
@@ -132,57 +131,64 @@ namespace WarcraftPlugin.Classes
             public ChargeWhileMovingEffect(CCSPlayerController owner)
                 : base(owner, duration: float.MaxValue, destroyOnDeath: true, destroyOnRoundEnd: true)
             {
-
             }
 
             public override void OnStart()
             {
-                Console.WriteLine("[ChargeSystem] Started charging while moving.");
-                if (Owner == null) return;
+                if (Owner == null || Owner.PlayerPawn == null || Owner.PlayerPawn.Value == null) return;
+
                 _previousPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
-                _chargeTimer = WarcraftPlugin.Instance.AddTimer(1.0f, () =>
-                {
-                    var currentPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
-                    bool isMoving = !_previousPosition.Equals(currentPosition);
-
-                    if (isMoving && _chargeStacks < _maxCharge)
-                    {
-                        _chargeStacks += 2;
-                        if (_chargeStacks > _maxCharge) _chargeStacks = _maxCharge;
-                        Owner.PrintToChat($" {ChatColors.Green}[ChargeSystem]{ChatColors.Default} Gained charge: {ChatColors.LightYellow}{_chargeStacks}/100");
-                    }
-                    _previousPosition = currentPosition;
-                }, TimerFlags.REPEAT);
-
+                Console.WriteLine($"[ChargeSystem] Charging started for {Owner.PlayerName}");
             }
 
             public override void OnFinish()
             {
-                Owner.PrintToChat($" {ChatColors.Green}[ChargeSystem]{ChatColors.Default} Stopped charging.");
-                _chargeTimer?.Kill();
+                if (Owner != null && Owner.IsValid)
+                {
+                    Owner.PrintToChat($" {ChatColors.Green}[ChargeSystem]{ChatColors.Default} Stopped charging.");
+                }
+
                 _chargeStacks = 0;
             }
 
             public override void OnTick()
             {
-                if (Owner == null) return;
-                if (_chargeStacks < 10) return;
+                if (Owner == null || Owner.PlayerPawn == null || Owner.PlayerPawn.Value == null || !Owner.IsAlive()) return;
 
-                int tier = _chargeStacks / 10;
-                float buffMultiplier = tier * 0.1f;
-                ApplyChargeBuff(buffMultiplier);
-            }
+                var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
 
-            private void ApplyChargeBuff(float multiplier)
-            {
-                // Example: modify movement speed
-                var pawn = Owner.PlayerPawn.Value;
-                if (Owner == null) return;
-                pawn.VelocityModifier = 1.0f + (multiplier / 2f);
-                Owner.PrintToChat($"[ChargeSystem] Buff active: +{(int)(multiplier * 100)}%");
+                // ✅ Better movement check: require 2+ units of movement
+                Vector diff = currentPosition - _previousPosition;
+                float distanceMoved = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
+                bool isMoving = distanceMoved > 4f; // 2 units squared
+
+                if (isMoving && _chargeStacks < _maxCharge)
+                {
+                    _chargeStacks += 2;
+                    if (_chargeStacks > _maxCharge) _chargeStacks = _maxCharge;
+
+                    float now = Server.CurrentTime;
+                    if (now - _lastChatTime > 2f)
+                    {
+                        Owner.PrintToChat($" {ChatColors.Green}[ChargeSystem]{ChatColors.Default} Gained charge: {ChatColors.LightYellow}{_chargeStacks}/100");
+                        _lastChatTime = now;
+                    }
+                }
+
+                _previousPosition = currentPosition;
+
+                // Apply passive buff if charged
+                if (_chargeStacks >= 10)
+                {
+                    int tier = _chargeStacks / 10;
+                    float buffMultiplier = tier * 0.1f;
+                    var pawn = Owner.PlayerPawn.Value;
+                    pawn.VelocityModifier = 1.0f + (buffMultiplier / 2f);
+                }
             }
 
         }
+
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
