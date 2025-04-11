@@ -156,7 +156,7 @@ namespace WarcraftPlugin.Classes
                 if (Owner == null || Owner.PlayerPawn?.Value == null || !Owner.IsAlive())
                     return;
 
-                var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
+                var currentPosition = CopyPosition(Owner.PlayerPawn.Value.AbsOrigin);
                 var diff = currentPosition - _lastPosition;
                 float movedDist = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
 
@@ -186,11 +186,10 @@ namespace WarcraftPlugin.Classes
                 _lastPosition = currentPosition;
             }
 
-
             public override void OnStart()
             {
                 if (Owner?.PlayerPawn?.Value == null) return;
-                _lastPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
+                _lastPosition = CopyPosition(Owner.PlayerPawn.Value.AbsOrigin);
                 Console.WriteLine($"[ChargeSystem] Charging started for {Owner.PlayerName}");
             }
 
@@ -207,7 +206,6 @@ namespace WarcraftPlugin.Classes
                 }
             }
 
-
             public override void OnFinish()
             {
                 if (Owner?.IsValid == true)
@@ -216,7 +214,13 @@ namespace WarcraftPlugin.Classes
                 }
                 _chargeStacks = 0;
             }
+
+            private Vector CopyPosition(Vector pos)
+            {
+                return new Vector(pos.X, pos.Y, pos.Z);
+            }
         }
+
 
         internal class ElectricShockEffect : WarcraftEffect
         {
