@@ -33,6 +33,7 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerHurt>(PlayerHurt);
+            HookEvent<EventPlayerDeath>(PlayerDeath);
 
             HookAbility(3, Ultimate);
         }
@@ -52,6 +53,19 @@ namespace WarcraftPlugin.Classes
                 _chargeEffects[player.SteamID] = effect;
             });
         }
+        private void PlayerDeath(EventPlayerDeath death)
+        {
+            var player = death.Userid;
+            if (player == null || !player.IsValid) return;
+
+            if (_chargeEffects.TryGetValue(player.SteamID, out var effect))
+            {
+                effect.Destroy(); // ✅ cleanly stops OnTick
+                _chargeEffects.Remove(player.SteamID);
+            }
+        }
+
+
         private void Ultimate()
         {
             if (WarcraftPlayer.GetAbilityLevel(3) <= 0)
@@ -101,7 +115,10 @@ namespace WarcraftPlugin.Classes
 
                 var lightningPos = Warcraft.EyePosition(player);
                 var particle = Warcraft.SpawnParticle(lightningPos, "particles/ui/status_levels/ui_status_level7_lightning.vpcf", 2.0f);
-                particle.SetParent(player.PlayerPawn.Value);
+                if (player.PlayerPawn != null && player.PlayerPawn.Value != null)
+                {
+                    particle.SetParent(player.PlayerPawn.Value);
+                }
                 var raisedPos = pos + new Vector(0, 0, 30);
                 Warcraft.SpawnParticle(raisedPos, "particles/generic_fx/fx_electricspark_glow.vpcf", 2f);
                 Warcraft.SpawnParticle(casterPos, "particles/explosions_fx/bumpmine_detonate_sparks.vpcf", 2f);
@@ -154,7 +171,7 @@ namespace WarcraftPlugin.Classes
             public override void OnTick()
             {
                 if (Owner == null || Owner.PlayerPawn == null || Owner.PlayerPawn.Value == null || !Owner.IsAlive()) return;
-
+                Console.WriteLine($"[ChargeSystem] Ticking for {Owner?.PlayerName}");
                 var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
 
                 // ✅ Better movement check: require 2+ units of movement
@@ -199,13 +216,13 @@ namespace WarcraftPlugin.Classes
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
             var electricDamage = abilityLevel;
             var victimPos = victim.PlayerPawn.Value.AbsOrigin;
-            @event.AddBonusDamage(electricDamage);
+            SkillFunctions.DealRawDamage(attacker, victim, electricDamage);
             Warcraft.SpawnParticle(victimPos, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
 
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
                 if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive()) return;
-                @event.AddBonusDamage(electricDamage);
+                SkillFunctions.DealRawDamage(attacker, victim, electricDamage);
                 Warcraft.SpawnParticle(victimPos, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
             });
 
@@ -220,7 +237,7 @@ namespace WarcraftPlugin.Classes
             WarcraftPlugin.Instance.AddTimer(3f, () =>
             {
                 if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive()) return;
-                @event.AddBonusDamage(electricDamage);
+                SkillFunctions.DealRawDamage(attacker, victim, electricDamage);
                 Warcraft.SpawnParticle(victimPos, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
             });
         }
