@@ -49,8 +49,9 @@ namespace WarcraftPlugin.Classes
                 if (player == null || !player.IsValid || !player.IsAlive()) return;
 
                 var effect = new ChargeWhileMovingEffect(player);
-                effect.Start();
                 _chargeEffects[player.SteamID] = effect;
+                effect.Start(); // ✅ now it's tracked before starting
+
             });
         }
         private void PlayerDeath(EventPlayerDeath death)
