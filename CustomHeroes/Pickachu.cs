@@ -160,6 +160,7 @@ namespace WarcraftPlugin.Classes
 
             public override void OnTick()
             {
+                Console.WriteLine($"[ChargeSystem] TICKING FOR MOVING EFFECT");
                 try
                 {
                     if (Owner == null || Owner.PlayerPawn?.Value == null || !Owner.IsAlive()) return;
@@ -204,52 +205,51 @@ namespace WarcraftPlugin.Classes
 
         internal class ElectricShockEffect : WarcraftEffect
         {
+            private readonly CCSPlayerController _target;
             private readonly CCSPlayerController _attacker;
-            private readonly CCSPlayerController _victim;
+            private readonly int _ticks;
             private readonly int _damagePerTick;
-            private int _ticksRemaining;
+            private int _currentTick;
 
-            public ElectricShockEffect(CCSPlayerController attacker, CCSPlayerController victim, int totalDamage)
-                : base(victim, duration: 4.5f, onTickInterval: 1.5f)
+            public ElectricShockEffect(CCSPlayerController attacker, CCSPlayerController target, int ticks, int damagePerTick)
+                : base(attacker, ticks * 0.8f, onTickInterval: 0.8f) // Slightly slower than Bleed
             {
                 _attacker = attacker;
-                _victim = victim;
-                _damagePerTick = totalDamage / 3;
-                _ticksRemaining = 3;
+                _target = target;
+                _ticks = ticks;
+                _damagePerTick = damagePerTick;
             }
 
             public override void OnStart()
             {
-                Console.WriteLine($"[Thunderbolt] ElectricShockEffect started on {_victim.PlayerName}");
-                ApplyDamage();
+                Console.WriteLine($"[Thunderbolt] ElectricShockEffect STARTED on {_target?.PlayerName}");
+                SpawnElectricEffect(_target);
             }
 
             public override void OnTick()
             {
-                if (--_ticksRemaining <= 0 || !_victim.IsAlive())
-                {
-                    Destroy();
-                    return;
-                }
+                if (_target == null || !_target.IsAlive() || _currentTick >= _ticks) return;
 
-                ApplyDamage();
+                _target.TakeDamage(_damagePerTick, _attacker);
+                SpawnElectricEffect(_target);
+                _currentTick++;
             }
 
             public override void OnFinish()
             {
-                Console.WriteLine($"[Thunderbolt] ElectricShockEffect ended for {_victim.PlayerName}");
+                Console.WriteLine($"[Thunderbolt] ElectricShockEffect ENDED on {_target?.PlayerName}");
             }
 
-            private void ApplyDamage()
+            private void SpawnElectricEffect(CCSPlayerController player)
             {
-                if (_attacker?.IsValid != true || _victim?.IsValid != true || !_victim.IsAlive())
-                    return;
-
-                _victim.TakeDamage(_damagePerTick, _attacker);  // safer than raw damage
-                var pos = _victim.PlayerPawn.Value.AbsOrigin;
-                Warcraft.SpawnParticle(pos, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
+                var pos = player.PlayerPawn?.Value?.AbsOrigin;
+                if (pos != null)
+                {
+                    Warcraft.SpawnParticle(pos, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
+                }
             }
         }
+
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
@@ -257,11 +257,16 @@ namespace WarcraftPlugin.Classes
             var victim = @event.Userid;
 
             if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive()) return;
-            int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
-            var electricDamage = abilityLevel;
-            var victimPos = victim.PlayerPawn.Value.AbsOrigin;
-            new ElectricShockEffect(attacker, victim, electricDamage).Start();
+
+            int level = WarcraftPlayer.GetAbilityLevel(1);
+            if (level <= 0) return;
+
+            int ticks = 3 + (level / 2); // scale with level
+            int damagePerTick = Math.Max(1, level); // avoid 0
+
+            new ElectricShockEffect(attacker, victim, ticks, damagePerTick).Start();
         }
+
 
         private void PlayerHurt(EventPlayerHurt @event)
         {
