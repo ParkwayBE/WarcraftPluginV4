@@ -206,6 +206,56 @@ namespace WarcraftPlugin.Classes
             }
 
         }
+        internal class ElectricShockEffect : WarcraftEffect
+        {
+            private readonly CCSPlayerController Attacker;
+            private readonly int Damage;
+            private int TicksRemaining = 3;
+
+            public ElectricShockEffect(CCSPlayerController attacker, CCSPlayerController victim, int damage)
+                : base(victim, duration: 4.5f, destroyOnDeath: true, destroyOnRoundEnd: true)
+            {
+                Attacker = attacker;
+                Damage = damage;
+            }
+
+            public override void OnStart()
+            {
+                Console.WriteLine($"[Thunderbolt] Starting ElectricShockEffect on {Owner.PlayerName}");
+                ApplyDamage();
+            }
+
+            public override void OnTick()
+            {
+                TicksRemaining--;
+                ApplyDamage();
+
+                if (TicksRemaining <= 0)
+                    Destroy();
+            }
+
+            public override void OnFinish()
+            {
+                // needs to be here
+                Console.WriteLine($"[Thunderbolt] ElectricShockEffect ended for {Owner?.PlayerName}");
+            }
+
+            private void ApplyDamage()
+            {
+                if (Owner == null || !Owner.IsValid || !Owner.IsAlive()) return;
+                if (Attacker == null || !Attacker.IsValid || !Attacker.IsAlive()) return;
+
+                SkillFunctions.DealRawDamage(Attacker, Owner, Damage);
+
+                if (Owner.PlayerPawn?.Value != null)
+                {
+                    var pos = Owner.PlayerPawn.Value.AbsOrigin;
+                    Warcraft.SpawnParticle(pos, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
+                }
+            }
+        }
+
+
 
 
         private void PlayerHurtOther(EventPlayerHurtOther @event)
@@ -217,30 +267,7 @@ namespace WarcraftPlugin.Classes
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
             var electricDamage = abilityLevel;
             var victimPos = victim.PlayerPawn.Value.AbsOrigin;
-            SkillFunctions.DealRawDamage(attacker, victim, electricDamage);
-            Warcraft.SpawnParticle(victimPos, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
-
-            WarcraftPlugin.Instance.AddTimer(1.5f, () =>
-            {
-                if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive()) return;
-                SkillFunctions.DealRawDamage(attacker, victim, electricDamage);
-                Warcraft.SpawnParticle(victimPos, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
-            });
-
-            float chance = 0.02f * abilityLevel;
-            if (Random.Shared.NextDouble() <= chance)
-            {
-                if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive()) return;
-                // Paralyze code needs to be here
-                Console.WriteLine($"[Thunderbolt] Paralyzing victim from Thunderbolt.");
-            }
-
-            WarcraftPlugin.Instance.AddTimer(3f, () =>
-            {
-                if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive()) return;
-                SkillFunctions.DealRawDamage(attacker, victim, electricDamage);
-                Warcraft.SpawnParticle(victimPos, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
-            });
+            new ElectricShockEffect(attacker, victim, electricDamage).Start();
         }
 
         private void PlayerHurt(EventPlayerHurt @event)
