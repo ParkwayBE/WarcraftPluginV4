@@ -147,7 +147,7 @@ namespace WarcraftPlugin.Classes
             public int ChargeStacks => _chargeStacks;
 
             public ChargeWhileMovingEffect(CCSPlayerController owner)
-                : base(owner, duration: 9999f, destroyOnDeath: true, destroyOnRoundEnd: true)
+                : base(owner, duration: 9999f, destroyOnDeath: true, destroyOnRoundEnd: true, onTickInterval: 1f)
             {
             }
 
@@ -199,7 +199,7 @@ namespace WarcraftPlugin.Classes
 
                 if (_chargeStacks >= 10)
                 {
-                    int tier = _chargeStacks / 10;
+                    int tier = Math.Min(_chargeStacks / 10, 10); // max 10 tiers
                     float buffMultiplier = tier * 0.1f;
                     Owner.PlayerPawn.Value.VelocityModifier = 1.0f + (buffMultiplier / 2f);
                 }
@@ -243,21 +243,18 @@ namespace WarcraftPlugin.Classes
             private void ApplyDamage()
             {
                 if (Owner == null || !Owner.IsValid || !Owner.IsAlive()) return;
+                if (Owner.PlayerPawn == null || Owner.PlayerPawn.Value == null) return;
                 if (Attacker == null || !Attacker.IsValid || !Attacker.IsAlive()) return;
+                if (Attacker.PlayerPawn == null || Attacker.PlayerPawn.Value == null) return;
 
+                // ✅ Now it's safe to proceed
                 SkillFunctions.DealRawDamage(Attacker, Owner, Damage);
 
-                if (Owner.PlayerPawn?.Value != null)
-                {
-                    var pos = Owner.PlayerPawn.Value.AbsOrigin;
-                    Warcraft.SpawnParticle(pos, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
-                }
+                var pos = Owner.PlayerPawn.Value.AbsOrigin;
+                Warcraft.SpawnParticle(pos, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
             }
+
         }
-
-
-
-
         private void PlayerHurtOther(EventPlayerHurtOther @event)
         {
             var attacker = @event.Attacker;

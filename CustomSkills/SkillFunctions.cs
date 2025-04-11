@@ -118,14 +118,41 @@ namespace WarcraftPlugin.CustomSkills
 
         public static void DealRawDamage(CCSPlayerController attacker, CCSPlayerController victim, int damage, KillFeedIcon? icon = null)
         {
-            if (victim == null || !victim.IsValid || victim.PlayerPawn?.Value == null || !victim.IsAlive())
+            if (victim == null)
+            {
+                Console.WriteLine("[DealRawDamage] Victim is null — skipping.");
                 return;
+            }
 
-            if (attacker != null && (!attacker.IsValid || attacker.PlayerPawn?.Value == null))
+            if (!victim.IsValid)
+            {
+                Console.WriteLine($"[DealRawDamage] Victim {victim.PlayerName} is not valid.");
+                return;
+            }
+
+            if (victim.PlayerPawn == null || victim.PlayerPawn.Value == null)
+            {
+                Console.WriteLine($"[DealRawDamage] Victim {victim.PlayerName} has null PlayerPawn.");
+                return;
+            }
+
+            if (!victim.IsAlive())
+            {
+                Console.WriteLine($"[DealRawDamage] Victim {victim.PlayerName} is not alive.");
+                return;
+            }
+
+            if (attacker != null && (!attacker.IsValid || attacker.PlayerPawn == null || attacker.PlayerPawn.Value == null || !attacker.IsAlive()))
+            {
+                Console.WriteLine("[DealRawDamage] Attacker was invalid or null — setting to null.");
                 attacker = null;
+            }
 
             if (DamageLoopProtection.Contains(victim.Handle))
+            {
+                Console.WriteLine("[DealRawDamage] Damage loop protection triggered — skipping.");
                 return;
+            }
 
             try
             {
@@ -138,12 +165,20 @@ namespace WarcraftPlugin.CustomSkills
                     inflictor: null,
                     penetrationKill: false
                 );
+
+                Console.WriteLine($"[DealRawDamage] {attacker?.PlayerName ?? "World"} dealt {damage} damage to {victim.PlayerName}.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DealRawDamage] Exception while dealing damage: {ex.Message}");
             }
             finally
             {
                 DamageLoopProtection.Remove(victim.Handle);
             }
         }
+
+
 
 
         public static void ImpaleTarget(CCSPlayerController attacker, CCSPlayerController victim, float force = 300f)
