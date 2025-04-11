@@ -139,7 +139,6 @@ namespace WarcraftPlugin.Classes
         }
         internal class ChargeWhileMovingEffect : WarcraftEffect
         {
-            private Vector _previousPosition;
             private float _lastChatTime;
             public int _chargeStacks;
             private Vector _lastPosition;
@@ -156,9 +155,12 @@ namespace WarcraftPlugin.Classes
             {
                 if (Owner == null || Owner.PlayerPawn == null || Owner.PlayerPawn.Value == null) return;
 
-                _previousPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
+                var origin = Owner.PlayerPawn.Value.AbsOrigin.Clone();
+                _lastPosition = Owner.PlayerPawn.Value.AbsOrigin.Clone();
+
                 Console.WriteLine($"[ChargeSystem] Charging started for {Owner.PlayerName}");
             }
+
 
             public override void OnFinish()
             {
