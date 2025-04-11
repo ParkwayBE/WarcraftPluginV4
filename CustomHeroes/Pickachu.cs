@@ -280,27 +280,32 @@ namespace WarcraftPlugin.Classes
 
             public override void OnFinish()
             {
-                if (Owner == null || Owner.PlayerPawn == null || !Owner.IsValid) return;
+                try
+                {
+                    if (Owner == null || !Owner.IsValid) return;
+                    if (Owner.PlayerPawn == null || Owner.PlayerPawn.Value == null) return;
 
-                FreezeInput(Owner, false);
-                //_fireDelayTimer?.Kill();
-                _activeParalyzeEffects.Remove(Owner.SteamID);
+                    FreezeInput(Owner, false);
+                    //_fireDelayTimer?.Kill();
+                    _activeParalyzeEffects.Remove(Owner.SteamID);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[ParalyzeEffect.OnFinish] CRASH PREVENTED: {ex.Message}");
+                }
             }
+
         }
 
         private static void FreezeInput(CCSPlayerController player, bool freeze)
         {
-            if (player == null || !player.IsValid || player.PlayerPawn == null) return;
+            if (player == null || !player.IsValid || player.PlayerPawn == null || player.PlayerPawn.Value == null)
+                return;
 
             if (freeze)
-            {
                 player.DisableMovement();
-            }
             else
-            {
                 player.EnableMovement();
-            }
         }
-
     }
 }
