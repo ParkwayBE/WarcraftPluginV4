@@ -92,13 +92,13 @@ namespace WarcraftPlugin.Classes
                     continue;
 
                 // Apply damage and effects
-                SkillFunctions.DealRawDamage(WarcraftPlayer.Player, wcTarget.Player, stackDamage);
+                SkillFunctions.DealRawDamage(Player, wcTarget.Player, stackDamage);
                 Warcraft.SpawnParticle(pos, "particles/generic_fx/fx_electricspark_glow.vpcf", 2f);
             }
 
             effect._chargeStacks = 0;
             Warcraft.SpawnParticle(Playerpos, "particles/explosions_fx/bumpmine_detonate_sparks.vpcf", 2f);
-
+            _chargeEffects.Remove(Player.SteamID);
             StartCooldown(3);
         }
 
