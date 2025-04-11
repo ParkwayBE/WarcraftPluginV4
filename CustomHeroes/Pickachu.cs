@@ -18,6 +18,8 @@ namespace WarcraftPlugin.Classes
         public override string DisplayName => "Pickachu";
         public override Color DefaultColor => Color.Yellow;
         private Dictionary<ulong, ChargeWhileMovingEffect> _chargeEffects = new();
+        private readonly Dictionary<ulong, float> _shockCooldowns = new();
+
 
 
         public override List<IWarcraftAbility> Abilities =>
@@ -34,8 +36,15 @@ namespace WarcraftPlugin.Classes
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
             HookEvent<EventPlayerHurt>(PlayerHurt);
             HookEvent<EventPlayerDeath>(PlayerDeath);
+            HookEvent<EventPlayerPing>(OnPlayerPing);
+
 
             HookAbility(3, Ultimate);
+        }
+
+        private void OnPlayerPing(EventPlayerPing ping)
+        {
+            SkillFunctions.HandleTeleportPing(Player, ping.X, ping.Y, ping.Z);
         }
 
 
@@ -282,11 +291,20 @@ namespace WarcraftPlugin.Classes
             int level = WarcraftPlayer.GetAbilityLevel(1);
             if (level <= 0) return;
 
-            int ticks = 3 + (level / 2); // scale with level
-            int damagePerTick = Math.Max(1, level); // avoid 0
+            float currentTime = Server.CurrentTime;
+            if (_shockCooldowns.TryGetValue(victim.SteamID, out var lastShockTime))
+            {
+                if (currentTime - lastShockTime < 1f) return; // 1 sec cooldown
+            }
+
+            _shockCooldowns[victim.SteamID] = currentTime;
+
+            int ticks = 3 + (level / 2);
+            int damagePerTick = Math.Max(1, level);
 
             new ElectricShockEffect(attacker, victim, ticks, damagePerTick).Start();
         }
+
 
 
         private void PlayerHurt(EventPlayerHurt @event)
