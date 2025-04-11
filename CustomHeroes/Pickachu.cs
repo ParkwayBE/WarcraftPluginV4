@@ -34,6 +34,7 @@ namespace WarcraftPlugin.Classes
         {
             HookEvent<EventPlayerSpawn>(PlayerSpawn);
             HookEvent<EventPlayerHurtOther>(PlayerHurtOther);
+            HookEvent<EventPlayerHurt>(PlayerHurt);
 
             HookAbility(3, Ultimate);
         }
@@ -197,6 +198,7 @@ namespace WarcraftPlugin.Classes
             float chance = 0.02f * abilityLevel;
             if (Random.Shared.NextDouble() <= chance)
             {
+                if (victim == null) return;
                 new ParalyzeEffect(victim, 1.0f).Start();
                 Console.WriteLine($"[Thunderbolt] Paralyzing victim from Thunderbolt.");
             }
@@ -253,7 +255,7 @@ namespace WarcraftPlugin.Classes
                 FreezeInput(Owner, true);
                 Owner.PrintToCenter($"{ChatColors.Red}⚡ Paralyzed! ⚡");
                 Warcraft.SpawnParticle(Owner.PlayerPawn.Value.AbsOrigin, "particles/ambient_fx/ambient_sparks_core.vpcf", 2f);
-
+                /*
                 _fireDelayTimer = WarcraftPlugin.Instance.AddTimer(0.25f, () =>
                 {
                     if (Owner == null || Owner.PlayerPawn == null || !Owner.IsValid) return;
@@ -269,7 +271,7 @@ namespace WarcraftPlugin.Classes
                             weapon.NextPrimaryAttackTick = currentTick + durationTicks;
                         }
                     }
-                }, TimerFlags.REPEAT);
+                }, TimerFlags.REPEAT); */
             }
             public override void OnTick()
             {
@@ -281,7 +283,7 @@ namespace WarcraftPlugin.Classes
                 if (Owner == null || Owner.PlayerPawn == null || !Owner.IsValid) return;
 
                 FreezeInput(Owner, false);
-                _fireDelayTimer?.Kill();
+                //_fireDelayTimer?.Kill();
                 _activeParalyzeEffects.Remove(Owner.SteamID);
             }
         }
