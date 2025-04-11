@@ -62,10 +62,16 @@ namespace WarcraftPlugin.Classes
             // TODO: Sunny Day : Blind enemies that hit you, evade damage;  both on %
             var attacker = @event.Attacker;
             var victim = @event.Userid;
-            if (attacker.Contains("Blastoise"))
+
+            if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive()) return;
+
+            var attackerName = Warcraft.GetRealPlayerName(attacker);
+
+            if (attackerName.Contains("Venusaur"))
             {
-
-
+                var dmgTaken = @event.DmgHealth;
+                int DmgNegate = dmgTaken / 5;
+                SkillFunctions.SetBonusHealth(victim, DmgNegate);
             }
         }
 
@@ -93,7 +99,6 @@ namespace WarcraftPlugin.Classes
                 var damageDealt = @event.DmgHealth;
                 int bonusDamage = damageDealt / 5;
                 SkillFunctions.DealRawDamage(attacker, victim, bonusDamage);
-
             }
 
 

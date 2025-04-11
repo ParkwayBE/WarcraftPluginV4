@@ -92,11 +92,11 @@ namespace WarcraftPlugin.Classes
                 SkillFunctions.SetBonusHealth(victim, DmgNegate);
             }
 
-            if (WarcraftPlayer.GetAbilityLevel(1) > 0) Backstab(@event);
+            if (WarcraftPlayer.GetAbilityLevel(1) > 0) BackstabNegation(@event);
 
         }
 
-        private void Backstab(EventPlayerHurt eventPlayerHurtOther)
+        private void BackstabNegation(EventPlayerHurt eventPlayerHurtOther)
         {
             var attackerAngle = eventPlayerHurtOther.Attacker.PlayerPawn.Value.EyeAngles.Y;
             var victimAngle = eventPlayerHurtOther.Userid.PlayerPawn.Value.EyeAngles.Y;
