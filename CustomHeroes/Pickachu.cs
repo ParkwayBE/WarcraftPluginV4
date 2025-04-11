@@ -28,7 +28,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Static body", "After getting hit you have a chance to paralyze your attacker. "),
             new WarcraftAbility("Thunderbolt", "Chance to deal bonus electric damage, potentially Paralyzing your target."),
             new WarcraftAbility("Charge", "Moving is Charging, Charge is increasing your movement speed and evasion based on how long you've been Charging."),
-            new WarcraftCooldownAbility("Volt Tackle","Consume all Charges to deal damage to nearby players, more Charges equals more damage and range.", 1f, true)
+            new WarcraftCooldownAbility("Volt Tackle","Consume all Charges to deal damage to nearby players, more Charges equals more damage and range.", 3f, true)
         ];
 
         public override void Register()
@@ -87,6 +87,7 @@ namespace WarcraftPlugin.Classes
 
             if (!_chargeEffects.TryGetValue(caster.SteamID, out var effect)) return;
             int damage = effect.ChargeStacks;
+            int ActualDamage = damage / 2;
 
             // Begin Volt Tackle — TELEPORT first
             SkillFunctions.TeleportUltimate(caster);
@@ -98,9 +99,9 @@ namespace WarcraftPlugin.Classes
                 var casterPos = caster.PlayerPawn?.Value?.AbsOrigin;
                 if (casterPos == null || !caster.IsValid || !caster.IsAlive()) return;
 
-                float radius = 1500f;
+                float radius = 750f;
                 bool hitSomething = false;
-                DrawLaserSphere(caster.PlayerPawn.Value.AbsOrigin, 1500f);
+                DrawLaserSphere(caster.PlayerPawn.Value.AbsOrigin, 750f);
 
                 foreach (var player in Utilities.GetPlayers())
                 {
@@ -127,7 +128,7 @@ namespace WarcraftPlugin.Classes
 
                     // ✅ Hit confirmed
                     hitSomething = true;
-                    SkillFunctions.DealRawDamage(caster, player, damage);
+                    SkillFunctions.DealRawDamage(caster, player, ActualDamage);
                     caster.PrintToChat($" {ChatColors.Green}[Volt Tackle]{ChatColors.Default} Dealt {ChatColors.LightPurple}{damage}{ChatColors.Default} damage to {ChatColors.Yellow}{player.PlayerName}{ChatColors.Default}.");
 
                     var lightningPos = Warcraft.EyePosition(player);
@@ -145,8 +146,11 @@ namespace WarcraftPlugin.Classes
                 // No targets? Deal damage to self!
                 if (!hitSomething)
                 {
-                    caster.PrintToChat($" {ChatColors.Red}⚠️ No targets hit! You shocked yourself for {damage}!");
+                    int CrashDamage = (int)(30 + (damage / 100f) * 70);
+                    caster.PrintToChat($" {ChatColors.Red}⚠️ No targets hit! You shocked yourself for {CrashDamage}!");
                     SkillFunctions.DealRawDamage(caster, caster, damage);
+                    effect._chargeStacks = 0;
+                    StartCooldown(3);
                 }
 
                 // Always clear charges and trigger cooldown
