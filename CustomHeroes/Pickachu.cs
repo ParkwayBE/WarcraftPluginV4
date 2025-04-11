@@ -58,49 +58,55 @@ namespace WarcraftPlugin.Classes
         {
             if (Player == null || !Player.IsAlive())
                 return;
-            var Playerpos = Player.PlayerPawn.Value.AbsOrigin;
-            if (!_chargeEffects.TryGetValue(Player.SteamID, out var effect))
+
+            var caster = Player;
+            var casterPos = caster.PlayerPawn.Value.AbsOrigin;
+
+            if (!_chargeEffects.TryGetValue(caster.SteamID, out var effect))
                 return;
 
             int stackDamage = effect.ChargeStacks;
-            float radius = 15 * effect.ChargeStacks;
+            float radius = 15f * effect.ChargeStacks;
 
             foreach (var target in Utilities.GetPlayers())
             {
-                if (!target.IsAlive() || target == Player || target.TeamNum == Player.TeamNum)
+                if (!target.IsAlive() || target == caster || target.TeamNum == caster.TeamNum)
                     continue;
 
                 var wcTarget = target.GetWarcraftPlayer();
-                if (wcTarget == null)
+                if (wcTarget == null || wcTarget.Player == null)
                 {
-                    Console.WriteLine($"[VoltTackle] Skipping target {target.PlayerName} (no WarcraftPlayer)");
+                    Console.WriteLine($"[VoltTackle] Skipping {target.PlayerName} (missing WCPlayer or controller)");
                     continue;
                 }
 
                 if (wcTarget.HasUltimateImmunity)
                 {
-                    Player.PrintToCenter($" {ChatColors.Red}⛔{ChatColors.Default} Target has {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
+                    caster.PrintToCenter($" {ChatColors.Red}⛔{ChatColors.Default} Target has {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default}!");
                     target.PrintToCenter($" {ChatColors.Green}🛡️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} blocked {ChatColors.LightPurple}Volt Tackle{ChatColors.Default}!");
                     continue;
                 }
 
-                var pos = target.PlayerPawn.Value.AbsOrigin;
-                var self = Player.PlayerPawn.Value.AbsOrigin;
+                var targetPos = target.PlayerPawn.Value.AbsOrigin;
+                float distance = (targetPos - casterPos).Length();
 
-                float dist = (pos - self).Length();
-                if (dist > radius)
+                if (distance > radius)
                     continue;
 
-                // Apply damage and effects
-                SkillFunctions.DealRawDamage(Player, wcTarget.Player, stackDamage);
-                Warcraft.SpawnParticle(pos, "particles/generic_fx/fx_electricspark_glow.vpcf", 2f);
+                // ⚡ Apply damage & effect
+                SkillFunctions.DealRawDamage(caster, wcTarget.Player, stackDamage);
+                Warcraft.SpawnParticle(targetPos, "particles/generic_fx/fx_electricspark_glow.vpcf", 2f);
+                Console.WriteLine($"[VoltTackle] {caster.PlayerName} hit {target.PlayerName} for {stackDamage} (Distance: {distance:0.0})");
             }
 
+            // 🔋 Reset stacks and cleanup
             effect._chargeStacks = 0;
-            Warcraft.SpawnParticle(Playerpos, "particles/explosions_fx/bumpmine_detonate_sparks.vpcf", 2f);
-            _chargeEffects.Remove(Player.SteamID);
+            Warcraft.SpawnParticle(casterPos, "particles/explosions_fx/bumpmine_detonate_sparks.vpcf", 2f);
+            _chargeEffects.Remove(caster.SteamID);
+
             StartCooldown(3);
         }
+
 
         internal class ChargeWhileMovingEffect : WarcraftEffect
         {
