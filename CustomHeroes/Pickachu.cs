@@ -148,7 +148,7 @@ namespace WarcraftPlugin.Classes
                 {
                     int CrashDamage = (int)(30 + (damage / 100f) * 70);
                     caster.PrintToChat($" {ChatColors.Red}⚠️ No targets hit! You shocked yourself for {CrashDamage}!");
-                    SkillFunctions.DealRawDamage(caster, caster, damage);
+                    SkillFunctions.DealRawDamage(caster, caster, CrashDamage);
                     effect._chargeStacks = 0;
                     StartCooldown(3);
                 }
