@@ -142,12 +142,13 @@ namespace WarcraftPlugin.Classes
             private Vector _previousPosition;
             private float _lastChatTime;
             public int _chargeStacks;
+            private Vector _lastPosition;
             private readonly int _maxCharge = 100;
 
             public int ChargeStacks => _chargeStacks;
 
             public ChargeWhileMovingEffect(CCSPlayerController owner)
-                : base(owner, duration: float.MaxValue, destroyOnDeath: true, destroyOnRoundEnd: true)
+                : base(owner, duration: 9999f, destroyOnDeath: true, destroyOnRoundEnd: true)
             {
             }
 
@@ -171,14 +172,13 @@ namespace WarcraftPlugin.Classes
 
             public override void OnTick()
             {
-                if (Owner == null || Owner.PlayerPawn == null || Owner.PlayerPawn.Value == null || !Owner.IsAlive()) return;
-                Console.WriteLine($"[ChargeSystem] Ticking for {Owner?.PlayerName}");
-                var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
+                if (Owner == null || Owner.PlayerPawn == null || !Owner.IsAlive()) return;
 
-                // ✅ Better movement check: require 2+ units of movement
-                Vector diff = currentPosition - _previousPosition;
+                var currentPosition = Owner.PlayerPawn.Value.AbsOrigin;
+                var diff = currentPosition - _lastPosition;
                 float distanceMoved = diff.X * diff.X + diff.Y * diff.Y + diff.Z * diff.Z;
-                bool isMoving = distanceMoved > 4f; // 2 units squared
+
+                bool isMoving = distanceMoved > 4f;
 
                 if (isMoving && _chargeStacks < _maxCharge)
                 {
@@ -193,15 +193,13 @@ namespace WarcraftPlugin.Classes
                     }
                 }
 
-                _previousPosition = currentPosition;
+                _lastPosition = currentPosition;
 
-                // Apply passive buff if charged
                 if (_chargeStacks >= 10)
                 {
                     int tier = _chargeStacks / 10;
                     float buffMultiplier = tier * 0.1f;
-                    var pawn = Owner.PlayerPawn.Value;
-                    pawn.VelocityModifier = 1.0f + (buffMultiplier / 2f);
+                    Owner.PlayerPawn.Value.VelocityModifier = 1.0f + (buffMultiplier / 2f);
                 }
             }
 
