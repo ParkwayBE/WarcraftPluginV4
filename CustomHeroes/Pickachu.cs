@@ -60,7 +60,7 @@ namespace WarcraftPlugin.Classes
 
                 var effect = new ChargeWhileMovingEffect(player);
                 _chargeEffects[player.SteamID] = effect;
-                effect.Start(); // ✅ now it's tracked before starting
+                effect.Start(); 
 
             });
         }
@@ -71,7 +71,7 @@ namespace WarcraftPlugin.Classes
 
             if (_chargeEffects.TryGetValue(player.SteamID, out var effect))
             {
-                effect.Destroy(); // ✅ cleanly stops OnTick
+                effect.Destroy(); 
                 _chargeEffects.Remove(player.SteamID);
             }
         }
@@ -89,19 +89,17 @@ namespace WarcraftPlugin.Classes
             int damage = effect.ChargeStacks;
             int ActualDamage = damage / 2;
 
-            // Begin Volt Tackle — TELEPORT first
             SkillFunctions.TeleportUltimate(caster);
             caster.PrintToChat($" {ChatColors.LightPurple}⚡ Volt Tackle initiated!");
 
-            // After teleport, do the AoE check (short delay to ensure teleport finished)
             WarcraftPlugin.Instance.AddTimer(0.3f, () =>
             {
                 var casterPos = caster.PlayerPawn?.Value?.AbsOrigin;
                 if (casterPos == null || !caster.IsValid || !caster.IsAlive()) return;
 
-                float radius = 750f;
+                float radius = 350f;
                 bool hitSomething = false;
-                DrawLaserSphere(caster.PlayerPawn.Value.AbsOrigin, 750f);
+                DrawLaserSphere(caster.PlayerPawn.Value.AbsOrigin, 350f);
 
                 foreach (var player in Utilities.GetPlayers())
                 {
@@ -126,7 +124,6 @@ namespace WarcraftPlugin.Classes
                         continue;
                     }
 
-                    // ✅ Hit confirmed
                     hitSomething = true;
                     SkillFunctions.DealRawDamage(caster, player, ActualDamage);
                     caster.PrintToChat($" {ChatColors.Green}[Volt Tackle]{ChatColors.Default} Dealt {ChatColors.LightPurple}{damage}{ChatColors.Default} damage to {ChatColors.Yellow}{player.PlayerName}{ChatColors.Default}.");
@@ -143,7 +140,6 @@ namespace WarcraftPlugin.Classes
                     Warcraft.SpawnParticle(casterPos, "particles/explosions_fx/bumpmine_detonate_sparks.vpcf", 2f);
                 }
 
-                // No targets? Deal damage to self!
                 if (!hitSomething)
                 {
                     int CrashDamage = (int)(30 + (damage / 100f) * 70);
@@ -153,7 +149,6 @@ namespace WarcraftPlugin.Classes
                     StartCooldown(3);
                 }
 
-                // Always clear charges and trigger cooldown
                 effect._chargeStacks = 0;
                 StartCooldown(3);
             });
@@ -248,7 +243,7 @@ namespace WarcraftPlugin.Classes
             private int _currentTick;
 
             public ElectricShockEffect(CCSPlayerController attacker, CCSPlayerController target, int ticks, int damagePerTick)
-                : base(attacker, ticks * 0.8f, onTickInterval: 0.8f) // Slightly slower than Bleed
+                : base(attacker, ticks * 0.8f, onTickInterval: 1.1f)
             {
                 _attacker = attacker;
                 _target = target;
@@ -258,7 +253,6 @@ namespace WarcraftPlugin.Classes
 
             public override void OnStart()
             {
-                Console.WriteLine($"[Thunderbolt] ElectricShockEffect STARTED on {_target?.PlayerName}");
                 SpawnElectricEffect(_target);
             }
 
@@ -273,7 +267,6 @@ namespace WarcraftPlugin.Classes
 
             public override void OnFinish()
             {
-                Console.WriteLine($"[Thunderbolt] ElectricShockEffect ENDED on {_target?.PlayerName}");
             }
 
             private void SpawnElectricEffect(CCSPlayerController player)
@@ -300,7 +293,7 @@ namespace WarcraftPlugin.Classes
             float currentTime = Server.CurrentTime;
             if (_shockCooldowns.TryGetValue(victim.SteamID, out var lastShockTime))
             {
-                if (currentTime - lastShockTime < 1f) return; // 1 sec cooldown
+                if (currentTime - lastShockTime < 1f) return; 
             }
 
             _shockCooldowns[victim.SteamID] = currentTime;
@@ -321,8 +314,6 @@ namespace WarcraftPlugin.Classes
 
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
             if (abilityLevel <= 0) return;
-
-            // Defensive paralyze code here Static body
         }
 
         public static List<Vector3d> CreateSphereAroundPoint(Vector point, double radius, int numLatitudeSegments = 10, int numLongitudeSegments = 10)
@@ -356,7 +347,6 @@ namespace WarcraftPlugin.Classes
         {
             var points = CreateSphereAroundPoint(center, radius);
 
-            // Connect points in horizontal "latitude" bands
             int latSegments = 10;
             int lonSegments = 10;
 
