@@ -199,7 +199,7 @@ namespace WarcraftPlugin.Classes
             if (Random.Shared.NextDouble() <= chance)
             {
                 if (victim == null) return;
-                new ParalyzeEffect(victim, 1.0f).Start();
+                // new ParalyzeEffect(victim, 1.0f).Start();
                 Console.WriteLine($"[Thunderbolt] Paralyzing victim from Thunderbolt.");
             }
 
@@ -220,12 +220,13 @@ namespace WarcraftPlugin.Classes
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
             if (abilityLevel <= 0) return;
 
+            /*
             float chance = (0.1f * abilityLevel) / 2f;
             if (Random.Shared.NextDouble() <= chance)
             {
                 new ParalyzeEffect(attacker, 0.5f).Start();
                 Console.WriteLine($"[StaticBody] Paralyzing attacker for hitting Pickachu.");
-            }
+            } */
         }
 
 
@@ -302,10 +303,14 @@ namespace WarcraftPlugin.Classes
             if (player == null || !player.IsValid || player.PlayerPawn == null || player.PlayerPawn.Value == null)
                 return;
 
+            if (!player.IsAlive()) // ✅ Extra critical check
+                return;
+
             if (freeze)
                 player.DisableMovement();
             else
                 player.EnableMovement();
         }
+
     }
 }
