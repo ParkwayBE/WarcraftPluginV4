@@ -101,7 +101,7 @@ namespace WarcraftPlugin.Classes
             int damage = effect.ChargeStacks;
             int ActualDamage = damage / 2;
 
-            SkillFunctions.TeleportUltimate(caster, 200f);
+            SkillFunctions.TeleportUltimate(caster, 300f);
             caster.PrintToChat($" {ChatColors.LightPurple}⚡ Volt Tackle initiated!");
 
             WarcraftPlugin.Instance.AddTimer(0.3f, () =>
@@ -109,7 +109,7 @@ namespace WarcraftPlugin.Classes
                 var casterPos = caster.PlayerPawn?.Value?.AbsOrigin;
                 if (casterPos == null || !caster.IsValid || !caster.IsAlive()) return;
 
-                float radius = 200f;
+                float radius = 300f;
                 bool hitSomething = false;
                 HashSet<ulong> alreadyHit = new();
 
