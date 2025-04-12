@@ -327,7 +327,7 @@ namespace WarcraftPlugin.Classes
             {
                 new FireDelayAndFreezeEffect(attacker, duration: 0.5f, fireDelaySeconds: 0.5f, debugPrint: true).Start();
                 victim.PrintToChat($" {ChatColors.Red} You got paralyzed by {attacker.PlayerName}");
-                attacker.PrintToChat($" {ChatColors.Green} You {ChatColors.Default}{ChatColors.LightPurple}paralyzed{ChatColors.Default}{ChatColors.Green} {victim.PlayerName}{ChatColors.Default}");
+                attacker.PrintToChat($" {ChatColors.Green} You {ChatColors.Default}{ChatColors.LightPurple}paralyzed{ChatColors.Default}{ChatColors.Green} {victim.PlayerName}{ChatColors.Default}"); // 
 
             }
         }

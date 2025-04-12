@@ -65,6 +65,7 @@
     <None Include="CustomHeroes\Naix.cs" />
     <None Include="CustomHeroes\NightElves.cs" />
     <None Include="CustomHeroes\OrcishHorde.cs" />
+    <None Include="CustomHeroes\Pickachu.cs" />
     <None Include="CustomHeroes\ShadowHunter.cs" />
     <None Include="CustomHeroes\UndeadScourge.cs" />
     <None Include="CustomHeroes\Warden.cs" />
@@ -96,6 +97,7 @@
     <Compile Remove="CustomHeroes\Naix.cs" />
     <Compile Remove="CustomHeroes\NightElves.cs" />
     <Compile Remove="CustomHeroes\OrcishHorde.cs" />
+    <Compile Remove="CustomHeroes\Pickachu.cs" />
     <Compile Remove="CustomHeroes\ShadowHunter.cs" />
     <Compile Remove="CustomHeroes\UndeadScourge.cs" />
     <Compile Remove="CustomHeroes\Warden.cs" />
