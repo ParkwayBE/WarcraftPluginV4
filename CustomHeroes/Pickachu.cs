@@ -20,6 +20,8 @@ namespace WarcraftPlugin.Classes
         public override Color DefaultColor => Color.Yellow;
         private Dictionary<ulong, ChargeWhileMovingEffect> _chargeEffects = new();
         private readonly Dictionary<ulong, float> _shockCooldowns = new();
+        HashSet<ulong> alreadyHit = new();
+
 
 
 
@@ -123,6 +125,11 @@ namespace WarcraftPlugin.Classes
                         player.PrintToCenter($" {ChatColors.Green}🛡️{ChatColors.Default} Your {ChatColors.LightPurple}Ultimate Immunity{ChatColors.Default} blocked {ChatColors.LightPurple}Volt Tackle{ChatColors.Default}!");
                         continue;
                     }
+
+                    if (alreadyHit.Contains(player.SteamID))
+                        continue;
+                    alreadyHit.Add(player.SteamID);
+
 
                     hitSomething = true;
                     SkillFunctions.DealRawDamage(caster, player, ActualDamage);
