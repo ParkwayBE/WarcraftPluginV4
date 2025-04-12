@@ -20,7 +20,6 @@ namespace WarcraftPlugin.Classes
         public override Color DefaultColor => Color.Yellow;
         private Dictionary<ulong, ChargeWhileMovingEffect> _chargeEffects = new();
         private readonly Dictionary<ulong, float> _shockCooldowns = new();
-        HashSet<ulong> alreadyHit = new();
 
 
 
@@ -102,6 +101,7 @@ namespace WarcraftPlugin.Classes
 
                 float radius = 350f;
                 bool hitSomething = false;
+                HashSet<ulong> alreadyHit = new();
 
                 foreach (var player in Utilities.GetPlayers())
                 {
