@@ -1093,7 +1093,9 @@ namespace WarcraftPlugin.Core
             wcDcPlayer.HasLongjumpBoots = false;
             wcDcPlayer.HasOrbOfReflection = false;
             wcDcPlayer.HasDamageReflection = false;
-            wcDcPlayer.RespawnQueued = false;
+            wcDcPlayer.ChameleonOffensive = false;
+            wcDcPlayer.ChameleonDefensive = false;
+            wcDcPlayer.HasUltimateImmunity = false;
 
             return HookResult.Continue;
         }
@@ -1151,11 +1153,19 @@ namespace WarcraftPlugin.Core
                 {
                     Server.NextFrame(() =>
                     {
-                        if (victim.PlayerPawn != null && victim.PlayerPawn.IsValid)
+                        try
                         {
-                            Utilities.SetStateChanged(victim.PlayerPawn.Value, "CBaseEntity", "m_iHealth");
+                            if (victim != null && victim.PlayerPawn != null && victim.PlayerPawn.IsValid)
+                            {
+                                Utilities.SetStateChanged(victim.PlayerPawn.Value, "CBaseEntity", "m_iHealth");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[ERROR] Exception in HelmOfExcellence NextFrame: {ex}");
                         }
                     });
+
                 }
 
             }
