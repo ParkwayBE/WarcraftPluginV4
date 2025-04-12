@@ -45,8 +45,9 @@ namespace WarcraftPlugin.Classes
 
         private void OnPlayerPing(EventPlayerPing ping)
         {
-            SkillFunctions.HandleTeleportPing(Player, ping.X, ping.Y, ping.Z);
+            SkillFunctions.HandleTeleportPing(Player, ping.X, ping.Y, ping.Z, maxDistance: 400f);
         }
+
 
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
@@ -89,7 +90,7 @@ namespace WarcraftPlugin.Classes
             int damage = effect.ChargeStacks;
             int ActualDamage = damage / 2;
 
-            SkillFunctions.HandleTeleportPing(Player, ping.X, ping.Y, ping.Z, maxDistance: 600f);
+            SkillFunctions.TeleportUltimate(caster, 400f);
             caster.PrintToChat($" {ChatColors.LightPurple}⚡ Volt Tackle initiated!");
 
             WarcraftPlugin.Instance.AddTimer(0.3f, () =>

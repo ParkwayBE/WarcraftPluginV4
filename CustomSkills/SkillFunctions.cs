@@ -54,10 +54,11 @@ namespace WarcraftPlugin.CustomSkills
         }
 
 
-        public static void HandleTeleportPing(CCSPlayerController player, float x, float y, float z)
+        public static void HandleTeleportPing(CCSPlayerController player, float x, float y, float z, float maxDistance = 1000f)
         {
-            TeleportSkill.HandlePing(player, x, y, z);
+            TeleportSkill.HandlePing(player, x, y, z, maxDistance);
         }
+
         // end Teleport skill
 
         public static void FreezePlayer(CCSPlayerController attacker, CCSPlayerController target, int chancePercent, float duration)
