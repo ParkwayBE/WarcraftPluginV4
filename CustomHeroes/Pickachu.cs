@@ -89,7 +89,7 @@ namespace WarcraftPlugin.Classes
             int damage = effect.ChargeStacks;
             int ActualDamage = damage / 2;
 
-            SkillFunctions.TeleportUltimate(caster);
+            SkillFunctions.HandleTeleportPing(Player, ping.X, ping.Y, ping.Z, maxDistance: 600f);
             caster.PrintToChat($" {ChatColors.LightPurple}⚡ Volt Tackle initiated!");
 
             WarcraftPlugin.Instance.AddTimer(0.3f, () =>
@@ -99,7 +99,6 @@ namespace WarcraftPlugin.Classes
 
                 float radius = 350f;
                 bool hitSomething = false;
-                DrawLaserSphere(caster.PlayerPawn.Value.AbsOrigin, 350f);
 
                 foreach (var player in Utilities.GetPlayers())
                 {
@@ -189,13 +188,15 @@ namespace WarcraftPlugin.Classes
                 float now = Server.CurrentTime;
                 if (now - _lastChatTime > 2f)
                 {
-                    Owner.PrintToCenter($" {ChatColors.Green}[ChargeSystem]{ChatColors.Default} Charge: {ChatColors.LightYellow}{_chargeStacks}/100");
+                    Owner.PrintToCenter($"Charge: {_chargeStacks}/100");
                     _lastChatTime = now;
                 }
 
                 int tier = Math.Min(_chargeStacks / 10, 10);
                 float buffMultiplier = tier * 0.1f;
-                Owner.PlayerPawn.Value.VelocityModifier = 1.0f + (buffMultiplier / 2f);
+                float newSpeed = 1.0f + (buffMultiplier / 2f);
+                Owner.PlayerPawn.Value.VelocityModifier = Math.Min(newSpeed, 1.6f);
+
 
                 _lastPosition = currentPosition;
             }

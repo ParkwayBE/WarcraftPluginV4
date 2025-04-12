@@ -48,10 +48,11 @@ namespace WarcraftPlugin.CustomSkills
             new SetInvisibility(player, duration, alpha).Start();
         }
         // Teleport Skill
-        public static void TeleportUltimate(CCSPlayerController player)
+        public static void TeleportUltimate(CCSPlayerController player, float maxDistance = 1000f)
         {
-            TeleportSkill.Execute(player);
+            TeleportSkill.Execute(player, maxDistance);
         }
+
 
         public static void HandleTeleportPing(CCSPlayerController player, float x, float y, float z)
         {
