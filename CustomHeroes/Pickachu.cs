@@ -68,15 +68,25 @@ namespace WarcraftPlugin.Classes
         }
         private void PlayerDeath(EventPlayerDeath death)
         {
-            var player = death.Userid;
-            if (player == null || !player.IsValid) return;
-
-            if (_chargeEffects.TryGetValue(player.SteamID, out var effect))
+            try
             {
-                effect.Destroy();
-                _chargeEffects.Remove(player.SteamID);
+                if (death == null || !death.IsValid) return;
+
+                var player = death.Userid;
+                if (player == null || !player.IsValid) return;
+
+                if (_chargeEffects.TryGetValue(player.SteamID, out var effect))
+                {
+                    effect.Destroy();
+                    _chargeEffects.Remove(player.SteamID);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] Exception in PlayerDeath: {ex.Message}\n{ex.StackTrace}");
             }
         }
+
 
 
         private void Ultimate()
