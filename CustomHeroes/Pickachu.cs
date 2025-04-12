@@ -302,7 +302,7 @@ namespace WarcraftPlugin.Classes
             float currentTime = Server.CurrentTime;
             if (_shockCooldowns.TryGetValue(victim.SteamID, out var lastShockTime))
             {
-                if (currentTime - lastShockTime < 1f) return; 
+                if (currentTime - lastShockTime < 1f) return;
             }
 
             _shockCooldowns[victim.SteamID] = currentTime;
@@ -311,7 +311,21 @@ namespace WarcraftPlugin.Classes
             int damagePerTick = Math.Max(1, level);
 
             new ElectricShockEffect(attacker, victim, ticks, damagePerTick).Start();
+
+            // 🔥 Test fire rate slowdown on attacker
+            var pawn = attacker.PlayerPawn?.Value;
+            if (pawn?.WeaponServices?.ActiveWeapon?.Value != null)
+            {
+                var weapon = pawn.WeaponServices.ActiveWeapon.Value;
+                int currentTick = Server.TickCount;
+                int durationTicks = 200; // equivalent to ~10 seconds @ 20 ticks/sec
+
+                weapon.NextPrimaryAttackTick = currentTick + durationTicks;
+
+                attacker.PrintToChat($"{ChatColors.Red}⚡ Testing fire delay applied to YOU for ~10 seconds!");
+            }
         }
+
 
 
 
