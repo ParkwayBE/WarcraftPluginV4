@@ -9,7 +9,6 @@ namespace WarcraftPlugin.CustomSkills
     {
         public static void Execute(CCSPlayerController player, float maxDistance)
         {
-            // Ping hack to get target location (assumes player_ping is hooked in race file)
             player.ExecuteClientCommandFromServer("player_ping");
         }
 
@@ -20,14 +19,12 @@ namespace WarcraftPlugin.CustomSkills
             var origin = player.PlayerPawn.Value.AbsOrigin;
             var pingTarget = new Vector(pingX, pingY, pingZ);
 
-            // Calculate direction from origin to ping
             var direction = new Vector(pingX - origin.X, pingY - origin.Y, pingZ - origin.Z);
             float distance = MathF.Sqrt(direction.X * direction.X + direction.Y * direction.Y + direction.Z * direction.Z);
 
             if (distance == 0)
                 return;
 
-            // Normalize direction and scale by offset
             var offset = 40f;
             var zOffset = 60f;
 
@@ -38,7 +35,6 @@ namespace WarcraftPlugin.CustomSkills
                 pingZ + normalized.Z * zOffset
             );
 
-            // Clamp to max distance
             var finalDirection = new Vector(adjustedTarget.X - origin.X, adjustedTarget.Y - origin.Y, adjustedTarget.Z - origin.Z);
             float finalDistance = MathF.Sqrt(finalDirection.X * finalDirection.X + finalDirection.Y * finalDirection.Y + finalDirection.Z * finalDirection.Z);
 
@@ -50,7 +46,6 @@ namespace WarcraftPlugin.CustomSkills
 
             var finalTarget = new Vector(origin.X + finalDirection.X, origin.Y + finalDirection.Y, origin.Z + finalDirection.Z);
 
-            // Effects and teleport
             player.PlayLocalSound("sounds/weapons/fx/nearmiss/bulletltor06.vsnd");
 
             var from = origin.Clone().Add(z: 20);

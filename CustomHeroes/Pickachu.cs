@@ -325,7 +325,7 @@ namespace WarcraftPlugin.Classes
             float selfZapChance = 0.12f * (level / 5f);
             if (Random.Shared.NextDouble() <= selfZapChance)
             {
-                new FireDelayAndFreezeEffect(attacker, duration: 0.5f, fireDelaySeconds: 0.5f, debugPrint: true).Start();
+                new FireDelayAndFreezeEffect(victim, duration: 1.0f, fireDelaySeconds: 1.0f, debugPrint: true).Start();
                 victim.PrintToChat($" {ChatColors.Red} You got paralyzed by {attacker.PlayerName}");
                 attacker.PrintToChat($" {ChatColors.Green} You {ChatColors.Default}{ChatColors.LightPurple}paralyzed{ChatColors.Default}{ChatColors.Green} {victim.PlayerName}{ChatColors.Default}"); // 
 
@@ -349,7 +349,7 @@ namespace WarcraftPlugin.Classes
 
             if (Random.Shared.NextDouble() <= selfZapChance)
             {
-                new FireDelayAndFreezeEffect(attacker, duration: 0.5f, fireDelaySeconds: 0.5f, debugPrint: true).Start();
+                new FireDelayAndFreezeEffect(attacker, duration: 1.0f, fireDelaySeconds: 1.0f, debugPrint: true).Start();
                 attacker.PrintToChat($" {ChatColors.Red} You got paralyzed by {victim.PlayerName}");
                 attacker.PrintToChat($" {ChatColors.Green} You {ChatColors.Default}{ChatColors.LightPurple}paralyzed{ChatColors.Default}{ChatColors.Green} {victim.PlayerName}{ChatColors.Default}");
 
@@ -410,6 +410,8 @@ namespace WarcraftPlugin.Classes
             {
                 Owner.PrintToChat("OnTick Called for effect");
                 Warcraft.SpawnParticle(Owner.PlayerPawn.Value.AbsOrigin, "particles/screen_fx/ghost_screenglow.vpcf", 2f);
+                Warcraft.SpawnParticle(Owner.PlayerPawn.Value.AbsOrigin, "particles/screen_fx/ghost_screenglow_warp_loop.vpcf", 2f);
+
             }
         }
 
