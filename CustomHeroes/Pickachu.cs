@@ -62,7 +62,7 @@ namespace WarcraftPlugin.Classes
 
                 var effect = new ChargeWhileMovingEffect(player);
                 _chargeEffects[player.SteamID] = effect;
-                effect.Start(); 
+                effect.Start();
 
             });
         }
@@ -73,7 +73,7 @@ namespace WarcraftPlugin.Classes
 
             if (_chargeEffects.TryGetValue(player.SteamID, out var effect))
             {
-                effect.Destroy(); 
+                effect.Destroy();
                 _chargeEffects.Remove(player.SteamID);
             }
         }
@@ -91,7 +91,7 @@ namespace WarcraftPlugin.Classes
             int damage = effect.ChargeStacks;
             int ActualDamage = damage / 2;
 
-            SkillFunctions.TeleportUltimate(caster, 400f);
+            SkillFunctions.TeleportUltimate(caster, 200f);
             caster.PrintToChat($" {ChatColors.LightPurple}⚡ Volt Tackle initiated!");
 
             WarcraftPlugin.Instance.AddTimer(0.3f, () =>
@@ -99,7 +99,7 @@ namespace WarcraftPlugin.Classes
                 var casterPos = caster.PlayerPawn?.Value?.AbsOrigin;
                 if (casterPos == null || !caster.IsValid || !caster.IsAlive()) return;
 
-                float radius = 350f;
+                float radius = 200f;
                 bool hitSomething = false;
                 HashSet<ulong> alreadyHit = new();
 
@@ -294,15 +294,21 @@ namespace WarcraftPlugin.Classes
             var attacker = @event.Attacker;
             var victim = @event.Userid;
 
-            if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive()) return;
+            if (attacker == null || victim == null || !attacker.IsAlive() || !victim.IsAlive())
+                return;
+
+            if (attacker.TeamNum == victim.TeamNum)
+                return;
 
             int level = WarcraftPlayer.GetAbilityLevel(1);
-            if (level <= 0) return;
+            if (level <= 0)
+                return;
 
             float currentTime = Server.CurrentTime;
             if (_shockCooldowns.TryGetValue(victim.SteamID, out var lastShockTime))
             {
-                if (currentTime - lastShockTime < 1f) return;
+                if (currentTime - lastShockTime < 1f)
+                    return;
             }
 
             _shockCooldowns[victim.SteamID] = currentTime;
@@ -310,23 +316,21 @@ namespace WarcraftPlugin.Classes
             int ticks = 3 + (level / 2);
             int damagePerTick = Math.Max(1, level);
 
-            new ElectricShockEffect(attacker, victim, ticks, damagePerTick).Start();
-
-            // 🔥 Test fire rate slowdown on attacker
-            var pawn = attacker.PlayerPawn?.Value;
-            if (pawn?.WeaponServices?.ActiveWeapon?.Value != null)
+            float shockChance = 0.25f * (level / 5f);
+            if (Random.Shared.NextDouble() <= shockChance)
             {
-                var weapon = pawn.WeaponServices.ActiveWeapon.Value;
-                int currentTick = Server.TickCount;
-                int durationTicks = 200; // equivalent to ~10 seconds @ 20 ticks/sec
+                new ElectricShockEffect(attacker, victim, ticks, damagePerTick).Start();
+            }
 
-                weapon.NextPrimaryAttackTick = currentTick + durationTicks;
+            float selfZapChance = 0.12f * (level / 5f);
+            if (Random.Shared.NextDouble() <= selfZapChance)
+            {
+                new FireDelayAndFreezeEffect(attacker, duration: 0.5f, fireDelaySeconds: 0.5f, debugPrint: true).Start();
+                victim.PrintToChat($" {ChatColors.Red} You got paralyzed by {attacker.PlayerName}");
+                attacker.PrintToChat($" {ChatColors.Green} You {ChatColors.Default}{ChatColors.LightPurple}paralyzed{ChatColors.Default}{ChatColors.Green} {victim.PlayerName}{ChatColors.Default}");
 
-                attacker.PrintToChat($"{ChatColors.Red}⚡ Testing fire delay applied to YOU for ~10 seconds!");
             }
         }
-
-
 
 
         private void PlayerHurt(EventPlayerHurt @event)
@@ -337,7 +341,81 @@ namespace WarcraftPlugin.Classes
 
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(1);
             if (abilityLevel <= 0) return;
+
+            int level = WarcraftPlayer.GetAbilityLevel(1);
+            if (level <= 0) return;
+
+            float selfZapChance = 0.12f * (level / 5f);
+
+            if (Random.Shared.NextDouble() <= selfZapChance)
+            {
+                new FireDelayAndFreezeEffect(attacker, duration: 0.5f, fireDelaySeconds: 0.5f, debugPrint: true).Start();
+                attacker.PrintToChat($" {ChatColors.Red} You got paralyzed by {victim.PlayerName}");
+                attacker.PrintToChat($" {ChatColors.Green} You {ChatColors.Default}{ChatColors.LightPurple}paralyzed{ChatColors.Default}{ChatColors.Green} {victim.PlayerName}{ChatColors.Default}");
+
+            }
+
         }
+
+
+
+        internal class FireDelayAndFreezeEffect : WarcraftEffect
+        {
+            private readonly float _fireDelaySeconds;
+            private readonly bool _debugPrint;
+            private int _originalFireTick = -1;
+
+            public FireDelayAndFreezeEffect(CCSPlayerController owner, float duration = 2.0f, float fireDelaySeconds = 2.0f, bool debugPrint = false)
+                : base(owner, duration, destroyOnDeath: true, destroyOnRoundEnd: true, onTickInterval: 0.5f)
+            {
+                _fireDelaySeconds = fireDelaySeconds;
+                _debugPrint = debugPrint;
+            }
+
+            public override void OnStart()
+            {
+                if (Owner?.PlayerPawn?.Value == null || !Owner.IsValid || !Owner.IsAlive()) return;
+
+                Owner.DisableMovement();
+
+                var weapon = Owner.PlayerPawn.Value.WeaponServices?.ActiveWeapon?.Value;
+                if (weapon != null)
+                {
+                    int currentTick = Server.TickCount;
+                    int delayTicks = (int)(_fireDelaySeconds * 20); // ~20 ticks/sec
+                    _originalFireTick = weapon.NextPrimaryAttackTick;
+
+                    weapon.NextPrimaryAttackTick = currentTick + delayTicks;
+
+                    if (_debugPrint)
+                    {
+                        Owner.PrintToChat($" {ChatColors.Red}[FireDelay] 🔥 Weapon delay applied for {_fireDelaySeconds:F1}s");
+                    }
+                }
+            }
+
+            public override void OnFinish()
+            {
+                if (Owner?.PlayerPawn?.Value == null || !Owner.IsValid) return;
+
+                Owner.EnableMovement();
+
+                if (_debugPrint)
+                {
+                    Owner.PrintToChat($" {ChatColors.Green}[FireDelay] ✅ Movement re-enabled");
+                }
+            }
+
+            public override void OnTick()
+            {
+                Owner.PrintToChat("OnTick Called for effect");
+                Warcraft.SpawnParticle(Owner.PlayerPawn.Value.AbsOrigin, "particles/screen_fx/ghost_screenglow.vpcf", 2f);
+            }
+        }
+
+
+
+
 
         public static List<Vector3d> CreateSphereAroundPoint(Vector point, double radius, int numLatitudeSegments = 10, int numLongitudeSegments = 10)
         {
