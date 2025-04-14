@@ -70,7 +70,7 @@ namespace WarcraftPlugin.Classes
         {
             try
             {
-                if (death == null || !death.IsValid) return;
+                if (death == null) return;
 
                 var player = death.Userid;
                 if (player == null || !player.IsValid) return;
