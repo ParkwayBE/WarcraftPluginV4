@@ -1168,7 +1168,7 @@ namespace WarcraftPlugin.Core
 
             }
 
-            if (wcVictim.HasOrbOfReflection && attacker.IsValid && attacker.IsAlive())
+            if (wcVictim != null && attacker != null && wcVictim.HasOrbOfReflection && attacker.IsValid && attacker.IsAlive())
             {
                 float now = Server.CurrentTime;
                 if (now - wcVictim.LastReflectionTime > 1.0f)
