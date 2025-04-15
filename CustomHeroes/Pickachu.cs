@@ -66,14 +66,18 @@ namespace WarcraftPlugin.Classes
 
             });
         }
+
         private void PlayerDeath(EventPlayerDeath death)
         {
             try
             {
-                if (death == null) return;
+                if (death?.Userid == null || !death.Userid.IsValid)
+                    return;
+
+                if (WarcraftPlayer.GetAbilityLevel(2) == 0) return;
+
 
                 var player = death.Userid;
-                if (player == null || !player.IsValid) return;
 
                 if (_chargeEffects.TryGetValue(player.SteamID, out var effect))
                 {
