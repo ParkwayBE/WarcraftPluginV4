@@ -1168,7 +1168,7 @@ namespace WarcraftPlugin.Core
 
             }
 
-            if (wcVictim != null && attacker != null && wcVictim.HasOrbOfReflection && attacker.IsValid && attacker.IsAlive())
+            if (wcVictim != null && wcVictim.HasOrbOfReflection && attacker != null && attacker.IsValid && attacker.PlayerPawn != null && attacker.PlayerPawn.IsValid && attacker.IsAlive())
             {
                 float now = Server.CurrentTime;
                 if (now - wcVictim.LastReflectionTime > 1.0f)
@@ -1184,6 +1184,7 @@ namespace WarcraftPlugin.Core
                     }
                 }
             }
+
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////
             return HookResult.Continue;
