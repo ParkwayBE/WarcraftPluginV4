@@ -1164,8 +1164,6 @@ namespace WarcraftPlugin.Core
                             Console.WriteLine($"[ERROR] Exception in HelmOfExcellence NextFrame: {ex}");
                         }
                     }
-                    ;
-
                 }
 
             }
