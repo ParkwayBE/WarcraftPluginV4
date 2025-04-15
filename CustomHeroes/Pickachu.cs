@@ -339,7 +339,7 @@ namespace WarcraftPlugin.Classes
             float selfZapChance = 0.12f * (level / 5f);
             if (Random.Shared.NextDouble() <= selfZapChance)
             {
-                new FireDelayAndFreezeEffect(victim, duration: 1.0f, fireDelaySeconds: 1.0f, debugPrint: true).Start();
+                new FireDelayAndFreezeEffect(attacker, victim, duration: 2f, fireDelaySeconds: 1.5f, debugPrint: true).Start();
                 victim.PrintToChat($" {ChatColors.Red} You got paralyzed by {attacker.PlayerName}");
                 attacker.PrintToChat($" {ChatColors.Green} You {ChatColors.Default}{ChatColors.LightPurple}paralyzed{ChatColors.Default}{ChatColors.Green} {victim.PlayerName}{ChatColors.Default}"); // 
 
@@ -363,7 +363,8 @@ namespace WarcraftPlugin.Classes
 
             if (Random.Shared.NextDouble() <= selfZapChance)
             {
-                new FireDelayAndFreezeEffect(attacker, duration: 1.0f, fireDelaySeconds: 1.0f, debugPrint: true).Start();
+                float delay = 1.0f + (0.2f * abilityLevel); // scales up to ~2s
+                new FireDelayAndFreezeEffect(attacker, victim, duration: 2f, fireDelaySeconds: 1.5f, debugPrint: true).Start();
                 attacker.PrintToChat($" {ChatColors.Red} You got paralyzed by {victim.PlayerName}");
                 attacker.PrintToChat($" {ChatColors.Green} You {ChatColors.Default}{ChatColors.LightPurple}paralyzed{ChatColors.Default}{ChatColors.Green} {victim.PlayerName}{ChatColors.Default}");
 
@@ -375,59 +376,58 @@ namespace WarcraftPlugin.Classes
 
         internal class FireDelayAndFreezeEffect : WarcraftEffect
         {
+            private readonly CCSPlayerController _target;
             private readonly float _fireDelaySeconds;
             private readonly bool _debugPrint;
             private int _originalFireTick = -1;
 
-            public FireDelayAndFreezeEffect(CCSPlayerController owner, float duration = 2.0f, float fireDelaySeconds = 2.0f, bool debugPrint = false)
-                : base(owner, duration, destroyOnDeath: true, destroyOnRoundEnd: true, onTickInterval: 0.5f)
+            public FireDelayAndFreezeEffect(CCSPlayerController applier, CCSPlayerController target, float duration, float fireDelaySeconds, bool debugPrint = false)
+                : base(applier, duration, destroyOnDeath: true, destroyOnRoundEnd: true, onTickInterval: 0.3f)
             {
+                _target = target;
                 _fireDelaySeconds = fireDelaySeconds;
                 _debugPrint = debugPrint;
             }
 
             public override void OnStart()
             {
-                if (Owner?.PlayerPawn?.Value == null || !Owner.IsValid || !Owner.IsAlive()) return;
+                if (_target?.PlayerPawn?.Value == null || !_target.IsValid || !_target.IsAlive()) return;
 
-                Owner.DisableMovement();
+                _target.DisableMovement();
 
-                var weapon = Owner.PlayerPawn.Value.WeaponServices?.ActiveWeapon?.Value;
+                var weapon = _target.PlayerPawn.Value.WeaponServices?.ActiveWeapon?.Value;
                 if (weapon != null)
                 {
                     int currentTick = Server.TickCount;
-                    int delayTicks = (int)(_fireDelaySeconds * 20); // ~20 ticks/sec
+                    int delayTicks = (int)(_fireDelaySeconds * 30);
                     _originalFireTick = weapon.NextPrimaryAttackTick;
 
                     weapon.NextPrimaryAttackTick = currentTick + delayTicks;
 
                     if (_debugPrint)
-                    {
-                        Owner.PrintToChat($" {ChatColors.Red}[FireDelay] 🔥 Weapon delay applied for {_fireDelaySeconds:F1}s");
-                    }
+                        _target.PrintToChat($" {ChatColors.Red}[FireDelay] 🔥 Delayed for {_fireDelaySeconds:F1}s");
                 }
             }
 
             public override void OnFinish()
             {
-                if (Owner?.PlayerPawn?.Value == null || !Owner.IsValid) return;
+                if (_target?.PlayerPawn?.Value == null || !_target.IsValid) return;
 
-                Owner.EnableMovement();
+                _target.EnableMovement();
 
                 if (_debugPrint)
-                {
-                    Owner.PrintToChat($" {ChatColors.Green}[FireDelay] ✅ Movement re-enabled");
-                }
+                    _target.PrintToChat($" {ChatColors.Green}[FireDelay] ✅ Recovered");
             }
 
             public override void OnTick()
             {
-                Owner.PrintToChat("OnTick Called for effect");
-                Warcraft.SpawnParticle(Owner.PlayerPawn.Value.AbsOrigin, "particles/screen_fx/ghost_screenglow.vpcf", 2f);
-                Warcraft.SpawnParticle(Owner.PlayerPawn.Value.AbsOrigin, "particles/screen_fx/ghost_screenglow_warp_loop.vpcf", 2f);
-
+                if (_target?.PlayerPawn?.Value != null)
+                {
+                    Warcraft.SpawnParticle(_target.PlayerPawn.Value.AbsOrigin, "particles/screen_fx/ghost_screenglow.vpcf", 2f);
+                }
             }
         }
+
 
 
 
