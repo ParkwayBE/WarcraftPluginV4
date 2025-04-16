@@ -157,6 +157,7 @@ namespace WarcraftPlugin.Classes
             }
             else
             {
+                DeleteAllWeapons(Player);
                 SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
                 UltimateToggle = true;
                 Player.PrintToChat($" {ChatColors.Green}You are now frozen invisible!");
@@ -274,6 +275,18 @@ namespace WarcraftPlugin.Classes
                 }
             }
         }
+
+        public static void DeleteAllWeapons(CCSPlayerController player)
+        {
+            var pawn = player.PlayerPawn?.Value;
+            if (pawn?.WeaponServices?.MyWeapons == null) return;
+
+            foreach (var weapon in pawn.WeaponServices.MyWeapons)
+            {
+                weapon?.Value?.Remove();
+            }
+        }
+
 
         internal class ChargeWhileMovingEffect : WarcraftEffect
         {
