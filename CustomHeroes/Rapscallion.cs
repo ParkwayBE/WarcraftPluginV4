@@ -144,6 +144,7 @@ namespace WarcraftPlugin.Classes
         {
             var pawn = Player.PlayerPawn.Value;
             if (pawn == null || !Player.IsAlive()) return;
+            var itemServices = new CCSPlayer_ItemServices(Player.PlayerPawn.Value.ItemServices.Handle);
             StartCooldown(3);
 
             if (UltimateToggle)
@@ -153,7 +154,7 @@ namespace WarcraftPlugin.Classes
                 UltimateToggle = false;
                 Player.PrintToChat(" Visible again.");
                 Player.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
-
+                itemServices.HasDefuser = true;
                 var restoreWeapons = new List<string> { "weapon_knife", "weapon_c4" };
                 _ultWeaponLock?.Destroy();
                 _flashEffect?.Destroy();
@@ -165,10 +166,12 @@ namespace WarcraftPlugin.Classes
             }
             else
             {
+                itemServices.HasDefuser = false;
                 DeleteAllWeapons(Player);
                 _flashEffect?.Destroy();
                 SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
                 UltimateToggle = true;
+
                 Player.PrintToChat($" {ChatColors.Green}You are now frozen invisible!");
                 Player.PlayerPawn.Value.SetColor(Color.FromArgb(0, 255, 255, 255));
                 var noWeapons = new List<string>();
@@ -324,6 +327,7 @@ namespace WarcraftPlugin.Classes
         public static void DeleteAllWeapons(CCSPlayerController player)
         {
             if (player == null) return;
+            player.DropWeaponByDesignerName("weapon_c4");
             player.RemoveWeapons();
         }
 
