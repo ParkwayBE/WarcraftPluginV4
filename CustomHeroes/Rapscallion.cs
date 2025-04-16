@@ -60,6 +60,10 @@ namespace WarcraftPlugin.Classes
                 new RestrictWeaponsEffect(Player, 999f, allowedWeapons).Start();
                 effect.Start();
 
+                _flashEffect?.Destroy();
+                _flashEffect = new FlashingInvisibilityEffect(Player);
+                _flashEffect.Start();
+
             });
 
         }
@@ -155,11 +159,11 @@ namespace WarcraftPlugin.Classes
                 var restoreWeapons = new List<string> { "weapon_knife", "weapon_c4" };
                 _ultWeaponLock?.Destroy();
                 _flashEffect?.Destroy();
-
-                _ultWeaponLock = new RestrictWeaponsEffect(Player, 999f, restoreWeapons);
-                _ultWeaponLock.Start();
                 _flashEffect = new FlashingInvisibilityEffect(Player);
                 _flashEffect.Start();
+                _ultWeaponLock = new RestrictWeaponsEffect(Player, 999f, restoreWeapons);
+                _ultWeaponLock.Start();
+
             }
             else
             {
