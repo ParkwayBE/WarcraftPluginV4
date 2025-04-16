@@ -351,13 +351,13 @@ namespace WarcraftPlugin.Classes
             private float _lastChatTime;
             public int _chargeStacks;
             private Vector _lastPosition;
-            private readonly int _maxCharge = 100;
+            private readonly int _maxCharge = 200;
             private readonly int _abilityLevel;
 
             public int ChargeStacks => _chargeStacks;
 
             public ChargeWhileMovingEffect(CCSPlayerController owner, int abilityLevel)
-        : base(owner, duration: 9999f, destroyOnDeath: true, destroyOnRoundEnd: true, onTickInterval: 1f)
+        : base(owner, duration: 9999f, destroyOnDeath: true, destroyOnRoundEnd: true, onTickInterval: 1.8f)
             {
                 _abilityLevel = abilityLevel;
             }
@@ -386,7 +386,7 @@ namespace WarcraftPlugin.Classes
                     _lastChatTime = now;
                 }
 
-                int tier = Math.Min(_chargeStacks / 10, 10);
+                int tier = Math.Min(_chargeStacks / 20, 10);
                 float buffMultiplier = tier * 0.1f;
                 float newSpeed = 1.0f + (buffMultiplier / 2f);
                 Owner.PlayerPawn.Value.VelocityModifier = Math.Min(newSpeed, 1.6f);
