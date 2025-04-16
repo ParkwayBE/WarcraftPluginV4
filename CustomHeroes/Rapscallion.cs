@@ -53,7 +53,13 @@ namespace WarcraftPlugin.Classes
             {
                 if (Player == null || !Player.IsValid || !Player.IsAlive()) return;
 
+                if (_chargeEffects.TryGetValue(Player.SteamID, out var existingEffect))
+                {
+                    existingEffect.Destroy();
+                }
+
                 int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
+
                 var effect = new ChargeWhileMovingEffect(Player, abilityLevel);
                 _chargeEffects[Player.SteamID] = effect;
                 UltimateToggle = false;
