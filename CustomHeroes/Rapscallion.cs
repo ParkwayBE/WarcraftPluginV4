@@ -64,8 +64,19 @@ namespace WarcraftPlugin.Classes
                 var effect = new ChargeWhileMovingEffect(Player, abilityLevel);
                 _chargeEffects[Player.SteamID] = effect;
                 UltimateToggle = false;
-                var allowedWeapons = new List<string> { "weapon_knife", "weapon_c4" };
-                new RestrictWeaponsEffect(Player, 999f, allowedWeapons, includeBomb: true).Start();
+                var allowedWeapons = new List<string> { "weapon_knife" };
+
+                // If player is terrorist and does NOT have the bomb, give it
+                if (Player.TeamNum == (int)CsTeam.Terrorist && !HasWeapon(Player, "weapon_c4"))
+                {
+                    allowedWeapons.Add("weapon_c4");
+                    new RestrictWeaponsEffect(Player, 999f, allowedWeapons, includeBomb: true).Start();
+                }
+                else
+                {
+                    new RestrictWeaponsEffect(Player, 999f, allowedWeapons, includeBomb: false).Start();
+                }
+
                 effect.Start();
 
                 _flashEffect?.Destroy();
