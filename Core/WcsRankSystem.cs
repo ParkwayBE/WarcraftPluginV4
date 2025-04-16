@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
@@ -8,7 +7,6 @@ using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using Dapper;
-using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Menu;
 
@@ -68,10 +66,6 @@ namespace WarcraftPlugin.Core
             else if (msg is "!top" or "!wcstop" or "top" or "wcstop" or "top10")
             {
                 ShowTop10InChat(player);
-            }
-            else if (msg is "!dummy" or "!spawn_dummy")
-            {
-                DummyBotManager.SpawnOrResetDummy(player);
             }
         }
 
@@ -298,106 +292,9 @@ namespace WarcraftPlugin.Core
 
 
 
-    public static class DummyBotManager
-    {
-        private static readonly Dictionary<int, CCSPlayerController> DummyTracking = new();
-
-        public static Dictionary<int, CCSPlayerController> GetAllTrackedDummies()
-        {
-            return DummyTracking;
-        }
-
-        public static void SpawnOrResetDummy(CCSPlayerController owner)
-        {
-            if (owner == null || !owner.IsValid || !owner.IsAlive() || owner.PlayerPawn?.Value == null)
-            {
-                Console.WriteLine("[Dummy] Command issued by invalid or dead player.");
-                return;
-            }
-
-            var enemyTeam = owner.TeamNum == (byte)CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
-
-            var dummy = Utilities.GetPlayers()
-                .FirstOrDefault(p => p.IsBot && p.IsValid && p.TeamNum == (byte)enemyTeam && p.PlayerPawn?.Value != null && p.IsAlive());
-
-            if (dummy == null)
-            {
-                owner.PrintToChat(" \x07[Dummy] No valid bot found on the enemy team.");
-                return;
-            }
-
-            // Track this dummy
-            DummyTracking[owner.Slot] = dummy;
-
-            // Position in front of player
-            var forward = owner.PlayerPawn.Value.EyeAngles.ToForward();
-            var spawnPos = owner.EyePosition() + forward * 100;
-            dummy.PlayerPawn.Value.Teleport(spawnPos, new QAngle(), new Vector());
-
-            // Give health
-            BonusHealth(dummy, 9999);
-
-            // Strip weapons
-            foreach (var weapon in dummy.PlayerPawn.Value.WeaponServices.MyWeapons)
-            {
-                if (weapon.IsValid)
-                {
-                    weapon.Value.Remove();
-                }
-            }
-
-            // Optional cosmetic
-            dummy.PlayerPawn.Value.SetColor(Color.Gray);
-            owner.PrintToChat(" \x04[Dummy] Dummy bot has been moved in front of you for testing.");
-        }
 
 
 
 
-        public static void BonusHealth(CCSPlayerController dummy, int amount)
-        {
-            Console.WriteLine($"[DEBUG] Giving bonus health to: {dummy.PlayerName}");
-
-            var healthEffect = new SetBonusHealth(dummy, amount);
-            healthEffect.Start();
-        }
-
-
-        public static void MonitorDummyHealth()
-        {
-            foreach (var entry in DummyTracking)
-            {
-                var dummy = entry.Value;
-                if (dummy == null || !dummy.IsValid || dummy.PlayerPawn?.Value == null)
-                    continue;
-
-                var hp = dummy.PlayerPawn.Value.Health;
-                if (hp <= 100)
-                {
-                    int newHealth = dummy.Health + 5000;
-                    dummy.SetHp(newHealth);
-                    dummy.PrintToChat(" \x07[Dummy] You cannot die. Testing mode active.");
-                    var tester = Utilities.GetPlayerFromSlot(entry.Key);
-                    tester?.PrintToChat(" \x06[Dummy] Your test dummy was low hp and got healed.");
-                }
-            }
-        }
-    }
-
-
-    public static class AngleExtensions
-    {
-        public static Vector ToForward(this QAngle angle)
-        {
-            float pitch = angle.X * (float)(Math.PI / 180.0);
-            float yaw = angle.Y * (float)(Math.PI / 180.0);
-
-            float x = (float)(Math.Cos(pitch) * Math.Cos(yaw));
-            float y = (float)(Math.Cos(pitch) * Math.Sin(yaw));
-            float z = (float)-Math.Sin(pitch);
-
-            return new Vector(x, y, z);
-        }
-    }
 
 }
