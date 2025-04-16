@@ -177,7 +177,7 @@ namespace WarcraftPlugin.Classes
                 }
             });
 
-            Player.PrintToChat($" {ChatColors.Green}Disintigrate{ChatColors.Green} Ultimate activated!");
+            Player.PrintToChat($" {ChatColors.Green}Disintigrate{ChatColors.Default} Ultimate activated!");
             WarcraftPlugin.Instance.AddTimer(3f, () => _ultActive = false);
             StartCooldown(3);
         }
@@ -282,8 +282,8 @@ namespace WarcraftPlugin.Classes
                 int collateralDamage = (int)(damage * 0.5f);
                 @event.AddBonusDamage(collateralDamage);
 
-                target.PrintToChat($" {ChatColors.Red}Module B{ChatColors.Default} You were hit through {victim.PlayerName}!");
-                attacker.PrintToChat($" {ChatColors.Green}Module B{ChatColors.Default}: {target.PlayerName} was pierced for {collateralDamage} damage!");
+                target.PrintToChat($" {ChatColors.Blue}Module B{ChatColors.Default} You were hit through {victim.PlayerName}!");
+                attacker.PrintToChat($" {ChatColors.Blue}Module B{ChatColors.Default}: {target.PlayerName} was pierced for {collateralDamage} damage!");
             }
         }
         public class RGBColorCycleEffect : WarcraftEffect
