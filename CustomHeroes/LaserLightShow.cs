@@ -194,6 +194,8 @@ namespace WarcraftPlugin.Classes
             var damage = @event.DmgHealth;
             if (damage <= 0) return;
 
+            @event.AddBonusDamage(abilityLevel);
+
             // ---------------------
             // V-Shape Laser Effect
             // ---------------------
@@ -212,11 +214,11 @@ namespace WarcraftPlugin.Classes
 
             // Grouped colors
             List<Color> tierColors = new()
-    {
-        Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256)),
-        Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256)),
-        Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256))
-    };
+            {
+                Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256)),
+                Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256)),
+                Color.FromArgb(rand.Next(256), rand.Next(256), rand.Next(256))
+            };
 
             for (int tier = 0; tier < tierCounts.Length; tier++)
             {
