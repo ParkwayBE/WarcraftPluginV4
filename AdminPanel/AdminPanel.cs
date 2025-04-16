@@ -10,6 +10,8 @@ using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Menu;
+using CSVector = CounterStrikeSharp.API.Modules.Utils.Vector;
+
 
 namespace WarcraftPlugin.Core
 {
@@ -489,7 +491,7 @@ namespace WarcraftPlugin.Core
             // Position in front of player
             var forward = owner.PlayerPawn.Value.EyeAngles.ToForward();
             var spawnPos = owner.EyePosition() + forward * 100;
-            dummy.PlayerPawn.Value.Teleport(spawnPos, new QAngle(), new Vector());
+            dummy.PlayerPawn.Value.Teleport(spawnPos, new QAngle(), new CSVector());
 
             // Give health
             BonusHealth(dummy, 9999);
@@ -540,24 +542,8 @@ namespace WarcraftPlugin.Core
             }
         }
     }
-    public static class AngleExtensions
-    {
-        public static Vector ToForward(this QAngle angle)
-        {
-            float pitch = angle.X * (float)(Math.PI / 180.0);
-            float yaw = angle.Y * (float)(Math.PI / 180.0);
-
-            float x = (float)(Math.Cos(pitch) * Math.Cos(yaw));
-            float y = (float)(Math.Cos(pitch) * Math.Sin(yaw));
-            float z = (float)-Math.Sin(pitch);
-
-            return new Vector(x, y, z);
-        }
-    }
-
-
-
 }
+
 namespace CounterStrikeSharp.API.Core
 {
     public partial class CCSPlayerControllerExtra : CCSPlayerController
