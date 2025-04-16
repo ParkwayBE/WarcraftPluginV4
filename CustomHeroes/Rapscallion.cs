@@ -22,6 +22,7 @@ namespace WarcraftPlugin.Classes
         private readonly int _MedkitHealthMultiplier = 20;
         private bool UltimateToggle = false;
         private Dictionary<ulong, ChargeWhileMovingEffect> _chargeEffects = new();
+        private RestrictWeaponsEffect? _ultWeaponLock;
 
         public override string DisplayName => "Rapscallion";
         public override Color DefaultColor => Color.White;
@@ -64,8 +65,9 @@ namespace WarcraftPlugin.Classes
 
         private void PlayerHurt(EventPlayerHurt @event)
         {
-            if (Player == null || !Player.IsValid || !Player.IsAlive())
-                return;
+            var victim = @event.Userid;
+            var attacker = @event.Attacker;
+            if (attacker == null || victim == null || !attacker.IsValid || !victim.IsValid) return;
 
             if (!_chargeEffects.TryGetValue(Player.SteamID, out var chargeEffect))
                 return;
@@ -76,7 +78,7 @@ namespace WarcraftPlugin.Classes
             if (Random.Shared.NextDouble() < evasionChance)
             {
                 @event.IgnoreDamage();
-                Player.PrintToCenter($" {ChatColors.Green}⚡ You evaded incoming damage!");
+                victim.PrintToCenter($" {ChatColors.Green}⚡ You evaded incoming damage!");
             }
         }
 
@@ -145,26 +147,43 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
+            if (IsOnCooldown())
+                return;
+
             var pawn = Player.PlayerPawn.Value;
             if (pawn == null || !Player.IsAlive()) return;
 
+            StartCooldown(3); // Start cooldown early
+
             if (UltimateToggle)
             {
+                // TURN OFF ULTIMATE: Revert back to walk mode
                 SetMoveType(pawn, MoveType_t.MOVETYPE_WALK);
                 pawn.Teleport(null, null, new Vector(0, 0, 0));
                 UltimateToggle = false;
                 Player.PrintToChat(" Visible again.");
-                StartCooldown(3);
+
+                // Give back knife and c4
+                var restoreWeapons = new List<string> { "weapon_knife", "weapon_c4" };
+                _ultWeaponLock?.Destroy(); // destroy old effect if any
+                _ultWeaponLock = new RestrictWeaponsEffect(Player, 999f, restoreWeapons);
+                _ultWeaponLock.Start();
             }
             else
             {
-                // Toggle on: enable flying
+                // TURN ON ULTIMATE: Enter invis/fly mode
                 SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
                 UltimateToggle = true;
                 Player.PrintToChat($" {ChatColors.Green}You are now frozen invisible!");
+
+                // Remove all weapons
+                var noWeapons = new List<string>(); // empty list means allow nothing
+                _ultWeaponLock?.Destroy(); // remove existing one just in case
+                _ultWeaponLock = new RestrictWeaponsEffect(Player, 999f, noWeapons);
+                _ultWeaponLock.Start();
             }
-            StartCooldown(3);
         }
+
 
         private class RestrictWeaponsEffect : WarcraftEffect
         {
