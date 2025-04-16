@@ -65,7 +65,7 @@ namespace WarcraftPlugin.Classes
                 _chargeEffects[Player.SteamID] = effect;
                 UltimateToggle = false;
                 var allowedWeapons = new List<string> { "weapon_knife", "weapon_c4" };
-                new RestrictWeaponsEffect(Player, 999f, allowedWeapons).Start();
+                new RestrictWeaponsEffect(Player, 999f, allowedWeapons, includeBomb: true).Start();
                 effect.Start();
 
                 _flashEffect?.Destroy();
