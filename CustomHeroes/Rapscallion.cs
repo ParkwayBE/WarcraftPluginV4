@@ -425,7 +425,7 @@ namespace WarcraftPlugin.Classes
                 float now = Server.CurrentTime;
                 if (now - _lastChatTime > 2f)
                 {
-                    Owner.PrintToCenter($"Charge: {_chargeStacks}/100");
+                    Owner.PrintToCenter($"Charge: {_chargeStacks}/200");
                     _lastChatTime = now;
                 }
 
