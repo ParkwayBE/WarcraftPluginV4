@@ -46,14 +46,14 @@ namespace WarcraftPlugin.Classes
                 if (abilityLevel < 1) return;
 
                 float speedMultiplier = 1 + (0.1f * abilityLevel);
+
                 int bonushealth = abilityLevel * 15;
+                var pawn = Player.PlayerPawn.Value;
 
-                SkillFunctions.MovementSpeed(Player, speedMultiplier, 999f);
-                SkillFunctions.SetBonusHealth(Player, bonushealth);
+                new SetMovementSpeed(Player, speedMultiplier, 999f).Start();
+                int newHealth = pawn.Health + bonushealth;
+                Player.SetHp(newHealth);
                 new RGBColorCycleEffect(Player, 999f).Start();
-
-
-
 
                 var origin = Player.PlayerPawn.Value.AbsOrigin;
                 float radius = 50f;
@@ -92,6 +92,34 @@ namespace WarcraftPlugin.Classes
             });
         }
 
+        public class SetMovementSpeed : WarcraftEffect
+        {
+            private readonly float _speedMultiplier;
+
+            public SetMovementSpeed(CCSPlayerController owner, float speedMultiplier, float duration)
+                : base(owner, duration)
+            {
+                _speedMultiplier = speedMultiplier;
+            }
+
+            public override void OnStart()
+            {
+                var pawn = Owner.PlayerPawn.Value;
+
+                float speed = 1f + (0.1f * _speedMultiplier);
+
+                pawn.VelocityModifier = speed;
+
+            }
+
+            public override void OnFinish()
+            {
+                Owner.PlayerPawn.Value.VelocityModifier = 1.0f;
+            }
+
+            public override void OnTick()
+            {/*       */ }
+        }
 
 
         private void Ultimate()
@@ -106,7 +134,7 @@ namespace WarcraftPlugin.Classes
             float radius = 900f + AbilityLevelMult;
 
             var eyePos = Player.EyePosition();
-            eyePos.Z += 30f; // Raise slightly above eye level
+            eyePos.Z += 30f;
             var forward = Player.PlayerPawn.Value.EyeAngles.ToForward();
             var targetPos = eyePos + forward * 1000f;
 
@@ -135,7 +163,6 @@ namespace WarcraftPlugin.Classes
 
                 for (int i = 0; i < beamCount; i++)
                 {
-                    // Random direction using unit sphere
                     double theta = Random.Shared.NextDouble() * 2 * Math.PI;
                     double phi = Math.Acos(2 * Random.Shared.NextDouble() - 1);
                     float x = (float)(Math.Sin(phi) * Math.Cos(theta));
@@ -178,8 +205,7 @@ namespace WarcraftPlugin.Classes
 
             var rand = new Random();
 
-            // Tier setup: 3 levels of lasers (1, 3, 5 = 9 total)
-            int[] tierCounts = { 0, 1, 2 }; // Number of lasers left/right from center per tier
+            int[] tierCounts = { 0, 1, 2 };
             float zStep = 10f;
             float xStep = 10f;
             float yCurve = 6f;
@@ -205,7 +231,7 @@ namespace WarcraftPlugin.Classes
                     Vector beamEnd = new Vector(
                         endBase.X + xOffset,
                         endBase.Y + yOffset,
-                        tierZ + rand.Next(-2, 3) // tiny jitter
+                        tierZ + rand.Next(-2, 3)
                     );
 
                     Warcraft.DrawLaserBetween(
@@ -238,7 +264,6 @@ namespace WarcraftPlugin.Classes
                 float dot = Vector3.Dot(forward.ToVector3(), toTargetNorm.ToVector3());
                 if (dot < 0.90f) continue;
 
-                // Piercing laser from victim to collateral
                 var pierceColor = Color.FromArgb(
                     Random.Shared.Next(100, 256),
                     Random.Shared.Next(100, 256),
@@ -276,11 +301,9 @@ namespace WarcraftPlugin.Classes
             {
                 if (Owner?.PlayerPawn?.Value == null || !Owner.IsAlive()) return;
 
-                // Convert hue (0-360) to RGB
                 var rgb = ColorFromHue(_hue);
                 Owner.PlayerPawn.Value.SetColor(rgb);
 
-                // Increase hue
                 _hue += 5f;
                 if (_hue >= 360f) _hue = 0f;
             }
