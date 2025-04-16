@@ -30,8 +30,8 @@ namespace WarcraftPlugin.Classes
 
         public override List<IWarcraftAbility> Abilities =>
         [
-            new WarcraftAbility("Ninja skills", "Gain health and invisibility when planting or defusing a bomb"),
-            new WarcraftAbility("Agility", "Up to 40% evasion and 180% movement speed"),
+            new WarcraftAbility("Ninja skills", "Heal and gain bonushealth when planting or defusing a bomb"),
+            new WarcraftAbility("Agility", "Up to 40% evasion and 160% movement speed"),
             new WarcraftAbility("Unseen Blade", "Additional knife damage"),
             new WarcraftCooldownAbility("Vanish", "Full Invisiblity toggle", 2f)
         ];
@@ -86,7 +86,6 @@ namespace WarcraftPlugin.Classes
                 victim.PrintToCenter($" {ChatColors.Green}⚡ You evaded incoming damage!");
             }
         }
-
 
         private void PlayerhurtOther(EventPlayerHurtOther @event)
         {
@@ -149,7 +148,6 @@ namespace WarcraftPlugin.Classes
 
             if (UltimateToggle)
             {
-                // TURN OFF ULTIMATE: Revert back to walk mode
                 SetMoveType(pawn, MoveType_t.MOVETYPE_WALK);
                 pawn.Teleport(null, null, new Vector(0, 0, 0));
                 UltimateToggle = false;
@@ -217,8 +215,6 @@ namespace WarcraftPlugin.Classes
                 Owner.PlayerPawn.Value.SetColor(color);
             }
         }
-
-
 
         private class RestrictWeaponsEffect : WarcraftEffect
         {
@@ -330,7 +326,6 @@ namespace WarcraftPlugin.Classes
             if (player == null) return;
             player.RemoveWeapons();
         }
-
 
         internal class ChargeWhileMovingEffect : WarcraftEffect
         {
