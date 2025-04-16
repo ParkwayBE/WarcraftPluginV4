@@ -32,7 +32,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Ninja skills", "Gain health and invisibility when planting or defusing a bomb"),
             new WarcraftAbility("Agility", "Up to 40% evasion and 180% movement speed"),
             new WarcraftAbility("Unseen Blade", "Additional knife damage"),
-            new WarcraftCooldownAbility("Vanish", "Full Invisiblity toggle", 8f)
+            new WarcraftCooldownAbility("Vanish", "Full Invisiblity toggle", 2f)
         ];
 
         public override void Register()
@@ -139,7 +139,7 @@ namespace WarcraftPlugin.Classes
         {
             var pawn = Player.PlayerPawn.Value;
             if (pawn == null || !Player.IsAlive()) return;
-            StartCooldown(3, 2f);
+            StartCooldown(3);
 
             if (UltimateToggle)
             {
