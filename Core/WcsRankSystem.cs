@@ -7,7 +7,6 @@ using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using Dapper;
-using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Menu;
 
 namespace WarcraftPlugin.Core
@@ -27,7 +26,6 @@ namespace WarcraftPlugin.Core
         {
             _plugin.AddCommand("say", "Chat command handler", OnChatCommand);
             _waitForWcPluginTimer = _plugin.AddTimer(1.0f, WaitForWarcraftPlugin, TimerFlags.REPEAT);
-            _plugin.RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt, HookMode.Pre);
 
         }
 
@@ -262,32 +260,6 @@ namespace WarcraftPlugin.Core
 
             MenuManagerExtra.OpenMainMenuExtra(player, pages);
         }
-
-
-        private HookResult OnPlayerHurt(EventPlayerHurt e, GameEventInfo info)
-        {
-            if (e == null || e.Userid == null || !e.Userid.IsValid)
-                return HookResult.Continue;
-
-            var victim = e.Userid;
-
-            foreach (var dummy in DummyBotManager.GetAllTrackedDummies())
-            {
-                if (dummy.Value == victim && victim.IsValid && victim.IsAlive())
-                {
-                    var currentHp = victim.PlayerPawn.Value.Health;
-                    var newHp = Math.Max(1, currentHp - e.DmgHealth);
-
-                    // Console log
-                    var attacker = e.Attacker;
-                    var name = attacker?.PlayerName ?? "Unknown";
-                    Console.WriteLine($"[Dummy] {name} dealt {e.DmgHealth} damage — HP: {currentHp} → {newHp}");
-                }
-            }
-
-            return HookResult.Continue;
-        }
-
     }
 
 
