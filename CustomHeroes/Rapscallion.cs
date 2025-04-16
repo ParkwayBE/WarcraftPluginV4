@@ -172,7 +172,6 @@ namespace WarcraftPlugin.Classes
 
             if (UltimateToggle)
             {
-                // TURN OFF ULTIMATE
                 SetMoveType(pawn, MoveType_t.MOVETYPE_WALK);
                 pawn.Teleport(null, null, new Vector(0, 0, 0));
                 UltimateToggle = false;
@@ -181,10 +180,11 @@ namespace WarcraftPlugin.Classes
                 Player.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
                 itemServices.HasDefuser = true;
 
-                // Restore knife and optionally bomb
-                List<string> restoreWeapons = Player.TeamNum == (int)CsTeam.Terrorist
-                    ? new List<string> { "weapon_knife", "weapon_c4" }
-                    : new List<string> { "weapon_knife" };
+                List<string> restoreWeapons = new() { "weapon_knife" };
+                if (Player.TeamNum == (int)CsTeam.Terrorist)
+                {
+                    restoreWeapons.Add("weapon_c4");
+                }
 
                 _ultWeaponLock?.Destroy();
                 _flashEffect?.Destroy();
@@ -192,30 +192,19 @@ namespace WarcraftPlugin.Classes
                 _flashEffect = new FlashingInvisibilityEffect(Player);
                 _flashEffect.Start();
 
-                _ultWeaponLock = new RestrictWeaponsEffect(Player, 999f, restoreWeapons);
+                _ultWeaponLock = new RestrictWeaponsEffect(Player, 999f, restoreWeapons, _hadBombWhenUlted);
                 _ultWeaponLock.Start();
 
-                // Give bomb back if player had it before ulting
-                if (_hadBombWhenUlted && Player.TeamNum == (int)CsTeam.Terrorist)
-                {
-                    if (!HasWeapon(Player, "weapon_c4"))
-                    {
-                        Player.GiveNamedItem("weapon_c4");
-                        Player.PrintToChat($" {ChatColors.Green}You got your C4 back.");
-                    }
-                    _hadBombWhenUlted = false; // Reset
-                }
+                _hadBombWhenUlted = false;
             }
             else
             {
-                // TURN ON ULTIMATE
                 UltimateToggle = true;
                 SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
 
                 Player.PrintToChat($" {ChatColors.Green}You are now frozen invisible!");
                 Player.PlayerPawn.Value.SetColor(Color.FromArgb(0, 255, 255, 255));
 
-                // Track bomb status
                 _hadBombWhenUlted = HasWeapon(Player, "weapon_c4");
 
                 itemServices.HasDefuser = false;
@@ -227,10 +216,9 @@ namespace WarcraftPlugin.Classes
                 _ultWeaponLock?.Destroy();
                 _ultWeaponLock = new RestrictWeaponsEffect(Player, 999f, noWeapons);
                 _ultWeaponLock.Start();
-
-                StartCooldown(3);
             }
         }
+
 
         internal class FlashingInvisibilityEffect : WarcraftEffect
         {
@@ -243,7 +231,7 @@ namespace WarcraftPlugin.Classes
 
             public override void OnStart()
             {
-                SetInvisibility(true); // Start invisible
+                SetInvisibility(true);
             }
 
             public override void OnTick()
@@ -272,11 +260,14 @@ namespace WarcraftPlugin.Classes
         private class RestrictWeaponsEffect : WarcraftEffect
         {
             private readonly List<string> _allowedWeapons;
+            private readonly bool _includeBomb;
 
-            public RestrictWeaponsEffect(CCSPlayerController owner, float duration, List<string> allowedWeapons)
-                : base(owner, duration)
+
+            public RestrictWeaponsEffect(CCSPlayerController owner, float duration, List<string> allowedWeapons, bool includeBomb = false)
+    : base(owner, duration)
             {
                 _allowedWeapons = allowedWeapons;
+                _includeBomb = includeBomb;
             }
 
             public override void OnStart()
@@ -363,15 +354,19 @@ namespace WarcraftPlugin.Classes
 
                 foreach (var weaponName in _allowedWeapons)
                 {
+                    // Only give C4 if _includeBomb is true and the player is a terrorist
+                    if (weaponName == "weapon_c4" && (!_includeBomb || Owner.TeamNum != (int)CsTeam.Terrorist))
+                        continue;
+
                     bool alreadyHasWeapon = inventory.Any(w => w.Value?.DesignerName == weaponName);
 
                     if (!alreadyHasWeapon)
                     {
                         Owner.GiveNamedItem(weaponName);
                     }
-                    else return;
                 }
             }
+
         }
 
         public static void DeleteAllWeapons(CCSPlayerController player)
