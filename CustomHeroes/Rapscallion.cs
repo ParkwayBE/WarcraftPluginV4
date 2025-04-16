@@ -155,7 +155,16 @@ namespace WarcraftPlugin.Classes
                 Player.PrintToChat($" {ChatColors.Green}Visible again.");
                 Player.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
                 itemServices.HasDefuser = true;
-                var restoreWeapons = new List<string> { "weapon_knife", "weapon_c4" };
+                List<string> restoreWeapons;
+
+                if (Player.TeamNum == (int)CsTeam.Terrorist)
+                {
+                    restoreWeapons = new List<string> { "weapon_knife", "weapon_c4" };
+                }
+                else
+                {
+                    restoreWeapons = new List<string> { "weapon_knife" };
+                }
                 _ultWeaponLock?.Destroy();
                 _flashEffect?.Destroy();
                 _flashEffect = new FlashingInvisibilityEffect(Player);
