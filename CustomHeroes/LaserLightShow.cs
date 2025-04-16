@@ -194,6 +194,8 @@ namespace WarcraftPlugin.Classes
             var damage = @event.DmgHealth;
             if (damage <= 0) return;
 
+            victim.AddBonusDamage(abilityLevel);
+
             // ---------------------
             // V-Shape Laser Effect
             // ---------------------
@@ -277,7 +279,8 @@ namespace WarcraftPlugin.Classes
                 );
 
                 // Apply collateral damage
-                int collateralDamage = (int)(damage * 0.5f);
+                int collatBonus = abilityLevel / 10;
+                int collateralDamage = (int)(damage * collatBonus);
                 @event.AddBonusDamage(collateralDamage);
 
                 target.PrintToChat($" {ChatColors.Red}Module B{ChatColors.Default} You were hit through {victim.PlayerName}!");
