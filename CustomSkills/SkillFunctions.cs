@@ -7,7 +7,6 @@ using WarcraftPlugin.Models;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 
-
 namespace WarcraftPlugin.CustomSkills
 {
     public static class SkillFunctions

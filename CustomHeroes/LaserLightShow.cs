@@ -7,11 +7,11 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using WarcraftPlugin.Core;
 using WarcraftPlugin.Core.Effects;
-using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Models;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
+
 
 namespace WarcraftPlugin.Classes
 {
@@ -36,7 +36,6 @@ namespace WarcraftPlugin.Classes
 
             HookAbility(3, Ultimate);
         }
-
 
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
@@ -349,4 +348,13 @@ namespace WarcraftPlugin.Classes
             }
         }
     }
+
+    public static class VectorExtensions
+    {
+        public static Vector3 ToVector3(this Vector v)
+        {
+            return new Vector3(v.X, v.Y, v.Z);
+        }
+    }
+
 }
