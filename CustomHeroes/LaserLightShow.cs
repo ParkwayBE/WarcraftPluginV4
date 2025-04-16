@@ -99,8 +99,6 @@ namespace WarcraftPlugin.Classes
             if (_ultActive) return;
             _ultActive = true;
 
-            // ... your code ...
-
             int abilityLevel0 = WarcraftPlayer.GetAbilityLevel(0);
             int abilityLevel1 = WarcraftPlayer.GetAbilityLevel(1);
             int abilityLevel2 = WarcraftPlayer.GetAbilityLevel(2);
@@ -112,7 +110,6 @@ namespace WarcraftPlugin.Classes
             var forward = Player.PlayerPawn.Value.EyeAngles.ToForward();
             var targetPos = eyePos + forward * 1000f;
 
-            // New rainbow triple beam
             Color[] beamColors = { Color.Red, Color.Green, Color.Blue };
             Vector[] offsets = {
                 new Vector(5f, 0, 0),
@@ -131,10 +128,7 @@ namespace WarcraftPlugin.Classes
 
             WarcraftPlugin.Instance.AddTimer(1.5f, () =>
             {
-                // Spawn explosion at target
                 Warcraft.SpawnExplosion(targetPos, (AbilityLevelMult - 50f), radius, Player, KillFeedIcon.prop_exploding_barrel);
-
-                // Radial blast lasers
 
                 int beamCount = 32;
                 float angleStep = 360f / beamCount;
