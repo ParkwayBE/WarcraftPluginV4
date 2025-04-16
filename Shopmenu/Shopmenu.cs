@@ -80,7 +80,6 @@ namespace WarcraftPlugin.Core
 
                         int currentMoney = moneyService.Account;
 
-                        // Check if already purchased this item
                         if (!purchasesThisRound.TryGetValue(pl, out var boughtItems))
                         {
                             boughtItems = new HashSet<string>();
@@ -102,20 +101,13 @@ namespace WarcraftPlugin.Core
                         bool success = item.Apply(pl);
                         if (!success)
                         {
-                            // Block purchase if Apply failed (e.g., due to race restriction)
+                            // Block purchase (e.g., due to race restriction)
                             return;
                         }
 
-                        // Deduct money & confirm purchase
                         moneyService.Account = Math.Max(0, currentMoney - item.Cost);
                         Utilities.SetStateChanged(player, "CCSPlayerController", "m_pInGameMoneyServices");
-                        player.PlayLocalSound("sounds/common/talk.vsnd");
-
-
-
-                        // ____________________________
-                        Utilities.SetStateChanged(player, "CBaseEntity", "m_iHealth");
-                        //------------------------------
+                        player.PlayLocalSound("sounds/common/talk.vsnd"); // TODO: change to better sound
 
                         pl.PrintToChat($" {ChatColors.Green}✔ You bought {item.Name} for ${item.Cost}!");
                         boughtItems.Add(item.Name);
@@ -221,7 +213,7 @@ namespace WarcraftPlugin.Core
     {
         public string Name => "Ring of Regen";
         public int Cost => 3500;
-        public bool IsPersistent => false; // so it cleans on round end
+        public bool IsPersistent => false;
 
         private readonly Dictionary<CCSPlayerController, Timer> regenTimers = new();
 
@@ -236,13 +228,10 @@ namespace WarcraftPlugin.Core
                 int currentHp = player.PlayerPawn.Value.Health;
                 if (currentHp < 200)
                 {
-                    // Heal for 2
                     player.PlayerPawn.Value.Health = Math.Min(currentHp + 2, 200);
                     Server.NextFrame(() => Utilities.SetStateChanged(player.PlayerPawn.Value!, "CBaseEntity", "m_iHealth"));
 
                 }
-
-                // Reschedule the timer
                 regenTimers[player] = WarcraftPlugin.Instance.AddTimer(1.0f, RepeatRegen);
             }
 
@@ -265,7 +254,7 @@ namespace WarcraftPlugin.Core
     }
     public class ShopItem3 : IShopItem
     {
-        public string Name => "Necklace of Immunity";
+        public string Name => "Necklace of Immunity"; // TO DO: REPLACE WITH A PUBLICLY AVAILABLE ITEMCODE
         public int Cost => 2500;
         public bool IsPersistent => false;
 
@@ -330,7 +319,6 @@ namespace WarcraftPlugin.Core
 
         public void ResetEffect(CCSPlayerController player)
         {
-            // Nothing to reset — XP gain is permanent
         }
     }
     public class ShopItem5 : IShopItem
@@ -361,7 +349,6 @@ namespace WarcraftPlugin.Core
 
         public void ResetEffect(CCSPlayerController player)
         {
-            // Nothing to reset — XP gain is permanent
         }
     }
     public class ShopItem6 : IShopItem
@@ -385,8 +372,7 @@ namespace WarcraftPlugin.Core
             int maxXp = wcPlayer.amountToLevel;
             int level = wcPlayer.GetLevel();
 
-            // Roll for GOLD bonus
-            int roll = random.Next(1, 431); // 1 in 430 chance
+            int roll = random.Next(1, 431);
             bool isGold = roll == 1;
 
             if (isGold)
@@ -403,10 +389,10 @@ namespace WarcraftPlugin.Core
             plugin.XpSystem.AddXp(player, xpToGive);
 
             player.PrintToChat($" {ChatColors.Green}🎲 You gained {xpToGive} XP from the Gambling Tome of Experience!");
-            player.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
+            player.PrintToChat($" {ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
             if (isGold)
             {
-                player.PrintToChat($" {ChatColors.Gold}💛 You wasted your knife luck for this round...");
+                player.PrintToChat($" {ChatColors.Gold}💛 You wasted your knife luck on this purchase...");
             }
 
             return true;
@@ -415,7 +401,6 @@ namespace WarcraftPlugin.Core
 
         public void ResetEffect(CCSPlayerController player)
         {
-            // Nothing to reset — XP gain is permanent
         }
     }
     public class ShopItem7 : IShopItem
@@ -437,8 +422,8 @@ namespace WarcraftPlugin.Core
             int maxXp = wcPlayer.amountToLevel;
             int level = wcPlayer.GetLevel();
 
-            player.PrintToChat($"{ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
-            player.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
+            player.PrintToChat($" {ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
+            player.PrintToChat($" {ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
 
 
             return true;
@@ -446,7 +431,6 @@ namespace WarcraftPlugin.Core
 
         public void ResetEffect(CCSPlayerController player)
         {
-            // Nothing to reset — XP gain is permanent
         }
     }
     public class ShopItem8 : IShopItem
@@ -465,16 +449,13 @@ namespace WarcraftPlugin.Core
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             if (wcPlayer == null || player.PlayerPawn?.Value == null) return false;
 
-            // Optional: Restrict by race
             if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
             {
                 player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot wear Feather Boots.");
                 return false;
             }
 
-            // ✅ Your actual effect goes here
-            player.PlayerPawn.Value.GravityScale = 0.75f; // Example: reduce gravity for higher jumps
-
+            player.PlayerPawn.Value.GravityScale = 0.75f;
             player.PrintToChat($" {ChatColors.Green}✔ Feather Boots equipped! Gravity reduced.");
             return true;
         }
@@ -483,7 +464,7 @@ namespace WarcraftPlugin.Core
         {
             if (player.PlayerPawn?.Value != null)
             {
-                player.PlayerPawn.Value.GravityScale = 1.0f; // Reset gravity to normal
+                player.PlayerPawn.Value.GravityScale = 1.0f;
                 player.PrintToChat($" {ChatColors.Default}✖ Feather Boots have worn off.");
             }
         }
@@ -608,8 +589,8 @@ namespace WarcraftPlugin.Core
         public int Cost => 1400;
         public bool IsPersistent => false;
 
-        private readonly string ctModel = "models/player/custom_player/legacy/ctm_fbi.vmdl";
-        private readonly string tModel = "models/player/custom_player/legacy/tm_leet.vmdl";
+        private readonly string ctModel = "models/player/custom_player/legacy/ctm_fbi.vmdl"; // TO DO: FIX PROPER MODEL
+        private readonly string tModel = "models/player/custom_player/legacy/tm_leet.vmdl"; // TO DO: FIX PROPER MODEL
 
 
         public bool Apply(CCSPlayerController player)
@@ -693,7 +674,7 @@ namespace WarcraftPlugin.Core
 
             if (players.Count == 0)
             {
-                player.PrintToChat($" {ChatColors.Red}✖ No teammates found to gift XP to.");
+                player.PrintToChat($" {ChatColors.Red}✖ No player found to gift XP to.");
                 return false;
             }
 
@@ -717,7 +698,6 @@ namespace WarcraftPlugin.Core
 
         public void ResetEffect(CCSPlayerController player)
         {
-            // XP is permanent — no reset needed
         }
     }
     public class ShopItem16 : IShopItem
@@ -798,7 +778,7 @@ namespace WarcraftPlugin.Core
             if (wcPlayer == null) return false;
 
             wcPlayer.HasMaskOfDeath = true;
-            player.PrintToChat($"{ChatColors.Green}✔ Mask of Death equipped. You may reveal enemies!");
+            player.PrintToChat($" {ChatColors.Green}✔ Mask of Death equipped. You may reveal enemies!");
             return true;
         }
 
@@ -821,7 +801,7 @@ namespace WarcraftPlugin.Core
             if (wcPlayer == null) return false;
 
             wcPlayer.HasHelmOfExcellence = true;
-            player.PrintToChat($"{ChatColors.Green}✔ Helm of Excellence equipped. Headshots hurt less!");
+            player.PrintToChat($" {ChatColors.Green}✔ Helm of Excellence equipped. Headshots hurt less!");
             return true;
         }
 
@@ -844,7 +824,7 @@ namespace WarcraftPlugin.Core
             if (wcPlayer == null) return false;
 
             wcPlayer.HasOrbOfReflection = true;
-            player.PrintToChat($"{ChatColors.Green}✔ Orb of Reflection equipped! Some of the damage you take will be returned.");
+            player.PrintToChat($" {ChatColors.Green}✔ Orb of Reflection equipped! Some of the damage you take will be returned.");
             return true;
         }
 
@@ -888,7 +868,6 @@ namespace WarcraftPlugin.Core
         {
             _plugin = plugin;
 
-            // Hook global events
             _plugin.RegisterEventHandler<EventRoundStart>(OnRoundStart);
             _plugin.RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt);
             _plugin.RegisterEventHandler<EventPlayerJump>(OnPlayerJump);
@@ -899,7 +878,7 @@ namespace WarcraftPlugin.Core
             _plugin.RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
         }
 
-        // 🧠 SECTION 1: Manual Global Buffs
+        // SECTION 1: Manual Global Buffs
 
         private HookResult OnSpawn(EventPlayerSpawn @event, GameEventInfo info)
         {
@@ -937,7 +916,7 @@ namespace WarcraftPlugin.Core
             var wcVictim = _plugin.GetWcPlayer(victim);
             if (wcVictim == null) return HookResult.Continue;
 
-            // 🧠 Reset player-specific buffs
+            // Reset player-specific buffs
             wcVictim.HasOrbOfSlow = false;
             wcVictim.HasArmorPiercingRounds = false;
             wcVictim.HasMaskOfDeath = false;
@@ -951,10 +930,10 @@ namespace WarcraftPlugin.Core
             wcVictim.HasUltimateImmunity = false;
             wcVictim.RespawnQueued = false;
 
-            // 🧠 Track death in stats
+            // Track death in stats for wcsrank system
             WarcraftPlugin.Instance.GetDatabase().RegisterDeath(victim, wcVictim.className);
 
-            // 🧠 Track kill (if valid attacker)
+            // Track attacker in stats for wcsrank system
             var attacker = @event.Attacker;
             if (attacker != null && attacker.IsValid && attacker != victim)
             {
@@ -967,9 +946,6 @@ namespace WarcraftPlugin.Core
 
             return HookResult.Continue;
         }
-
-
-
         private HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
         {
             foreach (var player in Utilities.GetPlayers())
@@ -1057,7 +1033,6 @@ namespace WarcraftPlugin.Core
                 var wcPlayer = _plugin.GetWcPlayer(player);
                 if (wcPlayer == null) continue;
 
-                // Safety reset: remove ultimate immunity
                 wcPlayer.HasOrbOfSlow = false;
                 wcPlayer.HasArmorPiercingRounds = false;
                 wcPlayer.HasMaskOfDeath = false;
@@ -1084,7 +1059,6 @@ namespace WarcraftPlugin.Core
             var wcDcPlayer = _plugin.GetWcPlayer(disconPlayer);
             if (wcDcPlayer == null) return HookResult.Continue;
 
-            // Reset player-specific buffs
             wcDcPlayer.HasOrbOfSlow = false;
             wcDcPlayer.HasArmorPiercingRounds = false;
             wcDcPlayer.HasMaskOfDeath = false;
@@ -1100,9 +1074,6 @@ namespace WarcraftPlugin.Core
             return HookResult.Continue;
         }
 
-
-
-        ///
 
         // SECTION 2: Shop & Debuff Effects
         private HookResult OnPlayerHurt(EventPlayerHurt @event, GameEventInfo info)

@@ -149,16 +149,6 @@ namespace WarcraftPlugin.Core
             player.PrintToChat("─────────────────────────────");
         }
 
-
-        // ✅ Helper method
-        private string BuildRankLine(string label, string value, int valueStartColumn)
-        {
-            int space = Math.Max(1, valueStartColumn - label.Length);
-            return $"{label}{new string(' ', space)}1{value}";
-        }
-
-
-
         private void ShowPlayerStatsMenu(CCSPlayerController viewer, ulong steamId)
         {
             if (_database == null) return;
@@ -234,7 +224,6 @@ namespace WarcraftPlugin.Core
                 return;
             }
 
-            // Build the menu pages
             var pages = new List<Menu.Menu>();
 
             for (int pageIndex = 0; pageIndex < 2; pageIndex++)
@@ -257,13 +246,13 @@ namespace WarcraftPlugin.Core
                     switch (idx)
                     {
                         case 0:
-                            color = "\x06"; emoji = "🥇"; break; // Gold
+                            color = "\x06"; emoji = "🥇"; break;
                         case 1:
-                            color = "\x0B"; emoji = "🥈"; break; // Silver
+                            color = "\x0B"; emoji = "🥈"; break;
                         case 2:
-                            color = "\x0E"; emoji = "🥉"; break; // Bronze
+                            color = "\x0E"; emoji = "🥉"; break;
                         default:
-                            color = "\x01"; emoji = "🔹"; break; // Normal
+                            color = "\x01"; emoji = "🔹"; break;
                     }
 
                     label = $"{color}{emoji} #{idx + 1} - {playerName} ({row.TotalLevel} lvl)";

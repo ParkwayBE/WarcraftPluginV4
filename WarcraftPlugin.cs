@@ -138,7 +138,6 @@ namespace WarcraftPlugin
 
             new ShopMenu(this);
 
-            new GlobalBuffs(this);
 
 
 
