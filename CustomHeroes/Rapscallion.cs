@@ -100,6 +100,7 @@ namespace WarcraftPlugin.Classes
             }
             else return;
         }
+
         private void HandleBombEvent(CCSPlayerController player)
         {
             if (player == null || player.PlayerPawn == null || player.PlayerPawn.Value == null)
@@ -152,14 +153,19 @@ namespace WarcraftPlugin.Classes
 
                 var restoreWeapons = new List<string> { "weapon_knife", "weapon_c4" };
                 _ultWeaponLock?.Destroy();
+                _flashEffect?.Destroy();
+
                 _ultWeaponLock = new RestrictWeaponsEffect(Player, 999f, restoreWeapons);
                 _ultWeaponLock.Start();
+                _flashEffect = new FlashingInvisibilityEffect(Player);
+                _flashEffect.Start();
             }
             else
             {
                 pawn.WeaponServices.ActiveWeapon = null;
                 DeleteAllWeapons(Player);
                 pawn.WeaponServices.ActiveWeapon = null;
+                _flashEffect?.Destroy();
                 SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
                 UltimateToggle = true;
                 Player.PrintToChat($" {ChatColors.Green}You are now frozen invisible!");
@@ -171,6 +177,44 @@ namespace WarcraftPlugin.Classes
                 StartCooldown(3); 
             }
         }
+
+        internal class FlashingInvisibilityEffect : WarcraftEffect
+        {
+            private bool _isInvisible = false;
+
+            public FlashingInvisibilityEffect(CCSPlayerController owner)
+                : base(owner, duration: 999f, destroyOnDeath: true, destroyOnRoundEnd: true, onTickInterval: 0.5f)
+            {
+            }
+
+            public override void OnStart()
+            {
+                SetInvisibility(true); // Start invisible
+            }
+
+            public override void OnTick()
+            {
+                _isInvisible = !_isInvisible;
+                SetInvisibility(_isInvisible);
+            }
+
+            public override void OnFinish()
+            {
+                SetInvisibility(false);
+            }
+
+            private void SetInvisibility(bool invisible)
+            {
+                if (Owner?.PlayerPawn?.Value == null) return;
+
+                var color = invisible
+                    ? Color.FromArgb(0, 255, 255, 255) 
+                    : Color.FromArgb(255, 255, 255, 255); 
+
+                Owner.PlayerPawn.Value.SetColor(color);
+            }
+        }
+
 
 
         private class RestrictWeaponsEffect : WarcraftEffect
