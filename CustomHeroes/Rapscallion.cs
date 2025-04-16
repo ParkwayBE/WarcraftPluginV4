@@ -95,7 +95,7 @@ namespace WarcraftPlugin.Classes
             if (activeWeaponName == "weapon_knife")
             {
                 victim.TakeDamage((@event.DmgHealth + abilityLevel), Player);
-                attacker.PrintToCenter($" {ChatColors.Green}You dealt {@event.DmgHealth} additional damage!")
+                attacker.PrintToCenter($" {ChatColors.Green}You dealt {@event.DmgHealth} additional damage!");
             }
             else return;
         }
@@ -136,9 +136,6 @@ namespace WarcraftPlugin.Classes
 
         private void Ultimate()
         {
-            if (IsOnCooldown())
-                return;
-
             var pawn = Player.PlayerPawn.Value;
             if (pawn == null || !Player.IsAlive()) return;
             StartCooldown(3, 2f);
@@ -189,8 +186,6 @@ namespace WarcraftPlugin.Classes
 
                 WarcraftPlugin.Instance.AddTimer(0.3f, () =>
                 {
-                    Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
-
                     DropAllWeaponsExceptAllowed();
 
                     WarcraftPlugin.Instance.AddTimer(0.2f, () =>
@@ -226,8 +221,6 @@ namespace WarcraftPlugin.Classes
             {
                 if (!Owner.IsValid || Owner.PlayerPawn?.Value == null)
                     return;
-
-                Owner.PlayerPawn.Value.WeaponServices.PreventWeaponPickup = false;
             }
 
             private void DropAllWeaponsExceptAllowed()
@@ -241,7 +234,6 @@ namespace WarcraftPlugin.Classes
                     var weapon = weapons[i].Value;
                     if (weapon == null || !_allowedWeapons.Contains(weapon.DesignerName))
                     {
-                        Console.WriteLine($" [RestrictWeaponsEffect] Dropping disallowed weapon: {weapon?.DesignerName}");
                         DropWeaponByDesignerName(Owner, weapon?.DesignerName ?? "");
                     }
                 }
@@ -275,16 +267,13 @@ namespace WarcraftPlugin.Classes
 
                     if (!alreadyHasWeapon)
                     {
-                        Console.WriteLine($"[RestrictWeaponsEffect] Giving allowed weapon: {weaponName}");
                         Owner.GiveNamedItem(weaponName);
                     }
-                    else
-                    {
-                        Console.WriteLine($"[RestrictWeaponsEffect] Skipping {weaponName}, already in inventory.");
-                    }
+                    else return;
                 }
             }
         }
+
         internal class ChargeWhileMovingEffect : WarcraftEffect
         {
             private float _lastChatTime;
@@ -295,7 +284,7 @@ namespace WarcraftPlugin.Classes
             public int ChargeStacks => _chargeStacks;
 
             public ChargeWhileMovingEffect(CCSPlayerController owner)
-                : base(owner, duration: 9999f, destroyOnDeath: true, destroyOnRoundEnd: true, onTickInterval: 1f)
+                : base(owner, duration: 999f, destroyOnDeath: true, destroyOnRoundEnd: true, onTickInterval: 1f)
             {
             }
 
