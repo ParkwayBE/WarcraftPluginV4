@@ -24,6 +24,7 @@ namespace WarcraftPlugin.Classes
         private Dictionary<ulong, ChargeWhileMovingEffect> _chargeEffects = new();
         private RestrictWeaponsEffect? _ultWeaponLock;
         private FlashingInvisibilityEffect? _flashEffect;
+        private bool _hadBombWhenUlted = false;
 
         public override string DisplayName => "Rapscallion";
         public override Color DefaultColor => Color.White;
@@ -152,53 +153,81 @@ namespace WarcraftPlugin.Classes
             Utilities.SetStateChanged(pawn, "CBaseEntity", "m_MoveType");
         }
 
+        private bool HasWeapon(CCSPlayerController player, string weaponName)
+        {
+            var pawn = player.PlayerPawn?.Value;
+            if (pawn?.WeaponServices?.MyWeapons == null) return false;
+
+            return pawn.WeaponServices.MyWeapons.Any(w => w.Value?.DesignerName == weaponName);
+        }
+
+
         private void Ultimate()
         {
             var pawn = Player.PlayerPawn.Value;
             if (pawn == null || !Player.IsAlive()) return;
+
             var itemServices = new CCSPlayer_ItemServices(Player.PlayerPawn.Value.ItemServices.Handle);
             StartCooldown(3);
 
             if (UltimateToggle)
             {
+                // TURN OFF ULTIMATE
                 SetMoveType(pawn, MoveType_t.MOVETYPE_WALK);
                 pawn.Teleport(null, null, new Vector(0, 0, 0));
                 UltimateToggle = false;
+
                 Player.PrintToChat($" {ChatColors.Green}Visible again.");
                 Player.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
                 itemServices.HasDefuser = true;
-                List<string> restoreWeapons;
 
-                if (Player.TeamNum == (int)CsTeam.Terrorist)
-                {
-                    restoreWeapons = new List<string> { "weapon_knife", "weapon_c4" };
-                }
-                else
-                {
-                    restoreWeapons = new List<string> { "weapon_knife" };
-                }
+                // Restore knife and optionally bomb
+                List<string> restoreWeapons = Player.TeamNum == (int)CsTeam.Terrorist
+                    ? new List<string> { "weapon_knife", "weapon_c4" }
+                    : new List<string> { "weapon_knife" };
+
                 _ultWeaponLock?.Destroy();
                 _flashEffect?.Destroy();
+
                 _flashEffect = new FlashingInvisibilityEffect(Player);
                 _flashEffect.Start();
+
                 _ultWeaponLock = new RestrictWeaponsEffect(Player, 999f, restoreWeapons);
                 _ultWeaponLock.Start();
 
+                // Give bomb back if player had it before ulting
+                if (_hadBombWhenUlted && Player.TeamNum == (int)CsTeam.Terrorist)
+                {
+                    if (!HasWeapon(Player, "weapon_c4"))
+                    {
+                        Player.GiveNamedItem("weapon_c4");
+                        Player.PrintToChat($" {ChatColors.Green}You got your C4 back.");
+                    }
+                    _hadBombWhenUlted = false; // Reset
+                }
             }
             else
             {
-                itemServices.HasDefuser = false;
-                DeleteAllWeapons(Player);
-                _flashEffect?.Destroy();
-                SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
+                // TURN ON ULTIMATE
                 UltimateToggle = true;
+                SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
 
                 Player.PrintToChat($" {ChatColors.Green}You are now frozen invisible!");
                 Player.PlayerPawn.Value.SetColor(Color.FromArgb(0, 255, 255, 255));
+
+                // Track bomb status
+                _hadBombWhenUlted = HasWeapon(Player, "weapon_c4");
+
+                itemServices.HasDefuser = false;
+                DeleteAllWeapons(Player);
+
+                _flashEffect?.Destroy();
+
                 var noWeapons = new List<string>();
                 _ultWeaponLock?.Destroy();
                 _ultWeaponLock = new RestrictWeaponsEffect(Player, 999f, noWeapons);
                 _ultWeaponLock.Start();
+
                 StartCooldown(3);
             }
         }
