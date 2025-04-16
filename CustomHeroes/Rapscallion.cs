@@ -94,7 +94,8 @@ namespace WarcraftPlugin.Classes
             var activeWeaponName = pawn.WeaponServices!.ActiveWeapon.Value.DesignerName;
             if (activeWeaponName == "weapon_knife")
             {
-                victim.TakeDamage((@event.DmgHealth + abilityLevel), Player);
+                var damageBonus = WarcraftPlayer.GetAbilityLevel(2) * 12;
+                @event.AddBonusDamage(damageBonus);
                 attacker.PrintToCenter($" {ChatColors.Green}You dealt {@event.DmgHealth} additional damage!");
             }
             else return;
