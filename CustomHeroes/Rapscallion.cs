@@ -66,8 +66,7 @@ namespace WarcraftPlugin.Classes
                 UltimateToggle = false;
                 var allowedWeapons = new List<string> { "weapon_knife" };
 
-                // If player is terrorist and does NOT have the bomb, give it
-                if (Player.TeamNum == (int)CsTeam.Terrorist && !HasWeapon(Player, "weapon_c4"))
+                if (Player.TeamNum == (int)CsTeam.Terrorist)
                 {
                     allowedWeapons.Add("weapon_c4");
                     new RestrictWeaponsEffect(Player, 999f, allowedWeapons, includeBomb: true).Start();
@@ -76,6 +75,7 @@ namespace WarcraftPlugin.Classes
                 {
                     new RestrictWeaponsEffect(Player, 999f, allowedWeapons, includeBomb: false).Start();
                 }
+
 
                 effect.Start();
 
