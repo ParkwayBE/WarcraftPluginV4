@@ -126,7 +126,6 @@ namespace WarcraftPlugin.Classes
                 @event.AddBonusDamage(damageBonus);
                 attacker.PrintToCenter($" {ChatColors.Green}You dealt {@event.DmgHealth} additional damage!");
             }
-            else return;
         }
 
         private void HandleBombEvent(CCSPlayerController player)
@@ -189,7 +188,10 @@ namespace WarcraftPlugin.Classes
 
                 Player.PrintToChat($" {ChatColors.Green}Visible again.");
                 Player.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
-                itemServices.HasDefuser = true;
+                if (Player.TeamNum == (int)CsTeam.CounterTerrorist)
+                {
+                    itemServices.HasDefuser = true;
+                }
 
                 List<string> restoreWeapons = new() { "weapon_knife" };
                 if (Player.TeamNum == (int)CsTeam.Terrorist)
@@ -214,6 +216,7 @@ namespace WarcraftPlugin.Classes
                 SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
 
                 Player.PrintToChat($" {ChatColors.Green}You are now frozen invisible!");
+                _flashEffect?.Destroy();
                 Player.PlayerPawn.Value.SetColor(Color.FromArgb(0, 255, 255, 255));
 
                 _hadBombWhenUlted = HasWeapon(Player, "weapon_c4");
@@ -221,7 +224,6 @@ namespace WarcraftPlugin.Classes
                 itemServices.HasDefuser = false;
                 DeleteAllWeapons(Player);
 
-                _flashEffect?.Destroy();
 
                 var noWeapons = new List<string>();
                 _ultWeaponLock?.Destroy();
