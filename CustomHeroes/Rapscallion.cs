@@ -163,6 +163,7 @@ namespace WarcraftPlugin.Classes
                 UltimateToggle = true;
                 Player.PrintToChat($" {ChatColors.Green}You are now frozen invisible!");
             }
+            StartCooldown(3);
         }
 
         private class RestrictWeaponsEffect : WarcraftEffect
