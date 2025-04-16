@@ -23,6 +23,7 @@ namespace WarcraftPlugin.Classes
         private bool UltimateToggle = false;
         private Dictionary<ulong, ChargeWhileMovingEffect> _chargeEffects = new();
         private RestrictWeaponsEffect? _ultWeaponLock;
+        private FlashingInvisibilityEffect? _flashEffect;
 
         public override string DisplayName => "Rapscallion";
         public override Color DefaultColor => Color.White;
@@ -162,19 +163,17 @@ namespace WarcraftPlugin.Classes
             }
             else
             {
-                pawn.WeaponServices.ActiveWeapon = null;
                 DeleteAllWeapons(Player);
-                pawn.WeaponServices.ActiveWeapon = null;
                 _flashEffect?.Destroy();
                 SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
                 UltimateToggle = true;
                 Player.PrintToChat($" {ChatColors.Green}You are now frozen invisible!");
                 Player.PlayerPawn.Value.SetColor(Color.FromArgb(0, 255, 255, 255));
-                var noWeapons = new List<string>(); 
+                var noWeapons = new List<string>();
                 _ultWeaponLock?.Destroy();
                 _ultWeaponLock = new RestrictWeaponsEffect(Player, 999f, noWeapons);
                 _ultWeaponLock.Start();
-                StartCooldown(3); 
+                StartCooldown(3);
             }
         }
 
@@ -208,8 +207,8 @@ namespace WarcraftPlugin.Classes
                 if (Owner?.PlayerPawn?.Value == null) return;
 
                 var color = invisible
-                    ? Color.FromArgb(0, 255, 255, 255) 
-                    : Color.FromArgb(255, 255, 255, 255); 
+                    ? Color.FromArgb(0, 255, 255, 255)
+                    : Color.FromArgb(255, 255, 255, 255);
 
                 Owner.PlayerPawn.Value.SetColor(color);
             }
@@ -324,13 +323,8 @@ namespace WarcraftPlugin.Classes
 
         public static void DeleteAllWeapons(CCSPlayerController player)
         {
-            var pawn = player.PlayerPawn?.Value;
-            if (pawn?.WeaponServices?.MyWeapons == null) return;
-
-            foreach (var weapon in pawn.WeaponServices.MyWeapons)
-            {
-                weapon?.Value?.Remove();
-            }
+            if (player == null) return;
+            player.RemoveWeapons();
         }
 
 
