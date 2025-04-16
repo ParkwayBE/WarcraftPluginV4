@@ -157,7 +157,9 @@ namespace WarcraftPlugin.Classes
             }
             else
             {
+                pawn.WeaponServices.ActiveWeapon = null;
                 DeleteAllWeapons(Player);
+                pawn.WeaponServices.ActiveWeapon = null;
                 SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
                 UltimateToggle = true;
                 Player.PrintToChat($" {ChatColors.Green}You are now frozen invisible!");
