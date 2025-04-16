@@ -53,7 +53,8 @@ namespace WarcraftPlugin.Classes
             {
                 if (Player == null || !Player.IsValid || !Player.IsAlive()) return;
 
-                var effect = new ChargeWhileMovingEffect(Player);
+                int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
+                var effect = new ChargeWhileMovingEffect(Player, abilityLevel);
                 _chargeEffects[Player.SteamID] = effect;
                 UltimateToggle = false;
                 var allowedWeapons = new List<string> { "weapon_knife", "weapon_c4" };
@@ -95,6 +96,11 @@ namespace WarcraftPlugin.Classes
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
 
             if (!attacker.IsValid || !victim.IsValid || !victim.IsAlive()) return;
+
+            if (attacker.TeamNum == victim.TeamNum)
+                return;
+
+
             var activeWeaponName = pawn.WeaponServices!.ActiveWeapon.Value.DesignerName;
             if (activeWeaponName == "weapon_knife")
             {
@@ -346,12 +352,14 @@ namespace WarcraftPlugin.Classes
             public int _chargeStacks;
             private Vector _lastPosition;
             private readonly int _maxCharge = 100;
+            private readonly int _abilityLevel;
 
             public int ChargeStacks => _chargeStacks;
 
-            public ChargeWhileMovingEffect(CCSPlayerController owner)
-                : base(owner, duration: 999f, destroyOnDeath: true, destroyOnRoundEnd: true, onTickInterval: 1f)
+            public ChargeWhileMovingEffect(CCSPlayerController owner, int abilityLevel)
+        : base(owner, duration: 9999f, destroyOnDeath: true, destroyOnRoundEnd: true, onTickInterval: 1f)
             {
+                _abilityLevel = abilityLevel;
             }
 
             private void CheckForMovementAndAddCharge()
@@ -369,8 +377,7 @@ namespace WarcraftPlugin.Classes
                     _lastPosition = currentPosition;
                     return;
                 }
-
-                _chargeStacks = Math.Min(_chargeStacks + 2, _maxCharge);
+                _chargeStacks = Math.Min(_chargeStacks + _abilityLevel, _maxCharge);
 
                 float now = Server.CurrentTime;
                 if (now - _lastChatTime > 2f)
