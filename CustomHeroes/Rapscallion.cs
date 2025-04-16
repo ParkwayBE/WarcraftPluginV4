@@ -32,7 +32,7 @@ namespace WarcraftPlugin.Classes
             new WarcraftAbility("Ninja skills", "Gain health and invisibility when planting or defusing a bomb"),
             new WarcraftAbility("Agility", "Up to 40% evasion and 180% movement speed"),
             new WarcraftAbility("Unseen Blade", "Additional knife damage"),
-            new WarcraftCooldownAbility("Vanish", "Teleport, invis, freeze with reactivation to undo", 8f)
+            new WarcraftCooldownAbility("Vanish", "Full Invisiblity toggle", 8f)
         ];
 
         public override void Register()
@@ -95,26 +95,15 @@ namespace WarcraftPlugin.Classes
             if (activeWeaponName == "weapon_knife")
             {
                 victim.TakeDamage((@event.DmgHealth + abilityLevel), Player);
+                attacker.PrintToCenter($" {ChatColors.Green}You dealt {@event.DmgHealth} additional damage!")
             }
             else return;
         }
         private void HandleBombEvent(CCSPlayerController player)
         {
-            if (player == null)
+            if (player == null || player.PlayerPawn == null || player.PlayerPawn.Value == null)
             {
                 Console.WriteLine("ERROR: Player is NULL! Maybe they haven't spawned yet?");
-                return;
-            }
-
-            if (player.PlayerPawn == null || player.PlayerPawn.Value == null)
-            {
-                Console.WriteLine("ERROR: PlayerPawn or PlayerPawn.Value is NULL!");
-                return;
-            }
-
-            if (WarcraftPlayer == null)
-            {
-                Console.WriteLine("ERROR: WarcraftPlayer is NULL!");
                 return;
             }
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(0);
@@ -152,8 +141,7 @@ namespace WarcraftPlugin.Classes
 
             var pawn = Player.PlayerPawn.Value;
             if (pawn == null || !Player.IsAlive()) return;
-
-            StartCooldown(3); // Start cooldown early
+            StartCooldown(3, 2f);
 
             if (UltimateToggle)
             {
@@ -162,25 +150,24 @@ namespace WarcraftPlugin.Classes
                 pawn.Teleport(null, null, new Vector(0, 0, 0));
                 UltimateToggle = false;
                 Player.PrintToChat(" Visible again.");
+                Player.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
 
-                // Give back knife and c4
                 var restoreWeapons = new List<string> { "weapon_knife", "weapon_c4" };
-                _ultWeaponLock?.Destroy(); // destroy old effect if any
+                _ultWeaponLock?.Destroy();
                 _ultWeaponLock = new RestrictWeaponsEffect(Player, 999f, restoreWeapons);
                 _ultWeaponLock.Start();
             }
             else
             {
-                // TURN ON ULTIMATE: Enter invis/fly mode
                 SetMoveType(pawn, MoveType_t.MOVETYPE_FLY);
                 UltimateToggle = true;
                 Player.PrintToChat($" {ChatColors.Green}You are now frozen invisible!");
-
-                // Remove all weapons
-                var noWeapons = new List<string>(); // empty list means allow nothing
-                _ultWeaponLock?.Destroy(); // remove existing one just in case
+                Player.PlayerPawn.Value.SetColor(Color.FromArgb(0, 255, 255, 255));
+                var noWeapons = new List<string>(); 
+                _ultWeaponLock?.Destroy();
                 _ultWeaponLock = new RestrictWeaponsEffect(Player, 999f, noWeapons);
                 _ultWeaponLock.Start();
+                StartCooldown(3); 
             }
         }
 
