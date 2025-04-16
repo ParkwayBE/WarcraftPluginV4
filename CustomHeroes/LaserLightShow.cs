@@ -194,9 +194,6 @@ namespace WarcraftPlugin.Classes
             var damage = @event.DmgHealth;
             if (damage <= 0) return;
 
-            victim.TakeDamage(abilityLevel, Player);
-
-
             // ---------------------
             // V-Shape Laser Effect
             // ---------------------
