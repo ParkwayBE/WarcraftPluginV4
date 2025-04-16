@@ -152,7 +152,7 @@ namespace WarcraftPlugin.Classes
                 SetMoveType(pawn, MoveType_t.MOVETYPE_WALK);
                 pawn.Teleport(null, null, new Vector(0, 0, 0));
                 UltimateToggle = false;
-                Player.PrintToChat(" Visible again.");
+                Player.PrintToChat($" {ChatColors.Green}Visible again.");
                 Player.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
                 itemServices.HasDefuser = true;
                 var restoreWeapons = new List<string> { "weapon_knife", "weapon_c4" };
