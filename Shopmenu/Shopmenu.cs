@@ -9,7 +9,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
-using WarcraftPlugin.CustomSkills;
+using WarcraftPlugin.Events.ExtendedEvents;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Menu;
 
@@ -626,8 +626,20 @@ namespace WarcraftPlugin.Core
 
         public static void Invisibility(CCSPlayerController player, float duration, int amount)
         {
-            var InvisEffect = new SetInvisibility(player, duration, amount);
-            InvisEffect.Start();
+            if (player?.PlayerPawn?.Value == null) return;
+
+            var currentColor = player.PlayerPawn.Value.Render;
+            var newColor = Color.FromArgb(
+                Math.Clamp(170, 0, 255), // TO DO :Change 170 to correct level of invis
+                currentColor.R,
+                currentColor.G,
+                currentColor.B
+            );
+
+            player.PlayerPawn.Value.Render = newColor;
+            Utilities.SetStateChanged(player.PlayerPawn.Value, "CBaseModelEntity", "m_clrRender");
+
+            Utilities.SetStateChanged(player.PlayerPawn.Value, "CBaseModelEntity", "m_clrRender");
         }
 
         public bool Apply(CCSPlayerController player)
@@ -974,17 +986,26 @@ namespace WarcraftPlugin.Core
                     return HookResult.Continue;
 
                 // --- Orb of Slow ---
+
                 if (ShopMenu.Inventories.TryGetValue(attacker, out var attackerItems) &&
                     attackerItems.Any(item => item is OrbOfSlow))
                 {
-                    SkillFunctions.SlowTarget(attacker, victim, 25, 3f);
-                }
+                    var pawn = victim.PlayerPawn?.Value;
+                    if (pawn == null) return HookResult.Continue;
 
-                // --- FMJ Bullets ---
-                if (attackerItems != null && attackerItems.Any(item => item is FmjBullets))
-                {
-                    SkillFunctions.DealRawDamage(attacker, victim, 5);
-                    attacker.PrintToCenter("You dealt 5 additional damage with FMJ bullets!");
+                    var originalSpeed = pawn.VelocityModifier;
+                    pawn.VelocityModifier = originalSpeed / 2f;
+                    pawn.SetColor(Color.BlueViolet);
+
+                    plugin.AddTimer(3f, () =>
+                    {
+                        if (victim.IsValid && victim.PlayerPawn?.Value != null)
+                        {
+                            victim.PlayerPawn.Value.VelocityModifier = originalSpeed;
+                            victim.PlayerPawn.Value.SetColor(Color.White);
+                        }
+                    });
+
                 }
 
                 // --- Mask of Death (20% chance to strip invisibility/immunity) ---
@@ -1006,32 +1027,41 @@ namespace WarcraftPlugin.Core
                 {
                     int dmg = @event.DmgHealth;
                     int reduced = (int)(dmg * 0.65f);
-                    SkillFunctions.SetBonusHealth(victim, reduced);
 
-                    victim.PrintToCenter("🛡️ Helm of Excellence absorbed damage!");
-                    Server.NextFrame(() =>
+                    if (victim.PlayerPawn?.Value != null)
                     {
-                        if (victim.PlayerPawn?.Value != null)
-                            Utilities.SetStateChanged(victim.PlayerPawn.Value, "CBaseEntity", "m_iHealth");
-                    });
+                        int currentHp = victim.PlayerPawn.Value.Health;
+                        int newHp = currentHp + (dmg - reduced);
+                        victim.PlayerPawn.Value.Health = newHp;
+
+                        victim.PrintToCenter("🛡️ Helm of Excellence absorbed damage!");
+                        Server.NextFrame(() => Utilities.SetStateChanged(victim.PlayerPawn.Value, "CBaseEntity", "m_iHealth"));
+                    }
+
                 }
 
                 // --- Orb of Reflection (return 25% damage to attacker) ---
                 victimItems = null;
                 InventoryManagement.PersistentInventories.TryGetValue(victim, out victimItems);
 
-                if (victimItems != null &&
-                    victimItems.Any(item => item is OrbOfReflection) &&
-                    attacker.IsValid && attacker.IsAlive())
+                if (victimItems != null && victimItems.Any(item => item is OrbOfReflection) && attacker.IsValid && attacker.IsAlive() && attacker.PlayerPawn?.Value != null)
                 {
                     int reflected = (int)(@event.DmgHealth * 0.25f);
                     if (reflected > 0)
                     {
-                        SkillFunctions.DealRawDamage(victim, attacker, reflected);
+                        attacker.PlayerPawn.Value.Health -= reflected;
+
+                        Server.NextFrame(() =>
+                        {
+                            if (attacker.PlayerPawn?.Value != null)
+                                Utilities.SetStateChanged(attacker.PlayerPawn.Value, "CBaseEntity", "m_iHealth");
+                        });
+
                         attacker.PrintToChat($" {ChatColors.Red}⚡ You were struck by reflected damage!");
                         victim.PrintToChat($" {ChatColors.Green}✔ Orb of Reflection struck your attacker for {reflected} damage!");
                     }
                 }
+
 
 
 
@@ -1056,6 +1086,27 @@ namespace WarcraftPlugin.Core
 
                 return HookResult.Continue;
             });
+
+            plugin.RegisterEventHandler<EventPlayerHurtOther>((@event, info) =>
+            {
+                var attacker = @event.Attacker;
+                var victim = @event.Userid;
+
+                if (attacker == null || victim == null || attacker == victim)
+                    return HookResult.Continue;
+
+                ShopMenu.Inventories.TryGetValue(attacker, out var attackerItems);
+
+                // FMJ Bullets → Add bonus damage
+                if (attackerItems != null && attackerItems.Any(item => item is FmjBullets))
+                {
+                    @event.AddBonusDamage(5);
+                    attacker.PrintToCenter("You dealt 5 additional damage with FMJ bullets!");
+                }
+
+                return HookResult.Continue;
+            });
+
 
             plugin.RegisterEventHandler<EventPlayerDeath>((@event, info) =>
             {
@@ -1144,7 +1195,17 @@ namespace WarcraftPlugin.Core
                     // Optional: gravity effect for style
                     plugin.AddTimer(0.05f, () =>
                     {
-                        new SetGravityEffect(player, 70f, 5f).Start();
+                        var pawn = player.PlayerPawn.Value;
+                        float originalGravity = pawn.GravityScale;
+                        pawn.GravityScale = 0.7f;
+
+                        plugin.AddTimer(5f, () =>
+                        {
+                            if (player.IsValid && player.PlayerPawn?.Value != null)
+                            {
+                                player.PlayerPawn.Value.GravityScale = originalGravity;
+                            }
+                        });
                     });
                 }
 
