@@ -1,4 +1,6 @@
-﻿using System;
+﻿// NEW ShopMenu.cs TEMPLATE - refactor to use centralized inventory
+
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -11,40 +13,96 @@ using WarcraftPlugin.CustomSkills;
 using WarcraftPlugin.Helpers;
 using WarcraftPlugin.Menu;
 
-
 namespace WarcraftPlugin.Core
 {
-    #region
+    public class ResurrectionInfo
+    {
+        public Vector RespawnLocation { get; set; }
+        public float RespawnTriggerTime { get; set; }
+    }
+
+    public static class ResurrectionManager
+    {
+        public static readonly Dictionary<CCSPlayerController, ResurrectionInfo> ResurrectionQueue = new();
+
+    }
+
+    public static class InventoryManagement
+    {
+        public static readonly Dictionary<CCSPlayerController, List<IShopItem>> PersistentInventories = new();
+    }
+
+
+
+
     public class ShopMenu
     {
         private readonly WarcraftPlugin _plugin;
-        private static readonly Dictionary<CCSPlayerController, HashSet<string>> purchasesThisRound = new();
-        private static readonly Dictionary<CCSPlayerController, List<IShopItem>> roundBoundItems = new();
+
+        // Main inventory tracker (replaces WCPlayer flags)
+        public static readonly Dictionary<CCSPlayerController, List<IShopItem>> Inventories = new(); // Contains both types
 
         public ShopMenu(WarcraftPlugin plugin)
         {
             _plugin = plugin;
+
+            // Register shop open command
             _plugin.AddCommandListener("say", OnPlayerChat);
 
+            // Clean up on round end
             _plugin.RegisterEventHandler<EventRoundEnd>((@event, info) =>
             {
-                foreach (var (player, items) in roundBoundItems)
+                foreach (var (player, items) in Inventories)
                 {
                     foreach (var item in items)
-                    {
                         item.ResetEffect(player);
-                    }
                 }
 
-                purchasesThisRound.Clear();
-                roundBoundItems.Clear();
-
+                Inventories.Clear();
                 return HookResult.Continue;
             });
 
+            // Clean up on disconnect
+            _plugin.RegisterEventHandler<EventPlayerDisconnect>((@event, info) =>
+            {
+                var player = @event.Userid;
+                if (player != null && player.IsValid)
+                    Inventories.Remove(player);
+
+                return HookResult.Continue;
+            });
         }
 
-        public HookResult OnPlayerChat(CCSPlayerController? player, CommandInfo info)
+        private IShopItem GetShopItem(int index)
+        {
+            return index switch
+            {
+                1 => new BootsOfSpeed(),
+                2 => new RingOfRegen(),
+                3 => new NecklaceOfImmunity(),
+                4 => new GrandExpTome(),
+                5 => new MassiveExpTome(),
+                6 => new GamblingExpTome(),
+                7 => new SmallExpTome(),
+                8 => new FeatherBoots(),
+                9 => new LongjumpBoots(),
+                10 => new CloakOfInvisibility(),
+                11 => new OrbOfSlow(),
+                12 => new FmjBullets(),
+                13 => new DisguiseKit(),
+                14 => new PeriaptOfHealth(),
+                15 => new GiftOfExp(),
+                16 => new ScrollOfResurrection(),
+                17 => new GlovesOfWarmth(),
+                18 => new MaskOfDeath(),
+                19 => new HelmOfExcellence(),
+                20 => new OrbOfReflection(),
+                _ => throw new ArgumentOutOfRangeException(nameof(index), $"Invalid shop item index: {index}")
+            };
+        }
+
+
+        private HookResult OnPlayerChat(CCSPlayerController? player, CommandInfo info)
         {
             var message = info.GetArg(1).ToLower();
             if (player == null) return HookResult.Continue;
@@ -75,49 +133,65 @@ namespace WarcraftPlugin.Core
 
                     menu.Add(itemName, null, (pl, opt) =>
                     {
-                        var moneyService = pl.InGameMoneyServices;
-                        if (moneyService == null) return;
+                        var money = pl.InGameMoneyServices;
+                        if (money == null || !pl.IsValid()) return;
 
-                        int currentMoney = moneyService.Account;
+                        int currentMoney = money.Account;
 
-                        if (!purchasesThisRound.TryGetValue(pl, out var boughtItems))
+                        // Ensure inventories are initialized
+                        if (!Inventories.TryGetValue(pl, out var ownedRoundItems))
                         {
-                            boughtItems = new HashSet<string>();
-                            purchasesThisRound[pl] = boughtItems;
+                            ownedRoundItems = new List<IShopItem>();
+                            Inventories[pl] = ownedRoundItems;
                         }
 
-                        if (boughtItems.Contains(item.Name))
+                        if (!InventoryManagement.PersistentInventories.TryGetValue(pl, out var persistentItems))
                         {
-                            pl.PrintToChat($" {ChatColors.Red}✖ You already bought {item.Name} this round.");
+                            persistentItems = new List<IShopItem>();
+                            InventoryManagement.PersistentInventories[pl] = persistentItems;
+                        }
+
+
+                        // Check for duplicate item (persistent OR round-based)
+                        bool alreadyOwned = item.IsPersistent
+                            ? persistentItems.Any(i => i.GetType() == item.GetType())
+                            : ownedRoundItems.Any(i => i.GetType() == item.GetType());
+
+                        if (alreadyOwned)
+                        {
+                            pl.PrintToChat($" {ChatColors.Red}✖ You already own {item.Name}{(item.IsPersistent ? " permanently" : " this round")}.");
                             return;
                         }
 
                         if (currentMoney < item.Cost)
                         {
-                            pl.PrintToChat($" {ChatColors.Red}✖ You can't afford {item.Name}. It costs ${item.Cost}.");
+                            pl.PrintToChat($" {ChatColors.Red}✖ Not enough money for {item.Name} (${item.Cost}).");
                             return;
                         }
 
-                        bool success = item.Apply(pl);
-                        if (!success)
+                        if (!item.Apply(pl))
                         {
-                            // Block purchase (e.g., due to race restriction)
+                            // Item failed to apply (e.g. restricted)
                             return;
                         }
 
-                        moneyService.Account = Math.Max(0, currentMoney - item.Cost);
-                        Utilities.SetStateChanged(player, "CCSPlayerController", "m_pInGameMoneyServices");
-                        player.PlayLocalSound("sounds/common/talk.vsnd"); // TODO: change to better sound
+                        // Deduct money
+                        money.Account -= item.Cost;
+                        Utilities.SetStateChanged(pl, "CCSPlayerController", "m_pInGameMoneyServices");
 
+                        // Store in correct list
+                        if (item.IsPersistent)
+                        {
+                            persistentItems.Add(item);
+                        }
+                        else
+                        {
+                            ownedRoundItems.Add(item);
+                        }
+
+                        // Feedback
+                        pl.PlayLocalSound("sounds/common/talk.vsnd");
                         pl.PrintToChat($" {ChatColors.Green}✔ You bought {item.Name} for ${item.Cost}!");
-                        boughtItems.Add(item.Name);
-
-                        if (!item.IsPersistent)
-                        {
-                            if (!roundBoundItems.ContainsKey(pl))
-                                roundBoundItems[pl] = new List<IShopItem>();
-                            roundBoundItems[pl].Add(item);
-                        }
                     });
                 }
 
@@ -127,101 +201,121 @@ namespace WarcraftPlugin.Core
             MenuManagerExtra.OpenMainMenuExtra(player, pages);
         }
 
-        private IShopItem GetShopItem(int index)
-        {
-            return index switch
-            {
-                1 => new ShopItem1(),
-                2 => new ShopItem2(),
-                3 => new ShopItem3(),
-                4 => new ShopItem4(),
-                5 => new ShopItem5(),
-                6 => new ShopItem6(),
-                7 => new ShopItem7(),
-                8 => new ShopItem8(),
-                9 => new ShopItem9(),
-                10 => new ShopItem10(),
-                11 => new ShopItem11(),
-                12 => new ShopItem12(),
-                13 => new ShopItem13(),
-                14 => new ShopItem14(),
-                15 => new ShopItem15(),
-                16 => new ShopItem16(),
-                17 => new ShopItem17(),
-                18 => new ShopItem18(),
-                19 => new ShopItem19(),
-                20 => new ShopItem20(),
-                _ => new ShopItem1()
-            };
-
-        }
     }
 
     public interface IShopItem
     {
         string Name { get; }
         int Cost { get; }
-        bool IsPersistent { get; }
+        bool IsPersistent { get; }   // Add this
         bool Apply(CCSPlayerController player);
         void ResetEffect(CCSPlayerController player);
     }
-    #endregion
 
-    #region Shopmenu item classes
-    public class ShopItem1 : IShopItem
+
+    public static class ShopItemRegistry
     {
-        public string Name => "Boots of speed";
+        public static List<IShopItem> GetAllItems() => new List<IShopItem>
+        {
+            new BootsOfSpeed(),
+            new RingOfRegen(),
+            new NecklaceOfImmunity(),
+            new GrandExpTome(),
+            new MassiveExpTome(),
+            new GamblingExpTome(),
+            new SmallExpTome(),
+            new FeatherBoots(),
+            new LongjumpBoots(),
+            new CloakOfInvisibility(),
+            new OrbOfSlow(),
+            new FmjBullets(),
+            new DisguiseKit(),
+            new PeriaptOfHealth(),
+            new GiftOfExp(),
+            new ScrollOfResurrection(),
+            new GlovesOfWarmth(),
+            new MaskOfDeath(),
+            new HelmOfExcellence(),
+            new OrbOfReflection()
+        };
+    }
+
+    public class PeriaptOfHealth : IShopItem
+    {
+        public string Name => "Periapt of Health";
+        public int Cost => 2400;
+        public bool IsPersistent => false;
+        public bool Apply(CCSPlayerController player)
+        {
+            if (player.PlayerPawn?.Value == null) return false;
+            player.PlayerPawn.Value.Health += 50;
+            Server.NextFrame(() => Utilities.SetStateChanged(player.PlayerPawn.Value!, "CBaseEntity", "m_iHealth"));
+            player.PrintToChat($" {ChatColors.Green}+50 Health granted.");
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player) { }
+    }
+
+    public class BootsOfSpeed : IShopItem
+    {
+        public string Name => "Boots of Speed";
         public int Cost => 2600;
         public bool IsPersistent => false;
-
-        private readonly HashSet<string> restrictedRaces = new()
-        {
-            "undead_scourge",
-            "laser_light_show"
-        };
-
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null) return false;
+            if (wcPlayer?.GetClass() == null) return false;
 
-            var playerClass = wcPlayer.GetClass();
-            if (playerClass == null) return false;
-
-            var race = playerClass.InternalName;
-
-            if (restrictedRaces.Contains(race))
+            string race = wcPlayer.GetClass().InternalName;
+            if (race == "undead_scourge" || race == "laser_light_show")
             {
                 player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) already has movement buffs.");
                 return false;
             }
 
-            player.PlayerPawn.Value.VelocityModifier += 0.25f;
-            player.PrintToChat($" {ChatColors.Green}✔ Speed Boots equipped! (+25% movement speed)");
-            return true;
+            if (player.PlayerPawn?.Value != null)
+            {
+                player.PlayerPawn.Value.VelocityModifier += 0.25f;
+                player.PrintToChat($" {ChatColors.Green}✔ Speed Boots equipped! (+25% movement speed)");
+                return true;
+            }
+
+            return false;
         }
 
         public void ResetEffect(CCSPlayerController player)
         {
             if (player.IsValid && player.PlayerPawn?.Value != null)
-            {
                 player.PlayerPawn.Value.VelocityModifier = 1.0f;
-            }
         }
     }
-    public class ShopItem2 : IShopItem
+
+    public class RingOfRegen : IShopItem
     {
         public string Name => "Ring of Regen";
         public int Cost => 3500;
         public bool IsPersistent => false;
 
         private readonly Dictionary<CCSPlayerController, Timer> regenTimers = new();
+        private readonly HashSet<string> restrictedRaces = new()
+        {
+            "undead_scourge"
+        };
 
         public bool Apply(CCSPlayerController player)
         {
-            if (player.PlayerPawn?.Value == null || !player.IsValid) return false;
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer?.GetClass() == null || !player.IsValid || player.PlayerPawn?.Value == null) return false;
 
-            void RepeatRegen()
+            string race = wcPlayer.GetClass().InternalName;
+            if (restrictedRaces.Contains(race))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
+                return false;
+            }
+
+            void RegenTick()
             {
                 if (!player.IsValid || !player.IsAlive() || player.PlayerPawn?.Value == null) return;
 
@@ -230,17 +324,15 @@ namespace WarcraftPlugin.Core
                 {
                     player.PlayerPawn.Value.Health = Math.Min(currentHp + 2, 200);
                     Server.NextFrame(() => Utilities.SetStateChanged(player.PlayerPawn.Value!, "CBaseEntity", "m_iHealth"));
-
                 }
-                regenTimers[player] = WarcraftPlugin.Instance.AddTimer(1.0f, RepeatRegen);
+
+                regenTimers[player] = WarcraftPlugin.Instance.AddTimer(1.0f, RegenTick);
             }
 
-            regenTimers[player] = WarcraftPlugin.Instance.AddTimer(1.0f, RepeatRegen);
+            regenTimers[player] = WarcraftPlugin.Instance.AddTimer(1.0f, RegenTick);
             player.PrintToChat($"{ChatColors.Green}✔ Regeneration active! (+2 HP/sec)");
             return true;
         }
-
-
 
         public void ResetEffect(CCSPlayerController player)
         {
@@ -252,28 +344,26 @@ namespace WarcraftPlugin.Core
             }
         }
     }
-    public class ShopItem3 : IShopItem
+
+    public class NecklaceOfImmunity : IShopItem
     {
-        public string Name => "Necklace of Immunity"; // TO DO: REPLACE WITH A PUBLICLY AVAILABLE ITEMCODE
+        public string Name => "Necklace of Immunity";
         public int Cost => 2500;
         public bool IsPersistent => false;
-
         private readonly HashSet<string> restrictedRaces = new()
         {
-            "archmage_proudmoore",
-            "crypt_lord"
+            "undead_scourge"
         };
 
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null) return false;
+            if (wcPlayer?.GetClass() == null) return false;
 
-            var race = wcPlayer.GetClass().InternalName;
-
+            string race = wcPlayer.GetClass().InternalName;
             if (restrictedRaces.Contains(race))
             {
-                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) is restricted from buying this item.");
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
             }
 
@@ -285,54 +375,50 @@ namespace WarcraftPlugin.Core
         public void ResetEffect(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null) return;
-
-            wcPlayer.HasUltimateImmunity = false;
-            player.PrintToChat($" {ChatColors.Red}✖ Your ultimate immunity has worn off.");
+            if (wcPlayer != null)
+            {
+                wcPlayer.HasUltimateImmunity = false;
+                player.PrintToChat($" {ChatColors.Red}✖ Your ultimate immunity has worn off.");
+            }
         }
     }
-    public class ShopItem4 : IShopItem
+
+    public class GrandExpTome : IShopItem
     {
         public string Name => "Grand Exp Tome";
         public int Cost => 5000;
-        public bool IsPersistent => true; // XP is permanent
+        public bool IsPersistent => false;
         private const int xpToGive = 300;
 
         public bool Apply(CCSPlayerController player)
         {
-            var plugin = WarcraftPlugin.Instance;
-            if (plugin == null) return false;
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer?.GetClass() == null) return false;
 
-            plugin.XpSystem.AddXp(player, xpToGive);
+            WarcraftPlugin.Instance.XpSystem.AddXp(player, xpToGive);
 
-            var wcPlayer = plugin.GetWcPlayer(player);
             int curXp = wcPlayer.currentXp;
             int maxXp = wcPlayer.amountToLevel;
             int level = wcPlayer.GetLevel();
 
-            player.PrintToChat($"{ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
-            player.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
-
-
+            player.PrintToChat($" {ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
+            player.PrintToChat($" {ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
             return true;
         }
 
-        public void ResetEffect(CCSPlayerController player)
-        {
-        }
+        public void ResetEffect(CCSPlayerController player) { }
     }
-    public class ShopItem5 : IShopItem
+
+    public class MassiveExpTome : IShopItem
     {
         public string Name => "Massive Exp Tome";
         public int Cost => 10000;
-        public bool IsPersistent => true;
+        public bool IsPersistent => false;
         private const int xpToGive = 600;
 
         public bool Apply(CCSPlayerController player)
         {
             var plugin = WarcraftPlugin.Instance;
-            if (plugin == null) return false;
-
             plugin.XpSystem.AddXp(player, xpToGive);
 
             var wcPlayer = plugin.GetWcPlayer(player);
@@ -340,37 +426,30 @@ namespace WarcraftPlugin.Core
             int maxXp = wcPlayer.amountToLevel;
             int level = wcPlayer.GetLevel();
 
-            player.PrintToChat($"{ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
+            player.PrintToChat($"{ChatColors.Green}✔ You gained {xpToGive} XP from the Massive Tome of Experience!");
             player.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
-
-
             return true;
         }
 
-        public void ResetEffect(CCSPlayerController player)
-        {
-        }
+        public void ResetEffect(CCSPlayerController player) { }
     }
-    public class ShopItem6 : IShopItem
+
+    public class GamblingExpTome : IShopItem
     {
         public string Name => "Gambling Exp Tome";
         public int Cost => 10000;
-        public bool IsPersistent => true;
-
+        public bool IsPersistent => false;
         private const int xpToGiveMin = 100;
         private const int xpToGiveMax = 900;
 
         public bool Apply(CCSPlayerController player)
         {
             var plugin = WarcraftPlugin.Instance;
-            if (plugin == null) return false;
+            var wcPlayer = plugin.GetWcPlayer(player);
+            if (wcPlayer == null) return false;
 
             var random = new Random();
             int xpToGive = random.Next(xpToGiveMin, xpToGiveMax + 1);
-            var wcPlayer = plugin.GetWcPlayer(player);
-            int curXp = wcPlayer.currentXp;
-            int maxXp = wcPlayer.amountToLevel;
-            int level = wcPlayer.GetLevel();
 
             int roll = random.Next(1, 431);
             bool isGold = roll == 1;
@@ -378,43 +457,43 @@ namespace WarcraftPlugin.Core
             if (isGold)
             {
                 xpToGive += 1000;
-                Utilities.GetPlayers().ForEach(p =>
+                foreach (var p in Utilities.GetPlayers())
                 {
-                    p.PrintToChat($" {ChatColors.Gold}✨ {player.PlayerName} rolled a GOLD CASE in the XP shop and gained +1000 bonus XP! ✨");
-
-                });
-                player.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
+                    p.PrintToChat($" {ChatColors.Gold}✨ {player.PlayerName} rolled a GOLD CASE and gained +1000 bonus XP!");
+                }
             }
 
             plugin.XpSystem.AddXp(player, xpToGive);
 
+            int curXp = wcPlayer.currentXp;
+            int maxXp = wcPlayer.amountToLevel;
+            int level = wcPlayer.GetLevel();
+
             player.PrintToChat($" {ChatColors.Green}🎲 You gained {xpToGive} XP from the Gambling Tome of Experience!");
-            player.PrintToChat($" {ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
+            player.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
+
             if (isGold)
             {
-                player.PrintToChat($" {ChatColors.Gold}💛 You wasted your knife luck on this purchase...");
+                player.PrintToChat($"{ChatColors.Gold}💛 You wasted your knife luck on this purchase...");
             }
 
             return true;
         }
 
-
-        public void ResetEffect(CCSPlayerController player)
-        {
-        }
+        public void ResetEffect(CCSPlayerController player) { }
     }
-    public class ShopItem7 : IShopItem
+
+
+    public class SmallExpTome : IShopItem
     {
         public string Name => "Exp Tome";
         public int Cost => 1000;
-        public bool IsPersistent => true;
+        public bool IsPersistent => false;
         private const int xpToGive = 50;
 
         public bool Apply(CCSPlayerController player)
         {
             var plugin = WarcraftPlugin.Instance;
-            if (plugin == null) return false;
-
             plugin.XpSystem.AddXp(player, xpToGive);
 
             var wcPlayer = plugin.GetWcPlayer(player);
@@ -422,23 +501,60 @@ namespace WarcraftPlugin.Core
             int maxXp = wcPlayer.amountToLevel;
             int level = wcPlayer.GetLevel();
 
-            player.PrintToChat($" {ChatColors.Green}✔ You gained {xpToGive} XP from the Grand Tome of Experience!");
-            player.PrintToChat($" {ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
+            player.PrintToChat($" {ChatColors.Green}✔ You gained {xpToGive} XP from the Tome of Experience!");
+            player.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
+            return true;
+        }
 
+        public void ResetEffect(CCSPlayerController player) { }
+    }
+
+    public class GiftOfExp : IShopItem
+    {
+        public string Name => "Gift of Experience";
+        public int Cost => 4000;
+        public bool IsPersistent => false;
+        private const int xpToGive = 300;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            var plugin = WarcraftPlugin.Instance;
+
+            var teammates = Utilities.GetPlayers()
+                .Where(p => p.IsValid && p != player && !p.IsBot && p.TeamNum == player.TeamNum)
+                .ToList();
+
+            if (teammates.Count == 0)
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ No teammates found to gift XP to.");
+                return false;
+            }
+
+            var random = new Random();
+            var chosen = teammates[random.Next(teammates.Count)];
+
+            plugin.XpSystem.AddXp(chosen, xpToGive);
+
+            var wcChosen = plugin.GetWcPlayer(chosen);
+            int curXp = wcChosen.currentXp;
+            int maxXp = wcChosen.amountToLevel;
+            int level = wcChosen.GetLevel();
+
+            player.PrintToChat($" {ChatColors.Green}✔ You gifted {xpToGive} XP to {chosen.PlayerName}!");
+            chosen.PrintToChat($" {ChatColors.Gold}✨ {player.PlayerName} has gifted you {xpToGive} XP!");
+            chosen.PrintToChat($" {ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
 
             return true;
         }
 
-        public void ResetEffect(CCSPlayerController player)
-        {
-        }
+        public void ResetEffect(CCSPlayerController player) { }
     }
-    public class ShopItem8 : IShopItem
+
+    public class FeatherBoots : IShopItem
     {
         public string Name => "Feather Boots";
         public int Cost => 3100;
         public bool IsPersistent => false;
-
         private readonly HashSet<string> restrictedRaces = new()
         {
             "undead_scourge"
@@ -447,7 +563,7 @@ namespace WarcraftPlugin.Core
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null || player.PlayerPawn?.Value == null) return false;
+            if (wcPlayer?.GetClass() == null || player.PlayerPawn?.Value == null) return false;
 
             if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
             {
@@ -468,42 +584,44 @@ namespace WarcraftPlugin.Core
                 player.PrintToChat($" {ChatColors.Default}✖ Feather Boots have worn off.");
             }
         }
-
     }
-    public class ShopItem9 : IShopItem
+
+    public class LongjumpBoots : IShopItem
     {
-        public string Name => "Longjump";
+        public string Name => "Longjump Boots";
         public int Cost => 4000;
         public bool IsPersistent => false;
+        private readonly HashSet<string> restrictedRaces = new()
+        {
+            "undead_scourge"
+        };
 
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null || player.PlayerPawn?.Value == null) return false;
+            if (wcPlayer?.GetClass() == null || player.PlayerPawn?.Value == null) return false;
 
-            wcPlayer.HasLongjumpBoots = true;
+            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use Longjump.");
+                return false;
+            }
+
             player.PrintToChat($"{ChatColors.Green}✔ Longjump Boots equipped. Press jump to leap forward!");
-
             return true;
         }
 
-        public void ResetEffect(CCSPlayerController player)
-        {
-            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null) return;
-
-            wcPlayer.HasLongjumpBoots = false;
-        }
+        public void ResetEffect(CCSPlayerController player) { }
     }
-    public class ShopItem10 : IShopItem
+
+    public class CloakOfInvisibility : IShopItem
     {
-        public string Name => "Cloak of invisibility";
+        public string Name => "Cloak of Invisibility";
         public int Cost => 1800;
         public bool IsPersistent => false;
-
         private readonly HashSet<string> restrictedRaces = new()
         {
-            "human_alliance"
+            "undead_scourge"
         };
 
         public static void Invisibility(CCSPlayerController player, float duration, int amount)
@@ -515,12 +633,11 @@ namespace WarcraftPlugin.Core
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null) return false;
+            if (wcPlayer?.GetClass() == null) return false;
 
-            var race = wcPlayer.GetClass().InternalName;
-            if (restrictedRaces.Contains(race))
+            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
             {
-                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) already has invisibility buffs.");
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) already has invisibility.");
                 return false;
             }
 
@@ -529,178 +646,86 @@ namespace WarcraftPlugin.Core
             return true;
         }
 
-
         public void ResetEffect(CCSPlayerController player)
         {
-            Invisibility(player, 999f, 255);
+            Invisibility(player, 999f, 255); // revert invisibility
         }
     }
-    public class ShopItem11 : IShopItem
+
+    public class OrbOfSlow : IShopItem
     {
         public string Name => "Orb of Slow";
         public int Cost => 2800;
         public bool IsPersistent => false;
-
-        public bool Apply(CCSPlayerController player)
-        {
-            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null) return false;
-
-            wcPlayer.HasOrbOfSlow = true;
-            player.PrintToChat($" {ChatColors.Green}✔ Orb of Slow equipped! You now have a chance to slow enemies on hit.");
-            return true;
-        }
-
-        public void ResetEffect(CCSPlayerController player)
-        {
-            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null) return;
-
-            wcPlayer.HasOrbOfSlow = false;
-        }
-    }
-    public class ShopItem12 : IShopItem
-    {
-        public string Name => "FMJ Bullets";
-        public int Cost => 2800;
-        public bool IsPersistent => false;
-
-        public bool Apply(CCSPlayerController player)
-        {
-            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null) return false;
-
-            wcPlayer.HasArmorPiercingRounds = true;
-            player.PrintToChat($" {ChatColors.Green}✔ Orb of Slow equipped! You now have a chance to slow enemies on hit.");
-            return true;
-        }
-
-        public void ResetEffect(CCSPlayerController player)
-        {
-            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null) return;
-
-            wcPlayer.HasArmorPiercingRounds = false;
-        }
-    }
-    public class ShopItem13 : IShopItem
-    {
-        public string Name => "Disguise";
-        public int Cost => 1400;
-        public bool IsPersistent => false;
-
-        private readonly string ctModel = "models/player/custom_player/legacy/ctm_fbi.vmdl"; // TO DO: FIX PROPER MODEL
-        private readonly string tModel = "models/player/custom_player/legacy/tm_leet.vmdl"; // TO DO: FIX PROPER MODEL
-
-
-        public bool Apply(CCSPlayerController player)
-        {
-            if (player.PlayerPawn?.Value == null || !player.IsValid) return false;
-
-            var modelToApply = player.TeamNum switch
-            {
-                2 => ctModel, // Terrorist gets disguised as CT
-                3 => tModel,  // CT gets disguised as T
-                _ => null
-            };
-
-            if (modelToApply == null)
-            {
-                player.PrintToChat($" {ChatColors.Red}✖ Could not apply disguise.");
-                return false;
-            }
-
-            player.PlayerPawn.Value.SetModel(modelToApply);
-            player.PrintToChat($" {ChatColors.Green}✔ You are now disguised as the enemy!");
-
-            return true;
-        }
-
-        public void ResetEffect(CCSPlayerController player)
-        {
-            // Let CS2 reset model on death or round start naturally
-        }
-    }
-    public class ShopItem14 : IShopItem
-    {
-        public string Name => "Periapt of Health";
-        public int Cost => 2400;
-        public bool IsPersistent => true;
-
         private readonly HashSet<string> restrictedRaces = new()
         {
-            "human_alliance",
-            "laser_light_show"
+            "undead_scourge"
         };
 
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            var race = wcPlayer.GetClass().InternalName;
-            if (restrictedRaces.Contains(race))
+            if (wcPlayer?.GetClass() == null) return false;
+
+            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
             {
-                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) is restricted from buying this item.");
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
             }
 
-            if (player.PlayerPawn?.Value != null)
-            {
-                player.PlayerPawn.Value.Health += 50;
-                Server.NextFrame(() => Utilities.SetStateChanged(player.PlayerPawn.Value!, "CBaseEntity", "m_iHealth"));
-                player.PrintToChat($" {ChatColors.Green}+50 HP applied!");
-                return true;
-            }
-            return false;
+            player.PrintToChat($" {ChatColors.Green}✔ Orb of Slow equipped! You now have a chance to slow enemies on hit.");
+            return true;
         }
 
         public void ResetEffect(CCSPlayerController player) { }
     }
-    public class ShopItem15 : IShopItem
-    {
-        public string Name => "Gift of Experience";
-        public int Cost => 4000;
-        public bool IsPersistent => true;
 
-        private const int xpToGive = 300;
+
+    public class DisguiseKit : IShopItem
+    {
+        public string Name => "Disguise";
+        public int Cost => 1400;
+        public bool IsPersistent => false;
+        private readonly HashSet<string> restrictedRaces = new()
+        {
+            "undead_scourge"
+        };
+
+        private readonly string ctModel = "models/player/custom_player/legacy/ctm_fbi.vmdl";
+        private readonly string tModel = "models/player/custom_player/legacy/tm_leet.vmdl";
 
         public bool Apply(CCSPlayerController player)
         {
-            var plugin = WarcraftPlugin.Instance;
-            if (plugin == null) return false;
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer?.GetClass() == null || player.PlayerPawn?.Value == null || !player.IsValid) return false;
 
-            var players = Utilities.GetPlayers()
-                .Where(p => p.IsValid && p != player && p.IsBot == false)
-                .ToList();
-
-            if (players.Count == 0)
+            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
             {
-                player.PrintToChat($" {ChatColors.Red}✖ No player found to gift XP to.");
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
             }
 
-            var random = new Random();
-            var chosenTeammate = players[random.Next(players.Count)];
+            var model = player.TeamNum switch
+            {
+                2 => ctModel,
+                3 => tModel,
+                _ => null
+            };
 
-            plugin.XpSystem.AddXp(chosenTeammate, xpToGive);
+            if (model == null) return false;
 
-            var wcPlayer = plugin.GetWcPlayer(chosenTeammate);
-            int curXp = wcPlayer.currentXp;
-            int maxXp = wcPlayer.amountToLevel;
-            int level = wcPlayer.GetLevel();
-
-            player.PrintToChat($" {ChatColors.Green}✔ You have given {xpToGive} XP to {chosenTeammate.PlayerName} !");
-            chosenTeammate.PrintToChat($" {ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
-
-            chosenTeammate.PrintToChat($" {ChatColors.Gold}✨ {player.PlayerName} has gifted you {xpToGive} XP!");
-
+            player.PlayerPawn.Value.SetModel(model);
+            player.PrintToChat($" {ChatColors.Green}✔ You are now disguised as the enemy!");
             return true;
         }
 
         public void ResetEffect(CCSPlayerController player)
         {
+            // Let the game naturally reset model on round end/death
         }
     }
-    public class ShopItem16 : IShopItem
+
+    public class ScrollOfResurrection : IShopItem
     {
         public string Name => "Scroll of Resurrection";
         public int Cost => 5000;
@@ -727,123 +752,409 @@ namespace WarcraftPlugin.Core
             var random = new Random();
             var anchor = allies[random.Next(allies.Count)];
 
-            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            wcPlayer.RespawnQueued = true;
-            wcPlayer.RespawnLocation = anchor.PlayerPawn.Value.AbsOrigin;
-            wcPlayer.RespawnTriggerTime = Server.CurrentTime + 3f;
+            ResurrectionManager.ResurrectionQueue[player] = new ResurrectionInfo
+            {
+                RespawnLocation = anchor.PlayerPawn.Value.AbsOrigin,
+                RespawnTriggerTime = Server.CurrentTime + 3f
+            };
 
             player.PrintToChat($" {ChatColors.Gold}⏳ Channeling resurrection... You will respawn in 3 seconds!");
-
             return true;
         }
 
-
-
-
         public void ResetEffect(CCSPlayerController player) { }
     }
-    public class ShopItem17 : IShopItem
+
+
+    public class GlovesOfWarmth : IShopItem
     {
         public string Name => "Gloves of Warmth";
         public int Cost => 2800;
         public bool IsPersistent => false;
+        private readonly HashSet<string> restrictedRaces = new() { "undead_scourge" };
+        private static readonly Dictionary<CCSPlayerController, Timer> GrenadeTimers = new();
 
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null) return false;
+            if (wcPlayer?.GetClass() == null) return false;
 
-            wcPlayer.HasGlovesOfWarmth = true;
+            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
+                return false;
+            }
+
             player.GiveNamedItem("weapon_hegrenade");
             player.PrintToChat($"{ChatColors.Green}✔ Gloves of Warmth equipped!");
+
+            StartRegenLoop(player);
             return true;
+        }
+
+        private void StartRegenLoop(CCSPlayerController player)
+        {
+            if (GrenadeTimers.ContainsKey(player))
+                GrenadeTimers[player]?.Kill();
+
+            GrenadeTimers[player] = WarcraftPlugin.Instance.AddTimer(1.0f, () =>
+            {
+                if (!player.IsValid || player.PlayerPawn?.Value == null || !player.IsAlive())
+                    return;
+
+                var weapons = player.PlayerPawn.Value.WeaponServices?.MyWeapons;
+                if (weapons == null) return;
+
+                bool hasGrenade = weapons.Any(w =>
+                    w.Value?.DesignerName.Contains("hegrenade") == true ||
+                    w.Value?.DesignerName.Contains("flashbang") == true ||
+                    w.Value?.DesignerName.Contains("decoy") == true ||
+                    w.Value?.DesignerName.Contains("incgrenade") == true);
+
+                if (!hasGrenade)
+                {
+                    var grenades = new[] {
+                    "weapon_hegrenade",
+                    "weapon_flashbang",
+                    "weapon_decoy",
+                    "weapon_incgrenade"
+                };
+
+                    string selected = grenades[Random.Shared.Next(grenades.Length)];
+                    player.GiveNamedItem(selected);
+                    player.PrintToChat($" {ChatColors.Green}🧤 Gloves of Warmth: You received a new {selected.Replace("weapon_", "").ToUpper()}!");
+                }
+
+                // Reschedule
+                StartRegenLoop(player);
+            });
         }
 
         public void ResetEffect(CCSPlayerController player)
         {
-            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer != null)
-                wcPlayer.HasGlovesOfWarmth = false;
+            if (GrenadeTimers.TryGetValue(player, out var timer))
+            {
+                timer.Kill();
+                GrenadeTimers.Remove(player);
+            }
         }
     }
-    public class ShopItem18 : IShopItem
+
+
+    public class MaskOfDeath : IShopItem
     {
         public string Name => "Mask of Death";
         public int Cost => 1900;
         public bool IsPersistent => false;
+        private readonly HashSet<string> restrictedRaces = new()
+        {
+            "undead_scourge"
+        };
 
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null) return false;
+            if (wcPlayer?.GetClass() == null) return false;
 
-            wcPlayer.HasMaskOfDeath = true;
+            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
+                return false;
+            }
+
             player.PrintToChat($" {ChatColors.Green}✔ Mask of Death equipped. You may reveal enemies!");
             return true;
         }
 
-        public void ResetEffect(CCSPlayerController player)
-        {
-            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer != null)
-                wcPlayer.HasMaskOfDeath = false;
-        }
+        public void ResetEffect(CCSPlayerController player) { }
     }
-    public class ShopItem19 : IShopItem
+
+
+    public class HelmOfExcellence : IShopItem
     {
         public string Name => "Helm of Excellence";
         public int Cost => 3000;
         public bool IsPersistent => false;
+        private readonly HashSet<string> restrictedRaces = new()
+        {
+            "undead_scourge"
+        };
 
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null) return false;
+            if (wcPlayer?.GetClass() == null) return false;
 
-            wcPlayer.HasHelmOfExcellence = true;
+            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
+                return false;
+            }
+
             player.PrintToChat($" {ChatColors.Green}✔ Helm of Excellence equipped. Headshots hurt less!");
             return true;
         }
 
-        public void ResetEffect(CCSPlayerController player)
-        {
-            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer != null)
-                wcPlayer.HasHelmOfExcellence = false;
-        }
+        public void ResetEffect(CCSPlayerController player) { }
     }
-    public class ShopItem20 : IShopItem
+
+    public class OrbOfReflection : IShopItem
     {
         public string Name => "Orb of Reflection";
         public int Cost => 2800;
         public bool IsPersistent => false;
+        private readonly HashSet<string> restrictedRaces = new()
+        {
+            "undead_scourge"
+        };
 
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null) return false;
+            if (wcPlayer?.GetClass() == null) return false;
 
-            wcPlayer.HasOrbOfReflection = true;
-            player.PrintToChat($" {ChatColors.Green}✔ Orb of Reflection equipped! Some of the damage you take will be returned.");
+            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
+                return false;
+            }
+
+            player.PrintToChat($" {ChatColors.Green}✔ Orb of Reflection equipped! Some damage will be returned to attackers.");
             return true;
         }
 
-        public void ResetEffect(CCSPlayerController player)
+        public void ResetEffect(CCSPlayerController player) { }
+    }
+
+
+    public class FmjBullets : IShopItem
+    {
+        public string Name => "FMJ Bullets";
+        public int Cost => 2800;
+        public bool IsPersistent => false;
+        private readonly HashSet<string> restrictedRaces = new()
+        {
+            "undead_scourge"
+        };
+
+        public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer != null)
-                wcPlayer.HasOrbOfReflection = false;
+            if (wcPlayer?.GetClass() == null) return false;
+
+            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
+                return false;
+            }
+
+            player.PrintToChat($" {ChatColors.Green}✔ FMJ Bullets equipped! Bonus armor-piercing damage enabled.");
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player) { }
+    }
+
+
+    ////// /////////////////////////////////////////////////////END OF SHOPMENU
+    /// ////////////////////////////////////////////////////////
+    /// /// ////////////////////////////////////////////////////START OF GLOBAL BUFFS
+
+
+    public class ShopMenuEvents
+    {
+        public static void Register(WarcraftPlugin plugin)
+        {
+            plugin.RegisterEventHandler<EventPlayerHurt>((@event, info) =>
+            {
+                var attacker = @event.Attacker;
+                var victim = @event.Userid;
+
+                if (attacker == null || victim == null || attacker == victim)
+                    return HookResult.Continue;
+
+                // --- Orb of Slow ---
+                if (ShopMenu.Inventories.TryGetValue(attacker, out var attackerItems) &&
+                    attackerItems.Any(item => item is OrbOfSlow))
+                {
+                    SkillFunctions.SlowTarget(attacker, victim, 25, 3f);
+                }
+
+                // --- FMJ Bullets ---
+                if (attackerItems != null && attackerItems.Any(item => item is FmjBullets))
+                {
+                    SkillFunctions.DealRawDamage(attacker, victim, 5);
+                    attacker.PrintToCenter("You dealt 5 additional damage with FMJ bullets!");
+                }
+
+                // --- Mask of Death (20% chance to strip invisibility/immunity) ---
+                if (attackerItems != null &&
+                    attackerItems.Any(item => item is MaskOfDeath) &&
+                    Random.Shared.Next(100) < 20)
+                {
+                    if (victim.PlayerPawn?.Value != null)
+                    {
+                        victim.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
+                        victim.PrintToChat($" {ChatColors.Red}✖ Your invisibility and immunity were stripped!");
+                    }
+                }
+
+                // --- Helm of Excellence (damage reduction if headshot) ---
+                if (@event.Hitgroup == (int)HitGroup.Head &&
+                    ShopMenu.Inventories.TryGetValue(victim, out var victimItems) &&
+                    victimItems.Any(item => item is HelmOfExcellence))
+                {
+                    int dmg = @event.DmgHealth;
+                    int reduced = (int)(dmg * 0.65f);
+                    SkillFunctions.SetBonusHealth(victim, reduced);
+
+                    victim.PrintToCenter("🛡️ Helm of Excellence absorbed damage!");
+                    Server.NextFrame(() =>
+                    {
+                        if (victim.PlayerPawn?.Value != null)
+                            Utilities.SetStateChanged(victim.PlayerPawn.Value, "CBaseEntity", "m_iHealth");
+                    });
+                }
+
+                // --- Orb of Reflection (return 25% damage to attacker) ---
+                victimItems = null;
+                InventoryManagement.PersistentInventories.TryGetValue(victim, out victimItems);
+
+                if (victimItems != null &&
+                    victimItems.Any(item => item is OrbOfReflection) &&
+                    attacker.IsValid && attacker.IsAlive())
+                {
+                    int reflected = (int)(@event.DmgHealth * 0.25f);
+                    if (reflected > 0)
+                    {
+                        SkillFunctions.DealRawDamage(victim, attacker, reflected);
+                        attacker.PrintToChat($" {ChatColors.Red}⚡ You were struck by reflected damage!");
+                        victim.PrintToChat($" {ChatColors.Green}✔ Orb of Reflection struck your attacker for {reflected} damage!");
+                    }
+                }
+
+
+
+                // --- This is where the next code goes for other items ---
+
+                return HookResult.Continue;
+            });
+
+            plugin.RegisterEventHandler<EventPlayerSpawn>((@event, info) =>
+            {
+                var player = @event.Userid;
+
+                if (!player.IsValid || player.PlayerPawn?.Value == null) return HookResult.Continue;
+
+                plugin.AddTimer(0.2f, () =>
+                {
+                    if (!player.IsValid || player.PlayerPawn?.Value == null) return;
+
+                    // TODO: Handle on-spawn effects like stealth/invisibility/gloves here
+
+                });
+
+                return HookResult.Continue;
+            });
+
+            plugin.RegisterEventHandler<EventPlayerDeath>((@event, info) =>
+            {
+                var player = @event.Userid;
+
+                if (!player.IsValid || player.PlayerPawn?.Value == null) return HookResult.Continue;
+
+                ShopMenu.Inventories.Remove(player);
+                InventoryManagement.PersistentInventories.Remove(player);
+                ResurrectionManager.ResurrectionQueue.Remove(player);
+
+                return HookResult.Continue;
+            });
+
+            plugin.RegisterEventHandler<EventPlayerDisconnect>((@event, info) =>
+            {
+                var player = @event.Userid;
+                if (!player.IsValid) return HookResult.Continue;
+
+                ShopMenu.Inventories.Remove(player);
+                InventoryManagement.PersistentInventories.Remove(player);
+                ResurrectionManager.ResurrectionQueue.Remove(player);
+
+                return HookResult.Continue;
+            });
+
+
+            plugin.RegisterEventHandler<EventRoundStart>((@event, info) =>
+            {
+                foreach (KeyValuePair<CCSPlayerController, List<IShopItem>> entry in InventoryManagement.PersistentInventories)
+                {
+                    var player = entry.Key;
+                    var items = entry.Value;
+
+                    if (!player.IsValid() || player.PlayerPawn?.Value == null) continue;
+
+                    plugin.AddTimer(0.2f, () =>
+                    {
+                        foreach (var item in items)
+                            item.Apply(player);
+                    });
+                }
+
+                return HookResult.Continue;
+            });
+
+
+            plugin.RegisterEventHandler<EventRoundEnd>((@event, info) =>
+            {
+                // TODO: Round-end cleanup, clear one-round item effects, etc.
+
+                return HookResult.Continue;
+            });
+
+            plugin.RegisterEventHandler<EventPlayerJump>((@event, info) =>
+            {
+                var player = @event.Userid;
+
+                if (!player.IsValid || player.PlayerPawn?.Value == null)
+                    return HookResult.Continue;
+
+                if (ShopMenu.Inventories.TryGetValue(player, out var items) &&
+                    items.Any(i => i is LongjumpBoots))
+                {
+                    plugin.AddTimer(0.05f, () =>
+                    {
+                        if (!player.IsValid || player.PlayerPawn?.Value == null)
+                            return;
+
+                        var angle = player.PlayerPawn.Value.EyeAngles;
+                        var forward = new Vector();
+                        NativeAPI.AngleVectors(angle.Handle, forward.Handle, nint.Zero, nint.Zero);
+
+                        if (forward.Z < 0.55f)
+                            forward.Z = 0.55f;
+
+                        forward *= 520;
+
+                        // Apply velocity individually
+                        var pawn = player.PlayerPawn.Value;
+                        pawn.AbsVelocity.X = forward.X;
+                        pawn.AbsVelocity.Y = forward.Y;
+                        pawn.AbsVelocity.Z = forward.Z;
+                    });
+
+                    // Optional: gravity effect for style
+                    plugin.AddTimer(0.05f, () =>
+                    {
+                        new SetGravityEffect(player, 70f, 5f).Start();
+                    });
+                }
+
+                return HookResult.Continue;
+            });
         }
     }
 
-    #endregion
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///                                                                                                   END OF SHOPMENU CODE , BELOW YOU WILL FIND THE CODE FOR FLAGS ALLOWING GLOBAL BUFFS/ ITEM USAGE                                                                        ///
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 
     public enum HitGroup
@@ -858,344 +1169,4 @@ namespace WarcraftPlugin.Core
         RightLeg = 7,
         Gear = 10
     }
-
-    #region Global Buffs related to shopmenu
-    public class GlobalBuffs
-    {
-        private readonly WarcraftPlugin _plugin;
-
-        public GlobalBuffs(WarcraftPlugin plugin)
-        {
-            _plugin = plugin;
-
-            _plugin.RegisterEventHandler<EventRoundStart>(OnRoundStart);
-            _plugin.RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt);
-            _plugin.RegisterEventHandler<EventPlayerJump>(OnPlayerJump);
-            _plugin.RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
-            _plugin.RegisterEventHandler<EventGrenadeThrown>(OnGrenadeThrown);
-            _plugin.RegisterEventHandler<EventPlayerSpawn>(OnSpawn);
-            _plugin.RegisterEventHandler<EventPlayerDeath>(OnPlayerDeath);
-            _plugin.RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
-        }
-
-        // SECTION 1: Manual Global Buffs
-
-        private HookResult OnSpawn(EventPlayerSpawn @event, GameEventInfo info)
-        {
-            var player = @event.Userid;
-            if (!player.IsValid || !player.IsAlive() || player.PlayerPawn?.Value == null)
-                return HookResult.Continue;
-
-            var wcPlayer = _plugin.GetWcPlayer(player);
-            if (wcPlayer == null) return HookResult.Continue;
-
-            if (wcPlayer.RespawnQueued)
-            {
-                wcPlayer.RespawnQueued = false;
-
-                var location = wcPlayer.RespawnLocation;
-                _plugin.AddTimer(0.2f, () =>
-                {
-                    if (player.IsValid && player.PlayerPawn?.Value != null)
-                    {
-                        player.PlayerPawn.Value.Teleport(location);
-                        player.PrintToChat($" {ChatColors.Green}✔ You have been resurrected at your ally's location!");
-                    }
-                });
-            }
-
-            return HookResult.Continue;
-        }
-
-        private HookResult OnPlayerDeath(EventPlayerDeath @event, GameEventInfo info)
-        {
-            var victim = @event.Userid;
-            if (!victim.IsValid || victim.PlayerPawn?.Value == null)
-                return HookResult.Continue;
-
-            var wcVictim = _plugin.GetWcPlayer(victim);
-            if (wcVictim == null) return HookResult.Continue;
-
-            // Reset player-specific buffs
-            wcVictim.HasOrbOfSlow = false;
-            wcVictim.HasArmorPiercingRounds = false;
-            wcVictim.HasMaskOfDeath = false;
-            wcVictim.HasHelmOfExcellence = false;
-            wcVictim.HasGlovesOfWarmth = false;
-            wcVictim.HasLongjumpBoots = false;
-            wcVictim.HasOrbOfReflection = false;
-            wcVictim.HasDamageReflection = false;
-            wcVictim.ChameleonOffensive = false;
-            wcVictim.ChameleonDefensive = false;
-            wcVictim.HasUltimateImmunity = false;
-            wcVictim.RespawnQueued = false;
-
-            // Track death in stats for wcsrank system
-            WarcraftPlugin.Instance.GetDatabase().RegisterDeath(victim, wcVictim.className);
-
-            // Track attacker in stats for wcsrank system
-            var attacker = @event.Attacker;
-            if (attacker != null && attacker.IsValid && attacker != victim)
-            {
-                var wcAttacker = _plugin.GetWcPlayer(attacker);
-                if (wcAttacker != null)
-                {
-                    WarcraftPlugin.Instance.GetDatabase().RegisterKill(attacker, wcAttacker.className);
-                }
-            }
-
-            return HookResult.Continue;
-        }
-        private HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
-        {
-            foreach (var player in Utilities.GetPlayers())
-            {
-                if (!player.IsValid || player.PlayerPawn?.Value == null)
-                    continue;
-
-                player.PlayerPawn.Value.Health += 50;
-            }
-
-            _plugin.AddTimer(1.0f, RepeatRespawnCheck, TimerFlags.REPEAT);
-
-
-            return HookResult.Continue;
-        }
-        private HookResult OnGrenadeThrown(EventGrenadeThrown @event, GameEventInfo info)
-        {
-            var player = @event.Userid;
-            if (!player.IsValid || player.PlayerPawn?.Value == null || !player.IsAlive())
-                return HookResult.Continue;
-
-            var wcPlayer = _plugin.GetWcPlayer(player);
-            if (wcPlayer != null && wcPlayer.HasGlovesOfWarmth)
-            {
-                Server.NextFrame(() =>
-                {
-                    _plugin.AddTimer(5f, () =>
-                    {
-                        if (!player.IsValid || player.PlayerPawn?.Value == null || !player.IsAlive())
-                            return;
-
-                        string[] grenades = {
-                            "weapon_hegrenade",
-                            "weapon_flashbang",
-                            "weapon_incgrenade",
-                            "weapon_decoy"
-                        };
-
-                        string randomGrenade = grenades[Random.Shared.Next(grenades.Length)];
-                        player.GiveNamedItem(randomGrenade);
-
-                        player.PrintToChat($" {ChatColors.Green}You received a random grenade: {randomGrenade.Replace("weapon_", "").ToUpper()}!");
-                    });
-                });
-            }
-
-            return HookResult.Continue;
-        }
-
-
-        private void RepeatRespawnCheck()
-        {
-            foreach (var player in Utilities.GetPlayers())
-            {
-                var wcPlayer = _plugin.GetWcPlayer(player);
-                if (wcPlayer == null || !wcPlayer.RespawnQueued) continue;
-
-                if (Server.CurrentTime >= wcPlayer.RespawnTriggerTime)
-                {
-                    wcPlayer.RespawnQueued = false;
-
-                    if (!player.IsValid || player.IsAlive()) continue;
-
-                    player.Respawn();
-                    var targetLocation = wcPlayer.RespawnLocation;
-                    _plugin.AddTimer(0.2f, () =>
-                    {
-                        if (player.IsValid && player.PlayerPawn?.Value != null)
-                        {
-                            player.PlayerPawn.Value.Teleport(targetLocation);
-                            player.PrintToChat($"{ChatColors.Green}✔ You have been resurrected at your ally’s location!");
-                        }
-                    });
-                }
-            }
-        }
-
-        private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
-        {
-            foreach (var player in Utilities.GetPlayers())
-            {
-                if (!player.IsValid || player.PlayerPawn?.Value == null)
-                    continue;
-
-                var wcPlayer = _plugin.GetWcPlayer(player);
-                if (wcPlayer == null) continue;
-
-                wcPlayer.HasOrbOfSlow = false;
-                wcPlayer.HasArmorPiercingRounds = false;
-                wcPlayer.HasMaskOfDeath = false;
-                wcPlayer.HasHelmOfExcellence = false;
-                wcPlayer.HasGlovesOfWarmth = false;
-                wcPlayer.HasLongjumpBoots = false;
-                wcPlayer.HasOrbOfReflection = false;
-                wcPlayer.HasDamageReflection = false;
-                wcPlayer.ChameleonOffensive = false;
-                wcPlayer.ChameleonDefensive = false;
-                wcPlayer.HasUltimateImmunity = false;
-
-            }
-
-            return HookResult.Continue;
-        }
-
-        private HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
-        {
-            var disconPlayer = @event.Userid;
-            if (!disconPlayer.IsValid || disconPlayer.PlayerPawn?.Value == null)
-                return HookResult.Continue;
-
-            var wcDcPlayer = _plugin.GetWcPlayer(disconPlayer);
-            if (wcDcPlayer == null) return HookResult.Continue;
-
-            wcDcPlayer.HasOrbOfSlow = false;
-            wcDcPlayer.HasArmorPiercingRounds = false;
-            wcDcPlayer.HasMaskOfDeath = false;
-            wcDcPlayer.HasHelmOfExcellence = false;
-            wcDcPlayer.HasGlovesOfWarmth = false;
-            wcDcPlayer.HasLongjumpBoots = false;
-            wcDcPlayer.HasOrbOfReflection = false;
-            wcDcPlayer.HasDamageReflection = false;
-            wcDcPlayer.ChameleonOffensive = false;
-            wcDcPlayer.ChameleonDefensive = false;
-            wcDcPlayer.HasUltimateImmunity = false;
-
-            return HookResult.Continue;
-        }
-
-
-        // SECTION 2: Shop & Debuff Effects
-        private HookResult OnPlayerHurt(EventPlayerHurt @event, GameEventInfo info)
-        {
-            var attacker = @event.Attacker;
-            var victim = @event.Userid;
-
-            if (attacker == null || victim == null || attacker == victim || !attacker.IsValid || !victim.IsValid)
-                return HookResult.Continue;
-
-            if (attacker.TeamNum == victim.TeamNum)
-                return HookResult.Continue;
-
-            var wcAttacker = WarcraftPlugin.Instance.GetWcPlayer(attacker);
-            var wcVictim = WarcraftPlugin.Instance.GetWcPlayer(victim);
-
-            if (wcAttacker == null) return HookResult.Continue;
-
-            if (wcAttacker.HasOrbOfSlow)
-            {
-                SkillFunctions.SlowTarget(attacker, victim, 25, 3f); // 25% chance to slow for 3s
-            }
-
-
-            if (wcAttacker.HasArmorPiercingRounds)
-            {
-                SkillFunctions.DealRawDamage(attacker, victim, 5);
-                attacker.PrintToCenter("You dealt 5 additional damage with each hit");
-            }
-
-            if (wcAttacker.HasMaskOfDeath && Random.Shared.Next(100) < 20)
-            {
-                if (wcVictim != null)
-                {
-                    wcVictim.HasUltimateImmunity = false;
-                    victim.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
-                    victim.PrintToChat($" {ChatColors.Red}✖ Your invisibility and immunity were stripped!");
-                }
-            }
-
-            if (wcVictim != null && wcVictim.HasHelmOfExcellence && @event.Hitgroup == (int)HitGroup.Head)
-            {
-                int DmgDealt = @event.DmgHealth;
-                int DmgReduction = (int)(DmgDealt * 0.65f);
-                SkillFunctions.SetBonusHealth(victim, DmgReduction);
-                victim.PrintToCenter($" {ChatColors.Green}🛡️ Helm of Excellence absorbed some of the damage!");
-                if (victim != null && victim.IsValid && victim.PlayerPawn != null && victim.PlayerPawn.IsValid)
-                {
-                    {
-                        try
-                        {
-                            if (victim != null && victim.PlayerPawn != null && victim.PlayerPawn.IsValid)
-                            {
-                                Utilities.SetStateChanged(victim.PlayerPawn.Value, "CBaseEntity", "m_iHealth");
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"[ERROR] Exception in HelmOfExcellence NextFrame: {ex}");
-                        }
-                    }
-                }
-
-            }
-
-            if (wcVictim != null && wcVictim.HasOrbOfReflection && attacker != null && attacker.IsValid && attacker.PlayerPawn != null && attacker.PlayerPawn.IsValid && attacker.IsAlive())
-            {
-                float now = Server.CurrentTime;
-                if (now - wcVictim.LastReflectionTime > 1.0f)
-                {
-                    wcVictim.LastReflectionTime = now;
-
-                    int reflected = (int)(@event.DmgHealth * 0.25f);
-                    if (reflected > 0)
-                    {
-                        SkillFunctions.DealRawDamage(victim, attacker, reflected);
-                        attacker.PrintToChat($" {ChatColors.Red}⚡ You were struck by reflected damage!");
-                        victim.PrintToChat($" {ChatColors.Green}✔ Orb of Reflection struck your attacker for {reflected} damage!");
-                    }
-                }
-            }
-
-
-            /////////////////////////////////////////////////////////////////////////////////////////////////////
-            return HookResult.Continue;
-
-
-
-        }
-
-        private HookResult OnPlayerJump(EventPlayerJump @event, GameEventInfo info)
-        {
-            var player = @event.Userid;
-            if (player?.PlayerPawn?.Value == null || !player.IsValid) return HookResult.Continue;
-
-            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer == null || !wcPlayer.HasLongjumpBoots) return HookResult.Continue;
-
-            WarcraftPlugin.Instance.AddTimer(0.05f, () =>
-            {
-                var directionAngle = player.PlayerPawn.Value.EyeAngles;
-                var directionVec = new Vector();
-                NativeAPI.AngleVectors(directionAngle.Handle, directionVec.Handle, nint.Zero, nint.Zero);
-
-                if (directionVec.Z < 0.55f)
-                    directionVec.Z = 0.55f;
-
-
-
-                directionVec *= 520;
-                player.PlayerPawn.Value.AbsVelocity.X = directionVec.X;
-                player.PlayerPawn.Value.AbsVelocity.Y = directionVec.Y;
-                player.PlayerPawn.Value.AbsVelocity.Z = directionVec.Z;
-            });
-
-            WarcraftPlugin.Instance.AddTimer(0.05f, () =>
-            {
-                new SetGravityEffect(player, 70f, 5f).Start();
-            });
-
-            return HookResult.Continue;
-        }
-    }
 }
-#endregion
