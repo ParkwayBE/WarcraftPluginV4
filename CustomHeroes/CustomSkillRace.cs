@@ -24,26 +24,14 @@ namespace WarcraftPlugin.Classes
 
         public override void Register()
         {
-            HookEvent<EventPlayerPing>(OnPlayerPing);
             HookAbility(3, Ultimate);
         }
 
         private void Ultimate()
         {
-            SkillFunctions.TeleportUltimate(Player);
             StartCooldown(3); // Index 3 = Ultimate
         }
 
-        private void OnPlayerPing(EventPlayerPing ping)
-        {
-            SkillFunctions.HandleTeleportPing(Player, ping.X, ping.Y, ping.Z);
 
-
-
-
-            // Storage working particles
-            // particles/weapons/cs_weapon_fx/weapon_snowball_impact_splash.vpcf
-            //
-        }
     }
 }

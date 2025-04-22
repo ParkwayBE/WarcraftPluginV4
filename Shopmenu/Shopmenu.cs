@@ -63,7 +63,7 @@ namespace WarcraftPlugin.Core
             _plugin = plugin;
             _plugin.AddCommandListener("say", OnPlayerChat);
 
-            _plugin.RegisterEventHandler<EventRoundEnd>((@event, info) =>
+            _plugin.RegisterEventHandler<EventRoundEnd>((@event, info) => // Considder changing all these in their HookResult variant
             {
                 foreach (var (player, items) in Inventories)
                 {
@@ -396,7 +396,7 @@ namespace WarcraftPlugin.Core
 
                 default:
                     Console.WriteLine($"[WCS] ⚠ Invalid shop item index requested: {index}");
-                    return new BootsOfSpeed(); // Safe fallback
+                    return new BootsOfSpeed();
             }
         }
 
