@@ -90,7 +90,6 @@
     <Compile Remove="CustomHeroes\BloodMage.cs" />
     <Compile Remove="CustomHeroes\Chameleon.cs" />
     <Compile Remove="CustomHeroes\CryptLord.cs" />
-    <Compile Remove="CustomHeroes\CustomSkillRace.cs" />
     <Compile Remove="CustomHeroes\DwarvenSniper.cs" />
     <Compile Remove="CustomHeroes\HumanAlliance.cs" />
     <Compile Remove="CustomHeroes\LaserLightShow.cs" />
