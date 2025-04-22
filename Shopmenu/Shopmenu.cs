@@ -1154,11 +1154,19 @@ namespace WarcraftPlugin.Core
                 }
 
                 // Clear inventories after death (delayed to allow resurrection to use them if needed)
-                plugin.AddTimer(0.5f, () =>
+                plugin.AddTimer(1.0f, () =>
                 {
                     ShopMenu.Inventories.Remove(victim);
-                    InventoryManagement.PersistentInventories.Remove(victim);
+
+                    // Only clear persistent inventory if no scroll is pending
+                    if (victim.UserId.HasValue &&
+                        !ResurrectionTracker.ResurrectionUserIds.Contains((uint)victim.UserId.Value))
+                    {
+                        InventoryManagement.PersistentInventories.Remove(victim);
+                    }
                 });
+
+
 
                 return HookResult.Continue;
             });
