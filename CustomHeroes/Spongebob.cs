@@ -23,7 +23,7 @@ namespace WarcraftPlugin.Classes
         [
             new WarcraftAbility("Yummy Yummy", "5%-25% chance to refill your clip when getting shot."),
             new WarcraftAbility("Shock Absorber", "20-100% chance to reduce incoming headshot damage by 20%-60%."),
-            new WarcraftAbility("Slippery Sponge", "Double your movement speed for 3s when crouching. 10second cooldown and max 3 uses per round."),
+            new WarcraftAbility("Slippery Sponge", "Double your movement speed for 3s after crouching. 10second cooldown and max 3 uses per round."),
             new WarcraftCooldownAbility("Ultimate Sponge","Become a sponge for 3s during which all incoming damage is converted to health. Max HP: 200.", 25f)
         ];
 
@@ -171,7 +171,7 @@ namespace WarcraftPlugin.Classes
 
     }
 
-    private enum HitGroup
+    public enum HitGroup
     {
         Generic = 0,
         Head = 1,
