@@ -752,29 +752,12 @@ namespace WarcraftPlugin.Core
     {
         public string Name => "Scroll of Resurrection";
         public int Cost => 5000;
-        public bool IsPersistent => false;
+        public bool IsPersistent => true; // ✅ NOW PERSISTENT
 
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             if (wcPlayer?.GetClass() == null) return false;
-            if (player == null || player.PlayerPawn?.Value == null || player.IsAlive())
-            {
-                player.PrintToChat($" {ChatColors.Red}✖ You must be dead to use the Scroll of Resurrection!");
-                return false;
-            }
-
-            var allies = Utilities.GetPlayers()
-                .Where(p => p != player && p.TeamNum == player.TeamNum && p.IsAlive())
-                .ToList();
-
-            if (allies.Count == 0)
-            {
-                player.PrintToChat($" {ChatColors.Red}✖ No living teammates to anchor your resurrection.");
-                return false;
-            }
-
-
 
             string race = wcPlayer.GetClass().InternalName;
 
@@ -785,22 +768,13 @@ namespace WarcraftPlugin.Core
                 return false;
             }
 
-
-            var random = new Random();
-            var anchor = allies[random.Next(allies.Count)];
-
-            ResurrectionManager.ResurrectionQueue[player] = new ResurrectionInfo
-            {
-                RespawnLocation = anchor.PlayerPawn.Value.AbsOrigin,
-                RespawnTriggerTime = Server.CurrentTime + 3f
-            };
-
-            player.PrintToChat($" {ChatColors.Gold}⏳ Channeling resurrection... You will respawn in 3 seconds!");
+            player.PrintToChat($" {ChatColors.Gold}✔ Scroll of Resurrection purchased. It will automatically trigger when you die!");
             return true;
         }
 
         public void ResetEffect(CCSPlayerController player) { }
     }
+
 
 
     public class GlovesOfWarmth : IShopItem
