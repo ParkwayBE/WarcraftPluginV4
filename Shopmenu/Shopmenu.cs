@@ -1097,7 +1097,11 @@ namespace WarcraftPlugin.Core
                 if (!victim.IsValid || victim.PlayerPawn?.Value == null) return HookResult.Continue;
 
                 ShopMenu.Inventories.Remove(victim);
-                InventoryManagement.PersistentInventories.Remove(victim);
+                if (InventoryManagement.PersistentInventories.TryGetValue(victim, out var items))
+                {
+                    // Remove all persistent items EXCEPT Scroll of Resurrection
+                    items.RemoveAll(i => i is not ScrollOfResurrection);
+                }
                 ResurrectionManager.ResurrectionQueue.Remove(victim);
 
                 // --- Register death in WCS Rank System 
