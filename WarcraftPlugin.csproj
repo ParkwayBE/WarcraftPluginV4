@@ -68,6 +68,7 @@
     <None Include="CustomHeroes\Pickachu.cs" />
     <None Include="CustomHeroes\Rapscallion.cs" />
     <None Include="CustomHeroes\ShadowHunter.cs" />
+    <None Include="CustomHeroes\Spongebob.cs" />
     <None Include="CustomHeroes\UndeadScourge.cs" />
     <None Include="CustomHeroes\Warden.cs" />
     <None Include="Resources\nuget\Readme.md">
@@ -101,6 +102,7 @@
     <Compile Remove="CustomHeroes\Pickachu.cs" />
     <Compile Remove="CustomHeroes\Rapscallion.cs" />
     <Compile Remove="CustomHeroes\ShadowHunter.cs" />
+    <Compile Remove="CustomHeroes\Spongebob.cs" />
     <Compile Remove="CustomHeroes\UndeadScourge.cs" />
     <Compile Remove="CustomHeroes\Warden.cs" />
     <Compile Remove="CustomHeroes\Wraithstalker.cs" />
