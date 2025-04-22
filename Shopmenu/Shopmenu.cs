@@ -1227,7 +1227,7 @@ namespace WarcraftPlugin.Core
 
             void CheckResurrections()
             {
-                var toRespawn = new List<CCSPlayerController>();
+                var toRespawn = new List<(CCSPlayerController player, ResurrectionInfo info)>();
 
                 foreach (var (player, info) in ResurrectionManager.ResurrectionQueue)
                 {
@@ -1236,23 +1236,24 @@ namespace WarcraftPlugin.Core
 
                     if (Server.CurrentTime >= info.RespawnTriggerTime)
                     {
-                        toRespawn.Add(player);
+                        toRespawn.Add((player, info));
                     }
                 }
 
-                foreach (var player in toRespawn)
+                foreach (var (player, info) in toRespawn)
                 {
-                    if (!ResurrectionManager.ResurrectionQueue.TryGetValue(player, out var info))
-                        continue;
-
                     ResurrectionManager.ResurrectionQueue.Remove(player);
 
                     player.Respawn();
-                    player.SetHp(100);
-                    player.PlayerPawn?.Value?.Teleport(info.RespawnLocation, new QAngle(), new Vector());
+                    plugin.AddTimer(0.25f, () =>
+                    {
+                        if (!player.IsValid || player.PlayerPawn?.Value == null) return;
 
-                    Warcraft.SpawnParticle(info.RespawnLocation, "particles/ui/status_levels/ui_status_level_7_energycirc.vpcf", 4f);
-                    player.PrintToChat($" {ChatColors.Green}✔ Scroll of Resurrection activated!");
+                        player.SetHp(100);
+                        player.PlayerPawn.Value.Teleport(info.RespawnLocation, new QAngle(), new Vector());
+                        Warcraft.SpawnParticle(info.RespawnLocation, "particles/ui/status_levels/ui_status_level_7_energycirc.vpcf", 4f);
+                        player.PrintToChat($"{ChatColors.Green}✔ Scroll of Resurrection activated!");
+                    });
                 }
 
                 plugin.AddTimer(0.5f, CheckResurrections);
@@ -1261,17 +1262,16 @@ namespace WarcraftPlugin.Core
             plugin.AddTimer(0.5f, CheckResurrections);
         }
 
+        public enum HitGroup
+        {
+            Generic = 0,
+            Head = 1,
+            Chest = 2,
+            Stomach = 3,
+            LeftArm = 4,
+            RightArm = 5,
+            LeftLeg = 6,
+            RightLeg = 7,
+            Gear = 10
+        }
     }
-    public enum HitGroup
-    {
-        Generic = 0,
-        Head = 1,
-        Chest = 2,
-        Stomach = 3,
-        LeftArm = 4,
-        RightArm = 5,
-        LeftLeg = 6,
-        RightLeg = 7,
-        Gear = 10
-    }
-}

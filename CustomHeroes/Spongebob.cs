@@ -23,8 +23,8 @@ namespace WarcraftPlugin.Classes
         [
             new WarcraftAbility("Yummy Yummy", "5%-25% chance to refill your clip when getting shot."),
             new WarcraftAbility("Shock Absorber", "20-100% chance to reduce incoming headshot damage by 20%-60%."),
-            new WarcraftAbility("Slippery Sponge", "Get 200-300% movement speed boost for 2s when crouching. 10second cooldown and max 3 uses per round."),
-            new WarcraftCooldownAbility("Ultimate Sponge","Become a sponge for 2s during which all incoming damage is converted to health. Max HP: 200.", 25f)
+            new WarcraftAbility("Slippery Sponge", "Double your movement speed for 3s when crouching. 10second cooldown and max 3 uses per round."),
+            new WarcraftCooldownAbility("Ultimate Sponge","Become a sponge for 3s during which all incoming damage is converted to health. Max HP: 200.", 25f)
         ];
 
         public override void Register()
@@ -43,20 +43,18 @@ namespace WarcraftPlugin.Classes
 
             private readonly int abilityLevel;
 
-            // Cooldown map: SteamID → NextAvailableTime
             private static readonly Dictionary<ulong, float> Cooldowns = new();
 
             public SlipperySpongeSpeedBoostEffect(CCSPlayerController player, float duration = 5.0f)
                 : base(player, duration)
             {
                 var wp = player.GetWarcraftPlayer();
-                abilityLevel = wp.GetAbilityLevel(2); // Slippery Sponge
+                abilityLevel = wp.GetAbilityLevel(2); 
             }
 
             public override void OnStart()
             {
                 originalSpeed = Owner.PlayerPawn.Value.VelocityModifier;
-                // Don't apply speed here yet
             }
 
             public override void OnTick()
@@ -81,12 +79,6 @@ namespace WarcraftPlugin.Classes
 
                         Owner.PrintToChat($"{ChatColors.Green}[WCS] {ChatColors.Default}Slippery Sponge activated! ({3 - usesRemaining}/3 used)");
                     }
-                }
-
-                if (hasActivatedSpeed && !isDucking)
-                {
-                    Owner.PlayerPawn.Value.VelocityModifier = originalSpeed;
-                    hasActivatedSpeed = false;
                 }
             }
 
@@ -125,7 +117,7 @@ namespace WarcraftPlugin.Classes
 
             Player.PrintToChat($" {ChatColors.Green}[WCS] {ChatColors.Default}You have become a sponge for 2 seconds!");
 
-            WarcraftPlugin.Instance.AddTimer(2.0f, () =>
+            WarcraftPlugin.Instance.AddTimer(3.0f, () =>
             {
                 isUltimateActive = false;
                 Player.PrintToChat($" {ChatColors.Green}[WCS] {ChatColors.Default}Sponge mode ended.");
@@ -168,11 +160,11 @@ namespace WarcraftPlugin.Classes
             int yummyChance = new[] { 5, 10, 15, 20, 25, 30 }[Math.Clamp(level, 0, 5)];
             if (@event.DmgHealth > 0 && Random.Shared.Next(0, 100) < yummyChance)
             {
-                var activeWeapon = attacker.PlayerPawn.Value.WeaponServices.ActiveWeapon.Value;
+                var activeWeapon = victim.PlayerPawn.Value.WeaponServices.ActiveWeapon.Value;
                 if (activeWeapon != null)
                 {
                     activeWeapon.Clip1 = activeWeapon.GetVData<CBasePlayerWeaponVData>().MaxClip1;
-                    Console.WriteLine($"[INFO] {attacker.PlayerName}'s ammo refilled to max ({activeWeapon.Clip1})!");
+                    Console.WriteLine($"[INFO] {victim.PlayerName}'s ammo refilled to max ({activeWeapon.Clip1})!");
                 }
             }
         }
