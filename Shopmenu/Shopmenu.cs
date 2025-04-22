@@ -78,13 +78,26 @@ namespace WarcraftPlugin.Core
         {
             foreach (var (player, items) in Inventories)
             {
+                if (player == null || !player.IsValid || player.PlayerPawn?.Value == null)
+                    continue;
+
                 foreach (var item in items)
-                    item.ResetEffect(player);
+                {
+                    try
+                    {
+                        item.ResetEffect(player);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[WCS] ResetEffect crash: {ex.Message}");
+                    }
+                }
             }
 
             Inventories.Clear();
             return HookResult.Continue;
         }
+
         private HookResult OnPlayerJump(EventPlayerJump @event, GameEventInfo info)
         {
             if (@event == null || @event.Userid == null || !@event.Userid.IsValid)
