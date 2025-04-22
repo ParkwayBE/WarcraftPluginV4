@@ -376,7 +376,7 @@ namespace WarcraftPlugin.Core
                     }
                     player.Respawn();
 
-                    _plugin.AddTimer(0.2f, () =>
+                    _plugin.AddTimer(0.8f, () =>
                     {
                         if (player.IsValid && player.PlayerPawn?.Value != null)
                         {
