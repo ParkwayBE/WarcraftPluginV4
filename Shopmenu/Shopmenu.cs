@@ -82,6 +82,9 @@ namespace WarcraftPlugin.Core
         }
         private HookResult OnPlayerJump(EventPlayerJump @event, GameEventInfo info)
         {
+            if (@event == null || @event.Userid == null || !@event.Userid.IsValid)
+                return HookResult.Continue;
+
             var player = @event.Userid;
 
             if (!player.IsValid || player.PlayerPawn?.Value == null)
@@ -212,6 +215,9 @@ namespace WarcraftPlugin.Core
 
         private HookResult OnSpawn(EventPlayerSpawn @event, GameEventInfo info)
         {
+            if (@event == null || @event.Userid == null || !@event.Userid.IsValid)
+                return HookResult.Continue;
+
             var player = @event.Userid;
 
             if (!player.IsValid || player.PlayerPawn?.Value == null) return HookResult.Continue;
@@ -244,6 +250,10 @@ namespace WarcraftPlugin.Core
         private HookResult OnDeath(EventPlayerDeath @event, GameEventInfo info)
         {
             var player = @event.Userid;
+
+            if (@event == null || player == null || !player.IsValid)
+                return HookResult.Continue;
+
 
             if (!player.IsValid || player.PlayerPawn?.Value == null) return HookResult.Continue;
 
