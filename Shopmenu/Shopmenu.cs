@@ -17,12 +17,7 @@ namespace WarcraftPlugin.Core
     {
         public static readonly Dictionary<Type, HashSet<string>> RaceBlacklist = new()
         {
-            {
-                typeof(BootsOfSpeed), new()
-                {
-                "undead_scourge", "laser_light_show"
-                }
-            },
+            { typeof(BootsOfSpeed), new() { "undead_scourge", "laser_light_show" } },
             { typeof(RingOfRegen), new() { "undead_scourge" } },
             { typeof(NecklaceOfImmunity), new() { "undead_scourge" } },
             { typeof(FeatherBoots), new() { "undead_scourge" } },
@@ -64,14 +59,14 @@ namespace WarcraftPlugin.Core
             _plugin.AddCommandListener("say", OnPlayerChat);
             _plugin.RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
             _plugin.RegisterEventHandler<EventPlayerJump>(OnPlayerJump);
-            _plugin.RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt);
-            _plugin.RegisterEventHandler<EventPlayerHurtOther>(OnPlayerHurtOther);
+            _plugin.RegisterEventHandler<EventPlayerHurt>(OnHurt);
+            _plugin.RegisterEventHandler<EventPlayerHurtOther>(PlayerHurtOther);
             _plugin.RegisterEventHandler<EventPlayerSpawn>(OnSpawn);
             _plugin.RegisterEventHandler<EventPlayerDeath>(OnDeath);
             _plugin.RegisterEventHandler<EventPlayerDisconnect>(OnDisconnect);
             _plugin.RegisterEventHandler<EventRoundStart>(OnRoundStart);
 
-            StartResurrectionWatcher(); // Updated .dll file
+            StartResurrectionWatcher();
         }
 
         private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
@@ -87,9 +82,6 @@ namespace WarcraftPlugin.Core
         }
         private HookResult OnPlayerJump(EventPlayerJump @event, GameEventInfo info)
         {
-            if (@event == null || @event.Userid == null || !@event.Userid.IsValid)
-                return HookResult.Continue;
-
             var player = @event.Userid;
 
             if (!player.IsValid || player.PlayerPawn?.Value == null)
@@ -135,7 +127,7 @@ namespace WarcraftPlugin.Core
             return HookResult.Continue;
         }
 
-        private HookResult OnPlayerHurt(EventPlayerHurt @event, GameEventInfo info)
+        private HookResult OnHurt(EventPlayerHurt @event, GameEventInfo info)
         {
 
             var attacker = @event.Attacker;
@@ -220,9 +212,6 @@ namespace WarcraftPlugin.Core
 
         private HookResult OnSpawn(EventPlayerSpawn @event, GameEventInfo info)
         {
-            if (@event == null || @event.Userid == null || !@event.Userid.IsValid)
-                return HookResult.Continue;
-
             var player = @event.Userid;
 
             if (!player.IsValid || player.PlayerPawn?.Value == null) return HookResult.Continue;
@@ -230,12 +219,11 @@ namespace WarcraftPlugin.Core
             _plugin.AddTimer(0.2f, () =>
             {
                 if (!player.IsValid || player.PlayerPawn?.Value == null) return;
-                Console.WriteLine("Player has spawned"); // Remove this when done
             });
 
             return HookResult.Continue;
         }
-        private HookResult OnPlayerHurtOther(EventPlayerHurtOther @event, GameEventInfo info)
+        private HookResult PlayerHurtOther(EventPlayerHurtOther @event, GameEventInfo info)
         {
             var attacker = @event.Attacker;
             var victim = @event.Userid;
@@ -256,10 +244,6 @@ namespace WarcraftPlugin.Core
         private HookResult OnDeath(EventPlayerDeath @event, GameEventInfo info)
         {
             var player = @event.Userid;
-
-            if (@event == null || player == null || !player.IsValid)
-                return HookResult.Continue;
-
 
             if (!player.IsValid || player.PlayerPawn?.Value == null) return HookResult.Continue;
 
@@ -303,87 +287,55 @@ namespace WarcraftPlugin.Core
 
         private IShopItem GetShopItem(int index)
         {
-            switch (index)
+            return index switch
             {
-                case 1: return new BootsOfSpeed();
-                case 2: return new RingOfRegen();
-                case 3: return new NecklaceOfImmunity();
-                case 4: return new GrandExpTome();
-                case 5: return new MassiveExpTome();
-                case 6: return new GamblingExpTome();
-                case 7: return new SmallExpTome();
-                case 8: return new FeatherBoots();
-                case 9: return new LongjumpBoots();
-                case 10: return new CloakOfInvisibility();
-                case 11: return new OrbOfSlow();
-                case 12: return new FmjBullets();
-                case 13: return new DisguiseKit();
-                case 14: return new PeriaptOfHealth();
-                case 15: return new GiftOfExp();
-                case 16: return new ScrollOfResurrection();
-                case 17: return new GlovesOfWarmth();
-                case 18: return new MaskOfDeath();
-                case 19: return new HelmOfExcellence();
-                case 20: return new OrbOfReflection();
-
-                default:
-                    Console.WriteLine($"[WCS] ⚠ Invalid shop item index requested: {index}");
-                    return new BootsOfSpeed(); // Safe fallback
-            }
+                1 => new BootsOfSpeed(),
+                2 => new RingOfRegen(),
+                3 => new NecklaceOfImmunity(),
+                4 => new GrandExpTome(),
+                5 => new MassiveExpTome(),
+                6 => new GamblingExpTome(),
+                7 => new SmallExpTome(),
+                8 => new FeatherBoots(),
+                9 => new LongjumpBoots(),
+                10 => new CloakOfInvisibility(),
+                11 => new OrbOfSlow(),
+                12 => new FmjBullets(),
+                13 => new DisguiseKit(),
+                14 => new PeriaptOfHealth(),
+                15 => new GiftOfExp(),
+                16 => new ScrollOfResurrection(),
+                17 => new GlovesOfWarmth(),
+                18 => new MaskOfDeath(),
+                19 => new HelmOfExcellence(),
+                20 => new OrbOfReflection(),
+                _ => throw new ArgumentOutOfRangeException(nameof(index), $"Invalid shop item index: {index}")
+            };
         }
-
 
         private void StartResurrectionWatcher()
         {
             _plugin.AddTimer(1f, () =>
             {
                 float now = Server.CurrentTime;
-
-                if (now < 10f) // Prevent startup crashes
-                {
-                    StartResurrectionWatcher();
-                    return;
-                }
-
-                if (ResurrectionManager.ResurrectionQueue.Count == 0)
-                {
-                    StartResurrectionWatcher(); // Keep timer alive
-                    return;
-                }
-
                 var toRespawn = ResurrectionManager.ResurrectionQueue
                     .Where(kvp => kvp.Value.RespawnTriggerTime <= now)
                     .ToList();
 
                 foreach (var (player, info) in toRespawn)
                 {
-                    if (player == null || !player.IsValid || player.IsAlive())
+                    if (player.IsValid && !player.IsAlive())
                     {
-                        ResurrectionManager.ResurrectionQueue.Remove(player);
-                        continue;
-                    }
-
-                    if (player.PlayerPawn?.Value == null)
-                    {
-                        ResurrectionManager.ResurrectionQueue.Remove(player);
-                        continue;
-                    }
-
-                    if (player == null || !player.IsValid || player.PlayerPawn?.Value == null || player.IsAlive())
-                    {
-                        ResurrectionManager.ResurrectionQueue.Remove(player);
-                        continue;
-                    }
-                    player.Respawn();
-
-                    _plugin.AddTimer(0.8f, () =>
-                    {
-                        if (player.IsValid && player.PlayerPawn?.Value != null)
+                        player.Respawn();
+                        _plugin.AddTimer(0.2f, () =>
                         {
-                            player.PlayerPawn.Value.Teleport(info.RespawnLocation);
-                            player.PrintToChat($" {ChatColors.Green}✔ You have been resurrected at your ally’s location!");
-                        }
-                    });
+                            if (player.IsValid && player.PlayerPawn?.Value != null)
+                            {
+                                player.PlayerPawn.Value.Teleport(info.RespawnLocation);
+                                player.PrintToChat($" {ChatColors.Green}✔ You have been resurrected at your ally’s location!");
+                            }
+                        });
+                    }
 
                     ResurrectionManager.ResurrectionQueue.Remove(player);
                 }
@@ -391,8 +343,6 @@ namespace WarcraftPlugin.Core
                 StartResurrectionWatcher();
             });
         }
-
-
 
 
 
@@ -492,11 +442,13 @@ namespace WarcraftPlugin.Core
 
     }
 
+
+
     public interface IShopItem
     {
         string Name { get; }
         int Cost { get; }
-        bool IsPersistent { get; } // To DO : Change some items to be persistant through roundEnd and can be brought over to the next round without having to repurchase
+        bool IsPersistent { get; }
         bool Apply(CCSPlayerController player);
         void ResetEffect(CCSPlayerController player);
     }
@@ -1279,6 +1231,7 @@ namespace WarcraftPlugin.Core
 
         public void ResetEffect(CCSPlayerController player) { }
     }
+
     public enum HitGroup
     {
         Generic = 0,
