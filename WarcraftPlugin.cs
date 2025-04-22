@@ -137,6 +137,7 @@ namespace WarcraftPlugin
             _admin = new AdminPanel(this);
 
             new ShopMenu(this);
+            ShopMenuEvents.Register(this);
 
             if (Config.ShowCommandAdverts)
             {
