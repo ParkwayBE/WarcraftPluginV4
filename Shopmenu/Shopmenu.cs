@@ -62,7 +62,6 @@ namespace WarcraftPlugin.Core
         {
             _plugin = plugin;
             _plugin.AddCommandListener("say", OnPlayerChat);
-            _plugin.RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
             _plugin.RegisterEventHandler<EventPlayerJump>(OnPlayerJump);
             _plugin.RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt);
             _plugin.RegisterEventHandler<EventPlayerHurtOther>(OnPlayerHurtOther);
@@ -71,31 +70,35 @@ namespace WarcraftPlugin.Core
             _plugin.RegisterEventHandler<EventPlayerDisconnect>(OnDisconnect);
             _plugin.RegisterEventHandler<EventRoundStart>(OnRoundStart);
 
-            //StartResurrectionWatcher();
-        }
 
-        private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
-        {
-            foreach (var (player, items) in Inventories)
+            _plugin.RegisterEventHandler<EventRoundEnd>((@event, info) =>
             {
-                if (player == null || !player.IsValid || player.PlayerPawn?.Value == null)
-                    continue;
-
-                foreach (var item in items)
+                foreach (var (player, items) in Inventories)
                 {
-                    try
+                    if (player == null || !player.IsValid || player.PlayerPawn?.Value == null)
+                        continue;
+
+                    foreach (var item in items)
                     {
-                        item.ResetEffect(player);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[WCS] ResetEffect crash: {ex.Message}");
+                        try
+                        {
+                            item.ResetEffect(player);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[WCS] ResetEffect crash: {ex.Message}");
+                        }
                     }
                 }
-            }
+                Inventories.Clear();
+                return HookResult.Continue;
+            });
 
-            Inventories.Clear();
-            return HookResult.Continue;
+
+
+
+
+            StartResurrectionWatcher();
         }
 
         private HookResult OnPlayerJump(EventPlayerJump @event, GameEventInfo info)
