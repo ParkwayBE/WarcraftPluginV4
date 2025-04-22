@@ -328,6 +328,19 @@ namespace WarcraftPlugin.Core
             _plugin.AddTimer(1f, () =>
             {
                 float now = Server.CurrentTime;
+
+                if (now < 10f) // Prevent startup crashes
+                {
+                    StartResurrectionWatcher();
+                    return;
+                }
+
+                if (ResurrectionManager.ResurrectionQueue.Count == 0)
+                {
+                    StartResurrectionWatcher(); // Keep timer alive
+                    return;
+                }
+
                 var toRespawn = ResurrectionManager.ResurrectionQueue
                     .Where(kvp => kvp.Value.RespawnTriggerTime <= now)
                     .ToList();
@@ -346,6 +359,11 @@ namespace WarcraftPlugin.Core
                         continue;
                     }
 
+                    if (player == null || !player.IsValid || player.PlayerPawn?.Value == null || player.IsAlive())
+                    {
+                        ResurrectionManager.ResurrectionQueue.Remove(player);
+                        continue;
+                    }
                     player.Respawn();
 
                     _plugin.AddTimer(0.2f, () =>
