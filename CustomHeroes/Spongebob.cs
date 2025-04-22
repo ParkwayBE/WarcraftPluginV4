@@ -77,6 +77,16 @@ namespace WarcraftPlugin.Classes
                         hasActivatedSpeed = true;
                         usesRemaining--;
 
+                        WarcraftPlugin.Instance.AddTimer(3.0f, () =>
+                        {
+                            if (Owner.IsValid && Owner.PlayerPawn?.Value != null)
+                            {
+                                Owner.PlayerPawn.Value.VelocityModifier = originalSpeed;
+                            }
+                            hasActivatedSpeed = false;
+                        });
+
+
                         Owner.PrintToChat($"{ChatColors.Green}[WCS] {ChatColors.Default}Slippery Sponge activated! ({3 - usesRemaining}/3 used)");
                     }
                 }
@@ -168,7 +178,6 @@ namespace WarcraftPlugin.Classes
                 }
             }
         }
-
     }
 
     public enum HitGroup
