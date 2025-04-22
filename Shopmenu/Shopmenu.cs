@@ -1126,7 +1126,6 @@ namespace WarcraftPlugin.Core
 
                 if (!victim.IsValid || victim.PlayerPawn?.Value == null) return HookResult.Continue;
 
-                // Clean up inventory and resurrection
                 ShopMenu.Inventories.Remove(victim);
                 InventoryManagement.PersistentInventories.Remove(victim);
                 ResurrectionManager.ResurrectionQueue.Remove(victim);
