@@ -1093,14 +1093,13 @@ namespace WarcraftPlugin.Core
             {
                 var victim = @event.Userid;
 
-                // Handle scroll resurrection logic
-                if (ShopMenu.Inventories.TryGetValue(victim, out var roundItems))
+                // Check for Scroll of Resurrection before wiping inventory
+                if (InventoryManagement.PersistentInventories.TryGetValue(victim, out var persistentItems))
                 {
-                    var scroll = roundItems.FirstOrDefault(i => i is ScrollOfResurrection);
+                    var scroll = persistentItems.FirstOrDefault(i => i is ScrollOfResurrection);
                     if (scroll != null)
                     {
-                        roundItems.Remove(scroll);
-
+                        // Queue the resurrection
                         var teammates = Utilities.GetPlayers()
                             .Where(p => p.IsValid && p.IsAlive() && p.TeamNum == victim.TeamNum && p != victim)
                             .ToList();
@@ -1120,7 +1119,7 @@ namespace WarcraftPlugin.Core
                     }
                 }
 
-                // Clear their inventory after death
+                // ✅ Now wipe all items (scroll included)
                 ShopMenu.Inventories.Remove(victim);
                 InventoryManagement.PersistentInventories.Remove(victim);
 
@@ -1146,6 +1145,7 @@ namespace WarcraftPlugin.Core
 
                 return HookResult.Continue;
             });
+
 
 
 
@@ -1259,11 +1259,6 @@ namespace WarcraftPlugin.Core
                     Console.WriteLine($"[Scroll] Triggering resurrection for {player.PlayerName}");
 
                     ResurrectionManager.ResurrectionQueue.Remove(player);
-
-                    // --- Optional team refresh workaround
-                    var currentTeam = (CsTeam)player.TeamNum;
-                    player.ChangeTeam(currentTeam);
-
 
                     plugin.AddTimer(0.1f, () =>
                     {
