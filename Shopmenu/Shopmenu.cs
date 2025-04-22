@@ -711,8 +711,8 @@ namespace WarcraftPlugin.Core
         public bool IsPersistent => false;
 
 
-        private readonly string ctModel = "models/characters/tm_leet/ctm_sas_variantf.vmdl";
-        private readonly string tModel = "models/characters/tm_leet/tm_leet_variantb.vmdl";
+        private readonly string ctModel = "characters/models/ctm_fbi/ctm_fbi_variantb.vmdl"; // TODO FIX MODELS
+        private readonly string tModel = "characters/models/tm_leet/tm_leet_variantj.vmdl";
 
         public bool Apply(CCSPlayerController player)
         {
