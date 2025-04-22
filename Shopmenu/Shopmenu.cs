@@ -337,60 +337,57 @@ namespace WarcraftPlugin.Core
         {
             _plugin.AddTimer(1f, () =>
             {
-                float now = Server.CurrentTime;
-
-                if (now < 10f) // Prevent startup crashes
+                try
                 {
-                    StartResurrectionWatcher();
-                    return;
-                }
+                    float now = Server.CurrentTime;
 
-                if (ResurrectionManager.ResurrectionQueue.Count == 0)
-                {
-                    StartResurrectionWatcher(); // Keep timer alive
-                    return;
-                }
-
-                var toRespawn = ResurrectionManager.ResurrectionQueue
-                    .Where(kvp => kvp.Value.RespawnTriggerTime <= now)
-                    .ToList();
-
-                foreach (var (player, info) in toRespawn)
-                {
-                    if (player == null || !player.IsValid || player.IsAlive())
+                    if (now < 10f)
                     {
-                        ResurrectionManager.ResurrectionQueue.Remove(player);
-                        continue;
+                        _plugin.AddTimer(1f, StartResurrectionWatcher);
+                        return;
                     }
 
-                    if (player.PlayerPawn?.Value == null)
+                    if (ResurrectionManager.ResurrectionQueue.Count == 0)
                     {
-                        ResurrectionManager.ResurrectionQueue.Remove(player);
-                        continue;
+                        _plugin.AddTimer(1f, StartResurrectionWatcher);
+                        return;
                     }
 
-                    if (player == null || !player.IsValid || player.PlayerPawn?.Value == null || player.IsAlive())
-                    {
-                        ResurrectionManager.ResurrectionQueue.Remove(player);
-                        continue;
-                    }
-                    player.Respawn();
+                    var toRespawn = ResurrectionManager.ResurrectionQueue
+                        .Where(kvp => kvp.Value.RespawnTriggerTime <= now)
+                        .ToList();
 
-                    _plugin.AddTimer(0.8f, () =>
+                    foreach (var (player, info) in toRespawn)
                     {
-                        if (player.IsValid && player.PlayerPawn?.Value != null)
+                        if (player == null || !player.IsValid || player.PlayerPawn?.Value == null || player.IsAlive())
                         {
-                            player.PlayerPawn.Value.Teleport(info.RespawnLocation);
-                            player.PrintToChat($" {ChatColors.Green}✔ You have been resurrected at your ally’s location!");
+                            ResurrectionManager.ResurrectionQueue.Remove(player);
+                            continue;
                         }
-                    });
 
-                    ResurrectionManager.ResurrectionQueue.Remove(player);
+                        player.Respawn();
+
+                        _plugin.AddTimer(0.8f, () =>
+                        {
+                            if (player.IsValid && player.PlayerPawn?.Value != null)
+                            {
+                                player.PlayerPawn.Value.Teleport(info.RespawnLocation);
+                                player.PrintToChat($" {ChatColors.Green}✔ You have been resurrected at your ally’s location!");
+                            }
+                        });
+
+                        ResurrectionManager.ResurrectionQueue.Remove(player);
+                    }
+
+                    _plugin.AddTimer(1f, StartResurrectionWatcher);
                 }
-
-                StartResurrectionWatcher();
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[WCS] ResurrectionWatcher crashed: " + ex.Message);
+                }
             });
         }
+
 
 
 
