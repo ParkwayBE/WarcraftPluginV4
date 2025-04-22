@@ -20,7 +20,7 @@ namespace WarcraftPlugin.Models
 
         public bool ChameleonHasLongjump { get; set; } = false;
 
-
+        public bool HasDamageReflection { get; set; } = false;
 
 
 
