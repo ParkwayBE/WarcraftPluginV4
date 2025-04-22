@@ -1214,6 +1214,38 @@ namespace WarcraftPlugin.Core
                 }
                 return HookResult.Continue;
             });
+
+
+        }
+
+        private static void StartResurrectionWatcher(WarcraftPlugin plugin)
+        {
+            plugin.AddTimer(1f, () => // check every second
+            {
+                float now = Server.CurrentTime;
+                var toRespawn = ResurrectionManager.ResurrectionQueue
+                    .Where(kvp => kvp.Value.RespawnTriggerTime <= now)
+                    .ToList();
+
+                foreach (var (player, info) in toRespawn)
+                {
+                    if (player.IsValid && !player.IsAlive())
+                    {
+                        player.Respawn();
+                        plugin.AddTimer(0.2f, () =>
+                        {
+                            if (player.IsValid && player.PlayerPawn?.Value != null)
+                            {
+                                player.PlayerPawn.Value.Teleport(info.RespawnLocation);
+                                player.PrintToChat($" {ChatColors.Green}✔ You have been resurrected at your ally’s location!");
+                            }
+                        });
+                    }
+
+                    ResurrectionManager.ResurrectionQueue.Remove(player);
+                }
+                StartResurrectionWatcher(plugin);
+            });
         }
     }
     public enum HitGroup
