@@ -59,8 +59,8 @@ namespace WarcraftPlugin.Core
             _plugin.AddCommandListener("say", OnPlayerChat);
             _plugin.RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
             _plugin.RegisterEventHandler<EventPlayerJump>(OnPlayerJump);
-            _plugin.RegisterEventHandler<EventPlayerHurt>(OnHurt);
-            _plugin.RegisterEventHandler<EventPlayerHurtOther>(PlayerHurtOther);
+            _plugin.RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt);
+            _plugin.RegisterEventHandler<EventPlayerHurtOther>(OnPlayerHurtOther);
             _plugin.RegisterEventHandler<EventPlayerSpawn>(OnSpawn);
             _plugin.RegisterEventHandler<EventPlayerDeath>(OnDeath);
             _plugin.RegisterEventHandler<EventPlayerDisconnect>(OnDisconnect);
@@ -127,7 +127,7 @@ namespace WarcraftPlugin.Core
             return HookResult.Continue;
         }
 
-        private HookResult OnHurt(EventPlayerHurt @event, GameEventInfo info)
+        private HookResult OnPlayerHurt(EventPlayerHurt @event, GameEventInfo info)
         {
 
             var attacker = @event.Attacker;
@@ -223,7 +223,7 @@ namespace WarcraftPlugin.Core
 
             return HookResult.Continue;
         }
-        private HookResult PlayerHurtOther(EventPlayerHurtOther @event, GameEventInfo info)
+        private HookResult OnPlayerHurtOther(EventPlayerHurtOther @event, GameEventInfo info)
         {
             var attacker = @event.Attacker;
             var victim = @event.Userid;
