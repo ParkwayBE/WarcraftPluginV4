@@ -71,7 +71,7 @@ namespace WarcraftPlugin.Core
             _plugin.RegisterEventHandler<EventPlayerDisconnect>(OnDisconnect);
             _plugin.RegisterEventHandler<EventRoundStart>(OnRoundStart);
 
-            StartResurrectionWatcher(); // Updated .dll file
+            //StartResurrectionWatcher(); // Updated .dll file
         }
 
         private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
