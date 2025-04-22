@@ -32,24 +32,16 @@ namespace WarcraftPlugin.Core
             { typeof(FmjBullets), new() { "undead_scourge" } },
         };
     }
-    public class ResurrectionInfo
-    {
-        public Vector RespawnLocation { get; set; }
-        public float RespawnTriggerTime { get; set; }
-    }
-
-    public static class ResurrectionManager
-    {
-        public static readonly Dictionary<CCSPlayerController, ResurrectionInfo> ResurrectionQueue = new();
-
-    }
 
     public static class InventoryManagement
     {
         public static readonly Dictionary<CCSPlayerController, List<IShopItem>> PersistentInventories = new();
     }
 
-
+    public static class ResurrectionTracker
+    {
+        public static readonly HashSet<uint> ResurrectionUserIds = new();
+    }
 
 
     public class ShopMenu
@@ -416,9 +408,14 @@ namespace WarcraftPlugin.Core
                 return false;
             }
 
+            if (player.UserId.HasValue)
+            {
+                ResurrectionTracker.ResurrectionUserIds.Add((uint)player.UserId.Value);
+            }
             player.PrintToChat($" {ChatColors.Gold}✔ Scroll of Resurrection purchased. It will trigger automatically on death!");
             return true;
         }
+
 
         public void ResetEffect(CCSPlayerController player) { }
     }
@@ -967,8 +964,6 @@ namespace WarcraftPlugin.Core
     {
         public static void Register(WarcraftPlugin plugin)
         {
-            StartResurrectionLoop(plugin);
-
             plugin.RegisterEventHandler<EventPlayerHurt>((@event, info) =>
             {
                 var attacker = @event.Attacker;
@@ -1085,7 +1080,6 @@ namespace WarcraftPlugin.Core
                     @event.AddBonusDamage(5);
                     attacker.PrintToCenter("You dealt 5 additional damage with FMJ bullets!");
                 }
-
                 return HookResult.Continue;
             });
 
@@ -1095,30 +1089,6 @@ namespace WarcraftPlugin.Core
 
                 if (!victim.IsValid || victim.PlayerPawn?.Value == null)
                     return HookResult.Continue;
-
-                if (InventoryManagement.PersistentInventories.TryGetValue(victim, out var persistentItems))
-                {
-                    var scroll = persistentItems.FirstOrDefault(i => i is ScrollOfResurrection);
-                    if (scroll != null)
-                    {
-                        var teammates = Utilities.GetPlayers()
-                            .Where(p => p.IsValid && p.IsAlive() && p.TeamNum == victim.TeamNum && p != victim)
-                            .ToList();
-
-                        if (teammates.Count > 0)
-                        {
-                            var anchor = teammates[Random.Shared.Next(teammates.Count)];
-
-                            ResurrectionManager.ResurrectionQueue[victim] = new ResurrectionInfo
-                            {
-                                RespawnLocation = anchor.PlayerPawn.Value.AbsOrigin,
-                                RespawnTriggerTime = Server.CurrentTime + 3f
-                            };
-
-                            victim.PrintToChat($" {ChatColors.Gold}⏳ Resurrection scroll activated! You will respawn in 3 seconds...");
-                        }
-                    }
-                }
 
                 // --- Register death in WCS Rank System 
                 /*
@@ -1140,17 +1110,51 @@ namespace WarcraftPlugin.Core
                 }
                 */
 
-                // Always clear inventories after death
-                ShopMenu.Inventories.Remove(victim);
-                plugin.AddTimer(3.5f, () =>
+                // ✨ Scroll of Resurrection Trigger
+                if (victim.UserId.HasValue && ResurrectionTracker.ResurrectionUserIds.Contains((uint)victim.UserId.Value))
                 {
-                    if (!ResurrectionManager.ResurrectionQueue.ContainsKey(victim))
+                    ResurrectionTracker.ResurrectionUserIds.Remove((uint)victim.UserId.Value);
+
+                    var teammates = Utilities.GetPlayers()
+                        .Where(p => p != victim && p.IsValid && p.IsAlive() && p.TeamNum == victim.TeamNum)
+                        .ToList();
+
+                    if (teammates.Count > 0)
                     {
-                        InventoryManagement.PersistentInventories.Remove(victim);
+                        var anchor = teammates[Random.Shared.Next(teammates.Count)];
+                        var respawnLocation = anchor.PlayerPawn.Value.AbsOrigin;
+
+                        victim.PrintToChat($"{ChatColors.Gold}⏳ Resurrection scroll activated! Respawning in 3 seconds...");
+
+                        plugin.AddTimer(3.0f, () =>
+                        {
+                            if (!victim.IsValid || victim.IsAlive()) return;
+
+                            victim.Respawn();
+
+                            plugin.AddTimer(0.2f, () =>
+                            {
+                                if (victim.IsValid && victim.PlayerPawn?.Value != null)
+                                {
+                                    victim.PlayerPawn.Value.Teleport(respawnLocation);
+                                    victim.PrintToChat($"{ChatColors.Green}✔ You have been resurrected!");
+                                }
+                            });
+                        });
                     }
+                }
+
+                // Clear inventories after death (delayed to allow resurrection to use them if needed)
+                plugin.AddTimer(0.5f, () =>
+                {
+                    ShopMenu.Inventories.Remove(victim);
+                    InventoryManagement.PersistentInventories.Remove(victim);
                 });
+
                 return HookResult.Continue;
             });
+
+
 
 
 
@@ -1161,7 +1165,6 @@ namespace WarcraftPlugin.Core
 
                 ShopMenu.Inventories.Remove(player);
                 InventoryManagement.PersistentInventories.Remove(player);
-                ResurrectionManager.ResurrectionQueue.Remove(player);
 
                 return HookResult.Continue;
             });
@@ -1233,77 +1236,6 @@ namespace WarcraftPlugin.Core
                 return HookResult.Continue;
             });
         }
-
-        private static bool resurrectionLoopStarted = false;
-
-        private static void StartResurrectionLoop(WarcraftPlugin plugin)
-        {
-            if (resurrectionLoopStarted) return;
-            resurrectionLoopStarted = true;
-
-            void CheckResurrections()
-            {
-                var toRespawn = new List<(CCSPlayerController player, ResurrectionInfo info)>();
-
-                foreach (var (player, info) in ResurrectionManager.ResurrectionQueue)
-                {
-                    if (!player.IsValid || player.IsAlive())
-                        continue;
-
-                    if (Server.CurrentTime >= info.RespawnTriggerTime)
-                    {
-                        toRespawn.Add((player, info));
-                    }
-                }
-
-                foreach (var (player, info) in toRespawn)
-                {
-                    Console.WriteLine($"[Scroll] Triggering resurrection for {player.PlayerName}");
-
-                    ResurrectionManager.ResurrectionQueue.Remove(player);
-
-                    plugin.AddTimer(0.1f, () =>
-                    {
-                        if (!player.IsValid) return;
-
-                        Console.WriteLine($"[Scroll] Attempting respawn for {player.PlayerName}...");
-                        player.Respawn();
-
-                        plugin.AddTimer(0.5f, () =>
-                        {
-                            if (!player.IsValid)
-                            {
-                                Console.WriteLine($"[Scroll] {player.PlayerName} invalid after respawn.");
-                                return;
-                            }
-
-                            if (!player.IsAlive())
-                            {
-                                Console.WriteLine($"[Scroll] {player.PlayerName} is still dead after Respawn()");
-                                return;
-                            }
-
-                            if (player.PlayerPawn?.Value == null)
-                            {
-                                Console.WriteLine($"[Scroll] {player.PlayerName} has no valid pawn after respawn.");
-                                return;
-                            }
-
-                            player.SetHp(100);
-                            player.PlayerPawn.Value.Teleport(info.RespawnLocation, new QAngle(), new Vector());
-                            Warcraft.SpawnParticle(info.RespawnLocation, "particles/ui/status_levels/ui_status_level_7_energycirc.vpcf", 4f);
-                            player.PrintToChat($"{ChatColors.Green}✔ Scroll of Resurrection activated!");
-                            Console.WriteLine($"[Scroll] {player.PlayerName} resurrected at {info.RespawnLocation}");
-                        });
-                    });
-                }
-
-                plugin.AddTimer(0.5f, CheckResurrections);
-            }
-
-            plugin.AddTimer(0.5f, CheckResurrections);
-        }
-
 
         public enum HitGroup
         {
