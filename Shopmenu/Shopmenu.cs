@@ -711,8 +711,8 @@ namespace WarcraftPlugin.Core
         public bool IsPersistent => false;
 
 
-        private readonly string ctModel = "models/player/custom_player/legacy/ctm_fbi.vmdl"; // TO DO: Fix proper player model
-        private readonly string tModel = "models/player/custom_player/legacy/tm_leet.vmdl"; // TO DO: Fix proper player model
+        private readonly string ctModel = "characters/models/ctm_fbi_variantb.vmdl";
+        private readonly string tModel = "characters/models/tm_leet_varoa,tj.vmdl";
 
         public bool Apply(CCSPlayerController player)
         {
@@ -752,7 +752,7 @@ namespace WarcraftPlugin.Core
     {
         public string Name => "Scroll of Resurrection";
         public int Cost => 5000;
-        public bool IsPersistent => true; // ✅ NOW PERSISTENT
+        public bool IsPersistent => true;
 
         public bool Apply(CCSPlayerController player)
         {
@@ -963,16 +963,12 @@ namespace WarcraftPlugin.Core
         public void ResetEffect(CCSPlayerController player) { }
     }
 
-
-    ////// /////////////////////////////////////////////////////END OF SHOPMENU
-    /// ////////////////////////////////////////////////////////
-    /// /// ////////////////////////////////////////////////////START OF GLOBAL ClASS
-
-
     public class ShopMenuEvents
     {
         public static void Register(WarcraftPlugin plugin)
         {
+            StartResurrectionLoop(plugin);
+
             plugin.RegisterEventHandler<EventPlayerHurt>((@event, info) =>
             {
                 var attacker = @event.Attacker;
@@ -1241,7 +1237,7 @@ namespace WarcraftPlugin.Core
                 return HookResult.Continue;
             });
 
-            StartResurrectionLoop(plugin);
+
 
         }
 
