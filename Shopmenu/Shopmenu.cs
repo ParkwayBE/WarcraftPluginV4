@@ -1168,11 +1168,9 @@ namespace WarcraftPlugin.Core
 
             plugin.RegisterEventHandler<EventRoundStart>((@event, info) =>
             {
-                foreach (KeyValuePair<CCSPlayerController, List<IShopItem>> entry in InventoryManagement.PersistentInventories)
+                // Apply persistent items after short delay
+                foreach (var (player, items) in InventoryManagement.PersistentInventories)
                 {
-                    var player = entry.Key;
-                    var items = entry.Value;
-
                     if (!player.IsValid() || player.PlayerPawn?.Value == null) continue;
 
                     plugin.AddTimer(0.2f, () =>
@@ -1182,8 +1180,43 @@ namespace WarcraftPlugin.Core
                     });
                 }
 
+                // --- Resurrection scroll checker loop
+                void CheckResurrections()
+                {
+                    foreach (var (player, items) in InventoryManagement.PersistentInventories)
+                    {
+                        if (!player.IsValid || player.IsAlive()) continue;
+                        if (!items.Any(i => i is ScrollOfResurrection)) continue;
+
+                        if (ResurrectionManager.ResurrectionQueue.ContainsKey(player)) continue;
+
+                        var teammates = Utilities.GetPlayers()
+                            .Where(p => p.IsValid && p.IsAlive() && p.TeamNum == player.TeamNum && p != player)
+                            .ToList();
+
+                        if (teammates.Count == 0) continue;
+
+                        var anchor = teammates[Random.Shared.Next(teammates.Count)];
+
+                        ResurrectionManager.ResurrectionQueue[player] = new ResurrectionInfo
+                        {
+                            RespawnLocation = anchor.PlayerPawn.Value.AbsOrigin,
+                            RespawnTriggerTime = Server.CurrentTime + 3f
+                        };
+
+                        player.PrintToChat($" {ChatColors.Gold}⏳ Resurrection scroll detected! Respawning in 3 seconds...");
+                    }
+
+                    // Schedule next check
+                    plugin.AddTimer(0.5f, CheckResurrections);
+                }
+
+                // Start first scan
+                plugin.AddTimer(0.5f, CheckResurrections);
+
                 return HookResult.Continue;
             });
+
 
 
             plugin.RegisterEventHandler<EventPlayerJump>((@event, info) =>
