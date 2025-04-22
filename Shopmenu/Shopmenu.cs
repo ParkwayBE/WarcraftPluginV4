@@ -13,7 +13,7 @@ using WarcraftPlugin.Menu;
 
 namespace WarcraftPlugin.Core
 {
-    public static class ShopItemRestrictions // TO DO: Update this with the correct races for each item
+    public static class ShopItemRestrictions // TO DO: Update this with the correct blacklist
     {
         public static readonly Dictionary<Type, HashSet<string>> RaceBlacklist = new()
         {
