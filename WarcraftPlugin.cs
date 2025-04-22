@@ -138,10 +138,6 @@ namespace WarcraftPlugin
 
             new ShopMenu(this);
 
-
-
-
-
             if (Config.ShowCommandAdverts)
             {
                 AdvertManager = new AdvertManager();

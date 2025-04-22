@@ -48,10 +48,6 @@ namespace WarcraftPlugin.Core
     {
         public static readonly Dictionary<CCSPlayerController, List<IShopItem>> PersistentInventories = new();
     }
-
-
-
-
     public class ShopMenu
     {
         private readonly WarcraftPlugin _plugin;
@@ -61,18 +57,232 @@ namespace WarcraftPlugin.Core
         {
             _plugin = plugin;
             _plugin.AddCommandListener("say", OnPlayerChat);
+            _plugin.RegisterEventHandler<EventRoundEnd>(OnRoundEnd);
+            _plugin.RegisterEventHandler<EventPlayerJump>(OnPlayerJump);
+            _plugin.RegisterEventHandler<EventPlayerHurt>(OnHurt);
+            _plugin.RegisterEventHandler<EventPlayerHurtOther>(PlayerHurtOther);
+            _plugin.RegisterEventHandler<EventPlayerSpawn>(OnSpawn);
+            _plugin.RegisterEventHandler<EventPlayerDeath>(OnDeath);
+            _plugin.RegisterEventHandler<EventPlayerDisconnect>(OnDisconnect);
+            _plugin.RegisterEventHandler<EventRoundStart>(OnRoundStart);
 
-            _plugin.RegisterEventHandler<EventRoundEnd>((@event, info) =>
+            StartResurrectionWatcher();
+        }
+
+        private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
+        {
+            foreach (var (player, items) in Inventories)
             {
-                foreach (var (player, items) in Inventories)
+                foreach (var item in items)
+                    item.ResetEffect(player);
+            }
+
+            Inventories.Clear();
+            return HookResult.Continue;
+        }
+        private HookResult OnPlayerJump(EventPlayerJump @event, GameEventInfo info)
+        {
+            var player = @event.Userid;
+
+            if (!player.IsValid || player.PlayerPawn?.Value == null)
+                return HookResult.Continue;
+
+            if (ShopMenu.Inventories.TryGetValue(player, out var items) && items.Any(i => i is LongjumpBoots))
+            {
+                _plugin.AddTimer(0.05f, () =>
                 {
-                    foreach (var item in items)
-                        item.ResetEffect(player);
+                    if (!player.IsValid || player.PlayerPawn?.Value == null)
+                        return;
+
+                    var angle = player.PlayerPawn.Value.EyeAngles;
+                    var forward = new Vector();
+                    NativeAPI.AngleVectors(angle.Handle, forward.Handle, nint.Zero, nint.Zero);
+
+                    if (forward.Z < 0.55f)
+                        forward.Z = 0.55f;
+
+                    forward *= 520;
+
+                    var pawn = player.PlayerPawn.Value;
+                    pawn.AbsVelocity.X = forward.X;
+                    pawn.AbsVelocity.Y = forward.Y;
+                    pawn.AbsVelocity.Z = forward.Z;
+                });
+
+                _plugin.AddTimer(0.05f, () =>
+                {
+                    var pawn = player.PlayerPawn.Value;
+                    float originalGravity = pawn.GravityScale;
+                    pawn.GravityScale = 0.7f;
+
+                    _plugin.AddTimer(5f, () =>
+                    {
+                        if (player.IsValid && player.PlayerPawn?.Value != null)
+                        {
+                            player.PlayerPawn.Value.GravityScale = originalGravity;
+                        }
+                    });
+                });
+            }
+            return HookResult.Continue;
+        }
+
+        private HookResult OnHurt(EventPlayerHurt @event, GameEventInfo info)
+        {
+
+            var attacker = @event.Attacker;
+            var victim = @event.Userid;
+
+            if (attacker == null || victim == null || attacker == victim)
+                return HookResult.Continue;
+
+            // --- Orb of Slow
+
+            if (ShopMenu.Inventories.TryGetValue(attacker, out var attackerItems) && attackerItems.Any(item => item is OrbOfSlow))
+            {
+                var pawn = victim.PlayerPawn?.Value;
+                if (pawn == null) return HookResult.Continue;
+
+                var originalSpeed = pawn.VelocityModifier;
+                pawn.VelocityModifier = originalSpeed / 2f;
+                pawn.SetColor(Color.BlueViolet);
+
+                _plugin.AddTimer(3f, () =>
+                {
+                    if (victim.IsValid && victim.PlayerPawn?.Value != null)
+                    {
+                        victim.PlayerPawn.Value.VelocityModifier = originalSpeed;
+                        victim.PlayerPawn.Value.SetColor(Color.White);
+                    }
+                });
+
+            }
+
+            // --- Mask of Death 
+            if (attackerItems != null && attackerItems.Any(item => item is MaskOfDeath) && Random.Shared.Next(100) < 20)
+            {
+                if (victim.PlayerPawn?.Value != null)
+                {
+                    victim.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
+                    victim.PrintToChat($" {ChatColors.Red}✖ Your invisibility and immunity were stripped!");
+                }
+            }
+
+            // --- Helm of Excellence 
+            if (@event.Hitgroup == (int)HitGroup.Head && ShopMenu.Inventories.TryGetValue(victim, out var victimItems) && victimItems.Any(item => item is HelmOfExcellence))
+            {
+                int dmg = @event.DmgHealth;
+                int reduced = (int)(dmg * 0.65f);
+
+                if (victim.PlayerPawn?.Value != null)
+                {
+                    int currentHp = victim.PlayerPawn.Value.Health;
+                    int newHp = currentHp + (dmg - reduced);
+                    victim.PlayerPawn.Value.Health = newHp;
+
+                    victim.PrintToCenter("🛡️ Helm of Excellence absorbed damage!");
+                    Server.NextFrame(() => Utilities.SetStateChanged(victim.PlayerPawn.Value, "CBaseEntity", "m_iHealth"));
                 }
 
-                Inventories.Clear();
-                return HookResult.Continue;
+            }
+
+            // --- Orb of Reflection 
+            victimItems = null;
+            InventoryManagement.PersistentInventories.TryGetValue(victim, out victimItems);
+
+            if (victimItems != null && victimItems.Any(item => item is OrbOfReflection) && attacker.IsValid && attacker.IsAlive() && attacker.PlayerPawn?.Value != null)
+            {
+                int reflected = (int)(@event.DmgHealth * 0.25f);
+                if (reflected > 0)
+                {
+                    attacker.PlayerPawn.Value.Health -= reflected;
+
+                    Server.NextFrame(() =>
+                    {
+                        if (attacker.PlayerPawn?.Value != null)
+                            Utilities.SetStateChanged(attacker.PlayerPawn.Value, "CBaseEntity", "m_iHealth");
+                    });
+
+                    attacker.PrintToChat($" {ChatColors.Red}⚡ You were struck by reflected damage!");
+                    victim.PrintToChat($" {ChatColors.Green}✔ Orb of Reflection struck your attacker for {reflected} damage!");
+                }
+            }
+            return HookResult.Continue;
+        }
+
+        private HookResult OnSpawn(EventPlayerSpawn @event, GameEventInfo info)
+        {
+            var player = @event.Userid;
+
+            if (!player.IsValid || player.PlayerPawn?.Value == null) return HookResult.Continue;
+
+            _plugin.AddTimer(0.2f, () =>
+            {
+                if (!player.IsValid || player.PlayerPawn?.Value == null) return;
             });
+
+            return HookResult.Continue;
+        }
+        private HookResult PlayerHurtOther(EventPlayerHurtOther @event, GameEventInfo info)
+        {
+            var attacker = @event.Attacker;
+            var victim = @event.Userid;
+
+            if (attacker == null || victim == null || attacker == victim)
+                return HookResult.Continue;
+
+            ShopMenu.Inventories.TryGetValue(attacker, out var attackerItems);
+
+            if (attackerItems != null && attackerItems.Any(item => item is FmjBullets))
+            {
+                @event.AddBonusDamage(5);
+                attacker.PrintToCenter("You dealt 5 additional damage with FMJ bullets!");
+            }
+
+            return HookResult.Continue;
+        }
+        private HookResult OnDeath(EventPlayerDeath @event, GameEventInfo info)
+        {
+            var player = @event.Userid;
+
+            if (!player.IsValid || player.PlayerPawn?.Value == null) return HookResult.Continue;
+
+            ShopMenu.Inventories.Remove(player);
+            InventoryManagement.PersistentInventories.Remove(player);
+            ResurrectionManager.ResurrectionQueue.Remove(player);
+
+            return HookResult.Continue;
+        }
+        private HookResult OnDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
+        {
+            var player = @event.Userid;
+            if (!player.IsValid) return HookResult.Continue;
+
+            ShopMenu.Inventories.Remove(player);
+            InventoryManagement.PersistentInventories.Remove(player);
+            ResurrectionManager.ResurrectionQueue.Remove(player);
+
+            return HookResult.Continue;
+        }
+
+        private HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
+        {
+
+            foreach (KeyValuePair<CCSPlayerController, List<IShopItem>> entry in InventoryManagement.PersistentInventories)
+            {
+                var player = entry.Key;
+                var items = entry.Value;
+
+                if (!player.IsValid() || player.PlayerPawn?.Value == null) continue;
+
+                _plugin.AddTimer(0.2f, () =>
+                {
+                    foreach (var item in items)
+                        item.Apply(player);
+                });
+            }
+
+            return HookResult.Continue;
         }
 
         private IShopItem GetShopItem(int index)
@@ -102,6 +312,38 @@ namespace WarcraftPlugin.Core
                 _ => throw new ArgumentOutOfRangeException(nameof(index), $"Invalid shop item index: {index}")
             };
         }
+
+        private void StartResurrectionWatcher()
+        {
+            _plugin.AddTimer(1f, () =>
+            {
+                float now = Server.CurrentTime;
+                var toRespawn = ResurrectionManager.ResurrectionQueue
+                    .Where(kvp => kvp.Value.RespawnTriggerTime <= now)
+                    .ToList();
+
+                foreach (var (player, info) in toRespawn)
+                {
+                    if (player.IsValid && !player.IsAlive())
+                    {
+                        player.Respawn();
+                        _plugin.AddTimer(0.2f, () =>
+                        {
+                            if (player.IsValid && player.PlayerPawn?.Value != null)
+                            {
+                                player.PlayerPawn.Value.Teleport(info.RespawnLocation);
+                                player.PrintToChat($" {ChatColors.Green}✔ You have been resurrected at your ally’s location!");
+                            }
+                        });
+                    }
+
+                    ResurrectionManager.ResurrectionQueue.Remove(player);
+                }
+
+                StartResurrectionWatcher();
+            });
+        }
+
 
 
         private HookResult OnPlayerChat(CCSPlayerController? player, CommandInfo info)
@@ -994,260 +1236,6 @@ namespace WarcraftPlugin.Core
     ////// /////////////////////////////////////////////////////END OF SHOPMENU
     /// ////////////////////////////////////////////////////////
     /// /// ////////////////////////////////////////////////////START OF GLOBAL ClASS
-
-
-    public class ShopMenuEvents
-    {
-        public static void Register(WarcraftPlugin plugin)
-        {
-            plugin.RegisterEventHandler<EventPlayerHurt>((@event, info) =>
-            {
-                var attacker = @event.Attacker;
-                var victim = @event.Userid;
-
-                if (attacker == null || victim == null || attacker == victim)
-                    return HookResult.Continue;
-
-                // --- Orb of Slow
-
-                if (ShopMenu.Inventories.TryGetValue(attacker, out var attackerItems) &&
-                    attackerItems.Any(item => item is OrbOfSlow))
-                {
-                    var pawn = victim.PlayerPawn?.Value;
-                    if (pawn == null) return HookResult.Continue;
-
-                    var originalSpeed = pawn.VelocityModifier;
-                    pawn.VelocityModifier = originalSpeed / 2f;
-                    pawn.SetColor(Color.BlueViolet);
-
-                    plugin.AddTimer(3f, () =>
-                    {
-                        if (victim.IsValid && victim.PlayerPawn?.Value != null)
-                        {
-                            victim.PlayerPawn.Value.VelocityModifier = originalSpeed;
-                            victim.PlayerPawn.Value.SetColor(Color.White);
-                        }
-                    });
-
-                }
-
-                // --- Mask of Death 
-                if (attackerItems != null &&
-                    attackerItems.Any(item => item is MaskOfDeath) &&
-                    Random.Shared.Next(100) < 20)
-                {
-                    if (victim.PlayerPawn?.Value != null)
-                    {
-                        victim.PlayerPawn.Value.SetColor(Color.FromArgb(255, 255, 255, 255));
-                        victim.PrintToChat($" {ChatColors.Red}✖ Your invisibility and immunity were stripped!");
-                    }
-                }
-
-                // --- Helm of Excellence 
-                if (@event.Hitgroup == (int)HitGroup.Head &&
-                    ShopMenu.Inventories.TryGetValue(victim, out var victimItems) &&
-                    victimItems.Any(item => item is HelmOfExcellence))
-                {
-                    int dmg = @event.DmgHealth;
-                    int reduced = (int)(dmg * 0.65f);
-
-                    if (victim.PlayerPawn?.Value != null)
-                    {
-                        int currentHp = victim.PlayerPawn.Value.Health;
-                        int newHp = currentHp + (dmg - reduced);
-                        victim.PlayerPawn.Value.Health = newHp;
-
-                        victim.PrintToCenter("🛡️ Helm of Excellence absorbed damage!");
-                        Server.NextFrame(() => Utilities.SetStateChanged(victim.PlayerPawn.Value, "CBaseEntity", "m_iHealth"));
-                    }
-
-                }
-
-                // --- Orb of Reflection 
-                victimItems = null;
-                InventoryManagement.PersistentInventories.TryGetValue(victim, out victimItems);
-
-                if (victimItems != null && victimItems.Any(item => item is OrbOfReflection) && attacker.IsValid && attacker.IsAlive() && attacker.PlayerPawn?.Value != null)
-                {
-                    int reflected = (int)(@event.DmgHealth * 0.25f);
-                    if (reflected > 0)
-                    {
-                        attacker.PlayerPawn.Value.Health -= reflected;
-
-                        Server.NextFrame(() =>
-                        {
-                            if (attacker.PlayerPawn?.Value != null)
-                                Utilities.SetStateChanged(attacker.PlayerPawn.Value, "CBaseEntity", "m_iHealth");
-                        });
-
-                        attacker.PrintToChat($" {ChatColors.Red}⚡ You were struck by reflected damage!");
-                        victim.PrintToChat($" {ChatColors.Green}✔ Orb of Reflection struck your attacker for {reflected} damage!");
-                    }
-                }
-                return HookResult.Continue;
-            });
-
-            plugin.RegisterEventHandler<EventPlayerSpawn>((@event, info) =>
-            {
-                var player = @event.Userid;
-
-                if (!player.IsValid || player.PlayerPawn?.Value == null) return HookResult.Continue;
-
-                plugin.AddTimer(0.2f, () =>
-                {
-                    if (!player.IsValid || player.PlayerPawn?.Value == null) return;
-                });
-
-                return HookResult.Continue;
-            });
-
-            plugin.RegisterEventHandler<EventPlayerHurtOther>((@event, info) =>
-            {
-                var attacker = @event.Attacker;
-                var victim = @event.Userid;
-
-                if (attacker == null || victim == null || attacker == victim)
-                    return HookResult.Continue;
-
-                ShopMenu.Inventories.TryGetValue(attacker, out var attackerItems);
-
-                if (attackerItems != null && attackerItems.Any(item => item is FmjBullets))
-                {
-                    @event.AddBonusDamage(5);
-                    attacker.PrintToCenter("You dealt 5 additional damage with FMJ bullets!");
-                }
-
-                return HookResult.Continue;
-            });
-
-
-            plugin.RegisterEventHandler<EventPlayerDeath>((@event, info) =>
-            {
-                var player = @event.Userid;
-
-                if (!player.IsValid || player.PlayerPawn?.Value == null) return HookResult.Continue;
-
-                ShopMenu.Inventories.Remove(player);
-                InventoryManagement.PersistentInventories.Remove(player);
-                ResurrectionManager.ResurrectionQueue.Remove(player);
-
-                return HookResult.Continue;
-            });
-
-            plugin.RegisterEventHandler<EventPlayerDisconnect>((@event, info) =>
-            {
-                var player = @event.Userid;
-                if (!player.IsValid) return HookResult.Continue;
-
-                ShopMenu.Inventories.Remove(player);
-                InventoryManagement.PersistentInventories.Remove(player);
-                ResurrectionManager.ResurrectionQueue.Remove(player);
-
-                return HookResult.Continue;
-            });
-
-
-            plugin.RegisterEventHandler<EventRoundStart>((@event, info) =>
-            {
-                foreach (KeyValuePair<CCSPlayerController, List<IShopItem>> entry in InventoryManagement.PersistentInventories)
-                {
-                    var player = entry.Key;
-                    var items = entry.Value;
-
-                    if (!player.IsValid() || player.PlayerPawn?.Value == null) continue;
-
-                    plugin.AddTimer(0.2f, () =>
-                    {
-                        foreach (var item in items)
-                            item.Apply(player);
-                    });
-                }
-
-                return HookResult.Continue;
-            });
-
-
-            plugin.RegisterEventHandler<EventPlayerJump>((@event, info) =>
-            {
-                var player = @event.Userid;
-
-                if (!player.IsValid || player.PlayerPawn?.Value == null)
-                    return HookResult.Continue;
-
-                if (ShopMenu.Inventories.TryGetValue(player, out var items) &&
-                    items.Any(i => i is LongjumpBoots))
-                {
-                    plugin.AddTimer(0.05f, () =>
-                    {
-                        if (!player.IsValid || player.PlayerPawn?.Value == null)
-                            return;
-
-                        var angle = player.PlayerPawn.Value.EyeAngles;
-                        var forward = new Vector();
-                        NativeAPI.AngleVectors(angle.Handle, forward.Handle, nint.Zero, nint.Zero);
-
-                        if (forward.Z < 0.55f)
-                            forward.Z = 0.55f;
-
-                        forward *= 520;
-
-                        var pawn = player.PlayerPawn.Value;
-                        pawn.AbsVelocity.X = forward.X;
-                        pawn.AbsVelocity.Y = forward.Y;
-                        pawn.AbsVelocity.Z = forward.Z;
-                    });
-
-                    plugin.AddTimer(0.05f, () =>
-                    {
-                        var pawn = player.PlayerPawn.Value;
-                        float originalGravity = pawn.GravityScale;
-                        pawn.GravityScale = 0.7f;
-
-                        plugin.AddTimer(5f, () =>
-                        {
-                            if (player.IsValid && player.PlayerPawn?.Value != null)
-                            {
-                                player.PlayerPawn.Value.GravityScale = originalGravity;
-                            }
-                        });
-                    });
-                }
-                return HookResult.Continue;
-            });
-
-
-        }
-
-        private static void StartResurrectionWatcher(WarcraftPlugin plugin)
-        {
-            plugin.AddTimer(1f, () => // check every second
-            {
-                float now = Server.CurrentTime;
-                var toRespawn = ResurrectionManager.ResurrectionQueue
-                    .Where(kvp => kvp.Value.RespawnTriggerTime <= now)
-                    .ToList();
-
-                foreach (var (player, info) in toRespawn)
-                {
-                    if (player.IsValid && !player.IsAlive())
-                    {
-                        player.Respawn();
-                        plugin.AddTimer(0.2f, () =>
-                        {
-                            if (player.IsValid && player.PlayerPawn?.Value != null)
-                            {
-                                player.PlayerPawn.Value.Teleport(info.RespawnLocation);
-                                player.PrintToChat($" {ChatColors.Green}✔ You have been resurrected at your ally’s location!");
-                            }
-                        });
-                    }
-
-                    ResurrectionManager.ResurrectionQueue.Remove(player);
-                }
-                StartResurrectionWatcher(plugin);
-            });
-        }
-    }
     public enum HitGroup
     {
         Generic = 0,
