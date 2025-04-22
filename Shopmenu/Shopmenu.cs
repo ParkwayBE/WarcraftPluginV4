@@ -1122,16 +1122,37 @@ namespace WarcraftPlugin.Core
 
             plugin.RegisterEventHandler<EventPlayerDeath>((@event, info) =>
             {
-                var player = @event.Userid;
+                var victim = @event.Userid;
 
-                if (!player.IsValid || player.PlayerPawn?.Value == null) return HookResult.Continue;
+                if (!victim.IsValid || victim.PlayerPawn?.Value == null) return HookResult.Continue;
 
-                ShopMenu.Inventories.Remove(player);
-                InventoryManagement.PersistentInventories.Remove(player);
-                ResurrectionManager.ResurrectionQueue.Remove(player);
+                // Clean up inventory and resurrection
+                ShopMenu.Inventories.Remove(victim);
+                InventoryManagement.PersistentInventories.Remove(victim);
+                ResurrectionManager.ResurrectionQueue.Remove(victim);
 
+                // --- Register death in WCS Rank System 
+                /*
+                var wcVictim = WarcraftPlugin.Instance.GetWcPlayer(victim);
+                if (wcVictim != null)
+                {
+                    WarcraftPlugin.Instance.GetDatabase().RegisterDeath(victim, wcVictim.className);
+                }
+
+                // --- Register kill for attacker
+                var attacker = @event.Attacker;
+                if (attacker != null && attacker.IsValid && attacker != victim)
+                {
+                    var wcAttacker = WarcraftPlugin.Instance.GetWcPlayer(attacker);
+                    if (wcAttacker != null)
+                    {
+                        WarcraftPlugin.Instance.GetDatabase().RegisterKill(attacker, wcAttacker.className);
+                    }
+                }
+                */
                 return HookResult.Continue;
             });
+
 
             plugin.RegisterEventHandler<EventPlayerDisconnect>((@event, info) =>
             {
@@ -1275,3 +1296,4 @@ namespace WarcraftPlugin.Core
             Gear = 10
         }
     }
+}
