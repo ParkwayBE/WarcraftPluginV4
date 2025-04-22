@@ -38,18 +38,13 @@ namespace WarcraftPlugin.Core
     public class ShopMenu
     {
         private readonly WarcraftPlugin _plugin;
-
-        // Main inventory tracker (replaces WCPlayer flags)
-        public static readonly Dictionary<CCSPlayerController, List<IShopItem>> Inventories = new(); // Contains both types
+        public static readonly Dictionary<CCSPlayerController, List<IShopItem>> Inventories = new();
 
         public ShopMenu(WarcraftPlugin plugin)
         {
             _plugin = plugin;
-
-            // Register shop open command
             _plugin.AddCommandListener("say", OnPlayerChat);
 
-            // Clean up on round end
             _plugin.RegisterEventHandler<EventRoundEnd>((@event, info) =>
             {
                 foreach (var (player, items) in Inventories)
@@ -59,15 +54,6 @@ namespace WarcraftPlugin.Core
                 }
 
                 Inventories.Clear();
-                return HookResult.Continue;
-            });
-
-            _plugin.RegisterEventHandler<EventPlayerDisconnect>((@event, info) =>
-            {
-                var player = @event.Userid;
-                if (player != null && player.IsValid)
-                    Inventories.Remove(player);
-
                 return HookResult.Continue;
             });
         }
@@ -352,7 +338,7 @@ namespace WarcraftPlugin.Core
         public bool Apply(CCSPlayerController player)
         {
             player.PrintToChat($" {ChatColors.Red}✖ Necklace of Immunity is currently disabled.");
-            return false;
+            return false; // Disabling Necklace of Immunity for now
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             if (wcPlayer?.GetClass() == null) return false;
 
@@ -654,7 +640,7 @@ namespace WarcraftPlugin.Core
 
         public void ResetEffect(CCSPlayerController player)
         {
-            Invisibility(player, 999f, 255); // revert invisibility
+            Invisibility(player, 999f, 255);
         }
     }
 
@@ -697,8 +683,8 @@ namespace WarcraftPlugin.Core
             "undead_scourge"
         };
 
-        private readonly string ctModel = "models/player/custom_player/legacy/ctm_fbi.vmdl";
-        private readonly string tModel = "models/player/custom_player/legacy/tm_leet.vmdl";
+        private readonly string ctModel = "models/player/custom_player/legacy/ctm_fbi.vmdl"; // TO DO: Fix proper player model
+        private readonly string tModel = "models/player/custom_player/legacy/tm_leet.vmdl"; // TO DO: Fix proper player model
 
         public bool Apply(CCSPlayerController player)
         {
@@ -830,8 +816,6 @@ namespace WarcraftPlugin.Core
                     player.GiveNamedItem(selected);
                     player.PrintToChat($" {ChatColors.Green}🧤 Gloves of Warmth: You received a new {selected.Replace("weapon_", "").ToUpper()}!");
                 }
-
-                // Reschedule
                 StartRegenLoop(player);
             });
         }
@@ -964,7 +948,7 @@ namespace WarcraftPlugin.Core
 
     ////// /////////////////////////////////////////////////////END OF SHOPMENU
     /// ////////////////////////////////////////////////////////
-    /// /// ////////////////////////////////////////////////////START OF GLOBAL BUFFS
+    /// /// ////////////////////////////////////////////////////START OF GLOBAL ClASS
 
 
     public class ShopMenuEvents
@@ -979,7 +963,7 @@ namespace WarcraftPlugin.Core
                 if (attacker == null || victim == null || attacker == victim)
                     return HookResult.Continue;
 
-                // --- Orb of Slow ---
+                // --- Orb of Slow
 
                 if (ShopMenu.Inventories.TryGetValue(attacker, out var attackerItems) &&
                     attackerItems.Any(item => item is OrbOfSlow))
@@ -1002,7 +986,7 @@ namespace WarcraftPlugin.Core
 
                 }
 
-                // --- Mask of Death (20% chance to strip invisibility/immunity) ---
+                // --- Mask of Death 
                 if (attackerItems != null &&
                     attackerItems.Any(item => item is MaskOfDeath) &&
                     Random.Shared.Next(100) < 20)
@@ -1014,7 +998,7 @@ namespace WarcraftPlugin.Core
                     }
                 }
 
-                // --- Helm of Excellence (damage reduction if headshot) ---
+                // --- Helm of Excellence 
                 if (@event.Hitgroup == (int)HitGroup.Head &&
                     ShopMenu.Inventories.TryGetValue(victim, out var victimItems) &&
                     victimItems.Any(item => item is HelmOfExcellence))
@@ -1034,7 +1018,7 @@ namespace WarcraftPlugin.Core
 
                 }
 
-                // --- Orb of Reflection (return 25% damage to attacker) ---
+                // --- Orb of Reflection 
                 victimItems = null;
                 InventoryManagement.PersistentInventories.TryGetValue(victim, out victimItems);
 
@@ -1056,11 +1040,6 @@ namespace WarcraftPlugin.Core
                     }
                 }
 
-
-
-
-                // --- This is where the next code goes for other items ---
-
                 return HookResult.Continue;
             });
 
@@ -1073,9 +1052,6 @@ namespace WarcraftPlugin.Core
                 plugin.AddTimer(0.2f, () =>
                 {
                     if (!player.IsValid || player.PlayerPawn?.Value == null) return;
-
-                    // TODO: Handle on-spawn effects like stealth/invisibility/gloves here
-
                 });
 
                 return HookResult.Continue;
@@ -1091,7 +1067,6 @@ namespace WarcraftPlugin.Core
 
                 ShopMenu.Inventories.TryGetValue(attacker, out var attackerItems);
 
-                // FMJ Bullets → Add bonus damage
                 if (attackerItems != null && attackerItems.Any(item => item is FmjBullets))
                 {
                     @event.AddBonusDamage(5);
@@ -1148,13 +1123,6 @@ namespace WarcraftPlugin.Core
             });
 
 
-            plugin.RegisterEventHandler<EventRoundEnd>((@event, info) =>
-            {
-                // TODO: Round-end cleanup, clear one-round item effects, etc.
-
-                return HookResult.Continue;
-            });
-
             plugin.RegisterEventHandler<EventPlayerJump>((@event, info) =>
             {
                 var player = @event.Userid;
@@ -1179,14 +1147,12 @@ namespace WarcraftPlugin.Core
 
                         forward *= 520;
 
-                        // Apply velocity individually
                         var pawn = player.PlayerPawn.Value;
                         pawn.AbsVelocity.X = forward.X;
                         pawn.AbsVelocity.Y = forward.Y;
                         pawn.AbsVelocity.Z = forward.Z;
                     });
 
-                    // Optional: gravity effect for style
                     plugin.AddTimer(0.05f, () =>
                     {
                         var pawn = player.PlayerPawn.Value;
@@ -1202,16 +1168,10 @@ namespace WarcraftPlugin.Core
                         });
                     });
                 }
-
                 return HookResult.Continue;
             });
         }
     }
-
-
-
-
-
     public enum HitGroup
     {
         Generic = 0,
