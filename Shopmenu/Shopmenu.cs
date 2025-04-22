@@ -1,6 +1,4 @@
-﻿// NEW ShopMenu.cs TEMPLATE - refactor to use centralized inventory
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -15,6 +13,25 @@ using WarcraftPlugin.Menu;
 
 namespace WarcraftPlugin.Core
 {
+    public static class ShopItemRestrictions // TO DO: Update this with the correct races for each item
+    {
+        public static readonly Dictionary<Type, HashSet<string>> RaceBlacklist = new()
+        {
+            { typeof(BootsOfSpeed), new() { "undead_scourge", "laser_light_show" } },
+            { typeof(RingOfRegen), new() { "undead_scourge" } },
+            { typeof(NecklaceOfImmunity), new() { "undead_scourge" } },
+            { typeof(FeatherBoots), new() { "undead_scourge" } },
+            { typeof(LongjumpBoots), new() { "undead_scourge" } },
+            { typeof(CloakOfInvisibility), new() { "undead_scourge" } },
+            { typeof(OrbOfSlow), new() { "undead_scourge" } },
+            { typeof(DisguiseKit), new() { "undead_scourge" } },
+            { typeof(GlovesOfWarmth), new() { "undead_scourge" } },
+            { typeof(MaskOfDeath), new() { "undead_scourge" } },
+            { typeof(HelmOfExcellence), new() { "undead_scourge" } },
+            { typeof(OrbOfReflection), new() { "undead_scourge" } },
+            { typeof(FmjBullets), new() { "undead_scourge" } },
+        };
+    }
     public class ResurrectionInfo
     {
         public Vector RespawnLocation { get; set; }
@@ -183,6 +200,8 @@ namespace WarcraftPlugin.Core
 
     }
 
+
+
     public interface IShopItem
     {
         string Name { get; }
@@ -228,6 +247,17 @@ namespace WarcraftPlugin.Core
         public bool Apply(CCSPlayerController player)
         {
             if (player.PlayerPawn?.Value == null) return false;
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer?.GetClass() == null) return false;
+
+            string race = wcPlayer.GetClass().InternalName;
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
+                return false;
+            }
             player.PlayerPawn.Value.Health += 50;
             Server.NextFrame(() => Utilities.SetStateChanged(player.PlayerPawn.Value!, "CBaseEntity", "m_iHealth"));
             player.PrintToChat($" {ChatColors.Green}+50 Health granted.");
@@ -242,26 +272,24 @@ namespace WarcraftPlugin.Core
         public string Name => "Boots of Speed";
         public int Cost => 2600;
         public bool IsPersistent => false;
+
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer?.GetClass() == null) return false;
+            if (wcPlayer?.GetClass() == null || player.PlayerPawn?.Value == null) return false;
 
             string race = wcPlayer.GetClass().InternalName;
-            if (race == "undead_scourge" || race == "laser_light_show")
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
             {
-                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) already has movement buffs.");
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
             }
 
-            if (player.PlayerPawn?.Value != null)
-            {
-                player.PlayerPawn.Value.VelocityModifier += 0.25f;
-                player.PrintToChat($" {ChatColors.Green}✔ Speed Boots equipped! (+25% movement speed)");
-                return true;
-            }
-
-            return false;
+            player.PlayerPawn.Value.VelocityModifier += 0.25f;
+            player.PrintToChat($" {ChatColors.Green}✔ Speed Boots equipped! (+25% movement speed)");
+            return true;
         }
 
         public void ResetEffect(CCSPlayerController player)
@@ -271,6 +299,7 @@ namespace WarcraftPlugin.Core
         }
     }
 
+
     public class RingOfRegen : IShopItem
     {
         public string Name => "Ring of Regen";
@@ -278,10 +307,6 @@ namespace WarcraftPlugin.Core
         public bool IsPersistent => false;
 
         private readonly Dictionary<CCSPlayerController, Timer> regenTimers = new();
-        private readonly HashSet<string> restrictedRaces = new()
-        {
-            "undead_scourge"
-        };
 
         public bool Apply(CCSPlayerController player)
         {
@@ -289,7 +314,9 @@ namespace WarcraftPlugin.Core
             if (wcPlayer?.GetClass() == null || !player.IsValid || player.PlayerPawn?.Value == null) return false;
 
             string race = wcPlayer.GetClass().InternalName;
-            if (restrictedRaces.Contains(race))
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
             {
                 player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
@@ -325,6 +352,7 @@ namespace WarcraftPlugin.Core
         }
     }
 
+
     public class NecklaceOfImmunity : IShopItem // DISABLED 
     {
         public string Name => "[Disabled-Item]";
@@ -343,11 +371,14 @@ namespace WarcraftPlugin.Core
             if (wcPlayer?.GetClass() == null) return false;
 
             string race = wcPlayer.GetClass().InternalName;
-            if (restrictedRaces.Contains(race))
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
             {
                 player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
             }
+
 
             //wcPlayer.HasUltimateImmunity = true;
             player.PrintToChat($" {ChatColors.Green}✔ You are now immune to ultimates this round.");
@@ -537,23 +568,23 @@ namespace WarcraftPlugin.Core
         public string Name => "Feather Boots";
         public int Cost => 3100;
         public bool IsPersistent => false;
-        private readonly HashSet<string> restrictedRaces = new()
-        {
-            "undead_scourge"
-        };
 
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer?.GetClass() == null || player.PlayerPawn?.Value == null) return false;
+            if (wcPlayer?.GetClass() == null) return false;
 
-            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            string race = wcPlayer.GetClass().InternalName;
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
             {
-                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot wear Feather Boots.");
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
             }
 
-            player.PlayerPawn.Value.GravityScale = 0.75f;
+
+            player.PlayerPawn.Value.GravityScale = 0.65f;
             player.PrintToChat($" {ChatColors.Green}✔ Feather Boots equipped! Gravity reduced.");
             return true;
         }
@@ -573,19 +604,19 @@ namespace WarcraftPlugin.Core
         public string Name => "Longjump Boots";
         public int Cost => 4000;
         public bool IsPersistent => false;
-        private readonly HashSet<string> restrictedRaces = new()
-        {
-            "undead_scourge"
-        };
+
 
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer?.GetClass() == null || player.PlayerPawn?.Value == null) return false;
+            if (wcPlayer?.GetClass() == null) return false;
 
-            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            string race = wcPlayer.GetClass().InternalName;
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
             {
-                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use Longjump.");
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
             }
 
@@ -601,10 +632,6 @@ namespace WarcraftPlugin.Core
         public string Name => "Cloak of Invisibility";
         public int Cost => 1800;
         public bool IsPersistent => false;
-        private readonly HashSet<string> restrictedRaces = new()
-        {
-            "undead_scourge"
-        };
 
         public static void Invisibility(CCSPlayerController player, float duration, int amount)
         {
@@ -627,11 +654,15 @@ namespace WarcraftPlugin.Core
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             if (wcPlayer?.GetClass() == null) return false;
 
-            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            string race = wcPlayer.GetClass().InternalName;
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
             {
-                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) already has invisibility.");
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
             }
+
 
             Invisibility(player, 999f, 150);
             player.PrintToChat($" {ChatColors.Green}✔ Cloak of Invisibility equipped.");
@@ -649,17 +680,17 @@ namespace WarcraftPlugin.Core
         public string Name => "Orb of Slow";
         public int Cost => 2800;
         public bool IsPersistent => false;
-        private readonly HashSet<string> restrictedRaces = new()
-        {
-            "undead_scourge"
-        };
+
 
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             if (wcPlayer?.GetClass() == null) return false;
 
-            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            string race = wcPlayer.GetClass().InternalName;
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
             {
                 player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
@@ -678,10 +709,7 @@ namespace WarcraftPlugin.Core
         public string Name => "Disguise";
         public int Cost => 1400;
         public bool IsPersistent => false;
-        private readonly HashSet<string> restrictedRaces = new()
-        {
-            "undead_scourge"
-        };
+
 
         private readonly string ctModel = "models/player/custom_player/legacy/ctm_fbi.vmdl"; // TO DO: Fix proper player model
         private readonly string tModel = "models/player/custom_player/legacy/tm_leet.vmdl"; // TO DO: Fix proper player model
@@ -689,9 +717,12 @@ namespace WarcraftPlugin.Core
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer?.GetClass() == null || player.PlayerPawn?.Value == null || !player.IsValid) return false;
+            if (wcPlayer?.GetClass() == null) return false;
 
-            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            string race = wcPlayer.GetClass().InternalName;
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
             {
                 player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
@@ -725,6 +756,8 @@ namespace WarcraftPlugin.Core
 
         public bool Apply(CCSPlayerController player)
         {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer?.GetClass() == null) return false;
             if (player == null || player.PlayerPawn?.Value == null || player.IsAlive())
             {
                 player.PrintToChat($" {ChatColors.Red}✖ You must be dead to use the Scroll of Resurrection!");
@@ -740,6 +773,18 @@ namespace WarcraftPlugin.Core
                 player.PrintToChat($" {ChatColors.Red}✖ No living teammates to anchor your resurrection.");
                 return false;
             }
+
+
+
+            string race = wcPlayer.GetClass().InternalName;
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
+                return false;
+            }
+
 
             var random = new Random();
             var anchor = allies[random.Next(allies.Count)];
@@ -763,7 +808,6 @@ namespace WarcraftPlugin.Core
         public string Name => "Gloves of Warmth";
         public int Cost => 2800;
         public bool IsPersistent => false;
-        private readonly HashSet<string> restrictedRaces = new() { "undead_scourge" };
         private static readonly Dictionary<CCSPlayerController, Timer> GrenadeTimers = new();
 
         public bool Apply(CCSPlayerController player)
@@ -771,11 +815,15 @@ namespace WarcraftPlugin.Core
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             if (wcPlayer?.GetClass() == null) return false;
 
-            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            string race = wcPlayer.GetClass().InternalName;
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
             {
                 player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
             }
+
 
             player.GiveNamedItem("weapon_hegrenade");
             player.PrintToChat($"{ChatColors.Green}✔ Gloves of Warmth equipped!");
@@ -836,17 +884,16 @@ namespace WarcraftPlugin.Core
         public string Name => "Mask of Death";
         public int Cost => 1900;
         public bool IsPersistent => false;
-        private readonly HashSet<string> restrictedRaces = new()
-        {
-            "undead_scourge"
-        };
 
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             if (wcPlayer?.GetClass() == null) return false;
 
-            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            string race = wcPlayer.GetClass().InternalName;
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
             {
                 player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
@@ -865,17 +912,16 @@ namespace WarcraftPlugin.Core
         public string Name => "Helm of Excellence";
         public int Cost => 3000;
         public bool IsPersistent => false;
-        private readonly HashSet<string> restrictedRaces = new()
-        {
-            "undead_scourge"
-        };
 
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             if (wcPlayer?.GetClass() == null) return false;
 
-            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            string race = wcPlayer.GetClass().InternalName;
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
             {
                 player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
@@ -893,17 +939,16 @@ namespace WarcraftPlugin.Core
         public string Name => "Orb of Reflection";
         public int Cost => 2800;
         public bool IsPersistent => false;
-        private readonly HashSet<string> restrictedRaces = new()
-        {
-            "undead_scourge"
-        };
 
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             if (wcPlayer?.GetClass() == null) return false;
 
-            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            string race = wcPlayer.GetClass().InternalName;
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
             {
                 player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
@@ -922,17 +967,16 @@ namespace WarcraftPlugin.Core
         public string Name => "FMJ Bullets";
         public int Cost => 2800;
         public bool IsPersistent => false;
-        private readonly HashSet<string> restrictedRaces = new()
-        {
-            "undead_scourge"
-        };
 
         public bool Apply(CCSPlayerController player)
         {
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             if (wcPlayer?.GetClass() == null) return false;
 
-            if (restrictedRaces.Contains(wcPlayer.GetClass().InternalName))
+            string race = wcPlayer.GetClass().InternalName;
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
             {
                 player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
                 return false;
@@ -1039,7 +1083,6 @@ namespace WarcraftPlugin.Core
                         victim.PrintToChat($" {ChatColors.Green}✔ Orb of Reflection struck your attacker for {reflected} damage!");
                     }
                 }
-
                 return HookResult.Continue;
             });
 
