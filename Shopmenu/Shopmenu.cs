@@ -1142,15 +1142,15 @@ namespace WarcraftPlugin.Core
 
                 // Always clear inventories after death
                 ShopMenu.Inventories.Remove(victim);
-                InventoryManagement.PersistentInventories.Remove(victim);
-
-                return HookResult.Continue; // Fixed typo and pushed again
+                plugin.AddTimer(3.5f, () =>
+                {
+                    if (!ResurrectionManager.ResurrectionQueue.ContainsKey(victim))
+                    {
+                        InventoryManagement.PersistentInventories.Remove(victim);
+                    }
+                });
+                return HookResult.Continue;
             });
-
-
-
-
-
 
 
 
