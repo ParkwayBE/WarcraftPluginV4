@@ -187,7 +187,7 @@ namespace WarcraftPlugin.Core
                             ownedRoundItems.Add(item);
                         }
 
-                        pl.PlayLocalSound("sounds/common/talk.vsnd");
+                        pl.PlayLocalSound("sounds/common/talk.vsnd"); // update with a different sound, Currently using this for ultimate cd aswell.
                         pl.PrintToChat($" {ChatColors.Green}✔ You bought {item.Name} for ${item.Cost}!");
                     });
                 }
@@ -483,11 +483,11 @@ namespace WarcraftPlugin.Core
             int level = wcPlayer.GetLevel();
 
             player.PrintToChat($" {ChatColors.Green}🎲 You gained {xpToGive} XP from the Gambling Tome of Experience!");
-            player.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
+            player.PrintToChat($" {ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
 
             if (isGold)
             {
-                player.PrintToChat($"{ChatColors.Gold}💛 You wasted your knife luck on this purchase...");
+                player.PrintToChat($" {ChatColors.Gold}💛 You wasted your knife luck on this purchase...");
             }
 
             return true;
@@ -515,7 +515,7 @@ namespace WarcraftPlugin.Core
             int level = wcPlayer.GetLevel();
 
             player.PrintToChat($" {ChatColors.Green}✔ You gained {xpToGive} XP from the Tome of Experience!");
-            player.PrintToChat($"{ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
+            player.PrintToChat($" {ChatColors.Default}📘 You are now Level {level} ({curXp}/{maxXp} XP)");
             return true;
         }
 
@@ -620,9 +620,10 @@ namespace WarcraftPlugin.Core
                 return false;
             }
 
-            player.PrintToChat($"{ChatColors.Green}✔ Longjump Boots equipped. Press jump to leap forward!");
+            player.PrintToChat($" {ChatColors.Green}✔ Longjump Boots equipped. Press jump to leap forward!");
             return true;
         }
+
 
         public void ResetEffect(CCSPlayerController player) { }
     }
