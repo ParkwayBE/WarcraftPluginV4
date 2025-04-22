@@ -2,7 +2,6 @@
 using CounterStrikeSharp.API.Core;
 using WarcraftPlugin.Core;
 using WarcraftPlugin.Helpers;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace WarcraftPlugin.Models
 {
@@ -16,22 +15,6 @@ namespace WarcraftPlugin.Models
         internal CCSPlayerController Player { get; init; }
 
         internal string DesiredClass { get; set; }
-        public bool HasOrbOfSlow { get; set; } = false;
-        public bool HasArmorPiercingRounds { get; set; } = false;
-        public bool HasMaskOfDeath { get; set; } = false;
-        public bool HasHelmOfExcellence { get; set; } = false;
-        public bool HasGlovesOfWarmth { get; set; } = false;
-
-        public bool HasLongjumpBoots { get; set; } = false;
-        public bool HasOrbOfReflection { get; set; } = false;
-        public float LastReflectionTime { get; set; } = 0f;
-        public bool RespawnQueued { get; set; } = false;
-        public Vector RespawnLocation { get; set; } = default;
-
-        public float RespawnTriggerTime { get; set; }
-
-        public bool HasDamageReflection { get; set; } = false;
-
         public bool ChameleonOffensive { get; set; } = false;
         public bool ChameleonDefensive { get; set; } = false;
 
