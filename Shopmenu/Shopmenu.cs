@@ -711,7 +711,7 @@ namespace WarcraftPlugin.Core
         public bool IsPersistent => false;
 
 
-        private readonly string ctModel = "characters/models/ctm_fbi/ctm_fbi_variantb.vmdl"; // TODO FIX MODELS
+        private readonly string ctModel = "characters/models/ctm_fbi/ctm_fbi_variantb.vmdl";
         private readonly string tModel = "characters/models/tm_leet/tm_leet_variantj.vmdl";
 
         public bool Apply(CCSPlayerController player)
@@ -1089,20 +1089,40 @@ namespace WarcraftPlugin.Core
                 return HookResult.Continue;
             });
 
-
             plugin.RegisterEventHandler<EventPlayerDeath>((@event, info) =>
             {
                 var victim = @event.Userid;
 
-                if (!victim.IsValid || victim.PlayerPawn?.Value == null) return HookResult.Continue;
-
-                ShopMenu.Inventories.Remove(victim);
-                if (InventoryManagement.PersistentInventories.TryGetValue(victim, out var items))
+                // Handle scroll resurrection logic
+                if (ShopMenu.Inventories.TryGetValue(victim, out var roundItems))
                 {
-                    // Remove all persistent items EXCEPT Scroll of Resurrection
-                    items.RemoveAll(i => i is not ScrollOfResurrection);
+                    var scroll = roundItems.FirstOrDefault(i => i is ScrollOfResurrection);
+                    if (scroll != null)
+                    {
+                        roundItems.Remove(scroll);
+
+                        var teammates = Utilities.GetPlayers()
+                            .Where(p => p.IsValid && p.IsAlive() && p.TeamNum == victim.TeamNum && p != victim)
+                            .ToList();
+
+                        if (teammates.Count > 0)
+                        {
+                            var anchor = teammates[Random.Shared.Next(teammates.Count)];
+
+                            ResurrectionManager.ResurrectionQueue[victim] = new ResurrectionInfo
+                            {
+                                RespawnLocation = anchor.PlayerPawn.Value.AbsOrigin,
+                                RespawnTriggerTime = Server.CurrentTime + 3f
+                            };
+
+                            victim.PrintToChat($" {ChatColors.Gold}⏳ Resurrection scroll activated! You will respawn in 3 seconds...");
+                        }
+                    }
                 }
-                ResurrectionManager.ResurrectionQueue.Remove(victim);
+
+                // Clear their inventory after death
+                ShopMenu.Inventories.Remove(victim);
+                InventoryManagement.PersistentInventories.Remove(victim);
 
                 // --- Register death in WCS Rank System 
                 /*
@@ -1123,8 +1143,13 @@ namespace WarcraftPlugin.Core
                     }
                 }
                 */
+
                 return HookResult.Continue;
             });
+
+
+
+
 
 
             plugin.RegisterEventHandler<EventPlayerDisconnect>((@event, info) =>
@@ -1153,41 +1178,6 @@ namespace WarcraftPlugin.Core
                             item.Apply(player);
                     });
                 }
-
-                // --- Resurrection scroll checker loop
-                void CheckResurrections()
-                {
-                    foreach (var (player, items) in InventoryManagement.PersistentInventories)
-                    {
-                        if (!player.IsValid || player.IsAlive()) continue;
-                        if (!items.Any(i => i is ScrollOfResurrection)) continue;
-
-                        if (ResurrectionManager.ResurrectionQueue.ContainsKey(player)) continue;
-
-                        var teammates = Utilities.GetPlayers()
-                            .Where(p => p.IsValid && p.IsAlive() && p.TeamNum == player.TeamNum && p != player)
-                            .ToList();
-
-                        if (teammates.Count == 0) continue;
-
-                        var anchor = teammates[Random.Shared.Next(teammates.Count)];
-
-                        ResurrectionManager.ResurrectionQueue[player] = new ResurrectionInfo
-                        {
-                            RespawnLocation = anchor.PlayerPawn.Value.AbsOrigin,
-                            RespawnTriggerTime = Server.CurrentTime + 3f
-                        };
-
-                        player.PrintToChat($" {ChatColors.Gold}⏳ Resurrection scroll detected! Respawning in 3 seconds...");
-                    }
-
-                    // Schedule next check
-                    plugin.AddTimer(0.5f, CheckResurrections);
-                }
-
-                // Start first scan
-                plugin.AddTimer(0.5f, CheckResurrections);
-
                 return HookResult.Continue;
             });
 
@@ -1240,9 +1230,6 @@ namespace WarcraftPlugin.Core
                 }
                 return HookResult.Continue;
             });
-
-
-
         }
 
         private static bool resurrectionLoopStarted = false;
