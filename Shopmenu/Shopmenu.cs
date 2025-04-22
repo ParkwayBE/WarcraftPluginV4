@@ -62,7 +62,6 @@ namespace WarcraftPlugin.Core
                 return HookResult.Continue;
             });
 
-            // Clean up on disconnect
             _plugin.RegisterEventHandler<EventPlayerDisconnect>((@event, info) =>
             {
                 var player = @event.Userid;
@@ -138,7 +137,6 @@ namespace WarcraftPlugin.Core
 
                         int currentMoney = money.Account;
 
-                        // Ensure inventories are initialized
                         if (!Inventories.TryGetValue(pl, out var ownedRoundItems))
                         {
                             ownedRoundItems = new List<IShopItem>();
@@ -152,7 +150,6 @@ namespace WarcraftPlugin.Core
                         }
 
 
-                        // Check for duplicate item (persistent OR round-based)
                         bool alreadyOwned = item.IsPersistent
                             ? persistentItems.Any(i => i.GetType() == item.GetType())
                             : ownedRoundItems.Any(i => i.GetType() == item.GetType());
@@ -171,15 +168,13 @@ namespace WarcraftPlugin.Core
 
                         if (!item.Apply(pl))
                         {
-                            // Item failed to apply (e.g. restricted)
+                            Console.WriteLine("Item failed to apply");
                             return;
                         }
 
-                        // Deduct money
                         money.Account -= item.Cost;
                         Utilities.SetStateChanged(pl, "CCSPlayerController", "m_pInGameMoneyServices");
 
-                        // Store in correct list
                         if (item.IsPersistent)
                         {
                             persistentItems.Add(item);
@@ -189,7 +184,6 @@ namespace WarcraftPlugin.Core
                             ownedRoundItems.Add(item);
                         }
 
-                        // Feedback
                         pl.PlayLocalSound("sounds/common/talk.vsnd");
                         pl.PrintToChat($" {ChatColors.Green}✔ You bought {item.Name} for ${item.Cost}!");
                     });
@@ -207,7 +201,7 @@ namespace WarcraftPlugin.Core
     {
         string Name { get; }
         int Cost { get; }
-        bool IsPersistent { get; }   // Add this
+        bool IsPersistent { get; }
         bool Apply(CCSPlayerController player);
         void ResetEffect(CCSPlayerController player);
     }
@@ -345,9 +339,9 @@ namespace WarcraftPlugin.Core
         }
     }
 
-    public class NecklaceOfImmunity : IShopItem
+    public class NecklaceOfImmunity : IShopItem // DISABLED 
     {
-        public string Name => "Necklace of Immunity";
+        public string Name => "[Disabled-Item]";
         public int Cost => 2500;
         public bool IsPersistent => false;
         private readonly HashSet<string> restrictedRaces = new()
@@ -357,6 +351,8 @@ namespace WarcraftPlugin.Core
 
         public bool Apply(CCSPlayerController player)
         {
+            player.PrintToChat($" {ChatColors.Red}✖ Necklace of Immunity is currently disabled.");
+            return false;
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             if (wcPlayer?.GetClass() == null) return false;
 
@@ -367,7 +363,7 @@ namespace WarcraftPlugin.Core
                 return false;
             }
 
-            wcPlayer.HasUltimateImmunity = true;
+            //wcPlayer.HasUltimateImmunity = true;
             player.PrintToChat($" {ChatColors.Green}✔ You are now immune to ultimates this round.");
             return true;
         }
@@ -377,7 +373,7 @@ namespace WarcraftPlugin.Core
             var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
             if (wcPlayer != null)
             {
-                wcPlayer.HasUltimateImmunity = false;
+                //wcPlayer.HasUltimateImmunity = false;
                 player.PrintToChat($" {ChatColors.Red}✖ Your ultimate immunity has worn off.");
             }
         }
@@ -637,8 +633,6 @@ namespace WarcraftPlugin.Core
             );
 
             player.PlayerPawn.Value.Render = newColor;
-            Utilities.SetStateChanged(player.PlayerPawn.Value, "CBaseModelEntity", "m_clrRender");
-
             Utilities.SetStateChanged(player.PlayerPawn.Value, "CBaseModelEntity", "m_clrRender");
         }
 
