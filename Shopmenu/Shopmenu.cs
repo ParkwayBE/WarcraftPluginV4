@@ -1144,7 +1144,7 @@ namespace WarcraftPlugin.Core
                 ShopMenu.Inventories.Remove(victim);
                 InventoryManagement.PersistentInventories.Remove(victim);
 
-                return HookResult.Continue;
+                return HookResult.Continue; // Fixed typo and pushed again
             });
 
 
