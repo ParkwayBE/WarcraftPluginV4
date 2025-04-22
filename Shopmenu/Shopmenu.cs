@@ -712,7 +712,7 @@ namespace WarcraftPlugin.Core
 
 
         private readonly string ctModel = "characters/models/ctm_fbi_variantb.vmdl";
-        private readonly string tModel = "characters/models/tm_leet_varoa,tj.vmdl";
+        private readonly string tModel = "characters/models/tm_leet_variantj.vmdl";
 
         public bool Apply(CCSPlayerController player)
         {
