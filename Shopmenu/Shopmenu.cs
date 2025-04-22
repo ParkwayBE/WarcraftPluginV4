@@ -17,7 +17,12 @@ namespace WarcraftPlugin.Core
     {
         public static readonly Dictionary<Type, HashSet<string>> RaceBlacklist = new()
         {
-            { typeof(BootsOfSpeed), new() { "undead_scourge", "laser_light_show" } },
+            {
+                typeof(BootsOfSpeed), new()
+                {
+                "undead_scourge", "laser_light_show"
+                }
+            },
             { typeof(RingOfRegen), new() { "undead_scourge" } },
             { typeof(NecklaceOfImmunity), new() { "undead_scourge" } },
             { typeof(FeatherBoots), new() { "undead_scourge" } },
@@ -225,6 +230,7 @@ namespace WarcraftPlugin.Core
             _plugin.AddTimer(0.2f, () =>
             {
                 if (!player.IsValid || player.PlayerPawn?.Value == null) return;
+                Console.WriteLine("Player has spawned"); // Remove this when done
             });
 
             return HookResult.Continue;
@@ -297,31 +303,35 @@ namespace WarcraftPlugin.Core
 
         private IShopItem GetShopItem(int index)
         {
-            return index switch
+            switch (index)
             {
-                1 => new BootsOfSpeed(),
-                2 => new RingOfRegen(),
-                3 => new NecklaceOfImmunity(),
-                4 => new GrandExpTome(),
-                5 => new MassiveExpTome(),
-                6 => new GamblingExpTome(),
-                7 => new SmallExpTome(),
-                8 => new FeatherBoots(),
-                9 => new LongjumpBoots(),
-                10 => new CloakOfInvisibility(),
-                11 => new OrbOfSlow(),
-                12 => new FmjBullets(),
-                13 => new DisguiseKit(),
-                14 => new PeriaptOfHealth(),
-                15 => new GiftOfExp(),
-                16 => new ScrollOfResurrection(),
-                17 => new GlovesOfWarmth(),
-                18 => new MaskOfDeath(),
-                19 => new HelmOfExcellence(),
-                20 => new OrbOfReflection(),
-                _ => throw new ArgumentOutOfRangeException(nameof(index), $"Invalid shop item index: {index}")
-            };
+                case 1: return new BootsOfSpeed();
+                case 2: return new RingOfRegen();
+                case 3: return new NecklaceOfImmunity();
+                case 4: return new GrandExpTome();
+                case 5: return new MassiveExpTome();
+                case 6: return new GamblingExpTome();
+                case 7: return new SmallExpTome();
+                case 8: return new FeatherBoots();
+                case 9: return new LongjumpBoots();
+                case 10: return new CloakOfInvisibility();
+                case 11: return new OrbOfSlow();
+                case 12: return new FmjBullets();
+                case 13: return new DisguiseKit();
+                case 14: return new PeriaptOfHealth();
+                case 15: return new GiftOfExp();
+                case 16: return new ScrollOfResurrection();
+                case 17: return new GlovesOfWarmth();
+                case 18: return new MaskOfDeath();
+                case 19: return new HelmOfExcellence();
+                case 20: return new OrbOfReflection();
+
+                default:
+                    Console.WriteLine($"[WCS] ⚠ Invalid shop item index requested: {index}");
+                    return new BootsOfSpeed(); // Safe fallback
+            }
         }
+
 
         private void StartResurrectionWatcher()
         {
