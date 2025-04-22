@@ -492,13 +492,11 @@ namespace WarcraftPlugin.Core
 
     }
 
-
-
     public interface IShopItem
     {
         string Name { get; }
         int Cost { get; }
-        bool IsPersistent { get; }
+        bool IsPersistent { get; } // To DO : Change some items to be persistant through roundEnd and can be brought over to the next round without having to repurchase
         bool Apply(CCSPlayerController player);
         void ResetEffect(CCSPlayerController player);
     }
