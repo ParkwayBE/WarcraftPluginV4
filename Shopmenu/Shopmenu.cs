@@ -62,14 +62,6 @@ namespace WarcraftPlugin.Core
         {
             _plugin = plugin;
             _plugin.AddCommandListener("say", OnPlayerChat);
-            _plugin.RegisterEventHandler<EventPlayerJump>(OnPlayerJump);
-            _plugin.RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt);
-            _plugin.RegisterEventHandler<EventPlayerHurtOther>(OnPlayerHurtOther);
-            _plugin.RegisterEventHandler<EventPlayerSpawn>(OnSpawn);
-            _plugin.RegisterEventHandler<EventPlayerDeath>(OnDeath);
-            _plugin.RegisterEventHandler<EventPlayerDisconnect>(OnDisconnect);
-            _plugin.RegisterEventHandler<EventRoundStart>(OnRoundStart);
-
 
             _plugin.RegisterEventHandler<EventRoundEnd>((@event, info) =>
             {
