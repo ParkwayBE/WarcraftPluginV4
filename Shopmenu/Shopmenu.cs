@@ -1138,6 +1138,15 @@ namespace WarcraftPlugin.Core
                                 {
                                     victim.PlayerPawn.Value.Teleport(respawnLocation);
                                     victim.PrintToChat($"{ChatColors.Green}✔ You have been resurrected!");
+                                    if (InventoryManagement.PersistentInventories.TryGetValue(victim, out var persistentItems))
+                                    {
+                                        var scroll = persistentItems.FirstOrDefault(i => i is ScrollOfResurrection);
+                                        if (scroll != null)
+                                        {
+                                            persistentItems.Remove(scroll);
+                                        }
+                                    }
+
                                 }
                             });
                         });
@@ -1165,6 +1174,9 @@ namespace WarcraftPlugin.Core
 
                 ShopMenu.Inventories.Remove(player);
                 InventoryManagement.PersistentInventories.Remove(player);
+
+                if (player.UserId.HasValue)
+                    ResurrectionTracker.ResurrectionUserIds.Remove((uint)player.UserId.Value);
 
                 return HookResult.Continue;
             });
