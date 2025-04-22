@@ -711,8 +711,8 @@ namespace WarcraftPlugin.Core
         public bool IsPersistent => false;
 
 
-        private readonly string ctModel = "characters/models/ctm_fbi_variantb.vmdl";
-        private readonly string tModel = "characters/models/tm_leet_variantj.vmdl";
+        private readonly string ctModel = "characters/models/ctm_sas_variantf.vmdl";
+        private readonly string tModel = "characters/models/tm_phoenix_variantf.vmdl";
 
         public bool Apply(CCSPlayerController player)
         {
@@ -1269,17 +1269,48 @@ namespace WarcraftPlugin.Core
 
                 foreach (var (player, info) in toRespawn)
                 {
+                    Console.WriteLine($"[Scroll] Triggering resurrection for {player.PlayerName}");
+
                     ResurrectionManager.ResurrectionQueue.Remove(player);
 
-                    player.Respawn();
-                    plugin.AddTimer(0.25f, () =>
-                    {
-                        if (!player.IsValid || player.PlayerPawn?.Value == null) return;
+                    // --- Optional team refresh workaround
+                    var currentTeam = (CsTeam)player.TeamNum;
+                    player.ChangeTeam(currentTeam);
 
-                        player.SetHp(100);
-                        player.PlayerPawn.Value.Teleport(info.RespawnLocation, new QAngle(), new Vector());
-                        Warcraft.SpawnParticle(info.RespawnLocation, "particles/ui/status_levels/ui_status_level_7_energycirc.vpcf", 4f);
-                        player.PrintToChat($"{ChatColors.Green}✔ Scroll of Resurrection activated!");
+
+                    plugin.AddTimer(0.1f, () =>
+                    {
+                        if (!player.IsValid) return;
+
+                        Console.WriteLine($"[Scroll] Attempting respawn for {player.PlayerName}...");
+                        player.Respawn();
+
+                        plugin.AddTimer(0.5f, () =>
+                        {
+                            if (!player.IsValid)
+                            {
+                                Console.WriteLine($"[Scroll] {player.PlayerName} invalid after respawn.");
+                                return;
+                            }
+
+                            if (!player.IsAlive())
+                            {
+                                Console.WriteLine($"[Scroll] {player.PlayerName} is still dead after Respawn()");
+                                return;
+                            }
+
+                            if (player.PlayerPawn?.Value == null)
+                            {
+                                Console.WriteLine($"[Scroll] {player.PlayerName} has no valid pawn after respawn.");
+                                return;
+                            }
+
+                            player.SetHp(100);
+                            player.PlayerPawn.Value.Teleport(info.RespawnLocation, new QAngle(), new Vector());
+                            Warcraft.SpawnParticle(info.RespawnLocation, "particles/ui/status_levels/ui_status_level_7_energycirc.vpcf", 4f);
+                            player.PrintToChat($"{ChatColors.Green}✔ Scroll of Resurrection activated!");
+                            Console.WriteLine($"[Scroll] {player.PlayerName} resurrected at {info.RespawnLocation}");
+                        });
                     });
                 }
 
@@ -1288,6 +1319,7 @@ namespace WarcraftPlugin.Core
 
             plugin.AddTimer(0.5f, CheckResurrections);
         }
+
 
         public enum HitGroup
         {
