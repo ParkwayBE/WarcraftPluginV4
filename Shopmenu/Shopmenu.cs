@@ -396,6 +396,34 @@ namespace WarcraftPlugin.Core
         }
     }
 
+    public class ScrollOfResurrection : IShopItem
+    {
+        public string Name => "Scroll of Resurrection";
+        public int Cost => 5000;
+        public bool IsPersistent => true;
+
+        public bool Apply(CCSPlayerController player)
+        {
+            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
+            if (wcPlayer?.GetClass() == null) return false;
+
+            string race = wcPlayer.GetClass().InternalName;
+
+            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
+                blacklist.Contains(race))
+            {
+                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
+                return false;
+            }
+
+            player.PrintToChat($" {ChatColors.Gold}✔ Scroll of Resurrection purchased. It will trigger automatically on death!");
+            return true;
+        }
+
+        public void ResetEffect(CCSPlayerController player) { }
+    }
+
+
     public class GrandExpTome : IShopItem
     {
         public string Name => "Grand Exp Tome";
@@ -748,34 +776,6 @@ namespace WarcraftPlugin.Core
         }
     }
 
-    public class ScrollOfResurrection : IShopItem
-    {
-        public string Name => "Scroll of Resurrection";
-        public int Cost => 5000;
-        public bool IsPersistent => true;
-
-        public bool Apply(CCSPlayerController player)
-        {
-            var wcPlayer = WarcraftPlugin.Instance.GetWcPlayer(player);
-            if (wcPlayer?.GetClass() == null) return false;
-
-            string race = wcPlayer.GetClass().InternalName;
-
-            if (ShopItemRestrictions.RaceBlacklist.TryGetValue(GetType(), out var blacklist) &&
-                blacklist.Contains(race))
-            {
-                player.PrintToChat($" {ChatColors.Red}✖ Your race ({wcPlayer.GetClass().DisplayName}) cannot use this item.");
-                return false;
-            }
-
-            player.PrintToChat($" {ChatColors.Gold}✔ Scroll of Resurrection purchased. It will automatically trigger when you die!");
-            return true;
-        }
-
-        public void ResetEffect(CCSPlayerController player) { }
-    }
-
-
 
     public class GlovesOfWarmth : IShopItem
     {
@@ -1093,13 +1093,14 @@ namespace WarcraftPlugin.Core
             {
                 var victim = @event.Userid;
 
-                // Check for Scroll of Resurrection before wiping inventory
+                if (!victim.IsValid || victim.PlayerPawn?.Value == null)
+                    return HookResult.Continue;
+
                 if (InventoryManagement.PersistentInventories.TryGetValue(victim, out var persistentItems))
                 {
                     var scroll = persistentItems.FirstOrDefault(i => i is ScrollOfResurrection);
                     if (scroll != null)
                     {
-                        // Queue the resurrection
                         var teammates = Utilities.GetPlayers()
                             .Where(p => p.IsValid && p.IsAlive() && p.TeamNum == victim.TeamNum && p != victim)
                             .ToList();
@@ -1118,10 +1119,6 @@ namespace WarcraftPlugin.Core
                         }
                     }
                 }
-
-                // ✅ Now wipe all items (scroll included)
-                ShopMenu.Inventories.Remove(victim);
-                InventoryManagement.PersistentInventories.Remove(victim);
 
                 // --- Register death in WCS Rank System 
                 /*
@@ -1143,8 +1140,13 @@ namespace WarcraftPlugin.Core
                 }
                 */
 
+                // Always clear inventories after death
+                ShopMenu.Inventories.Remove(victim);
+                InventoryManagement.PersistentInventories.Remove(victim);
+
                 return HookResult.Continue;
             });
+
 
 
 
