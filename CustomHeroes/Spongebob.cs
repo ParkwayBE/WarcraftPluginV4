@@ -109,7 +109,6 @@ namespace WarcraftPlugin.Classes
         private void PlayerSpawn(EventPlayerSpawn spawn)
         {
             int abilityLevel = WarcraftPlayer.GetAbilityLevel(2);
-
             if (abilityLevel > 0)
             {
                 var effect = new SlipperySpongeSpeedBoostEffect(Player, 999F);
@@ -139,9 +138,12 @@ namespace WarcraftPlugin.Classes
         {
             var victim = @event.Userid;
             var attacker = @event.Attacker;
-            if (attacker == null || victim == null || !victim.IsValid || !attacker.IsValid || !victim.IsAlive()) return;
+
+            if (attacker == null || victim == null || !victim.IsValid || !attacker.IsValid || !victim.IsAlive())
+                return;
 
             var wp = victim.GetWarcraftPlayer();
+
             int level = wp.GetAbilityLevel(0);
 
             if (isUltimateActive)
@@ -153,12 +155,12 @@ namespace WarcraftPlugin.Classes
             }
 
             int ghostLevel = wp.GetAbilityLevel(1);
-            if (@event.Hitgroup == (int)HitGroup.Head)
+            if (@event.Hitgroup == (int)HitGroup.Head && ghostLevel > 0)
             {
-                int[] chanceLevels = { 20, 40, 60, 80, 90, 100 };
-                int[] reductionPercent = { 20, 30, 40, 50, 55, 60 };
-                int chance = chanceLevels[Math.Clamp(ghostLevel - 1, 0, 5)];
-                int reduceByPercent = reductionPercent[Math.Clamp(ghostLevel - 1, 0, 5)];
+                int[] chanceLevels = { 40, 60, 80, 90, 100 };
+                int[] reductionPercent = { 30, 40, 50, 55, 60 };
+                int chance = chanceLevels[Math.Clamp(ghostLevel - 1, 0, 4)];
+                int reduceByPercent = reductionPercent[Math.Clamp(ghostLevel - 1, 0, 4)];
 
                 if (Random.Shared.Next(0, 100) < chance)
                 {
@@ -167,17 +169,23 @@ namespace WarcraftPlugin.Classes
                 }
             }
 
-            int yummyChance = new[] { 5, 10, 15, 20, 25, 30 }[Math.Clamp(level, 0, 5)];
+            int yummyChance = Math.Clamp(level * 5, 0, 25); 
             if (@event.DmgHealth > 0 && Random.Shared.Next(0, 100) < yummyChance)
             {
-                var activeWeapon = victim.PlayerPawn.Value.WeaponServices.ActiveWeapon.Value;
-                if (activeWeapon != null)
+                var weapon = victim.PlayerPawn?.Value?.WeaponServices?.ActiveWeapon?.Value;
+                if (weapon != null)
                 {
-                    activeWeapon.Clip1 = activeWeapon.GetVData<CBasePlayerWeaponVData>().MaxClip1;
-                    Console.WriteLine($"[INFO] {victim.PlayerName}'s ammo refilled to max ({activeWeapon.Clip1})!");
+                    weapon.Clip1 = weapon.GetVData<CBasePlayerWeaponVData>().MaxClip1;
+                    Console.WriteLine($"[INFO] {victim.PlayerName}'s ammo refilled to max ({weapon.Clip1})!");
+                    victim.PrintToChat($"{ChatColors.Green}[Yummy Yummy]{ChatColors.Default} Your clip has been refilled!");
+                }
+                else
+                {
+                    Console.WriteLine($"[Yummy Yummy] No active weapon found for {victim.PlayerName}, skipping refill.");
                 }
             }
         }
+
     }
 
     public enum HitGroup
