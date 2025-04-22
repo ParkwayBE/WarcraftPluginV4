@@ -60,6 +60,7 @@
     <None Include="CustomHeroes\CryptLord.cs" />
     <None Include="CustomHeroes\DwarvenSniper.cs" />
     <None Include="CustomHeroes\HumanAlliance.cs" />
+    <None Include="CustomHeroes\LaserLightShow.cs" />
     <None Include="CustomHeroes\Lukaku.cs" />
     <None Include="CustomHeroes\Naix.cs" />
     <None Include="CustomHeroes\NightElves.cs" />
@@ -92,6 +93,7 @@
     <Compile Remove="CustomHeroes\CustomSkillRace.cs" />
     <Compile Remove="CustomHeroes\DwarvenSniper.cs" />
     <Compile Remove="CustomHeroes\HumanAlliance.cs" />
+    <Compile Remove="CustomHeroes\LaserLightShow.cs" />
     <Compile Remove="CustomHeroes\Lukaku.cs" />
     <Compile Remove="CustomHeroes\Naix.cs" />
     <Compile Remove="CustomHeroes\NightElves.cs" />

@@ -334,18 +334,28 @@ namespace WarcraftPlugin.Core
 
                 foreach (var (player, info) in toRespawn)
                 {
-                    if (player.IsValid && !player.IsAlive())
+                    if (player == null || !player.IsValid || player.IsAlive())
                     {
-                        player.Respawn();
-                        _plugin.AddTimer(0.2f, () =>
-                        {
-                            if (player.IsValid && player.PlayerPawn?.Value != null)
-                            {
-                                player.PlayerPawn.Value.Teleport(info.RespawnLocation);
-                                player.PrintToChat($" {ChatColors.Green}✔ You have been resurrected at your ally’s location!");
-                            }
-                        });
+                        ResurrectionManager.ResurrectionQueue.Remove(player);
+                        continue;
                     }
+
+                    if (player.PlayerPawn?.Value == null)
+                    {
+                        ResurrectionManager.ResurrectionQueue.Remove(player);
+                        continue;
+                    }
+
+                    player.Respawn();
+
+                    _plugin.AddTimer(0.2f, () =>
+                    {
+                        if (player.IsValid && player.PlayerPawn?.Value != null)
+                        {
+                            player.PlayerPawn.Value.Teleport(info.RespawnLocation);
+                            player.PrintToChat($" {ChatColors.Green}✔ You have been resurrected at your ally’s location!");
+                        }
+                    });
 
                     ResurrectionManager.ResurrectionQueue.Remove(player);
                 }
@@ -353,6 +363,8 @@ namespace WarcraftPlugin.Core
                 StartResurrectionWatcher();
             });
         }
+
+
 
 
 
