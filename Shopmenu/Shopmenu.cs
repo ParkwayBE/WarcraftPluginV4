@@ -1213,7 +1213,54 @@ namespace WarcraftPlugin.Core
                 }
                 return HookResult.Continue;
             });
+
+            StartResurrectionLoop(plugin);
+
         }
+
+        private static bool resurrectionLoopStarted = false;
+
+        private static void StartResurrectionLoop(WarcraftPlugin plugin)
+        {
+            if (resurrectionLoopStarted) return;
+            resurrectionLoopStarted = true;
+
+            void CheckResurrections()
+            {
+                var toRespawn = new List<CCSPlayerController>();
+
+                foreach (var (player, info) in ResurrectionManager.ResurrectionQueue)
+                {
+                    if (!player.IsValid || player.IsAlive())
+                        continue;
+
+                    if (Server.CurrentTime >= info.RespawnTriggerTime)
+                    {
+                        toRespawn.Add(player);
+                    }
+                }
+
+                foreach (var player in toRespawn)
+                {
+                    if (!ResurrectionManager.ResurrectionQueue.TryGetValue(player, out var info))
+                        continue;
+
+                    ResurrectionManager.ResurrectionQueue.Remove(player);
+
+                    player.Respawn();
+                    player.SetHp(100);
+                    player.PlayerPawn?.Value?.Teleport(info.RespawnLocation, new QAngle(), new Vector());
+
+                    Warcraft.SpawnParticle(info.RespawnLocation, "particles/ui/status_levels/ui_status_level_7_energycirc.vpcf", 4f);
+                    player.PrintToChat($" {ChatColors.Green}✔ Scroll of Resurrection activated!");
+                }
+
+                plugin.AddTimer(0.5f, CheckResurrections);
+            }
+
+            plugin.AddTimer(0.5f, CheckResurrections);
+        }
+
     }
     public enum HitGroup
     {
